@@ -1,7 +1,8 @@
 {
     "scopeName": "source.nlp",
     "fileTypes": [
-        "nlp"
+        "nlp",
+        "pat"
     ],
     "name": "NLP",
     "patterns": [
