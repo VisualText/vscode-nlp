@@ -1,0 +1,9 @@
+{
+    ".source.nlp": {
+        "matches": {
+            "prefix": "mat",
+            "body": "matches${1:tokens};",
+            "description": "rule matches"
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "name": "nlp",
+    "displayName": "NLP",
+    "description": "NLP++",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "nlp",
+            "aliases": ["NLP++", "nlp"],
+            "extensions": [".nlp",".nlppp", ".pat"],
+            "configuration": "./nlp-configuration.json"
+        }],
+        "grammars": [{
+            "language": "nlp",
+            "scopeName": "source.nlp",
+            "path": "./syntaxes/nlp.tmLanguage.json"
+        }],
+        "snippets": [
+            {
+                "language": "javascript",
+                "scopeName": "source.nlp",
+                "path": "./snippets/nlp.json"
+            }
+        ],
+        "colors": [{
+            "id": "keyword.region.nlp",
+            "description": "Color for NLP regions.",
+            "defaults": {
+                "dark": "foreground",
+                "light": "foreground",
+                "highContrast": "#010203"
+            }
+        }]
+    }
+}

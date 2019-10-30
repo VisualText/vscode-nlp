@@ -1,0 +1,12 @@
+{
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "keyword.region.nlp",
+                "settings": {
+                    "foreground": "#49b94f",
+                }
+            }
+        ]
+    }
+}
