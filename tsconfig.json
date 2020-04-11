@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "rootDir": "./src",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es6",
+        "outDir": "lib-cjs",
+        "sourceMap": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "importHelpers": true,
+        "lib": [
+            "es6",
+            "dom"
+        ]
+    },
+    "include": [
+        "./src/*.ts"
+    ]
+} 

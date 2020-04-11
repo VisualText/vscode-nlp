@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Analyzer",
+            "command": "nlp",
+            "args": [
+                "/ANAPATH",
+                "C:\\git\\nlp\\analyzers\\corporate",
+                "${relativeFile}"
+            ],
+            "options": {
+                "cwd": "C:\\git\\nlp\\vtcore-vs\\nlp\\Unicode_Release\\"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run Analyzer Debug",
+            "command": "nlp",
+            "args": [
+                "/ANAPATH",
+                "C:\\git\\nlp\\analyzers\\corporate",
+                "${relativeFile}",
+                "/DEV"
+            ],
+            "options": {
+                "cwd": "C:\\git\\nlp\\vtcore-vs\\nlp\\Unicode_Release\\"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+	]
+}
