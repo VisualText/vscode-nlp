@@ -9,18 +9,40 @@
     "categories": [
         "Programming Languages"
     ],
+    "activationEvents": [
+        "onCommand:nlp.analyze"
+    ],
+    "main": "./src/extension.js",
+    "devDependencies": {
+        "@types/node": "^13.11.0",
+        "typescript": "^3.8.3",
+        "vscode": "^1.1.36",
+        "vscode-debugadapter": "^1.40.0",
+        "vscode-debugprotocol": "^1.40.0"
+    },
     "contributes": {
-        "languages": [{
-            "id": "nlp",
-            "aliases": ["NLP++", "nlp"],
-            "extensions": [".nlp",".nlppp", ".pat"],
-            "configuration": "./nlp-configuration.json"
-        }],
-        "grammars": [{
-            "language": "nlp",
-            "scopeName": "source.nlp",
-            "path": "./syntaxes/nlp.tmLanguage.json"
-        }],
+        "languages": [
+            {
+                "id": "nlp",
+                "aliases": [
+                    "NLP++",
+                    "nlp"
+                ],
+                "extensions": [
+                    ".nlp",
+                    ".nlppp",
+                    ".pat"
+                ],
+                "configuration": "./nlp-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "nlp",
+                "scopeName": "source.nlp",
+                "path": "./syntaxes/nlp.tmLanguage.json"
+            }
+        ],
         "snippets": [
             {
                 "language": "javascript",
@@ -28,14 +50,26 @@
                 "path": "./snippets/nlp.json"
             }
         ],
-        "colors": [{
-            "id": "keyword.region.nlp",
-            "description": "Color for NLP regions.",
-            "defaults": {
-                "dark": "foreground",
-                "light": "foreground",
-                "highContrast": "#010203"
+        "colors": [
+            {
+                "id": "keyword.region.nlp",
+                "description": "Color for NLP regions.",
+                "defaults": {
+                    "dark": "foreground",
+                    "light": "foreground",
+                    "highContrast": "#010203"
+                }
             }
-        }]
+        ],
+        "commands": [
+            {
+                "command": "nlp.analyze",
+                "title": "NLP: Analyze Text",
+                "description": "Run the analyzer on text"
+            }
+        ]
+    },
+    "dependencies": {
+        "file-system": "^2.2.2"
     }
 }

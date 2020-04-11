@@ -14,11 +14,11 @@
         },
         {
             "name": "keyword.region.nlp",
-            "match": "@(CODE|DECL|NODES|PATH|POST|RULES)\\b"
+            "match": "@(CODE|DECL|NODES|PATH|POST|RULES|PRE)\\b"
         },
         {
             "name": "keyword.constants.nlp",
-            "match": "\\b_(ROOT|xWILD|xNUM|xALPHA|xWHITE|MOOSE)\\b"
+            "match": "\\b_(ROOT|xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND)\\b"
         },
         {
             "name": "keyword.other.nlp",
