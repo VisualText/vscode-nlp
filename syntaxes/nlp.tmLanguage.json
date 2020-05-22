@@ -19,7 +19,7 @@
         },
         {
             "name": "keyword.constants.nlp",
-            "match": "\\b_(ROOT|xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND)\\b"
+            "match": "\\b_(ROOT|xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND|xCTRL)\\b"
         },
         {
             "name": "keyword.other.nlp",
