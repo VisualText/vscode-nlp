@@ -55,13 +55,15 @@
                 "path": "./snippets/nlp.json"
             }
         ],
-        "colors": [{
-            "id": "keyword.region.nlp",
-            "description": "Color for NLP regions.",
-            "defaults": {
-                "dark": "foreground",
-                "light": "foreground",
-                "highContrast": "#010203"
+        "colors": [
+            {
+                "id": "keyword.region.nlp",
+                "description": "Color for NLP regions.",
+                "defaults": {
+                    "dark": "foreground",
+                    "light": "foreground",
+                    "highContrast": "#010203"
+                }
             }
         ],
         "commands": [
