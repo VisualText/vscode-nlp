@@ -9,17 +9,6 @@
     "categories": [
         "Programming Languages"
     ],
-    "activationEvents": [
-        "onCommand:nlp.analyze"
-    ],
-    "main": "./src/extension.js",
-    "devDependencies": {
-        "@types/node": "^13.11.0",
-        "typescript": "^3.8.3",
-        "vscode": "^1.1.36",
-        "vscode-debugadapter": "^1.40.0",
-        "vscode-debugprotocol": "^1.40.0"
-    },
     "contributes": {
         "languages": [
             {
@@ -34,6 +23,17 @@
                     ".pat"
                 ],
                 "configuration": "./nlp-configuration.json"
+            },
+            {
+                "id": "seq",
+                "extensions": [
+                    "seq"
+                ],
+                "aliases": [
+                    "SEQ",
+                    "seq"
+                ],
+                "configuration": "./seq.configuration.json"
             }
         ],
         "grammars": [
@@ -41,6 +41,11 @@
                 "language": "nlp",
                 "scopeName": "source.nlp",
                 "path": "./syntaxes/nlp.tmLanguage.json"
+            },
+            {
+                "language": "seq",
+                "scopeName": "source.seq",
+                "path": "./syntaxes/seq.tmLanguage.json"
             }
         ],
         "snippets": [
@@ -50,15 +55,13 @@
                 "path": "./snippets/nlp.json"
             }
         ],
-        "colors": [
-            {
-                "id": "keyword.region.nlp",
-                "description": "Color for NLP regions.",
-                "defaults": {
-                    "dark": "foreground",
-                    "light": "foreground",
-                    "highContrast": "#010203"
-                }
+        "colors": [{
+            "id": "keyword.region.nlp",
+            "description": "Color for NLP regions.",
+            "defaults": {
+                "dark": "foreground",
+                "light": "foreground",
+                "highContrast": "#010203"
             }
         ],
         "commands": [
@@ -67,9 +70,32 @@
                 "title": "NLP: Analyze Text",
                 "description": "Run the analyzer on text"
             }
-        ]
-    },
-    "dependencies": {
-        "file-system": "^2.2.2"
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "resourceLangId == seq",
+                    "command": "nlp.analyze",
+                    "group": "sequence"
+                },
+                {
+                    "when": "resourceExtname == .txt",
+                    "command": "nlp.analyze",
+                    "group": "sequence"
+                }
+            ],
+            "editor/context": [
+                {
+                    "when": "resourceExtname == .seq",
+                    "command": "nlp.analyze",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || NresourceExtname == .nlp",
+                    "command": "nlp.analyze",
+                    "group": "nlp"
+                }
+            ]
+        }
     }
 }
