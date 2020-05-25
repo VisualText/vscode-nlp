@@ -10,16 +10,12 @@
             "include": "#expression"
         },
         {
-            "name": "keyword.other.nlp",
-            "match": "\\b(?i:(fails|match|matches|lookahead|s))\\b"
-        },
-        {
             "name": "keyword.region.nlp",
-            "match": "@(CODE|DECL|NODES|PATH|POST|RULES|PRE)\\b"
+            "match": "(@(@)?)(CODE|DECL|NODES|PATH|POST|PRE|RULES)\\b"
         },
         {
             "name": "keyword.constants.nlp",
-            "match": "\\b_(ROOT|xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND|xCTRL)\\b"
+            "match": "\\b_ROOT\\b"
         },
         {
             "name": "keyword.other.nlp",
@@ -30,16 +26,15 @@
             "match": "\\b(?i:(and|not|or|in|>|<|<>|/|\\|+|-|=))\\b"
         },
         {
-            "name": "entity.name.function.nlp",
-            "match": "([A-Za-z_]+)\\s*(\\()",
+            "match": "([A-Za-z_]+)\\s*\\(",
             "captures": {
                 "1": {
                     "patterns": [
                         {
-                            "include": "#functions"
+                            "include": "#functions-node"
                         },
                         {
-                            "include": "#functions2"
+                            "include": "#functions"
                         }
                     ]
                 }
@@ -47,11 +42,11 @@
         }
     ],
     "repository": {
-        "functions": {
+        "functions-node": {
             "name": "entity.name.function.nlp",
-            "match": "\\b(N|S|X)\\b"
+            "match": "\\b(G|N|S|X)\\b"
         },
-        "functions2": {
+        "functions": {
             "name": "entity.name.function.nlp",
             "match": "\\b(?i:(addarg|addattr|addcnode|addconcept|addconval|addnode|addnumval|addstmt|addstrs|addstrval|addsval|addword|arraylength|attrchange|attrexists|attrname|attrvals|attrwithval|batchstart|cap|cbuf|closefile|conceptname|conceptpath|conval|cout|coutreset|dballocstmt|dbbindcol|dbclose|dbexec|dbexecstmt|dbfetch|dbfreestmt|dbopen|deaccent|debug|dictfindword|dictfirst|dictgetword|dictnext|down|else|eltnode|excise|exitpass|exittopopup|factorial|fail|fileout|findana|findattr|findattrs|findconcept|findhierconcept|findnode|findphrase|findroot|findvals|findwordpath|firstnode|flt|fltval|fncallstart|fprintgvar|fprintnvar|fprintxvar|fprintvar|gdump|getconcept|getconval|getnumval|getpopupdata|getstrval|getsval|ginc|gp|group|gtolower|guniq|hitconf|if|inc|inheritval|inputrange|inputrangetofile|interactive|kbdumptree|lasteltnode|lastnode|length|lengthr|levenshtein|lextagger|listadd|listnode|LJ|lj|logten|lookup|lowercase|makeconcept|makeparentconcept|makephrase|makestmt|merge|merger|mkdir|movecleft|movecright|movesem|ndump|next|nextattr|nextval|ninc|nodeconcept|nodeowner|noop|num|numrange|numval|openfile|or|pathconcept|percentstr|permuten|phraselength|phraseraw|phrasetext|pncopyvars|pndown|pninsert|pnmakevar|pnname|pnnext|pnprev|pnreplaceval|pnroot|pnsingletdown|pnup|pnvar|pnvarnames|pranchor|prchild|preaction|printvar|pndeletechilds|pnrename|prev|print|printr|prlit|prrange|prtree|prunephrases|prxtree|regexp|regexpi|renameattr|renamechild|renameconcept|renamenode|replaceval|resolveurl|return|returnstmt|rfaaction|rfaactions|rfaarg|rfaargtolist|rfacode|rfaelement|rfaelt|rfaexpr|rfalist|rfalitelt|rfalittoaction|rfalittopair|rfaname|rfanodes|rfanonlit|rfanonlitelt|rfanum|rfaop|rfapair|rfapairs|rfapostunary|rfapres|rfarange|rfarecurse|rfarecurses|rfaregion|rfaregions|rfarule|rfarulelts|rfarulemark|rfarules|rfarulesfile|rfaselect|rfastr|rfasugg|rfaunary|rfavar|rfbarg|rfbdecl|rfbdecls|rightjustifynum|rmattr|rmattrs|rmattrval|rmchild|rmchildren|rmconcept|rmcphrase|rmnode|rmphrase|rmval|rmvals|rmword|sdump|setbase|setlookahead|setunsealed|single|singler|singlex|singlezap|sortconsbyattr|sortchilds|sorthier|sortphrase|sortvals|spellcandidates|spellcorrect|spellword|splice|split|sqlstr|startout|stem|stopout|str|strchar|strchr|strchrcount|strclean|strcontains|strcontainsnocase|strendswith|strequal|strequalnocase|strescape|strunescape|strgreaterthan|strisalpha|strisdigit|strislower|strisupper|strlength|strlessthan|strnotequal|strnotequalnocase|strpiece|strrchr|strspellcandidate|strspellcompare|strsubst|strtolower|strtotitle|strtoupper|strtrim|strval|strwrap|succeed|suffix|system|take|today|topdir|unknown|unpackdirs|up|uppercase|urlbase|urltofile|var|vareq|varfn|varfnarray|varinlist|varne|varstrs|varz|wninit|wnsensestoconcept|wnhypnymstoconcept|while|whilestmt|wordindex|wordpath|xaddlen|xaddnvar|xdump|xinc|xmlstr|xrename))\\b"
         },
@@ -59,7 +54,7 @@
             "name": "meta.expression.nlp",
             "patterns": [
                 {
-                    "include": "#rule"
+                    "include": "#rules-region"
                 },
                 {
                     "include": "#comment"
@@ -72,86 +67,57 @@
                 }
             ]
         },
-        "rule": {
-            "name": "meta.rule.nlp",
-            "match": "([_a-zA-Z])*\\s*(<-)(\\n\\s*([^@.]*))*@@",
-            "captures": {
-                "1": {
-                    "name": "region.rule.rewrite.nlp"
-                },
-                "2": {
-                    "name": "region.rule.rewrite.symbol.nlp"
-                },
-                "3": {
-                    "name": "region.rule.rewrite.pattern.nlp",
-                    "patterns": [
-                        {
-                            "include": "#rewrite-line"
-                        }
-                    ]
-                }
-            }
-        },
-        "rewrite-line": {
-            "name": "rewrite.nlp",
-            "match": "([\\_a-zA-Z])*\\s*(.*)$\\n?",
-            "captures": {
-                "1": {
-                    "name": "rewrite-line.token.nlp",
-                    "patterns": [
-                        {
-                            "include": "#rule-line-token"
-                        }
-                    ]                },
-                "2": {
-                    "name": "rewrite-line.specs.nlp",
-                    "patterns": [
-                        {
-                            "include": "#token-specs"
-                        }
-                    ]
-                }
-            }
-        },
-        "token-specs": {
-            "begin": "\\[",
+        "rules-region": {
+            "begin": "[_a-zA-Z]+\\s*(<-)",
             "beginCaptures": {
-                "0": {
-                    "name": "token.specs.brace.open.nlp"
+                "1": {
+                    "name": "meta.rule.rewrite.nlp"
+                },
+                "2": {
+                    "name": "keyword.operator.nlp"
                 }
             },
-            "end": "\\]",
+            "end": "@@",
             "endCaptures": {
                 "0": {
-                    "name": "token.specs.brace.close.nlp"
+                    "name": "keyword.region.nlp"
                 }
             },
-            "name": "token.specs.nlp",
             "patterns": [
                 {
-                    "name": "token.token.nlp",
-                    "match": "\\b(lookahead|s)\\b"
+                    "include": "#attributes"
                 },
                 {
-                    "include": "#token-function"
+                    "include": "#comment-line"
+                },
+                {
+                    "include": "#constant-nodes"
                 }
             ]
         },
-        "token-function": {
-            "name": "token.function.name.nlp",
+        "attributes": {
+            "begin": "\\[",
+            "end": "\\]",
             "patterns": [
                 {
-                    "name": "token.token",
-                    "match": "\\b(fails|match|matches|min|max)\\b"
+                    "include": "#constant-nodes"
                 },
                 {
-                    "include": "#rule-line-token"
+                    "include": "#attribute"
+                },
+                {
+                    "include": "#comment-line"
                 }
-            ]
+            ],
+            "name": "meta.rules.rule.attribute.nlp"
         },
-        "rule-line-token": {
-            "name": "comment.line.nlp",
-            "match": "([\\_a-zA-Z])*"
+        "constant-nodes": {
+            "name": "keyword.constants.nlp",
+            "match": "\\b_(xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND|xCTRL)\\b"
+        },
+        "attribute": {
+            "name": "keyword.other.nlp",
+            "match": "\\b(?i:(fail|fails|group|match|matches|max|maximum|min|minimum|opt|optional|plus|s|single|star))\\b"
         },
         "comment": {
             "name": "comment.nlp",
@@ -168,21 +134,21 @@
             "match": "#.*$\\n?",
             "name": "comment.line.nlp"
         },
-		"comment-block": {
-			"begin": "/\\*",
-			"beginCaptures": {
-				"0": {
-					"name": "comment.block.begin.nlp"
-				}
-			},
-			"end": "\\*/",
-			"endCaptures": {
-				"0": {
-					"name": "comment.block.end.nlp"
-				}
-			},
-			"name": "comment.block.nlp"
-		},
+        "comment-block": {
+            "begin": "/\\*",
+            "beginCaptures": {
+                "0": {
+                    "name": "comment.block.begin.nlp"
+                }
+            },
+            "end": "\\*/",
+            "endCaptures": {
+                "0": {
+                    "name": "comment.block.end.nlp"
+                }
+            },
+            "name": "comment.block.nlp"
+        },
         "string": {
             "name": "string.nlp",
             "patterns": [
