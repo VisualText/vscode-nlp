@@ -60,6 +60,9 @@
                     "include": "#comment"
                 },
                 {
+                    "include": "#rewrite"
+                },
+                {
                     "include": "#string"
                 },
                 {
@@ -85,6 +88,9 @@
             },
             "patterns": [
                 {
+                    "include": "#rewrites"
+                },
+                {
                     "include": "#attributes"
                 },
                 {
@@ -103,6 +109,9 @@
                     "include": "#constant-nodes"
                 },
                 {
+                    "include": "#rewrites"
+                },
+                {
                     "include": "#attribute"
                 },
                 {
@@ -118,6 +127,10 @@
         "attribute": {
             "name": "keyword.other.nlp",
             "match": "\\b(?i:(fail|fails|group|match|matches|max|maximum|min|minimum|opt|optional|plus|s|single|star))\\b"
+        },
+        "rewrites": {
+            "name": "variable.parameter.nlp",
+            "match": "\\b_[a-zA-Z]+\\b"
         },
         "comment": {
             "name": "comment.nlp",
