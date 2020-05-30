@@ -1,0 +1,33 @@
+  
+{
+	"iconDefinitions": {
+		"_file_dark": {
+			"iconPath": "./images/pat-dark.svg"
+		},
+		"_file_light": {
+			"iconPath": "./images/pat-light.svg"
+		}
+	},
+
+	"file": "_file_dark",
+	"fileExtensions": {
+        "pat": "_pat_file",
+        "nlp": "_pat_file"
+	},
+	"languageIds": {
+        "nlp": "_pat_file"
+	},
+	"light": {
+		"file": "_file_light",
+		"fileExtensions": {
+            "pat": "_pat_file_light",
+            "nlp": "_pat_file_light"
+        },
+		"languageIds": {
+			"nlp": "_pat_file_light"
+		}
+	},
+	"highContrast": {
+		// overrides for high contrast
+	}
+}
