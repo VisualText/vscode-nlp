@@ -3,16 +3,46 @@
     "displayName": "NLP",
     "description": "NLP++",
     "version": "0.0.1",
+    "enableProposedApi": true,
     "engines": {
-        "vscode": "^1.30.0"
+        "vscode": "^1.45.0"
     },
     "categories": [
         "Programming Languages"
     ],
+    "activationEvents": [
+        "onLanguage:nlp",
+        "onView:analyzerSequence"
     ],
     "main": "./out/extension.js",
     "contributes": {
-                }
+        "views": {
+            "explorer": [
+                {
+                    "id": "analyzerSequence",
+                    "name": "Analyzer Sequence"
+                },
+				{
+					"id": "analyzerSequence",
+					"name": "Analyzer Sequence"
+				}
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+              {
+                "id": "package-explorer",
+                "title": "Package Explorer",
+                "icon": "media/dep.svg"
+              }
+            ]
+        },
+        "iconThemes": [
+            {
+              "id": "rules",
+              "label": "Rule Files",
+              "path": "./fileicons/vs_nlp-icon-theme.json"
+            }
         ],
         "languages": [
             {
@@ -75,7 +105,43 @@
                 "command": "nlp.analyze",
                 "title": "NLP: Analyze Text",
                 "description": "Run the analyzer on text"
-            }
+            },
+            {
+                "command": "analyzerSequence.reveal",
+                "title": "Analyzer Sequence: Reveal"
+            },
+            {
+                "command": "analyzerSequence.changeTitle",
+                "title": "Analyzer Sequence: Change Title"
+            },
+			{
+				"command": "analyzerSequence.refreshFile",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+            },
+            {
+				"command": "analyzerSequence.moveUp",
+				"title": "Move Up",
+				"icon": {
+					"light": "resources/light/up.svg",
+					"dark": "resources/dark/up.svg"
+				}
+            },
+            {
+				"command": "analyzerSequence.moveDown",
+				"title": "Move Down",
+				"icon": {
+					"light": "resources/light/down.svg",
+					"dark": "resources/dark/down.svg"
+				}
+			},
+			{
+				"command": "analyzerSequence.openFile",
+				"title": "Open File"
+			}
         ],
         "menus": {
             "explorer/context": [
@@ -101,7 +167,49 @@
                     "command": "nlp.analyze",
                     "group": "nlp"
                 }
+            ],
+			"view/item/context": [
+				{
+					"command": "analyzerSequence.refreshFile",
+					"when": "view == analyzerSequence && viewItem == file",
+					"group": "inline"
+                },
+                {
+					"command": "analyzerSequence.moveUp",
+					"when": "view == analyzerSequence && viewItem == file",
+					"group": "inline"
+                },
+                {
+					"command": "analyzerSequence.moveDown",
+					"when": "view == analyzerSequence && viewItem == file",
+					"group": "inline"
+                }
             ]
         }
+    },
+    "dependencies": {
+        "@types/mkdirp": "^1.0.0",
+        "@types/rimraf": "^3.0.0",
+        "rimraf": "^3.0.2",
+        "tslib": "^2.0.0",
+        "vscode": "^1.1.37"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.1",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^12.12.42",
+        "@types/vscode": "^1.45.0",
+        "glob": "^7.1.5",
+        "mocha": "^6.2.2",
+        "tslint": "^5.20.0",
+        "typescript": "^3.6.4",
+        "vscode-test": "^1.2.2"
     }
 }
