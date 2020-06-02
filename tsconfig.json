@@ -4,7 +4,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "target": "es6",
-        "outDir": "lib-cjs",
+        "outDir": "out",
         "sourceMap": true,
         "strict": true,
         "noImplicitAny": false,

@@ -9,7 +9,11 @@
     "categories": [
         "Programming Languages"
     ],
+    ],
+    "main": "./out/extension.js",
     "contributes": {
+                }
+        ],
         "languages": [
             {
                 "id": "nlp",
