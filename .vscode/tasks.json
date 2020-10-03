@@ -32,6 +32,22 @@
         },
         {
             "label": "Run Analyzer Debug",
+            "dependsOn": ["Copy Text","Run Debug"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Copy Text",
+            "command": "cp",
+            "args": [
+                "${relativeFile}",
+                "${workspaceFolder}\\output\\input.txt",
+            ]
+        },
+        {
+            "label": "Run Debug",
             "command": "nlp",
             "args": [
                 "/ANAPATH",
@@ -41,10 +57,6 @@
             ],
             "options": {
                 "cwd": "C:\\git\\nlp\\vtcore-vs\\nlp\\Unicode_Release\\"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
             }
         }
 	]

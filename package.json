@@ -22,26 +22,26 @@
                     "id": "analyzerSequence",
                     "name": "Analyzer Sequence"
                 },
-				{
-					"id": "analyzerSequence",
-					"name": "Analyzer Sequence"
-				}
+                {
+                    "id": "analyzerSequence",
+                    "name": "Analyzer Sequence"
+                }
             ]
         },
         "viewsContainers": {
             "activitybar": [
-              {
-                "id": "package-explorer",
-                "title": "Package Explorer",
-                "icon": "media/dep.svg"
-              }
+                {
+                    "id": "package-explorer",
+                    "title": "Package Explorer",
+                    "icon": "media/dep.svg"
+                }
             ]
         },
         "iconThemes": [
             {
-              "id": "rules",
-              "label": "Rule Files",
-              "path": "./fileicons/vs_nlp-icon-theme.json"
+                "id": "rules",
+                "label": "Rule Files",
+                "path": "./fileicons/vs_nlp-icon-theme.json"
             }
         ],
         "languages": [
@@ -68,6 +68,17 @@
                     "seq"
                 ],
                 "configuration": "./seq.configuration.json"
+            },
+            {
+                "id": "txxt",
+                "extensions": [
+                    "txxt"
+                ],
+                "aliases": [
+                    "TXXT",
+                    "txxt"
+                ],
+                "configuration": "./txxt.configuration.json"
             }
         ],
         "grammars": [
@@ -80,6 +91,11 @@
                 "language": "seq",
                 "scopeName": "source.seq",
                 "path": "./syntaxes/seq.tmLanguage.json"
+            },
+            {
+                "language": "txxt",
+                "scopeName": "source.txxt",
+                "path": "./syntaxes/txxt.tmLanguage.json"
             }
         ],
         "snippets": [
@@ -114,34 +130,34 @@
                 "command": "analyzerSequence.changeTitle",
                 "title": "Analyzer Sequence: Change Title"
             },
-			{
-				"command": "analyzerSequence.refreshFile",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+            {
+                "command": "analyzerSequence.refreshFile",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             },
             {
-				"command": "analyzerSequence.moveUp",
-				"title": "Move Up",
-				"icon": {
-					"light": "resources/light/up.svg",
-					"dark": "resources/dark/up.svg"
-				}
+                "command": "analyzerSequence.moveUp",
+                "title": "Move Up",
+                "icon": {
+                    "light": "resources/light/up.svg",
+                    "dark": "resources/dark/up.svg"
+                }
             },
             {
-				"command": "analyzerSequence.moveDown",
-				"title": "Move Down",
-				"icon": {
-					"light": "resources/light/down.svg",
-					"dark": "resources/dark/down.svg"
-				}
-			},
-			{
-				"command": "analyzerSequence.openFile",
-				"title": "Open File"
-			}
+                "command": "analyzerSequence.moveDown",
+                "title": "Move Down",
+                "icon": {
+                    "light": "resources/light/down.svg",
+                    "dark": "resources/dark/down.svg"
+                }
+            },
+            {
+                "command": "analyzerSequence.openFile",
+                "title": "Open File"
+            }
         ],
         "menus": {
             "explorer/context": [
@@ -168,21 +184,21 @@
                     "group": "nlp"
                 }
             ],
-			"view/item/context": [
-				{
-					"command": "analyzerSequence.refreshFile",
-					"when": "view == analyzerSequence && viewItem == file",
-					"group": "inline"
+            "view/item/context": [
+                {
+                    "command": "analyzerSequence.refreshFile",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "inline"
                 },
                 {
-					"command": "analyzerSequence.moveUp",
-					"when": "view == analyzerSequence && viewItem == file",
-					"group": "inline"
+                    "command": "analyzerSequence.moveUp",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "inline"
                 },
                 {
-					"command": "analyzerSequence.moveDown",
-					"when": "view == analyzerSequence && viewItem == file",
-					"group": "inline"
+                    "command": "analyzerSequence.moveDown",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "inline"
                 }
             ]
         }
@@ -190,6 +206,7 @@
     "dependencies": {
         "@types/mkdirp": "^1.0.0",
         "@types/rimraf": "^3.0.0",
+        "readline": "^1.3.0",
         "rimraf": "^3.0.2",
         "tslib": "^2.0.0",
         "vscode": "^1.1.37"
