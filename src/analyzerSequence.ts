@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as mkdirp from 'mkdirp';
 import * as rimraf from 'rimraf';
+import * as readline from 'readline';
 
 //#region Utilities
 
@@ -313,13 +314,119 @@ export class AnalyzerSequence {
 
 	private analyzerSequence: vscode.TreeView<Entry>;
 
+	workspacefolder: vscode.WorkspaceFolder | undefined;
+	outfolder = '';
+	firedFroms = new Array();
+	firedTos = new Array();
+
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
 		vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
 	}
 
+	private writeFiredText(logfile: vscode.Uri): vscode.Uri {
+		var filename = path.basename(logfile.path,'.log');
+		var firefile = path.join(this.outfolder,filename+'.txxt');
+		var inputfile = path.join(this.outfolder,'input.txt');
+
+		var text = fs.readFileSync(inputfile, 'utf8');
+		const regReplace = new RegExp('\r\n', 'g');
+		text = text.replace(regReplace, '\r');
+
+		var textfire = '';
+		var lastTo = 0;
+		var between = '';
+		var highlight = '';
+		var from = 0;
+		var to = 0;
+
+		if (this.firedFroms.length) {
+			for (var i = 0; i < this.firedFroms.length; i++) {
+				from = this.firedFroms[i];
+				to = this.firedTos[i];
+				between = text.substring(lastTo,from);
+				highlight = text.substring(from,to+1);
+				textfire = textfire.concat(between,'[[',highlight,']]');
+				lastTo = to + 1;
+			}
+			textfire = textfire.concat(text.substring(lastTo,text.length));
+		} else {
+			textfire = text;
+		}
+
+		fs.writeFileSync(firefile,textfire);
+
+		this.firedFroms = [];
+		this.firedTos = [];
+
+		const regBack = new RegExp('\r', 'g');
+		text = text.replace(regBack, '\r\n');
+		return vscode.Uri.file(firefile);
+	}
+
+	private findLogfile(resource: vscode.Uri): vscode.Uri {
+		var logfile = vscode.Uri.file('');
+		var firefile = vscode.Uri.file('');
+		const filenames = fs.readdirSync(this.outfolder, 'utf8');
+		const restoks = path.basename(resource.path).split('.');
+		const baser = restoks[0];
+
+		var arrayLength = filenames.length;
+		var re = new RegExp('\\w+', 'g');
+		var refire = new RegExp('[\[,\]', 'g');
+
+		for (var i = 0; i < arrayLength; i++) {
+			var filename = filenames[i];
+			if (filename.endsWith('.log')) {
+				var lines = fs.readFileSync(path.join(this.outfolder,filename), 'utf8').split('\n');
+				var l = 0;
+				var found = false;
+				var from = 0;
+				var to = 0;
+
+				for (let line of lines) {
+					if (found) {
+						var tokens = line.split(',fired');
+						if (tokens.length > 1) {
+							var tts = line.split(refire);
+							if (+tts[2] > to) {
+								from = +tts[1];
+								to = +tts[2];
+								this.firedFroms.push(from);
+								this.firedTos.push(to);								
+							}
+						}
+					}
+					else if (l++ == 2) {
+						var toks = line.match(re);
+						if (toks) {
+							var base = path.basename(resource.path);
+							if (baser.localeCompare(toks[2]) == 0) {
+								logfile = vscode.Uri.file(path.join(this.outfolder,filename));
+								found = true;
+							}	
+						} else {
+							return vscode.Uri.file(path.join(this.outfolder,'final.log'));
+						}
+					}
+				}
+				if (found) {
+					return this.writeFiredText(logfile);
+				}
+			}
+		}
+
+		return logfile;	
+	}
+
 	private openResource(resource: vscode.Uri): void {
-		vscode.window.showTextDocument(resource);
+		this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
+		if (this.workspacefolder) {
+			this.outfolder = path.join(this.workspacefolder.uri.path as string,'output\\');
+			this.outfolder = path.join('C:',this.outfolder.substr(3));
+			var firefile = this.findLogfile(resource);
+			vscode.window.showTextDocument(firefile);
+		}
 	}
 }

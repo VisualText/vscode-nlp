@@ -1,0 +1,22 @@
+{
+    "scopeName": "source.txxt",
+    "fileTypes": [
+        "txxt"
+    ],
+    "name": "TXXT",
+    "patterns": [{ "include": "#paren-expression" }],
+
+    "repository": {
+        "paren-expression": {
+            "begin": "\\[\\[",
+            "end": "\\]\\]",
+            "beginCaptures": {
+                "0": { "name": "variable.parameter.txxt" }
+            },
+            "endCaptures": {
+                "0": { "name": "variable.parameter.txxt" }
+            },
+            "name": "keyword.other.txxt"
+        }
+    }
+}
