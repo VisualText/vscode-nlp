@@ -2,32 +2,71 @@
 {
 	"iconDefinitions": {
 		"_file_dark": {
-			"iconPath": "./images/pat-dark.svg"
+			"iconPath": "./images/dark/file.svg"
 		},
 		"_file_light": {
-			"iconPath": "./images/pat-light.svg"
+			"iconPath": "./images/light/file.svg"
+		},
+		"_nlp_dark": {
+			"iconPath": "./images/dark/gear.svg"
+		},
+		"_nlp_light": {
+			"iconPath": "./images/light/gear.svg"
+		},
+		"_kb_dark": {
+			"iconPath": "./images/dark/library.svg"
+		},
+		"_kb_light": {
+			"iconPath": "./images/light/library.svg"
+		},
+		"_seq_dark": {
+			"iconPath": "./images/dark/list-tree.svg"
+		},
+		"_seq_light": {
+			"iconPath": "./images/light/list-tree.svg"
+		},
+		"_log_dark": {
+			"iconPath": "./images/dark/symbol-property.svg"
+		},
+		"_log_light": {
+			"iconPath": "./images/light/symbol-property.svg"
+		},
+		"_markup_dark": {
+			"iconPath": "./images/dark/symbol-keyword.svg"
+		},
+		"_markup_light": {
+			"iconPath": "./images/light/symbol-keyword.svg"
+		},
+		"_code_dark": {
+			"iconPath": "./images/dark/file-code.svg"
+		},
+		"_code_light": {
+			"iconPath": "./images/light/file-code.svg"
 		}
 	},
 
 	"file": "_file_dark",
 	"fileExtensions": {
-        "pat": "_pat_file",
-        "nlp": "_pat_file"
-	},
-	"languageIds": {
-        "nlp": "_pat_file"
+        "pat": "_nlp_dark",
+		"nlp": "_nlp_dark",
+		"kb": "_kb_dark",
+		"seq": "_seq_dark",
+		"log": "_log_dark",
+		"txxt": "_markup_dark",
+		"cpp": "_code_dark",
+		"h": "_code_dark"
 	},
 	"light": {
 		"file": "_file_light",
 		"fileExtensions": {
-            "pat": "_pat_file_light",
-            "nlp": "_pat_file_light"
-        },
-		"languageIds": {
-			"nlp": "_pat_file_light"
-		}
-	},
-	"highContrast": {
-		// overrides for high contrast
+			"pat": "_nlp_light",
+			"nlp": "_nlp_light",
+			"kb": "_kb_light",
+			"seq": "_seq_light",
+			"log": "_log_light",
+			"txxt": "_markup_light",
+			"cpp": "_code_light",
+			"h": "_code_light"
+        }
 	}
 }

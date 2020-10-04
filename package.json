@@ -39,8 +39,8 @@
         },
         "iconThemes": [
             {
-                "id": "rules",
-                "label": "Rule Files",
+                "id": "nlp",
+                "label": "NLP Files",
                 "path": "./fileicons/vs_nlp-icon-theme.json"
             }
         ],
