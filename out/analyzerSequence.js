@@ -367,8 +367,7 @@ class AnalyzerSequence {
     openResource(resource) {
         this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
         if (this.workspacefolder) {
-            this.outfolder = path.join(this.workspacefolder.uri.path, 'output\\');
-            this.outfolder = path.join('C:', this.outfolder.substr(3));
+            this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
             var firefile = this.findLogfile(resource);
             vscode.window.showTextDocument(firefile);
         }
