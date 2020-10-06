@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import * as readline from 'readline';
+import { Z_FIXED } from 'zlib';
 
 //#region Utilities
 
@@ -328,14 +329,9 @@ export class AnalyzerSequence {
 	}
 
 	private fileCreateTime(filepath: string): Date {
-		fs.stat(filepath, (error, stats) => { 
-			if (error) { 
-			  console.log(error); 
-			} 
-			else {
-				return stats.ctime;
-			} 
-		});
+		var stats = fs.statSync(filepath);
+		if (stats)
+			return stats.ctime;
 		return new Date(1970, 1, 1);
 	}
 
@@ -346,11 +342,13 @@ export class AnalyzerSequence {
 	}
 
 	private writeFiredText(logfile: vscode.Uri): vscode.Uri {
-		var filename = path.basename(logfile.path,'.log');
-		var firefile = path.join(this.outfolder,filename+'.txxt');
-		var inputfile = path.join(this.outfolder,'input.txt');
+		this.fileGroup(logfile);
+		var logDate: Date = this.fileCreateTime(logfile.path);
+		var inputDate: Date = this.fileCreateTime(this.inputFile);
+		if (inputDate < logDate && fs.existsSync(this.highlightFile))
+			return vscode.Uri.file(this.highlightFile);
 
-		var text = fs.readFileSync(inputfile, 'utf8');
+		var text = fs.readFileSync(this.inputFile, 'utf8');
 		const regReplace = new RegExp('\r\n', 'g');
 		text = text.replace(regReplace, '\r');
 
@@ -375,20 +373,21 @@ export class AnalyzerSequence {
 			textfire = text;
 		}
 
-		fs.writeFileSync(firefile,textfire);
+		fs.writeFileSync(this.highlightFile,textfire);
 
 		this.firedFroms = [];
 		this.firedTos = [];
 
 		const regBack = new RegExp('\r', 'g');
 		text = text.replace(regBack, '\r\n');
-		return vscode.Uri.file(firefile);
+		return vscode.Uri.file(this.highlightFile);
 	}
 
 	private findLogfile(resource: vscode.Uri): vscode.Uri {
 		var logfile = vscode.Uri.file('');
 		var firefile = vscode.Uri.file('');
-		const filenames = fs.readdirSync(this.outfolder, 'utf8');
+
+		const filenames = fs.readdirSync(this.outfolder);
 		const restoks = path.basename(resource.path).split('.');
 		const baser = restoks[0];
 
@@ -421,7 +420,7 @@ export class AnalyzerSequence {
 					else if (l++ == 2) {
 						var toks = line.match(re);
 						if (toks) {
-							var base = path.basename(resource.path);
+							var base = path.basename(resource.path,'.pat');
 							if (baser.localeCompare(toks[2]) == 0) {
 								logfile = vscode.Uri.file(path.join(this.outfolder,filename));
 								found = true;
@@ -432,24 +431,22 @@ export class AnalyzerSequence {
 					}
 				}
 				if (found) {
-					this.fileGroup(logfile);
-					var logDate: Date = this.fileCreateTime(logfile.path);
-					var inputDate: Date = this.fileCreateTime(this.inputFile);
-					if (inputDate < logDate)
-						return this.writeFiredText(logfile);
+					return this.writeFiredText(logfile);
 				}
 			}
 		}
 
-		return logfile;	
+		return logfile;
 	}
 
 	private openResource(resource: vscode.Uri): void {
 		this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
 		if (this.workspacefolder) {
 			this.outfolder = path.join(this.workspacefolder.uri.fsPath,'output');
-			var firefile = this.findLogfile(resource);
-			vscode.window.showTextDocument(firefile);
+			if (fs.existsSync(this.outfolder)) {
+				const firefile = this.findLogfile(resource);
+				vscode.window.showTextDocument(firefile);
+			}
 		}
 	}
 }

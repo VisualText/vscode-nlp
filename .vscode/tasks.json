@@ -16,14 +16,19 @@
 		},
         {
             "label": "Run Analyzer",
-            "command": "nlp",
+            "linux": {
+                "command": "nlp.exe"
+            },
+            "windows": {
+                "command": "nlp"
+            },
             "args": [
-                "/ANAPATH",
-                "C:\\git\\nlp\\analyzers\\corporate",
+                "-ANA",
+                "corporate",
                 "${relativeFile}"
             ],
             "options": {
-                "cwd": "C:\\git\\nlp\\vtcore-vs\\nlp\\Unicode_Release\\"
+                "cwd": "/home/dehilster/nlp-engine/"
             },
             "group": {
                 "kind": "build",
@@ -48,15 +53,20 @@
         },
         {
             "label": "Run Debug",
-            "command": "nlp",
+            "linux": {
+                "command": "nlp.exe"
+            },
+            "windows": {
+                "command": "nlp"
+            },
             "args": [
-                "/ANAPATH",
-                "C:\\git\\nlp\\analyzers\\corporate",
+                "-ANA",
+                "corporate",
                 "${relativeFile}",
-                "/DEV"
+                "-DEV"
             ],
             "options": {
-                "cwd": "C:\\git\\nlp\\vtcore-vs\\nlp\\Unicode_Release\\"
+                "cwd": "/home/dehilster/nlp-engine/"
             }
         }
 	]
