@@ -234,7 +234,7 @@ class FileSystemProvider {
             }
             const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
             if (workspaceFolder) {
-                const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, "\\spec"));
+                const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, "spec"));
                 const children = yield this.readDirectory(specUri);
                 children.sort((a, b) => {
                     if (a[1] === b[1]) {
@@ -245,7 +245,7 @@ class FileSystemProvider {
                 const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specUri.fsPath, name)), type }));
                 const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith(".pat") || item.uri.fsPath.endsWith(".nlp"));
                 const orderedArray = new Array();
-                var lines = fs.readFileSync(path.join(specUri.fsPath, "\\analyzer.seq"), 'utf8').split('\n');
+                var lines = fs.readFileSync(path.join(specUri.fsPath, "analyzer.seq"), 'utf8').split('\n');
                 for (let line of lines) {
                     const tokens = line.split("\t");
                     const file = tokens[1] + ".pat";
@@ -272,12 +272,31 @@ class FileSystemProvider {
 exports.FileSystemProvider = FileSystemProvider;
 class AnalyzerSequence {
     constructor(context) {
+        this.basename = '';
         this.outfolder = '';
+        this.inputFile = '';
+        this.highlightFile = '';
         this.firedFroms = new Array();
         this.firedTos = new Array();
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
         vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
+    }
+    fileCreateTime(filepath) {
+        fs.stat(filepath, (error, stats) => {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                return stats.ctime;
+            }
+        });
+        return new Date(1970, 1, 1);
+    }
+    fileGroup(logfile) {
+        this.basename = path.basename(logfile.path, '.log');
+        this.highlightFile = path.join(this.outfolder, this.basename + '.txxt');
+        this.inputFile = path.join(this.outfolder, 'input.txt');
     }
     writeFiredText(logfile) {
         var filename = path.basename(logfile.path, '.log');
@@ -358,7 +377,11 @@ class AnalyzerSequence {
                     }
                 }
                 if (found) {
-                    return this.writeFiredText(logfile);
+                    this.fileGroup(logfile);
+                    var logDate = this.fileCreateTime(logfile.path);
+                    var inputDate = this.fileCreateTime(this.inputFile);
+                    if (inputDate < logDate)
+                        return this.writeFiredText(logfile);
                 }
             }
         }
