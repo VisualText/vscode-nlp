@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AnalyzerSequence = exports.FileSystemProvider = exports.FileStat = void 0;
+exports.AnalyzerSequence = exports.FileSystemProvider = exports.SequenceLine = exports.FileStat = void 0;
 const tslib_1 = require("tslib");
 const vscode = require("vscode");
 const path = require("path");
@@ -130,6 +130,64 @@ class FileStat {
     }
 }
 exports.FileStat = FileStat;
+var moveDirection;
+(function (moveDirection) {
+    moveDirection[moveDirection["Up"] = 0] = "Up";
+    moveDirection[moveDirection["Down"] = 1] = "Down";
+})(moveDirection || (moveDirection = {}));
+class SequenceLine {
+    constructor(line = '') {
+        this.line = '';
+        this.type = '';
+        this.tokens = new Array();
+        this.Set(line);
+    }
+    Set(line) {
+        this.line = line;
+        if (line.length)
+            this.tokens = line.split(/[\t\s]/);
+        else
+            this.tokens = [];
+    }
+    CleanLine(line) {
+        var cleanstr = '';
+        for (var i = 0; i < this.tokens.length; i++) {
+            if (i == 0)
+                cleanstr = this.tokens[i];
+            else if (i < 3)
+                cleanstr = cleanstr.concat('\t', this.tokens[i]);
+            else
+                cleanstr = cleanstr.concat(' ', this.tokens[i]);
+        }
+        return cleanstr;
+    }
+    IsValid() {
+        if (this.tokens.length) {
+            if (this.tokens.length >= 2 && this.tokens[0].localeCompare('#'))
+                return true;
+        }
+        return false;
+    }
+    IsRuleFile() {
+        if (this.tokens.length) {
+            if (this.tokens[0].localeCompare('pat') == 0 ||
+                this.tokens[0].localeCompare('rec') == 0 ||
+                this.tokens[0].localeCompare('nlp') == 0)
+                return true;
+        }
+        return false;
+    }
+    FileName() {
+        return this.tokens[1].concat('.pat');
+    }
+    GetType() {
+        return this.tokens[0];
+    }
+    GetName() {
+        return this.tokens[1];
+    }
+}
+exports.SequenceLine = SequenceLine;
 //#endregion
 class FileSystemProvider {
     constructor() {
@@ -237,30 +295,40 @@ class FileSystemProvider {
                 const children = yield this.readDirectory(element.uri);
                 return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
             }
-            const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
-            if (workspaceFolder) {
-                const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, 'spec'));
-                const children = yield this.readDirectory(specUri);
-                children.sort((a, b) => {
-                    if (a[1] === b[1]) {
-                        return a[0].localeCompare(b[0]);
+            if (vscode.workspace.workspaceFolders) {
+                const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+                if (workspaceFolder) {
+                    const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, 'spec'));
+                    const children = yield this.readDirectory(specUri);
+                    children.sort((a, b) => {
+                        if (a[1] === b[1]) {
+                            return a[0].localeCompare(b[0]);
+                        }
+                        return a[1] === vscode.FileType.Directory ? -1 : 1;
+                    });
+                    const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specUri.fsPath, name)), type }));
+                    const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
+                    const orderedArray = new Array();
+                    var lines = fs.readFileSync(path.join(specUri.fsPath, 'analyzer.seq'), 'utf8').split('\n');
+                    var seqLine = new SequenceLine();
+                    for (let line of lines) {
+                        seqLine.Set(line);
+                        if (seqLine.IsValid()) {
+                            if (seqLine.IsRuleFile()) {
+                                var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqLine.FileName()));
+                                if (found.length)
+                                    orderedArray.push(found[0].uri);
+                                else
+                                    orderedArray.push(vscode.Uri.file(seqLine.FileName()));
+                            }
+                            else {
+                                orderedArray.push(vscode.Uri.file(seqLine.GetType()));
+                            }
+                        }
                     }
-                    return a[1] === vscode.FileType.Directory ? -1 : 1;
-                });
-                const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specUri.fsPath, name)), type }));
-                const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
-                const orderedArray = new Array();
-                var lines = fs.readFileSync(path.join(specUri.fsPath, 'analyzer.seq'), 'utf8').split('\n');
-                for (let line of lines) {
-                    const tokens = line.split('\t');
-                    const file = tokens[1] + '.pat';
-                    const found = patsOnly.filter(item => item.uri.fsPath.endsWith(file));
-                    if (found.length) {
-                        orderedArray.push(found[0].uri);
-                    }
+                    const finalFiles = orderedArray.map(item => ({ uri: item, type: 1 }));
+                    return finalFiles;
                 }
-                const finalFiles = orderedArray.map(item => ({ uri: item, type: 1 }));
-                return finalFiles;
             }
             return [];
         });
@@ -273,13 +341,75 @@ class FileSystemProvider {
         }
         return treeItem;
     }
+    moveUp(resource) {
+        this.moveSequence(resource, moveDirection.Up);
+    }
+    moveDown(resource) {
+        this.moveSequence(resource, moveDirection.Down);
+    }
+    moveSequence(resource, direction) {
+        if (!fs.existsSync(resource.uri.path)) {
+            vscode.window.showWarningMessage('Cannot move a non-file');
+            return;
+        }
+        if (vscode.workspace.workspaceFolders) {
+            const workspacefolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+            if (workspacefolder) {
+                var newlines = new Array();
+                var cleanlines = new Array();
+                var basename = path.basename(resource.uri.path, '.pat');
+                var specfilename = path.join(workspacefolder.uri.fsPath, 'spec', 'analyzer.seq');
+                var analyzeFile = vscode.Uri.file(specfilename);
+                var lines = fs.readFileSync(analyzeFile.path, 'utf8').split('\n');
+                var seqLine = new SequenceLine();
+                for (let line of lines) {
+                    seqLine.Set(line);
+                    if (seqLine.IsValid()) {
+                        cleanlines.push(seqLine.CleanLine(line));
+                    }
+                }
+                var row = -1;
+                var r = 0;
+                for (let line of lines) {
+                    seqLine.Set(line);
+                    if (basename.localeCompare(seqLine.GetName()) == 0) {
+                        row = r;
+                        break;
+                    }
+                    r++;
+                }
+                // Build new file
+                if (row >= 0 && row + 1 < cleanlines.length) {
+                    for (var i = 0; i < cleanlines.length; i++) {
+                        if ((direction == moveDirection.Up && i + 1 == row) || (direction == moveDirection.Down && i == row)) {
+                            newlines.push(cleanlines[i + 1]);
+                            newlines.push(cleanlines[i]);
+                            i++;
+                        }
+                        else if (cleanlines[i].length)
+                            newlines.push(cleanlines[i]);
+                    }
+                    // Make file from lines
+                    var newcontent = '';
+                    for (var i = 0; i < newlines.length; i++) {
+                        if (i > 0)
+                            newcontent = newcontent.concat('\n');
+                        newcontent = newcontent.concat(newlines[i]);
+                    }
+                    fs.writeFileSync(specfilename, newcontent, { flag: 'w+' });
+                    this.refresh();
+                }
+                else if (row == -1) {
+                    vscode.window.showWarningMessage('Item cannot move up');
+                }
+                else {
+                    vscode.window.showWarningMessage('Item cannot move down');
+                }
+            }
+        }
+    }
 }
 exports.FileSystemProvider = FileSystemProvider;
-var moveDirection;
-(function (moveDirection) {
-    moveDirection[moveDirection["Up"] = 0] = "Up";
-    moveDirection[moveDirection["Down"] = 1] = "Down";
-})(moveDirection || (moveDirection = {}));
 class AnalyzerSequence {
     constructor(context) {
         this.basename = '';
@@ -291,17 +421,15 @@ class AnalyzerSequence {
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
         vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
-        vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => this.moveUp(resource));
-        vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => this.moveDown(resource));
+        vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => treeDataProvider.moveUp(resource));
+        vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => treeDataProvider.moveDown(resource));
         vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
     }
-    moveUp(resource) {
-        this.moveSequence(resource, moveDirection.Up);
-    }
-    moveDown(resource) {
-        this.moveSequence(resource, moveDirection.Down);
-    }
     openResource(resource) {
+        if (resource.path.localeCompare('/stub') == 0 || resource.path.localeCompare('/end') == 0 || resource.path.localeCompare('/tokenize') == 0) {
+            vscode.window.showWarningMessage('Not editable');
+            return;
+        }
         this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
         if (this.workspacefolder) {
             this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
@@ -309,43 +437,6 @@ class AnalyzerSequence {
                 const firefile = this.findLogfile(resource);
                 vscode.window.showTextDocument(firefile);
             }
-        }
-    }
-    moveSequence(resource, direction) {
-        var newlines = new Array();
-        var basename = path.basename(resource.uri.path, '.pat');
-        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource.uri);
-        if (this.workspacefolder) {
-            var specfilename = path.join(this.workspacefolder.uri.fsPath, 'spec', 'analyzer.seq');
-            var analyzeFile = vscode.Uri.file(specfilename);
-            var lines = fs.readFileSync(analyzeFile.path, 'utf8').split('\n');
-            var i = 0;
-            for (let line of lines) {
-                const tokens = line.split('\t');
-                if (basename.localeCompare(tokens[1]) == 0) {
-                    break;
-                }
-                i++;
-            }
-            // Build new file
-            for (var j = 0; j < lines.length; j++) {
-                if ((direction == moveDirection.Up && j + 1 == i) || (direction == moveDirection.Down && j == i)) {
-                    newlines.push(lines[j + 1]);
-                    newlines.push(lines[j]);
-                    j++;
-                }
-                else
-                    newlines.push(lines[j]);
-            }
-            // Make file from lines
-            var newcontent = '';
-            for (var i = 0; i < newlines.length; i++) {
-                if (i > 0)
-                    newcontent = newcontent.concat('\n');
-                newcontent = newcontent.concat(newlines[i]);
-            }
-            fs.writeFileSync(specfilename, newcontent, { flag: 'w+' });
-            // need to refresh here!
         }
     }
     fileCreateTime(filepath) {
