@@ -239,7 +239,7 @@ class FileSystemProvider {
             }
             const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
             if (workspaceFolder) {
-                const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, "spec"));
+                const specUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, 'spec'));
                 const children = yield this.readDirectory(specUri);
                 children.sort((a, b) => {
                     if (a[1] === b[1]) {
@@ -248,12 +248,12 @@ class FileSystemProvider {
                     return a[1] === vscode.FileType.Directory ? -1 : 1;
                 });
                 const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specUri.fsPath, name)), type }));
-                const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith(".pat") || item.uri.fsPath.endsWith(".nlp"));
+                const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
                 const orderedArray = new Array();
-                var lines = fs.readFileSync(path.join(specUri.fsPath, "analyzer.seq"), 'utf8').split('\n');
+                var lines = fs.readFileSync(path.join(specUri.fsPath, 'analyzer.seq'), 'utf8').split('\n');
                 for (let line of lines) {
-                    const tokens = line.split("\t");
-                    const file = tokens[1] + ".pat";
+                    const tokens = line.split('\t');
+                    const file = tokens[1] + '.pat';
                     const found = patsOnly.filter(item => item.uri.fsPath.endsWith(file));
                     if (found.length) {
                         orderedArray.push(found[0].uri);
@@ -268,13 +268,18 @@ class FileSystemProvider {
     getTreeItem(element) {
         const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
         if (element.type === vscode.FileType.File) {
-            treeItem.command = { command: 'analyzerSequence.openFile', title: "Open File", arguments: [element.uri], };
+            treeItem.command = { command: 'analyzerSequence.openFile', title: 'Open File', arguments: [element.uri], };
             treeItem.contextValue = 'file';
         }
         return treeItem;
     }
 }
 exports.FileSystemProvider = FileSystemProvider;
+var moveDirection;
+(function (moveDirection) {
+    moveDirection[moveDirection["Up"] = 0] = "Up";
+    moveDirection[moveDirection["Down"] = 1] = "Down";
+})(moveDirection || (moveDirection = {}));
 class AnalyzerSequence {
     constructor(context) {
         this.basename = '';
@@ -286,7 +291,62 @@ class AnalyzerSequence {
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
         vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
+        vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => this.moveUp(resource));
+        vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => this.moveDown(resource));
         vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
+    }
+    moveUp(resource) {
+        this.moveSequence(resource, moveDirection.Up);
+    }
+    moveDown(resource) {
+        this.moveSequence(resource, moveDirection.Down);
+    }
+    openResource(resource) {
+        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
+        if (this.workspacefolder) {
+            this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
+            if (fs.existsSync(this.outfolder)) {
+                const firefile = this.findLogfile(resource);
+                vscode.window.showTextDocument(firefile);
+            }
+        }
+    }
+    moveSequence(resource, direction) {
+        var newlines = new Array();
+        var basename = path.basename(resource.uri.path, '.pat');
+        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource.uri);
+        if (this.workspacefolder) {
+            var specfilename = path.join(this.workspacefolder.uri.fsPath, 'spec', 'analyzer.seq');
+            var analyzeFile = vscode.Uri.file(specfilename);
+            var lines = fs.readFileSync(analyzeFile.path, 'utf8').split('\n');
+            var i = 0;
+            for (let line of lines) {
+                const tokens = line.split('\t');
+                if (basename.localeCompare(tokens[1]) == 0) {
+                    break;
+                }
+                i++;
+            }
+            // Build new file
+            for (var j = 0; j < lines.length; j++) {
+                if ((direction == moveDirection.Up && j + 1 == i) || (direction == moveDirection.Down && j == i)) {
+                    newlines.push(lines[j + 1]);
+                    newlines.push(lines[j]);
+                    j++;
+                }
+                else
+                    newlines.push(lines[j]);
+            }
+            // Make file from lines
+            var newcontent = '';
+            for (var i = 0; i < newlines.length; i++) {
+                if (i > 0)
+                    newcontent = newcontent.concat('\n');
+                newcontent = newcontent.concat(newlines[i]);
+            }
+            fs.writeFileSync(specfilename, newcontent, { flag: 'w+' });
+            // need to refresh here!
+        }
     }
     fileCreateTime(filepath) {
         if (fs.existsSync(filepath)) {
@@ -390,16 +450,6 @@ class AnalyzerSequence {
             }
         }
         return logfile;
-    }
-    openResource(resource) {
-        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
-        if (this.workspacefolder) {
-            this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
-            if (fs.existsSync(this.outfolder)) {
-                const firefile = this.findLogfile(resource);
-                vscode.window.showTextDocument(firefile);
-            }
-        }
     }
 }
 exports.AnalyzerSequence = AnalyzerSequence;
