@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import * as readline from 'readline';
-import { Z_FIXED } from 'zlib';
 
 //#region Utilities
 
@@ -329,9 +328,11 @@ export class AnalyzerSequence {
 	}
 
 	private fileCreateTime(filepath: string): Date {
-		var stats = fs.statSync(filepath);
-		if (stats)
-			return stats.ctime;
+		if (fs.existsSync(filepath)) {
+			var stats = fs.statSync(filepath);
+			if (stats)
+				return stats.ctime;
+		}
 		return new Date(1970, 1, 1);
 	}
 
@@ -347,6 +348,8 @@ export class AnalyzerSequence {
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
 		if (inputDate < logDate && fs.existsSync(this.highlightFile))
 			return vscode.Uri.file(this.highlightFile);
+		else if (!fs.existsSync(this.inputFile))
+			return logfile;
 
 		var text = fs.readFileSync(this.inputFile, 'utf8');
 		const regReplace = new RegExp('\r\n', 'g');
@@ -367,13 +370,15 @@ export class AnalyzerSequence {
 				highlight = text.substring(from,to+1);
 				textfire = textfire.concat(between,'[[',highlight,']]');
 				lastTo = to + 1;
+				
+				between = '';
 			}
 			textfire = textfire.concat(text.substring(lastTo,text.length));
 		} else {
 			textfire = text;
 		}
 
-		fs.writeFileSync(this.highlightFile,textfire);
+		fs.writeFileSync(this.highlightFile,textfire,{flag:'w+'});
 
 		this.firedFroms = [];
 		this.firedTos = [];

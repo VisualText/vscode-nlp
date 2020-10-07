@@ -283,9 +283,11 @@ class AnalyzerSequence {
         vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
     }
     fileCreateTime(filepath) {
-        var stats = fs.statSync(filepath);
-        if (stats)
-            return stats.ctime;
+        if (fs.existsSync(filepath)) {
+            var stats = fs.statSync(filepath);
+            if (stats)
+                return stats.ctime;
+        }
         return new Date(1970, 1, 1);
     }
     fileGroup(logfile) {
@@ -299,6 +301,8 @@ class AnalyzerSequence {
         var inputDate = this.fileCreateTime(this.inputFile);
         if (inputDate < logDate && fs.existsSync(this.highlightFile))
             return vscode.Uri.file(this.highlightFile);
+        else if (!fs.existsSync(this.inputFile))
+            return logfile;
         var text = fs.readFileSync(this.inputFile, 'utf8');
         const regReplace = new RegExp('\r\n', 'g');
         text = text.replace(regReplace, '\r');
@@ -316,13 +320,14 @@ class AnalyzerSequence {
                 highlight = text.substring(from, to + 1);
                 textfire = textfire.concat(between, '[[', highlight, ']]');
                 lastTo = to + 1;
+                between = '';
             }
             textfire = textfire.concat(text.substring(lastTo, text.length));
         }
         else {
             textfire = text;
         }
-        fs.writeFileSync(this.highlightFile, textfire);
+        fs.writeFileSync(this.highlightFile, textfire, { flag: 'w+' });
         this.firedFroms = [];
         this.firedTos = [];
         const regBack = new RegExp('\r', 'g');
