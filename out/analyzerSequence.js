@@ -133,7 +133,12 @@ exports.FileStat = FileStat;
 //#endregion
 class FileSystemProvider {
     constructor() {
+        this._onDidChangeTreeData = new vscode.EventEmitter();
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
         this._onDidChangeFile = new vscode.EventEmitter();
+    }
+    refresh() {
+        this._onDidChangeTreeData.fire();
     }
     get onDidChangeFile() {
         return this._onDidChangeFile.event;
@@ -281,6 +286,7 @@ class AnalyzerSequence {
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
         vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
+        vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
     }
     fileCreateTime(filepath) {
         if (fs.existsSync(filepath)) {
