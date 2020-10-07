@@ -154,6 +154,13 @@ interface Entry {
 export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
 
 	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
+	
+	private _onDidChangeTreeData: vscode.EventEmitter<Entry> = new vscode.EventEmitter<Entry>();
+	readonly onDidChangeTreeData: vscode.Event<Entry> = this._onDidChangeTreeData.event;
+
+	refresh(): void {
+	  this._onDidChangeTreeData.fire();
+	}
 
 	constructor() {
 		this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -325,6 +332,7 @@ export class AnalyzerSequence {
 		const treeDataProvider = new FileSystemProvider();
 		this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
 		vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
+		vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
 	}
 
 	private fileCreateTime(filepath: string): Date {

@@ -159,6 +159,14 @@
             {
                 "command": "analyzerSequence.openFile",
                 "title": "Open File"
+            },
+            {
+                "command": "analyzerSequence.refreshEntry",
+                "title": "Refresh",
+                "icon": {
+                  "light": "resources/light/refresh.svg",
+                  "dark": "resources/dark/refresh.svg"
+                }
             }
         ],
         "menus": {
@@ -184,6 +192,17 @@
                     "when": "resourceExtname == .pat || NresourceExtname == .nlp",
                     "command": "nlp.analyze",
                     "group": "nlp"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "analyzerSequence.refreshEntry",
+                    "when": "view == analyzerSequence",
+                    "group": "navigation"
+                },
+                {
+                    "command": "analyzerSequence.addEntry",
+                    "when": "view == analyzerSequence"
                 }
             ],
             "view/item/context": [
