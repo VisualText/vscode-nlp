@@ -133,14 +133,6 @@
                 "title": "Analyzer Sequence: Change Title"
             },
             {
-                "command": "analyzerSequence.refreshFile",
-                "title": "Refresh",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
-                }
-            },
-            {
                 "command": "analyzerSequence.moveUp",
                 "title": "Move Up",
                 "icon": {
@@ -154,6 +146,30 @@
                 "icon": {
                     "light": "resources/light/down.svg",
                     "dark": "resources/dark/down.svg"
+                }
+            },
+            {
+                "command": "analyzerSequence.openKB",
+                "title": "Open KB",
+                "icon": {
+                    "light": "fileicons/images/light/library.svg",
+                    "dark": "fileicons/images/dark/library.svg"
+                }
+            },
+            {
+                "command": "analyzerSequence.openHighlight",
+                "title": "Highlight Text",
+                "icon": {
+                    "light": "fileicons/images/light/symbol-keyword.svg",
+                    "dark": "fileicons/images/dark/symbol-keyword.svg"
+                }
+            },
+            {
+                "command": "analyzerSequence.openNLP",
+                "title": "Open NLP file",
+                "icon": {
+                    "light": "fileicons/images/light/code.svg",
+                    "dark": "fileicons/images/dark/code.svg"
                 }
             },
             {
@@ -203,7 +219,42 @@
             ],
             "view/item/context": [
                 {
-                    "command": "analyzerSequence.refreshFile",
+                    "command": "analyzerSequence.openNLP",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "display"
+                },
+                {
+                    "command": "analyzerSequence.openHighlight",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "display"
+                },
+                {
+                    "command": "analyzerSequence.openKB",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "display"
+                },
+                {
+                    "command": "analyzerSequence.moveUp",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "move"
+                },
+                {
+                    "command": "analyzerSequence.moveDown",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "move"
+                },
+                {
+                    "command": "analyzerSequence.openNLP",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerSequence.openHighlight",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerSequence.openKB",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },

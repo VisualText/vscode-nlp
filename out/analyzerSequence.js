@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AnalyzerSequence = exports.FileSystemProvider = exports.SequenceLine = exports.FileStat = void 0;
+exports.AnalyzerSequence = exports.FileSystemProvider = exports.SequenceFile = exports.FileStat = void 0;
 const tslib_1 = require("tslib");
 const vscode = require("vscode");
 const path = require("path");
@@ -140,7 +140,14 @@ var seqType;
     seqType[seqType["nlp"] = 0] = "nlp";
     seqType[seqType["stub"] = 1] = "stub";
 })(seqType || (seqType = {}));
-class SequenceLine {
+var nlpFileType;
+(function (nlpFileType) {
+    nlpFileType[nlpFileType["nlp"] = 0] = "nlp";
+    nlpFileType[nlpFileType["txxt"] = 1] = "txxt";
+    nlpFileType[nlpFileType["log"] = 2] = "log";
+    nlpFileType[nlpFileType["kb"] = 3] = "kb";
+})(nlpFileType || (nlpFileType = {}));
+class SequenceFile {
     constructor(line = '') {
         this.line = '';
         this.type = seqType.nlp;
@@ -150,8 +157,12 @@ class SequenceLine {
     }
     Set(line) {
         this.line = line;
-        if (line.length)
+        this.type = seqType.nlp;
+        if (line.length) {
             this.tokens = line.split(/[\t\s]/);
+            if (this.tokens[0].localeCompare('pat') && this.tokens[0].localeCompare('rec'))
+                this.type = seqType.stub;
+        }
         else
             this.tokens = [];
     }
@@ -175,13 +186,7 @@ class SequenceLine {
         return false;
     }
     IsRuleFile() {
-        if (this.tokens.length) {
-            if (this.tokens[0].localeCompare('pat') == 0 ||
-                this.tokens[0].localeCompare('rec') == 0 ||
-                this.tokens[0].localeCompare('nlp') == 0)
-                return true;
-        }
-        return false;
+        return this.type == seqType.nlp;
     }
     FileName() {
         return this.tokens[1].concat('.pat');
@@ -222,7 +227,7 @@ class SequenceLine {
         return this.basename;
     }
 }
-exports.SequenceLine = SequenceLine;
+exports.SequenceFile = SequenceFile;
 //#endregion
 class FileSystemProvider {
     constructor() {
@@ -345,19 +350,19 @@ class FileSystemProvider {
                     const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
                     const orderedArray = new Array();
                     var lines = fs.readFileSync(path.join(specUri.fsPath, 'analyzer.seq'), 'utf8').split('\n');
-                    var seqLine = new SequenceLine();
+                    var seqFile = new SequenceFile();
                     for (let line of lines) {
-                        seqLine.Set(line);
-                        if (seqLine.IsValid()) {
-                            if (seqLine.IsRuleFile()) {
-                                var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqLine.FileName()));
+                        seqFile.Set(line);
+                        if (seqFile.IsValid()) {
+                            if (seqFile.IsRuleFile()) {
+                                var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqFile.FileName()));
                                 if (found.length)
                                     orderedArray.push({ uri: found[0].uri, type: 1 });
                                 else
-                                    orderedArray.push({ uri: vscode.Uri.file(seqLine.FileName()), type: 1 });
+                                    orderedArray.push({ uri: vscode.Uri.file(seqFile.FileName()), type: 1 });
                             }
                             else {
-                                orderedArray.push({ uri: vscode.Uri.file(seqLine.GetStubName().concat('.stub')), type: 1 });
+                                orderedArray.push({ uri: vscode.Uri.file(seqFile.GetStubName().concat('.stub')), type: 1 });
                             }
                         }
                     }
@@ -385,25 +390,25 @@ class FileSystemProvider {
         if (vscode.workspace.workspaceFolders) {
             const workspacefolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
             if (workspacefolder) {
-                var seqLine = new SequenceLine();
-                var seqFileType = seqLine.GetTypeFromFile(resource.uri.path);
-                var basename = seqLine.GetBasename();
+                var seqFile = new SequenceFile();
+                var seqFileType = seqFile.GetTypeFromFile(resource.uri.path);
+                var basename = seqFile.GetBasename();
                 var newlines = new Array();
                 var cleanlines = new Array();
                 var specfilename = path.join(workspacefolder.uri.fsPath, 'spec', 'analyzer.seq');
                 var analyzeFile = vscode.Uri.file(specfilename);
                 var lines = fs.readFileSync(analyzeFile.path, 'utf8').split('\n');
                 for (let line of lines) {
-                    seqLine.Set(line);
-                    if (seqLine.IsValid()) {
-                        cleanlines.push(seqLine.CleanLine(line));
+                    seqFile.Set(line);
+                    if (seqFile.IsValid()) {
+                        cleanlines.push(seqFile.CleanLine(line));
                     }
                 }
                 var row = -1;
                 var r = 0;
                 for (let line of lines) {
-                    seqLine.Set(line);
-                    if (basename.localeCompare(seqLine.GetName()) == 0) {
+                    seqFile.Set(line);
+                    if (basename.localeCompare(seqFile.GetName()) == 0) {
                         row = r;
                         break;
                     }
@@ -449,6 +454,7 @@ class FileSystemProvider {
 exports.FileSystemProvider = FileSystemProvider;
 class AnalyzerSequence {
     constructor(context) {
+        this.seqFile = new SequenceFile();
         this.basename = '';
         this.outfolder = '';
         this.inputFile = '';
@@ -457,22 +463,51 @@ class AnalyzerSequence {
         this.firedTos = new Array();
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
-        vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openResource(resource));
+        vscode.commands.registerCommand('analyzerSequence.openNLP', (resource) => this.openNLP(resource));
+        vscode.commands.registerCommand('analyzerSequence.openHighlight', (resource) => this.openHighlight(resource));
+        vscode.commands.registerCommand('analyzerSequence.openKB', (resource) => this.openKB(resource));
         vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => treeDataProvider.moveUp(resource));
         vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => treeDataProvider.moveDown(resource));
         vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
     }
-    openResource(resource) {
-        if (resource.path.localeCompare('/stub') == 0 || resource.path.localeCompare('/end') == 0 || resource.path.localeCompare('/tokenize') == 0) {
+    openNLP(resource) {
+        this.seqFile.GetTypeFromFile(resource.uri.path);
+        if (!this.seqFile.IsRuleFile()) {
             vscode.window.showWarningMessage('Not editable');
             return;
         }
-        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource);
+        vscode.window.showTextDocument(resource.uri);
+    }
+    openHighlight(resource) {
+        this.seqFile.GetTypeFromFile(resource.uri.path);
+        if (!this.seqFile.IsRuleFile()) {
+            vscode.window.showWarningMessage('Not editable');
+            return;
+        }
+        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource.uri);
         if (this.workspacefolder) {
             this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
             if (fs.existsSync(this.outfolder)) {
-                const firefile = this.findLogfile(resource);
+                var firefile = this.findLogfile(resource.uri, nlpFileType.txxt);
                 vscode.window.showTextDocument(firefile);
+            }
+        }
+    }
+    openKB(resource) {
+        this.seqFile.GetTypeFromFile(resource.uri.path);
+        if (!this.seqFile.IsRuleFile()) {
+            vscode.window.showWarningMessage('Not editable');
+            return;
+        }
+        this.workspacefolder = vscode.workspace.getWorkspaceFolder(resource.uri);
+        if (this.workspacefolder) {
+            this.outfolder = path.join(this.workspacefolder.uri.fsPath, 'output');
+            if (fs.existsSync(this.outfolder)) {
+                var kbfile = this.findLogfile(resource.uri, nlpFileType.kb);
+                if (fs.existsSync(kbfile.path))
+                    vscode.window.showTextDocument(kbfile);
+                else
+                    vscode.window.showWarningMessage('No KB file for this pass');
             }
         }
     }
@@ -528,7 +563,7 @@ class AnalyzerSequence {
         text = text.replace(regBack, '\r\n');
         return vscode.Uri.file(this.highlightFile);
     }
-    findLogfile(resource) {
+    findLogfile(resource, nlpType) {
         var logfile = vscode.Uri.file('');
         var firefile = vscode.Uri.file('');
         const filenames = fs.readdirSync(this.outfolder);
@@ -563,6 +598,11 @@ class AnalyzerSequence {
                         if (toks) {
                             var base = path.basename(resource.path, '.pat');
                             if (baser.localeCompare(toks[2]) == 0) {
+                                if (nlpType == nlpFileType.kb) {
+                                    var anafile = path.basename(filename, '.log');
+                                    filename = anafile.concat('.kb');
+                                    return vscode.Uri.file(path.join(this.outfolder, filename));
+                                }
                                 logfile = vscode.Uri.file(path.join(this.outfolder, filename));
                                 found = true;
                             }
