@@ -7,6 +7,12 @@
 		"_file_light": {
 			"iconPath": "./images/light/file.svg"
 		},
+		"_stub_dark": {
+			"iconPath": "./images/dark/triangle-right.svg"
+		},
+		"_stub_light": {
+			"iconPath": "./images/light/triangle-right.svg"
+		},
 		"_nlp_dark": {
 			"iconPath": "./images/dark/gear.svg"
 		},
@@ -46,6 +52,7 @@
 	},
 
 	"file": "_file_dark",
+	"folder": "_folder_dark",
 	"fileExtensions": {
         "pat": "_nlp_dark",
 		"nlp": "_nlp_dark",
@@ -53,11 +60,13 @@
 		"seq": "_seq_dark",
 		"log": "_log_dark",
 		"txxt": "_markup_dark",
+		"stub": "_stub_dark",
 		"cpp": "_code_dark",
 		"h": "_code_dark"
 	},
 	"light": {
 		"file": "_file_light",
+		"folder": "_folder_light",
 		"fileExtensions": {
 			"pat": "_nlp_light",
 			"nlp": "_nlp_light",
@@ -65,6 +74,7 @@
 			"seq": "_seq_light",
 			"log": "_log_light",
 			"txxt": "_markup_light",
+			"stub": "_stub_light",
 			"cpp": "_code_light",
 			"h": "_code_light"
         }
