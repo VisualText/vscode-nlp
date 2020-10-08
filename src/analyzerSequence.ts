@@ -153,10 +153,16 @@ enum moveDirection {
 	Down
 }
 
+enum seqType {
+	nlp,
+	stub
+}
+
 export class SequenceLine {
-	line: string = '';
-	type: string = '';
-	tokens = new Array();
+	private line: string = '';
+	private type: seqType = seqType.nlp;
+	private tokens = new Array();
+	private basename: string = '';
 
 	constructor(line:string = '') {
 		this.Set(line);
@@ -206,13 +212,46 @@ export class SequenceLine {
 	FileName(): string {
 		return this.tokens[1].concat('.pat');
 	}
+	
+	GetType(): seqType {
+		return this.type;
+	}
 
-	GetType(): string {
+	GetTypeName(): string {
 		return this.tokens[0];
 	}
 
 	GetName(): string {
+		if (this.tokens[0].localeCompare('tokenize') == 0)
+			return this.tokens[0];
 		return this.tokens[1];
+	}
+	
+	GetStubName(): string {
+		if (this.tokens[0].localeCompare('tokenize') == 0)
+			return this.tokens[0];
+		else if (this.tokens[0].localeCompare('stub') == 0)
+			return this.tokens[1];
+		else if (this.tokens[0].localeCompare('end') == 0)
+			return this.tokens[0].concat('_',this.tokens[1]);
+		return this.tokens[1];
+	}
+
+	GetTypeFromFile(filename: string): seqType {
+		this.type = seqType.nlp;
+		this.basename = path.basename(filename, '.nlp');
+		this.basename = path.basename(this.basename, '.pat');
+		var basenamestub = path.basename(filename, '.stub');
+		if (basenamestub.length < this.basename.length) {
+			this.type = seqType.stub;
+			this.basename = basenamestub;
+			return seqType.stub;
+		}
+		return seqType.nlp;
+	}
+
+	GetBasename(): string {
+		return this.basename;
 	}
 }
 
@@ -367,16 +406,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 						if (seqLine.IsRuleFile()) {
 							var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqLine.FileName()));
 							if (found.length)
-								orderedArray.push(found[0].uri);
+								orderedArray.push({uri: found[0].uri, type: 1});
 							else
-								orderedArray.push(vscode.Uri.file(seqLine.FileName()));
+								orderedArray.push({uri: vscode.Uri.file(seqLine.FileName()), type: 1});
 						} else {
-							orderedArray.push(vscode.Uri.file(seqLine.GetType()));
+							orderedArray.push({uri: vscode.Uri.file(seqLine.GetStubName().concat('.stub')), type: 1});
 						}			
 					}
 				}
-				const finalFiles = orderedArray.map(item => ({ uri: item, type: 1}));
-				return finalFiles;
+				return orderedArray;
 			}
 		}
 
@@ -401,24 +439,20 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 	}
 	
 	moveSequence(resource: Entry, direction: moveDirection) {
-		if (!fs.existsSync(resource.uri.path)) {
-			vscode.window.showWarningMessage('Cannot move a non-file');
-			return;
-		}
-
 		if (vscode.workspace.workspaceFolders) {
 			const workspacefolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
 
 			if (workspacefolder) {
+				var seqLine = new SequenceLine();
+				var seqFileType: seqType = seqLine.GetTypeFromFile(resource.uri.path);
+				var basename = seqLine.GetBasename();
+				
 				var newlines = new Array();
 				var cleanlines = new Array();
-				var basename = path.basename(resource.uri.path,'.pat');
 		
 				var specfilename = path.join(workspacefolder.uri.fsPath,'spec','analyzer.seq');
 				var analyzeFile = vscode.Uri.file(specfilename);
 				var lines = fs.readFileSync(analyzeFile.path, 'utf8').split('\n');
-	
-				var seqLine = new SequenceLine();
 
 				for (let line of lines) {
 					seqLine.Set(line);
@@ -440,7 +474,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 				}
 	
 				// Build new file
-				if (row >= 0 && row + 1 < cleanlines.length) {
+				if (row == 0) {
+					vscode.window.showWarningMessage('Tokenize must be first');
+				} else if (row == 1 && direction == moveDirection.Up) {
+					vscode.window.showWarningMessage('Cannot move into the first position');
+
+				} else if (row >= 1 && row + 1 < cleanlines.length) {
 					for (var i = 0; i < cleanlines.length; i++) {
 						if ((direction == moveDirection.Up && i+1 == row) || (direction == moveDirection.Down && i == row)) {
 							newlines.push(cleanlines[i+1]);
