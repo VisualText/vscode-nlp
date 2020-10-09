@@ -165,7 +165,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.openNLP",
+                "command": "analyzerSequence.openFile",
                 "title": "Open NLP file",
                 "icon": {
                     "light": "fileicons/images/light/code.svg",
@@ -174,7 +174,11 @@
             },
             {
                 "command": "analyzerSequence.openFile",
-                "title": "Open File"
+                "title": "Open File",
+                "icon": {
+                    "light": "images/light/file-code.svg",
+                    "dark": "images/dark/file-code.svg"
+                }
             },
             {
                 "command": "analyzerSequence.refreshEntry",
@@ -219,7 +223,7 @@
             ],
             "view/item/context": [
                 {
-                    "command": "analyzerSequence.openNLP",
+                    "command": "analyzerSequence.openFile",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
@@ -244,7 +248,7 @@
                     "group": "move"
                 },
                 {
-                    "command": "analyzerSequence.openNLP",
+                    "command": "analyzerSequence.openFile",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },

@@ -406,8 +406,8 @@ class FileSystemProvider {
                 }
                 var row = -1;
                 var r = 0;
-                for (let line of lines) {
-                    seqFile.Set(line);
+                for (var i = 0; i < cleanlines.length; i++) {
+                    seqFile.Set(cleanlines[i]);
                     if (basename.localeCompare(seqFile.GetName()) == 0) {
                         row = r;
                         break;
@@ -463,7 +463,7 @@ class AnalyzerSequence {
         this.firedTos = new Array();
         const treeDataProvider = new FileSystemProvider();
         this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
-        vscode.commands.registerCommand('analyzerSequence.openNLP', (resource) => this.openNLP(resource));
+        vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openNLP(resource));
         vscode.commands.registerCommand('analyzerSequence.openHighlight', (resource) => this.openHighlight(resource));
         vscode.commands.registerCommand('analyzerSequence.openKB', (resource) => this.openKB(resource));
         vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => treeDataProvider.moveUp(resource));
