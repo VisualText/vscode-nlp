@@ -181,6 +181,14 @@
                 }
             },
             {
+                "command": "analyzerSequence.insert",
+                "title": "Insert pass",
+                "icon": {
+                    "light": "fileicons/images/light/file-code.svg",
+                    "dark": "fileicons/images/dark/file-code.svg"
+                }
+            },
+            {
                 "command": "analyzerSequence.delete",
                 "title": "Delete pass",
                 "icon": {
@@ -257,6 +265,11 @@
                 },
                 {
                     "command": "analyzerSequence.rename",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerSequence.insert",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
