@@ -166,7 +166,7 @@ enum nlpFileType {
 }
 
 export class SequenceFile {
-	private file: vscode.Uri = vscode.Uri.file('');
+	private workingDir: vscode.Uri = vscode.Uri.file('');
 	private pass: string = '';
 	private specfolder: vscode.Uri = vscode.Uri.file('');
 	private type: seqType = seqType.nlp;
@@ -179,9 +179,9 @@ export class SequenceFile {
 	constructor() {
 	}
 
-	SetWorkingDirectory(file: vscode.Uri) {
-		this.file = file;
-		this.specfolder = vscode.Uri.file(path.join(file.path,'spec'));
+	SetWorkingDirectory(directory: vscode.Uri) {
+		this.workingDir = directory;
+		this.specfolder = vscode.Uri.file(path.join(directory.path,'spec'));
 		this.passes = fs.readFileSync(path.join(this.specfolder.fsPath, 'analyzer.seq'), 'utf8').split('\n');
 		this.CleanPasses();
 	}
@@ -196,11 +196,35 @@ export class SequenceFile {
 		}
 	}
 
-	RenamePass(origpass: vscode.Uri, newpass: vscode.Uri) {
-
+	RenamePass(origpassname: string, newpassname: string) {
+		if (this.passes.length) {
+			for (var i=0; i < this.passes.length; i++) {
+				this.SetPass(this.passes[i]);
+				if (origpassname.localeCompare(this.GetName()) == 0) {
+					this.tokens[1] = newpassname;
+					this.passes[i] = this.PassString();
+					break;
+				}
+			}
+			this.SaveFile();
+		}
 	}
 
-	SetPass(pass:string) {
+	PassString(): string {
+		var passStr: string = '';
+		for (var i=0; i<this.tokens.length; i++) {
+			if (passStr.length) {
+				if (i < 3)
+					passStr = passStr.concat('\t');
+				else				
+					passStr = passStr.concat(' ');
+			}
+			passStr = passStr.concat(this.tokens[i]);
+		}
+		return passStr;
+	}
+
+	SetPass(pass: string) {
 		this.pass = pass;
 		this.type = seqType.nlp;
 		if (pass.length) {
@@ -208,7 +232,7 @@ export class SequenceFile {
 			if (this.tokens[0].localeCompare('pat') && this.tokens[0].localeCompare('rec'))
 				this.type = seqType.stub;
 		} else
-		this.tokens = [];
+			this.tokens = [];
 	}
 
 	CleanLine(pass: string): string {
@@ -299,7 +323,7 @@ export class SequenceFile {
 			this.newcontent = this.newcontent.concat(this.passes[i]);
 		}
 
-		fs.writeFileSync(this.specfolder.path,this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(this.specfolder.path,'analyzer.seq'),this.newcontent,{flag:'w+'});
 	}
 
 	MovePass(direction: moveDirection, row: number) {
@@ -545,15 +569,23 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 	}
 	
 	renamePass(resource: Entry): void {
-		vscode.window.showInputBox({ value: path.basename(resource.uri.path,'.pat') }).then(text => {
-			var original = resource.uri;
-			if (text) {
-				var newfile = vscode.Uri.file(path.join(path.dirname(original.path),text.concat(path.extname(original.path))));
-				this.rename(original,newfile,{overwrite: false});
-				var seqLine = new SequenceFile();
-				this.refresh();
+		if (vscode.workspace.workspaceFolders) {
+			const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+			if (workspaceFolder) {
+				var basename = path.basename(resource.uri.path,'.pat');
+				vscode.window.showInputBox({ value: basename }).then(newname => {
+					var original = resource.uri;
+					if (newname) {
+						var seqLine = new SequenceFile();
+						seqLine.SetWorkingDirectory(workspaceFolder.uri);
+						seqLine.RenamePass(basename,newname);
+						var newfile = vscode.Uri.file(path.join(seqLine.GetSpecFolder().path,newname.concat(path.extname(original.path))));
+						this.rename(original,newfile,{overwrite: false});
+						this.refresh();
+					}
+				});
 			}
-		});
+		}
 	}
 }
 

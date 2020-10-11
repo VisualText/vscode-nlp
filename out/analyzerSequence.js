@@ -149,7 +149,7 @@ var nlpFileType;
 })(nlpFileType || (nlpFileType = {}));
 class SequenceFile {
     constructor() {
-        this.file = vscode.Uri.file('');
+        this.workingDir = vscode.Uri.file('');
         this.pass = '';
         this.specfolder = vscode.Uri.file('');
         this.type = seqType.nlp;
@@ -159,9 +159,9 @@ class SequenceFile {
         this.basename = '';
         this.newcontent = '';
     }
-    SetWorkingDirectory(file) {
-        this.file = file;
-        this.specfolder = vscode.Uri.file(path.join(file.path, 'spec'));
+    SetWorkingDirectory(directory) {
+        this.workingDir = directory;
+        this.specfolder = vscode.Uri.file(path.join(directory.path, 'spec'));
         this.passes = fs.readFileSync(path.join(this.specfolder.fsPath, 'analyzer.seq'), 'utf8').split('\n');
         this.CleanPasses();
     }
@@ -174,7 +174,31 @@ class SequenceFile {
             }
         }
     }
-    RenamePass(origpass, newpass) {
+    RenamePass(origpassname, newpassname) {
+        if (this.passes.length) {
+            for (var i = 0; i < this.passes.length; i++) {
+                this.SetPass(this.passes[i]);
+                if (origpassname.localeCompare(this.GetName()) == 0) {
+                    this.tokens[1] = newpassname;
+                    this.passes[i] = this.PassString();
+                    break;
+                }
+            }
+            this.SaveFile();
+        }
+    }
+    PassString() {
+        var passStr = '';
+        for (var i = 0; i < this.tokens.length; i++) {
+            if (passStr.length) {
+                if (i < 3)
+                    passStr = passStr.concat('\t');
+                else
+                    passStr = passStr.concat(' ');
+            }
+            passStr = passStr.concat(this.tokens[i]);
+        }
+        return passStr;
     }
     SetPass(pass) {
         this.pass = pass;
@@ -260,7 +284,7 @@ class SequenceFile {
                 this.newcontent = this.newcontent.concat('\n');
             this.newcontent = this.newcontent.concat(this.passes[i]);
         }
-        fs.writeFileSync(this.specfolder.path, this.newcontent, { flag: 'w+' });
+        fs.writeFileSync(path.join(this.specfolder.path, 'analyzer.seq'), this.newcontent, { flag: 'w+' });
     }
     MovePass(direction, row) {
         for (var i = 0; i < this.passes.length; i++) {
@@ -476,15 +500,23 @@ class FileSystemProvider {
         vscode.window.showQuickPick(['$(diff-added) Add', '$(diff-removed) Remove']);
     }
     renamePass(resource) {
-        vscode.window.showInputBox({ value: path.basename(resource.uri.path, '.pat') }).then(text => {
-            var original = resource.uri;
-            if (text) {
-                var newfile = vscode.Uri.file(path.join(path.dirname(original.path), text.concat(path.extname(original.path))));
-                this.rename(original, newfile, { overwrite: false });
-                var seqLine = new SequenceFile();
-                this.refresh();
+        if (vscode.workspace.workspaceFolders) {
+            const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+            if (workspaceFolder) {
+                var basename = path.basename(resource.uri.path, '.pat');
+                vscode.window.showInputBox({ value: basename }).then(newname => {
+                    var original = resource.uri;
+                    if (newname) {
+                        var seqLine = new SequenceFile();
+                        seqLine.SetWorkingDirectory(workspaceFolder.uri);
+                        seqLine.RenamePass(basename, newname);
+                        var newfile = vscode.Uri.file(path.join(seqLine.GetSpecFolder().path, newname.concat(path.extname(original.path))));
+                        this.rename(original, newfile, { overwrite: false });
+                        this.refresh();
+                    }
+                });
             }
-        });
+        }
     }
 }
 exports.FileSystemProvider = FileSystemProvider;
