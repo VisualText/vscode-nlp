@@ -179,6 +179,12 @@ export class SequenceFile {
 	constructor() {
 	}
 
+	BaseName(passname: string): string {
+		var basename = path.basename(passname,'.pat');
+		basename = path.basename(basename,'.nlp');
+		return basename;
+	}
+
 	SetWorkingDirectory(directory: vscode.Uri) {
 		this.workingDir = directory;
 		this.specfolder = vscode.Uri.file(path.join(directory.path,'spec'));
@@ -208,6 +214,37 @@ export class SequenceFile {
 			}
 			this.SaveFile();
 		}
+	}
+	
+	InsertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
+		if (this.passes.length) {
+			this.SetFile(passafter.path);
+			var row = this.FindPass(this.GetBasename());
+			if (row >= 0) {
+				var newpassstr = this.CreatePassStrFromFile(newpass);
+				this.passes.splice(row+1,0,newpassstr);
+				this.SaveFile();			
+			}
+		}	
+	}
+
+	DeletePass(pass: vscode.Uri) {
+		if (this.passes.length) {
+			this.SetFile(pass.path);
+			var row = this.FindPass(this.GetBasename());
+			if (row >= 0) {
+				this.passes.splice(row,1);
+			}
+			this.SaveFile();
+		}	
+	}
+
+	CreatePassStrFromFile(file: vscode.Uri) {
+		var name = this.BaseName(file.path);
+		var ext = path.extname(file.path).substr(1);
+		var passStr: string = '';
+		passStr = passStr.concat(ext,'\t',name,'\t# comment');
+		return passStr;
 	}
 
 	PassString(): string {
@@ -339,13 +376,17 @@ export class SequenceFile {
 
 	FindPass(passToMatch: string): number {
 		var r = 0;
+		var found = false;
 		for (let pass of this.passes) {
 			this.SetPass(pass);
 			if (passToMatch.localeCompare(this.GetName()) == 0) {
+				found = true;
 				break;
 			}			
 			r++;
 		}
+		if (!found)
+			r = -1;
 		return r;
 	}
 }
@@ -565,7 +606,57 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 	}
 
 	deletePass(resource: Entry): void {
-		vscode.window.showQuickPick(['$(diff-added) Add', '$(diff-removed) Remove']);
+		if (vscode.workspace.workspaceFolders) {
+			const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+			if (workspaceFolder) {
+				let items: vscode.QuickPickItem[] = [];
+				var deleteDescr = '';
+				deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' pass');
+				items.push({label: 'Yes', description: deleteDescr});
+				items.push({label: 'No', description: 'Do not delete pass'});
+
+				vscode.window.showQuickPick(items).then(selection => {
+					var seqLine = new SequenceFile();
+					seqLine.SetWorkingDirectory(workspaceFolder.uri);
+					seqLine.SetFile(resource.uri.path);
+					if (!selection) {
+						return;
+					}
+					if (selection.label.localeCompare('Yes') == 0) {
+						seqLine.DeletePass(resource.uri);
+						this.refresh();
+					}
+				});
+			}
+		}
+	}
+
+	insertPass(resource: Entry): void {
+		if (vscode.workspace.workspaceFolders) {
+			const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+			if (workspaceFolder) {
+				var seqLine = new SequenceFile();
+				seqLine.SetWorkingDirectory(workspaceFolder.uri);
+
+				const options: vscode.OpenDialogOptions = {
+					canSelectMany: false,
+					openLabel: 'Open',
+					defaultUri: seqLine.GetSpecFolder(),
+					filters: {
+					   'Text files': ['pat'],
+					   'All files': ['*']
+				   }
+			   };
+				vscode.window.showOpenDialog(options).then(selection => {
+					if (!selection) {
+						return;
+					}
+					var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
+					seqLine.InsertPass(resource.uri,newfile);
+					this.refresh();
+				});
+			}
+		}
 	}
 	
 	renamePass(resource: Entry): void {
@@ -611,6 +702,7 @@ export class AnalyzerSequence {
 		vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => treeDataProvider.moveUp(resource));
 		vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => treeDataProvider.moveDown(resource));
 		vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('analyzerSequence.insert', (resource) => treeDataProvider.insertPass(resource));
 		vscode.commands.registerCommand('analyzerSequence.delete', (resource) => treeDataProvider.deletePass(resource));
 		vscode.commands.registerCommand('analyzerSequence.rename', (resource) => treeDataProvider.renamePass(resource));
 	}
