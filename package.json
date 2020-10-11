@@ -173,11 +173,19 @@
                 }
             },
             {
-                "command": "analyzerSequence.openFile",
-                "title": "Open File",
+                "command": "analyzerSequence.rename",
+                "title": "Rename pass",
                 "icon": {
-                    "light": "images/light/file-code.svg",
-                    "dark": "images/dark/file-code.svg"
+                    "light": "fileicons/images/light/code.svg",
+                    "dark": "fileicons/images/dark/code.svg"
+                }
+            },
+            {
+                "command": "analyzerSequence.delete",
+                "title": "Delete pass",
+                "icon": {
+                    "light": "fileicons/images/light/file-code.svg",
+                    "dark": "fileicons/images/dark/file-code.svg"
                 }
             },
             {
@@ -246,6 +254,16 @@
                     "command": "analyzerSequence.moveDown",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "move"
+                },
+                {
+                    "command": "analyzerSequence.rename",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerSequence.delete",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "edit"
                 },
                 {
                     "command": "analyzerSequence.openFile",
