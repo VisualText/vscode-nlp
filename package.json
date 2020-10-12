@@ -181,8 +181,16 @@
                 }
             },
             {
+                "command": "analyzerSequence.insertNew",
+                "title": "Insert New pass",
+                "icon": {
+                    "light": "fileicons/images/light/file-code.svg",
+                    "dark": "fileicons/images/dark/file-code.svg"
+                }
+            },
+            {
                 "command": "analyzerSequence.insert",
-                "title": "Insert pass",
+                "title": "Insert Existing pass",
                 "icon": {
                     "light": "fileicons/images/light/file-code.svg",
                     "dark": "fileicons/images/dark/file-code.svg"
@@ -265,6 +273,11 @@
                 },
                 {
                     "command": "analyzerSequence.rename",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerSequence.insertNew",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
