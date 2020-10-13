@@ -5,7 +5,7 @@ const command_1 = require("./command");
 const analyzerSequence_1 = require("./analyzerSequence");
 function activate(ctx) {
     command_1.NLPCommands.attach(ctx);
-    new analyzerSequence_1.AnalyzerSequence(ctx);
+    analyzerSequence_1.AnalyzerSequence.attach(ctx);
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

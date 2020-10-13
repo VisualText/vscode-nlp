@@ -1,13 +1,16 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import { LogFile } from './logfile';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
     _ctx: vscode.ExtensionContext;
 
+
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
-        ctx.subscriptions.push(vscode.commands.registerCommand("nlp.analyze", this.analyze));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -17,15 +20,16 @@ export class NLPCommands {
         return nlpCommands;
     }
 
-    analyze() {
-        console.log(`NLP Analyzing!!!`);
-        const testFolder = "${workspaceFolder}";
-        const fs = require('fs');
+    ruleFired() {
+        if (vscode.window.activeTextEditor) {
+            var file = vscode.window.activeTextEditor.document.uri;
+            var position = vscode.window.activeTextEditor.selection.active;
+            var logFile = new LogFile();
+            logFile.findRule(file,position);
+        }
+    }
 
-        fs.readdir(testFolder, (err, files) => {
-            files.forEach(file => {
-                console.log(file);
-            });
-        });
+    analyze() {
+        console.log('NLP Analyzing!!!');
     }
 }
