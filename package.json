@@ -121,8 +121,15 @@
         "commands": [
             {
                 "command": "nlp.analyze",
-                "title": "NLP: Analyze Text",
+                "category": "NLP",
+                "title": "Analyze Text",
                 "description": "Run the analyzer on text"
+            },
+            {
+                "command": "nlp.ruleFired",
+                "category": "NLP",
+                "title": "View rule fired",
+                "description": "View the rule that fired for this match"
             },
             {
                 "command": "analyzerSequence.reveal",
@@ -173,6 +180,14 @@
                 }
             },
             {
+                "command": "analyzerSequence.openTree",
+                "title": "Open Tree file",
+                "icon": {
+                    "light": "fileicons/images/light/list-tree.svg",
+                    "dark": "fileicons/images/dark/list-tree.svg"
+                }
+            },
+            {
                 "command": "analyzerSequence.rename",
                 "title": "Rename pass",
                 "icon": {
@@ -216,25 +231,20 @@
         "menus": {
             "explorer/context": [
                 {
-                    "when": "resourceLangId == seq",
-                    "command": "nlp.analyze",
-                    "group": "sequence"
-                },
-                {
-                    "when": "resourceExtname == .txt",
+                    "when": "resourceLangId == nlp  && resourceExtname == .txt",
                     "command": "nlp.analyze",
                     "group": "sequence"
                 }
             ],
             "editor/context": [
                 {
-                    "when": "resourceExtname == .seq",
+                    "when": "resourceExtname == .txt",
                     "command": "nlp.analyze",
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .pat || NresourceExtname == .nlp",
-                    "command": "nlp.analyze",
+                    "when": "resourceExtname == .txxt",
+                    "command": "nlp.ruleFired",
                     "group": "nlp"
                 }
             ],
@@ -248,6 +258,11 @@
             "view/item/context": [
                 {
                     "command": "analyzerSequence.openFile",
+                    "when": "view == analyzerSequence && viewItem == file",
+                    "group": "display"
+                },
+                {
+                    "command": "analyzerSequence.openTree",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
@@ -292,7 +307,7 @@
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerSequence.openFile",
+                    "command": "analyzerSequence.openTree",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },
