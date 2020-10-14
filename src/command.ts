@@ -11,6 +11,7 @@ export class NLPCommands {
         this._ctx = ctx;
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -26,6 +27,15 @@ export class NLPCommands {
             var position = vscode.window.activeTextEditor.selection.active;
             var logFile = new LogFile();
             logFile.findRule(file,position);
+        }
+    }
+
+    openSelTree() {
+        if (vscode.window.activeTextEditor) {
+            var file = vscode.window.activeTextEditor.document.uri;
+            var logFile = new LogFile();
+            var selection = vscode.window.activeTextEditor.selection;
+            logFile.findSelectedTree(file,selection);
         }
     }
 
