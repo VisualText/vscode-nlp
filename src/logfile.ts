@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { moveDirection, nlpFileType, SequenceFile } from './sequence';
+import { TextFile } from './textFile';
 import { isAbsolute } from 'path';
 
 export let logFile: LogFile;
@@ -16,6 +17,8 @@ export class LogFile {
 	private logfile = '';
 	private fireds = new Array();
 	private highlights = new Array();
+	private selStart = 0;
+	private selEnd = 0;
     
 	constructor() {
 		this.setOutputFolder(path.join(this.seqFile.GetWorkingDirectory().path,'output'));
@@ -25,7 +28,7 @@ export class LogFile {
 		var filepath = '';
 		this.seqFile.SetFile(file.path);
 		if (this.seqFile.GetFileType() == nlpFileType.TXXT) {
-			this.fileGroup(file);
+			this.setFilesNames(file);
 
 			if (this.parseBrackets()) {
 				this.parseFireds(this.logfile);
@@ -46,11 +49,119 @@ export class LogFile {
 							var range = new vscode.Range(pos, pos);
 							editor.revealRange(range);
 						});
-					}					
+					}		
 				}
 			}			
 		}
 		return filepath;
+	}
+
+	findSelectedTree(file: vscode.Uri, selection: vscode.Selection) {
+		var treefile = '';
+		this.seqFile.SetFile(file.path);
+
+		if (this.seqFile.GetFileType() == nlpFileType.TXXT) {
+			this.setFilesNames(file);
+			this.absoluteRangeFromSelection(this.highlightFile, selection);	
+			var treeseg = this.findLogfileLines();
+			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.log';
+			this.openNewFile(filename,treeseg);
+		}
+		return treefile;
+	}
+
+	openNewFile(filepath: string, content: string) {
+		const newFile = vscode.Uri.parse('untitled:' + filepath);
+			vscode.workspace.openTextDocument(newFile).then(document => {
+				const edit = new vscode.WorkspaceEdit();
+				edit.insert(newFile, new vscode.Position(0, 0), content);
+				return vscode.workspace.applyEdit(edit).then(success => {
+					if (success) {
+						vscode.window.showTextDocument(document);
+					} else {
+						vscode.window.showInformationMessage('Error!');
+					}
+				});
+			});
+	}
+
+	bracketCount(text: string, end: number = 0): number {
+		if (end) {
+			text = text.substr(0,end);
+		}
+		var brackets = text.split(/\[\[/);
+		var brackets2 = text.split(/\]\]/);
+		return ((brackets.length + brackets2.length - 2))*2;
+	}
+
+	absoluteRangeFromSelection(textfile: string, selection: vscode.Selection) {
+		var absStart = 0;
+		var absEnd = 0;
+		var file = new TextFile(textfile);
+		var sep = file.getSeparator();
+		var sepLength = file.getSeparatorLength();
+
+		var linecount = 0;
+		var multiline = false;
+
+		for (let line of file.getLines(true)) {
+			if (multiline) {
+				if (selection.end.line == linecount) {
+					absEnd += selection.end.character - this.bracketCount(line,selection.end.character);
+					break;
+				}
+				absEnd += line.length + this.bracketCount(line);
+				if (line.length == 0)
+					absEnd += 1;
+			}
+			else if (selection.start.line == linecount) {
+				absStart += selection.start.character - this.bracketCount(line,selection.start.character);
+				if (selection.end.line == linecount) {
+					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(line,selection.end.character) - 1;
+					break;
+				}
+				absEnd = absStart + line.length - this.bracketCount(line);
+				multiline = true;
+			} else {
+				absStart += line.length - this.bracketCount(line);
+				if (line.length == 0)
+					absStart += 1;
+			}
+			linecount++;
+		}
+
+		this.selStart = absStart;
+		this.selEnd = absEnd;
+	}
+
+	findLogfileLines(): string {
+		var file = new TextFile(this.logfile);
+		var sep = file.getSeparatorNormalized();
+		var linecount = 0;
+		var treeseg = '';
+		var from = 0;
+		var to = 0;
+		var add = false;
+
+		for (let line of file.getLines()) {
+			from = 0;
+			to = 0;
+			add = false;
+
+			var tokens = line.split('[');
+			if (tokens.length > 1) {
+				var toks = tokens[1].split(/[,\]]/);
+				if (toks.length > 2) {
+					from = +toks[0];
+					to = +toks[1];
+					if (from >= this.selStart && to <= this.selEnd) {
+						treeseg = treeseg.concat(line,sep);
+					}		
+				}
+			}
+		}
+
+		return treeseg;
 	}
 
 	findMatchByAbsolute(absolute: number): number {
@@ -75,14 +186,11 @@ export class LogFile {
 	}
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
-		var contentstr = fs.readFileSync(this.highlightFile, 'utf8');
-		var lines = contentstr.split('\r');
-		if (lines.length == 1)
-			lines = contentstr.split('\n');
+		var file = new TextFile(this.highlightFile);
 		var lineCount = 0;
 		var absolute = 0;
 
-		for (let line of lines) {
+		for (let line of file.getLines()) {
 			if (lineCount == position.line) {
 				return absolute + position.character;
 			}
@@ -96,7 +204,8 @@ export class LogFile {
 		var bracketNumber = -1;
 		this.highlights = [];
 
-		var tokens = fs.readFileSync(this.highlightFile, 'utf8').split(/\[\[/);
+		var file = new TextFile(this.highlightFile,false);
+		var tokens = file.getText(true).split(/\[\[/);
 		var tokencount = 0;
 		var len = 0;
 		var lenBracket = 0;
@@ -127,13 +236,13 @@ export class LogFile {
 		var refire = new RegExp('[\[,\]', 'g');
 		this.fireds = [];
 
-		var lines = fs.readFileSync(logfile, 'utf8').split('\n');
+		var file = new TextFile(logfile);
 		var from = 0;
 		var to = 0;
 		var rulenum = 0;
 		var ruleline = 0;
 
-		for (let line of lines) {
+		for (let line of file.getLines()) {
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
 				var tts = line.split(refire);
@@ -160,18 +269,19 @@ export class LogFile {
 		var arrayLength = filenames.length;
 		var re = new RegExp('\\w+', 'g');
 		var refire = new RegExp('[\[,\]', 'g');
+		var file = new TextFile();
 
 		this.fireds = [];
 
 		for (let filename of filenames) {
-			if (filename.endsWith('.log')) {
-				var lines = fs.readFileSync(path.join(this.outfolder,filename), 'utf8').split('\n');
+			if (filename.endsWith('.log') || filename.endsWith('.kb')) {
+				file.setFile(path.join(this.outfolder,filename));
 				var l = 0;
 				var found = false;
 				var from = 0;
 				var to = 0;
 
-				for (let line of lines) {
+				for (let line of file.getLines()) {
 					if (found) {
 						var tokens = line.split(',fired');
 						if (tokens.length > 1) {
@@ -224,7 +334,7 @@ export class LogFile {
 		return new Date(1970, 1, 1);
 	}
 
-	fileGroup(filepath: vscode.Uri) {
+	setFilesNames(filepath: vscode.Uri) {
 		this.basename = path.basename(filepath.path,'.log');
 		this.basename = path.basename(this.basename,'.txxt');
 		this.basename = path.basename(this.basename,'.pat');
@@ -235,7 +345,7 @@ export class LogFile {
 	}
 
 	writeFiredText(logfile: vscode.Uri): vscode.Uri {
-		this.fileGroup(logfile);
+		this.setFilesNames(logfile);
 		var logDate: Date = this.fileCreateTime(logfile.path);
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
 		if (inputDate < logDate && fs.existsSync(this.highlightFile))
@@ -243,9 +353,7 @@ export class LogFile {
 		else if (!fs.existsSync(this.inputFile))
 			return logfile;
 
-		var text = fs.readFileSync(this.inputFile, 'utf8');
-		const regReplace = new RegExp('\r\n', 'g');
-		text = text.replace(regReplace, '\r');
+		var file = new TextFile(this.inputFile,false);
 
 		var textfire = '';
 		var lastTo = 0;
@@ -258,22 +366,18 @@ export class LogFile {
 			for (var i = 0; i < this.fireds.length; i++) {
 				from = this.fireds[i].from;
 				to = this.fireds[i].to;
-				between = text.substring(lastTo,from);
-				highlight = text.substring(from,to+1);
+				between = file.getText(true).substring(lastTo,from);
+				highlight = file.getText(true).substring(from,to+1);
 				textfire = textfire.concat(between,'[[',highlight,']]');
 				lastTo = to + 1;
 			}
-			textfire = textfire.concat(text.substring(lastTo,text.length));
+			textfire = textfire.concat(file.getText(true).substring(lastTo,file.getText(true).length));
 		} else {
-			textfire = text;
+			textfire = file.getText(true);
 		}
 
-		fs.writeFileSync(this.highlightFile,textfire,{flag:'w+'});
-
+		fs.writeFileSync(this.highlightFile,file.unnormalizeText(textfire),{flag:'w+'});
 		this.fireds = [];
-
-		const regBack = new RegExp('\r', 'g');
-		text = text.replace(regBack, '\r\n');
 		return vscode.Uri.file(this.highlightFile);
 	}
 }

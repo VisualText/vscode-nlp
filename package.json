@@ -132,6 +132,12 @@
                 "description": "View the rule that fired for this match"
             },
             {
+                "command": "nlp.openSelTree",
+                "category": "NLP",
+                "title": "View selected tree",
+                "description": "View the tree for the selected text"
+            },
+            {
                 "command": "analyzerSequence.reveal",
                 "title": "Analyzer Sequence: Reveal"
             },
@@ -245,6 +251,11 @@
                 {
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.ruleFired",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txxt",
+                    "command": "nlp.openSelTree",
                     "group": "nlp"
                 }
             ],
