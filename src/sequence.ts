@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { LogFile, nlpFileType } from './logfile';
 
 export enum moveDirection { UP, DOWN }
 export enum seqType { NLP, STUB }
-export enum nlpFileType { NLP, TXXT, LOG, KB }
 
 export class SequenceFile {
 	private workingDir: vscode.Uri = vscode.Uri.file('');

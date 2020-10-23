@@ -6,7 +6,6 @@ export let nlpCommands: NLPCommands;
 export class NLPCommands {
     _ctx: vscode.ExtensionContext;
 
-
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
