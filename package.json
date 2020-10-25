@@ -74,24 +74,38 @@
             {
                 "id": "seq",
                 "extensions": [
-                    "seq"
+                    ".seq"
                 ],
                 "aliases": [
-                    "SEQ",
-                    "seq"
+                    ".SEQ",
+                    ".seq"
                 ],
                 "configuration": "./seq.configuration.json"
             },
             {
                 "id": "txxt",
                 "extensions": [
-                    "txxt"
+                    ".txxt"
                 ],
                 "aliases": [
-                    "TXXT",
-                    "txxt"
+                    ".TXXT",
+                    ".txxt"
                 ],
                 "configuration": "./txxt.configuration.json"
+            },
+            {
+                "id": "tree",
+                "extensions": [
+                    ".log",
+                    ".tree"
+                ],
+                "aliases": [
+                    "LOG",
+                    "log",
+                    "TREE",
+                    "tree"
+                ],
+                "configuration": "./tree.configuration.json"
             }
         ],
         "grammars": [
@@ -109,6 +123,11 @@
                 "language": "txxt",
                 "scopeName": "source.txxt",
                 "path": "./syntaxes/txxt.tmLanguage.json"
+            },
+            {
+                "language": "tree",
+                "scopeName": "source.tree",
+                "path": "./syntaxes/tree.tmLanguage.json"
             }
         ],
         "snippets": [
