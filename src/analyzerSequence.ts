@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
-import { moveDirection, nlpFileType, SequenceFile } from './sequence';
-import { LogFile } from './logfile';
+import { moveDirection, seqType, SequenceFile } from './sequence';
+import { LogFile, nlpFileType } from './logfile';
+import { url } from 'inspector';
 
 //#region Utilities
 
@@ -145,14 +146,28 @@ export class FileStat implements vscode.FileStat {
 	}
 }
 
-interface Entry {
+interface Entry2 {
 	uri: vscode.Uri;
 	type: vscode.FileType;
 }
 
+class Entry extends vscode.TreeItem {
+	constructor(
+		public readonly uri: vscode.Uri,
+		public readonly label: string,
+		public readonly contextValue: string,
+		public pass: number,
+		public type: seqType,
+		public collapsibleState: vscode.TreeItemCollapsibleState
+	) {
+		super(label, collapsibleState);
+		this.command = { command: 'analayzerSequence.openFile', title: "Open File", arguments: [this.uri] };
+	}
+}
+
 //#endregion
 
-export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
+export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
 
 	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
 	
@@ -274,8 +289,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 
 	async getChildren(element?: Entry): Promise<Entry[]> {
 		if (element) {
-			const children = await this.readDirectory(element.uri);
-			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
+			return [];
 		}
 
 		var seqFile = new SequenceFile();
@@ -290,18 +304,22 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(seqFile.GetSpecFolder().fsPath, name)), type }));
 			const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
 			const orderedArray = new Array();
+			let passnum = 0;
+			var label: string = '';
 
-			for (let pass of  seqFile.GetPasses()) {
+			for (let pass of seqFile.GetPasses()) {
 				seqFile.SetPass(pass);
 				if (seqFile.IsValid()) {
+					passnum++;
+					label = passnum.toString() + ' ' + seqFile.GetName();
 					if (seqFile.IsRuleFile()) {
 						var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqFile.FileName()));
 						if (found.length)
-							orderedArray.push({uri: found[0].uri, type: 1});
+							orderedArray.push({uri: found[0].uri, label: label, contextValue: 'file', type: seqType.NLP, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 						else
-							orderedArray.push({uri: vscode.Uri.file(seqFile.FileName()), type: 1});
+							orderedArray.push({uri: vscode.Uri.file(seqFile.FileName()), label: label, contextValue: 'file', type: seqType.NLP, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 					} else {
-						orderedArray.push({uri: vscode.Uri.file(seqFile.GetStubName().concat('.stub')), type: 1});
+						orderedArray.push({uri: vscode.Uri.file(seqFile.GetStubName().concat('.stub')), label: label, contextValue: 'stub', type: seqType.STUB, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 					}			
 				}
 			}
@@ -312,12 +330,20 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 	}
 
 	getTreeItem(element: Entry): vscode.TreeItem {
-		const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-		if (element.type === vscode.FileType.File) {
-			treeItem.command = { command: 'analyzerSequence.openFile', title: 'Open File', arguments: [element], };
-			treeItem.contextValue = 'file';
+		if (element.type === seqType.NLP) {
+			element.command = { command: 'analyzerSequence.openFile', title: "Open File", arguments: [element] };
+			element.iconPath = {
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'gear.svg'),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'gear.svg')
+			};
+		} else {
+			element.iconPath = {
+				light: path.join(__filename, '..', '..', 'resources', 'light', 'circle-filled.svg'),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'circle-filled.svg')
+			};
 		}
-		return treeItem;
+		element.collapsibleState = vscode.TreeItemCollapsibleState.None;
+		return element;
 	}
 
 	moveUp(resource: Entry): void {
@@ -438,7 +464,7 @@ export class AnalyzerSequence {
 	private logFile = new LogFile();
 
 	constructor(context: vscode.ExtensionContext) {
-		const treeDataProvider = new FileSystemProvider();
+		const treeDataProvider = new PassTree();
 		this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
 		vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openNLP(resource));
 		vscode.commands.registerCommand('analyzerSequence.openTree', (resource) => this.openTree(resource));
@@ -461,7 +487,7 @@ export class AnalyzerSequence {
     }
 
 	private openNLP(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.path);
+		this.seqFile.SetFile(resource.uri.fsPath);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;
@@ -470,7 +496,7 @@ export class AnalyzerSequence {
 	}
 	
 	private openTree(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.path);
+		this.seqFile.SetFile(resource.uri.fsPath);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;
@@ -479,7 +505,7 @@ export class AnalyzerSequence {
 		if (this.workspacefolder) {
 			this.logFile.setOutputFolder(path.join(this.workspacefolder.uri.fsPath,'output'));
 			if (fs.existsSync(this.logFile.getOutputFolder())) {
-				var logfile = this.logFile.findLogfile(resource.uri,nlpFileType.LOG);
+				var logfile = this.logFile.anaFile(resource.pass,nlpFileType.LOG);
 				if (logfile)
 					vscode.window.showTextDocument(logfile);
 				else
@@ -498,7 +524,7 @@ export class AnalyzerSequence {
 		if (this.workspacefolder) {
 			this.logFile.setOutputFolder(path.join(this.workspacefolder.uri.fsPath,'output'));
 			if (fs.existsSync(this.logFile.getOutputFolder())) {
-				var firefile = this.logFile.findLogfile(resource.uri,nlpFileType.TXXT);
+				var firefile = this.logFile.firedFile(resource.pass);
 				if (firefile)
 					vscode.window.showTextDocument(firefile);
 				else
@@ -517,7 +543,7 @@ export class AnalyzerSequence {
 		if (this.workspacefolder) {
 			this.logFile.setOutputFolder(path.join(this.workspacefolder.uri.fsPath,'output'));
 			if (fs.existsSync(this.logFile.getOutputFolder())) {
-				var kbfile = this.logFile.findLogfile(resource.uri,nlpFileType.KB);
+				var kbfile = this.logFile.anaFile(resource.pass,nlpFileType.KB);
 				if (fs.existsSync(kbfile.path))
 					vscode.window.showTextDocument(kbfile);
 				else

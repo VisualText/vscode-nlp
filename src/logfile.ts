@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { moveDirection, nlpFileType, SequenceFile } from './sequence';
+import { moveDirection, SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 import { isAbsolute } from 'path';
+
+export enum nlpFileType { NLP, TXXT, LOG, KB }
+
 
 export let logFile: LogFile;
 export class LogFile {
@@ -19,9 +22,21 @@ export class LogFile {
 	private highlights = new Array();
 	private selStart = 0;
 	private selEnd = 0;
-    
+
+	private nlpFileExts = new Array('nlp', 'txxt', 'log', 'kb');
+
 	constructor() {
 		this.setOutputFolder(path.join(this.seqFile.GetWorkingDirectory().path,'output'));
+	}
+
+	anaFile(pass: number, type: nlpFileType = nlpFileType.LOG): vscode.Uri {
+		var filename: string = 'ana';
+		if (pass < 10)
+			filename = filename + '00';
+		else
+			filename = filename + '0';
+		filename = filename + pass.toString() + '.' + this.nlpFileExts[type];
+		return vscode.Uri.file(path.join(this.outfolder,filename));
 	}
 
     findRule(file: vscode.Uri, position: vscode.Position) {
@@ -258,71 +273,14 @@ export class LogFile {
 		return this.fireds.length ? true : false;
 	}
 
-	findLogfile(resource: vscode.Uri, nlpType: nlpFileType): vscode.Uri {
-		var logfile = vscode.Uri.file('');
-		var firefile = vscode.Uri.file('');
-
-		const filenames = fs.readdirSync(this.outfolder);
-		const restoks = path.basename(resource.path).split('.');
-		const baser = restoks[0];
-
-		var arrayLength = filenames.length;
-		var re = new RegExp('\\w+', 'g');
-		var refire = new RegExp('[\[,\]', 'g');
-		var file = new TextFile();
-
-		this.fireds = [];
-
-		for (let filename of filenames) {
-			if (filename.endsWith('.log') || filename.endsWith('.kb')) {
-				file.setFile(path.join(this.outfolder,filename));
-				var l = 0;
-				var found = false;
-				var from = 0;
-				var to = 0;
-
-				for (let line of file.getLines()) {
-					if (found) {
-						var tokens = line.split(',fired');
-						if (tokens.length > 1) {
-							var tts = line.split(refire);
-							if (+tts[2] > to) {
-								from = +tts[1];
-								to = +tts[2];
-								this.fireds.push({from: from, to: to});						
-							}
-						}
-					}
-					else if (l++ == 2) {
-						var toks = line.match(re);
-						if (toks) {
-							var base = path.basename(resource.path,'.pat');
-							if (baser.localeCompare(toks[2]) == 0) {
-								if (nlpType == nlpFileType.KB) {
-									var anafile = path.basename(filename,'.log');
-									filename = anafile.concat('.kb');
-									return vscode.Uri.file(path.join(this.outfolder,filename));
-								}
-								else if (nlpType == nlpFileType.LOG) {
-									return vscode.Uri.file(path.join(this.outfolder,filename));
-								}
-								logfile = vscode.Uri.file(path.join(this.outfolder,filename));
-								found = true;
-							}	
-						} else {
-							return vscode.Uri.file(path.join(this.outfolder,'final.log'));
-						}
-					} else if (l > 2) {
-						break;
-					}
-				}
-				if (found) {
-					return this.writeFiredText(logfile);
-				}
-			}
+	firedFile(pass: number): vscode.Uri {
+		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
+		if (!fs.existsSync(firefile.path)) {
+			var logfile = this.anaFile(pass);
+			this.parseFireds(logfile.path);
+			this.writeFiredText(logfile);
 		}
-
-		return logfile;
+		return firefile;
     }
     
 	fileCreateTime(filepath: string): Date {

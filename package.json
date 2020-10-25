@@ -23,19 +23,30 @@
                 {
                     "id": "analyzerSequence",
                     "name": "Analyzer Sequence"
-                },
+                }
+            ],
+            "visual-text": [
                 {
                     "id": "analyzerSequence",
-                    "name": "Analyzer Sequence"
+                    "name": "VisualText",
+                    "icon": "resources/NLPIcon.svg",
+                    "contextualTitle": "VisualText"
                 }
             ]
         },
         "viewsContainers": {
+            "panel": [
+                {
+                    "id": "visual-text",
+                    "title": "VisualText",
+                    "icon": "resources/NLPIcon.svg"
+                }
+            ],
             "activitybar": [
                 {
-                    "id": "package-explorer",
-                    "title": "Package Explorer",
-                    "icon": "media/dep.svg"
+                    "id": "visual-text",
+                    "title": "VisualText",
+                    "icon": "resources/NLPIcon.svg"
                 }
             ]
         },
@@ -349,6 +360,7 @@
         "@types/mkdirp": "^1.0.0",
         "@types/rimraf": "^3.0.0",
         "fs": "0.0.1-security",
+        "ftp": "^0.3.10",
         "mkdirp": "^1.0.4",
         "readline": "^1.3.0",
         "rimraf": "^3.0.2",
@@ -368,7 +380,7 @@
         "@types/vscode": "^1.45.0",
         "glob": "^7.1.5",
         "mocha": "^6.2.2",
-        "tslib": "^2.0.2",
+        "tslib": "^2.0.3",
         "tslint": "^5.20.0",
         "typescript": "^3.6.4",
         "vscode-test": "^1.2.2"
