@@ -29,17 +29,20 @@
             ]
         },
         "node-name": {
-            "match": "\\b[a-zA-Z0-9]\\b",
-            "name": "variable.parameter.tree"
+            "match": "\\b([a-zA-Z0-9]+)\\b",
+            "name": "keyword.node.tree"
         },
         "rewrites": {
-            "name": "keyword.region.tree",
+            "name": "keyword.rewrite.tree",
             "match": "\\b_[a-zA-Z]+\\b"
         },
         "attributes": {
             "begin": "\\[",
             "end": "\\]",
             "patterns": [
+                {
+                    "include": "#number"
+                },
                 {
                     "include": "#literal"
                 },
@@ -84,17 +87,17 @@
                 }
             ]
         },
-        "numeric-literal": {
-            "match": "\\b[0-9]\\b",
+        "number": {
+            "match": "\\b[0-9]+\\b",
             "name": "constant.numeric.tree"
         },
         "fired": {
             "match": "\\b(?i:(fired))\\b",
-            "name": "keyword.region.tree"
+            "name": "keyword.fired.tree"
         },
         "types": {
             "match": "\\b(?i:(node|alpha|punct|ctrl))\\b",
-            "name": "entity.name.function.tree"
+            "name": "keyword.attribute.tree"
         }
     }
 }
