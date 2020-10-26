@@ -132,7 +132,7 @@
         ],
         "snippets": [
             {
-                "language": "javascript",
+                "language": "nlp",
                 "scopeName": "source.nlp",
                 "path": "./snippets/nlp.json"
             }
