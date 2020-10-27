@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
-import { moveDirection, seqType, SequenceFile } from './sequence';
-import { LogFile, nlpFileType } from './logfile';
+import { SequenceFile, seqType, moveDirection } from './sequence';
+import { nlpFileType } from './textFile';
+import { LogFile } from './logfile';
 import { url } from 'inspector';
 
 //#region Utilities
@@ -357,8 +358,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	moveSequence(resource: Entry, direction: moveDirection) {
 		var seqFile = new SequenceFile();
 		if (seqFile.HasWorkingDirectory()) {
-			seqFile.SetFile(resource.uri.path);
-			var basename = seqFile.GetBasename();
+			seqFile.setFile(resource.uri.path);
+			var basename = seqFile.getBasename();
 			var row = seqFile.FindPass(basename);
 
 			// Build new file
@@ -390,7 +391,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
-				seqFile.SetFile(resource.uri.path);
+				seqFile.setFile(resource.uri.path);
 				if (!selection) {
 					return;
 				}
@@ -487,7 +488,7 @@ export class AnalyzerSequence {
     }
 
 	private openNLP(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.fsPath);
+		this.seqFile.setFile(resource.uri.fsPath);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;
@@ -496,7 +497,7 @@ export class AnalyzerSequence {
 	}
 	
 	private openTree(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.fsPath);
+		this.seqFile.setFile(resource.uri.fsPath);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;
@@ -515,7 +516,7 @@ export class AnalyzerSequence {
 	}
 
 	private openHighlight(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.path);
+		this.seqFile.setFile(resource.uri.path);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;
@@ -534,7 +535,7 @@ export class AnalyzerSequence {
 	}
 
 	private openKB(resource: Entry): void {
-		this.seqFile.SetFile(resource.uri.path);
+		this.seqFile.setFile(resource.uri.path);
 		if (!this.seqFile.IsRuleFile()) {
 			vscode.window.showWarningMessage('Not editable');
 			return;

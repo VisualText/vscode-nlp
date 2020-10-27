@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { sep } from 'path';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
+export enum nlpFileType { UNKNOWN, NLP, TXXT, LOG, KB }
 
 export class TextFile {
     private uri: vscode.Uri = vscode.Uri.file('');
@@ -15,6 +16,10 @@ export class TextFile {
     private sep: string = '';
     private lines = new Array();
     private linesNormalized = new Array();
+    private filetype = nlpFileType.UNKNOWN;
+    private tabsize = 4;
+
+    public basename: string = '';
 
     constructor(filepath: string = '', separateLines: boolean = true) {
         this.setFile(filepath,separateLines);
@@ -25,10 +30,47 @@ export class TextFile {
         if (filepath.length) {
             this.uri = vscode.Uri.file(filepath);
             this.filepath = filepath;
-            this.calculateSeparatorType();
-            if (separateLines)
-                this.separateLines();            
+            this.text = fs.readFileSync(this.filepath, 'utf8');
+            this.setFileType(this.filepath);   
+            this.separation(separateLines);
         }        
+    }
+
+    setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {
+        this.clear();
+        this.uri = editor.document.uri;
+        this.filepath = editor.document.uri.path;
+        var firstLine = editor.document.lineAt(0);
+        var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+        var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+        this.text = editor.document.getText(textRange);
+        this.setFileType(this.filepath);
+        this.separation(separateLines);
+    }
+    
+	setFileType(filename: string) {
+		this.basename = path.basename(filename, '.nlp');
+		this.basename = path.basename(this.basename, '.pat');
+        
+		this.filetype = nlpFileType.NLP
+		if (path.extname(filename) == '.txxt')
+			this.filetype = nlpFileType.TXXT;
+		else if (path.extname(filename) == '.kb')
+			this.filetype = nlpFileType.KB;
+		else if (path.extname(filename) == '.log')
+			this.filetype = nlpFileType.LOG;
+    }
+
+	getFileType(): nlpFileType {
+		return this.filetype;
+	}
+    
+    getUri(): vscode.Uri {
+        return this.uri;
+    }
+    
+	getBasename(): string {
+		return this.basename;
     }
 
     clear() {
@@ -40,9 +82,8 @@ export class TextFile {
         this.lines = [];
     }
     
-    calculateSeparatorType() {
-        if (this.filepath.length) {
-            this.text = fs.readFileSync(this.filepath, 'utf8');
+    separation(separateLines: boolean=true) {
+        if (this.filepath.length && this.text.length) {
             var counts_rn = this.text.split('\r\n');
             var counts_r = this.text.split('\r');
             var counts_n = this.text.split('\n');
@@ -59,7 +100,9 @@ export class TextFile {
             } else if (counts_n.length > 1) {
                 this.sepType = separatorType.SEP_N;
                 this.sep = '\n';
-            }       
+            }
+            if (separateLines)
+                this.separateLines();      
         }
     }
 
