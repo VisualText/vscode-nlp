@@ -9,6 +9,7 @@ export class NLPCommands {
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
     }
@@ -20,21 +21,24 @@ export class NLPCommands {
         return nlpCommands;
     }
 
+    reformatRule() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.reformatRule(vscode.window.activeTextEditor);
+        }
+    }
+
     ruleFired() {
         if (vscode.window.activeTextEditor) {
-            var file = vscode.window.activeTextEditor.document.uri;
-            var position = vscode.window.activeTextEditor.selection.active;
             var logFile = new LogFile();
-            logFile.findRule(file,position);
+            logFile.findRule(vscode.window.activeTextEditor);
         }
     }
 
     openSelTree() {
         if (vscode.window.activeTextEditor) {
-            var file = vscode.window.activeTextEditor.document.uri;
             var logFile = new LogFile();
-            var selection = vscode.window.activeTextEditor.selection;
-            logFile.findSelectedTree(file,selection);
+            logFile.findSelectedTree(vscode.window.activeTextEditor);
         }
     }
 

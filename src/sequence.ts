@@ -1,24 +1,26 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { LogFile, nlpFileType } from './logfile';
+import { TextFile, nlpFileType } from './textFile';
+import { LogFile } from './logfile';
 
 export enum moveDirection { UP, DOWN }
-export enum seqType { NLP, STUB }
+export enum seqType { UNKNOWN, NLP, STUB, FOLDER }
 
-export class SequenceFile {
+export class SequenceFile extends TextFile {
+	private textFile = new TextFile();
 	private workingDir: vscode.Uri = vscode.Uri.file('');
 	private specfolder: vscode.Uri = vscode.Uri.file('');
 	private pass: string = '';
-	private type: seqType = seqType.NLP;
-	private filetype: nlpFileType = nlpFileType.NLP;
 	private tokens = new Array();
 	private passes = new Array();
 	private cleanpasses = new Array();
-	private basename: string = '';
 	private newcontent: string = '';
+	private basenamestub: string = '';
+	private seqType = seqType.UNKNOWN;
 
 	constructor() {
+		super();
 		if (vscode.workspace.workspaceFolders) {
             const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
             if (workspaceFolder) {
@@ -47,6 +49,17 @@ export class SequenceFile {
 		this.passes = fs.readFileSync(path.join(this.specfolder.fsPath, 'analyzer.seq'), 'utf8').split('\n');
 		this.CleanPasses();
 	}
+
+	SetSeqType(filename: string) {
+		this.setFileType(filename);
+
+		this.seqType = seqType.NLP;
+		var basenamestub = path.basename(filename, '.stub');
+		if (this.basenamestub.length < this.basename.length) {
+			this.seqType = seqType.STUB;
+			this.basename = basenamestub;
+        }
+    }
 
 	GetFileByNumber(num: number): string {
 		var filepath = '';
@@ -84,8 +97,8 @@ export class SequenceFile {
 	
 	InsertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
 		if (this.passes.length) {
-			this.SetFile(passafter.path);
-			var row = this.FindPass(this.GetBasename());
+			this.textFile.setFile(passafter.path,false);
+			var row = this.FindPass(this.textFile.getBasename());
 			if (row >= 0) {
 				var newpassstr = this.CreatePassStrFromFile(newpass.path);
 				this.passes.splice(row+1,0,newpassstr);
@@ -96,8 +109,8 @@ export class SequenceFile {
 		
 	InsertNewPass(passafter: vscode.Uri, newpass: string) {
 		if (this.passes.length) {
-			this.SetFile(passafter.path);
-			var row = this.FindPass(this.GetBasename());
+			this.textFile.setFile(passafter.path,false);
+			var row = this.FindPass(this.textFile.getBasename());
 			if (row >= 0) {
 				var newfile = this.CreateNewPassFile(newpass);
 				var newpassstr = this.CreatePassStrFromFile(newfile);
@@ -109,8 +122,8 @@ export class SequenceFile {
 
 	DeletePass(pass: vscode.Uri) {
 		if (this.passes.length) {
-			this.SetFile(pass.path);
-			var row = this.FindPass(this.GetBasename());
+			this.textFile.setFile(pass.path,false);
+			var row = this.FindPass(this.textFile.getBasename());
 			if (row >= 0) {
 				this.passes.splice(row,1);
 			}
@@ -178,11 +191,11 @@ export class SequenceFile {
 
 	SetPass(pass: string) {
 		this.pass = pass;
-		this.type = seqType.NLP;
+		this.seqType = seqType.NLP;
 		if (pass.length) {
 			this.tokens = pass.split(/[\t\s]/);
 			if (this.tokens[0].localeCompare('pat') && this.tokens[0].localeCompare('rec'))
-				this.type = seqType.STUB;
+				this.seqType = seqType.STUB;
 		} else
 			this.tokens = [];
 	}
@@ -211,23 +224,19 @@ export class SequenceFile {
 	}
 
 	IsRuleFile() {
-		return this.type == seqType.NLP;
+		return this.seqType == seqType.NLP;
 	}
 
 	FileName(): string {
 		return this.tokens[1].concat('.pat');
 	}
+	
+	GetSeqType(): seqType {
+		return this.seqType;
+    }
 
 	GetPasses(): any[] {
 		return this.passes;
-	}
-	
-	GetType(): seqType {
-		return this.type;
-	}
-
-	GetFileType(): nlpFileType {
-		return this.filetype;
 	}
 
 	GetTypeName(): string {
@@ -252,30 +261,6 @@ export class SequenceFile {
 		else if (this.tokens[0].localeCompare('end') == 0)
 			return this.tokens[0].concat('_',this.tokens[1]);
 		return this.tokens[1];
-	}
-
-	SetFile(filename: string): seqType {
-		this.type = seqType.NLP;
-		this.basename = path.basename(filename, '.nlp');
-		this.basename = path.basename(this.basename, '.pat');
-		var basenamestub = path.basename(filename, '.stub');
-		if (basenamestub.length < this.basename.length) {
-			this.type = seqType.STUB;
-			this.basename = basenamestub;
-			return seqType.STUB;
-		}
-		this.filetype = nlpFileType.NLP
-		if (path.extname(filename) == '.txxt')
-			this.filetype = nlpFileType.TXXT;
-		else if (path.extname(filename) == '.kb')
-			this.filetype = nlpFileType.KB;
-		else if (path.extname(filename) == '.log')
-			this.filetype = nlpFileType.LOG;
-		return this.type;
-	}
-
-	GetBasename(): string {
-		return this.basename;
 	}
 
 	SaveFile() {
