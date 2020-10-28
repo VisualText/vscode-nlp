@@ -18,11 +18,8 @@ export class LogFile {
 	private logfile = '';
 	private fireds = new Array();
 	private highlights = new Array();
-	//private ruleRange: vscode.Range;
 	private selStart = 0;
 	private selEnd = 0;
-
-	private nlpFileExts = new Array('nlp', 'txxt', 'log', 'kb');
 
 	constructor() {
 		this.setOutputFolder(path.join(this.seqFile.GetWorkingDirectory().path,'output'));
@@ -34,7 +31,7 @@ export class LogFile {
 			filename = filename + '00';
 		else
 			filename = filename + '0';
-		filename = filename + pass.toString() + '.' + this.nlpFileExts[type];
+		filename = filename + pass.toString() + '.' + this.textFile.getExtension(type);
 		return vscode.Uri.file(path.join(this.outfolder,filename));
 	}
 	
