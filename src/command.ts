@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { LogFile } from './logfile';
+import { NLPFile } from './nlp';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
@@ -8,6 +9,7 @@ export class NLPCommands {
 
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
+        ctx.subscriptions.push(vscode.commands.registerCommand('text.analyze', this.analyze));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
@@ -23,8 +25,8 @@ export class NLPCommands {
 
     reformatRule() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
-            logFile.reformatRule(vscode.window.activeTextEditor);
+            var nlpFile = new NLPFile();
+            nlpFile.reformatRule(vscode.window.activeTextEditor);
         }
     }
 
@@ -43,6 +45,9 @@ export class NLPCommands {
     }
 
     analyze() {
-        console.log('NLP Analyzing!!!');
+        if (vscode.window.activeTextEditor) {
+            var nlp = new NLPFile();
+            nlp.analyze(vscode.window.activeTextEditor);
+        }
     }
 }

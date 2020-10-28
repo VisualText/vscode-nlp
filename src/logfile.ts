@@ -4,44 +4,32 @@ import * as fs from 'fs';
 import { isAbsolute } from 'path';
 import { SequenceFile, moveDirection } from './sequence';
 import { TextFile, nlpFileType, separatorType } from './textFile';
+import { Analyzer } from './analyzer';
 
 export let logFile: LogFile;
-export class LogFile {
+export class LogFile extends TextFile {
 	
+	private analyzer = new Analyzer();
 	private seqFile = new SequenceFile();
-	private textFile = new TextFile();
-	private workspacefolder: vscode.WorkspaceFolder | undefined;
-	private basename = '';
-	private inputFile = '';
-    private highlightFile = '';
-	private outfolder = '';
-	private logfile = '';
 	private fireds = new Array();
 	private highlights = new Array();
 	private selStart = 0;
 	private selEnd = 0;
+	private logFile = '';
+	private highlightFile = '';
+	private inputFile = '';
 
 	constructor() {
-		this.setOutputFolder(path.join(this.seqFile.GetWorkingDirectory().path,'output'));
-	}
-
-	anaFile(pass: number, type: nlpFileType = nlpFileType.LOG): vscode.Uri {
-		var filename: string = 'ana';
-		if (pass < 10)
-			filename = filename + '00';
-		else
-			filename = filename + '0';
-		filename = filename + pass.toString() + '.' + this.textFile.getExtension(type);
-		return vscode.Uri.file(path.join(this.outfolder,filename));
+		super();
 	}
 	
     findRule(editor: vscode.TextEditor) {
-		this.textFile.setDocument(editor);
-		if (this.textFile.getFileType() == nlpFileType.TXXT) {
-			this.setFilesNames(this.textFile.getUri());
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.TXXT) {
+			this.setFilesNames(this.getUri().path);
 
 			if (this.parseBrackets()) {
-				this.parseFireds(this.logfile);
+				this.parseFireds(this.logFile);
 				var absolute = this.lineCharacterToAbsolute(editor.selection.active);
 
 				if (absolute >= 0) {
@@ -49,7 +37,8 @@ export class LogFile {
 
 					if (firedNumber >= 0) {
 						var chosen = this.fireds[firedNumber];
-						var ruleFile = this.seqFile.GetFileByNumber(chosen.rule-1);
+						this.seqFile.init();
+						var ruleFile = this.seqFile.getFileByNumber(chosen.rule-1);
 						var ruleFileUri = vscode.Uri.file(ruleFile);
 
 						vscode.window.showTextDocument(ruleFileUri).then(editor => 
@@ -65,162 +54,37 @@ export class LogFile {
 		}
 	}
 
-    reformatRule(editor: vscode.TextEditor) {
-		this.textFile.setDocument(editor);
-		if (this.textFile.getFileType() == nlpFileType.NLP) {
-			this.setFilesNames(this.textFile.getUri());
-
-			var rulevars = this.findRuleText(editor);
-
-			if (rulevars[0].length) {
-				var formattedRule = this.formatRule(rulevars[0]);
-				var rang = new vscode.Selection(rulevars[1].start,rulevars[1].end);
-				if (rulevars[1].start.line == rulevars[1].end.line) {
-					formattedRule = this.textFile.getSeparator() + formattedRule + this.textFile.getSeparator() + '\t';
-				}
-				var snippet = new vscode.SnippetString(formattedRule);
-				editor.insertSnippet(snippet,rang);
-			}			
+	setFile(filepath: string, separateLines: boolean = true) {
+		super.setFile(filepath,separateLines);
+		this.setFilesNames(filepath);
+	}
+	
+	setFilesNames(filepath: string) {
+		if (filepath.length) {
+			this.basename = path.basename(filepath,'.log');
+			this.basename = path.basename(this.basename,'.txxt');
+			this.basename = path.basename(this.basename,'.pat');
+			this.basename = path.basename(this.basename,'.nlp');
+			this.logFile = path.join(this.analyzer.getOutputDirectory().path,this.basename+'.log');
+			this.highlightFile = path.join(this.analyzer.getOutputDirectory().path,this.basename+'.txxt');
+			this.inputFile = path.join(this.analyzer.getOutputDirectory().path,'input.txt');			
 		}
 	}
 
-	findRuleText(editor: vscode.TextEditor): [string, vscode.Range] {
-		var rulestr = '';
-		var position = editor.selection.active;
-		var lineStart = position.line;
-		var charStart = position.character;
-		var lineEnd = position.line;
-		var charEnd = position.character;
-
-		var lines = this.textFile.getLines(true);
-		var line = lines[lineStart];
-		var lastline = line;
-		var multilined = false;
-		var pos = 0;
-
-		while ((pos = line.search('<-')) < 0) {
-			rulestr = line + rulestr;
-			lastline = line;
-			line = lines[--lineStart];
-			multilined = true;
-		}
-		if (lineStart < position.line)
-			charStart = 0;
+	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
+		var filename: string = 'ana';
+		if (pass < 10)
+			filename = filename + '00';
 		else
-			charStart = pos+3;
-		if (multilined)
-			lineStart++;
-
-		multilined = false;
-		line = lines[lineEnd];
-		var firsttime = true;
-		while ((pos = line.search('@@')) < 0) {
-			if (!firsttime)
-				rulestr = rulestr + line;
-			lastline = line;
-			line = lines[++lineEnd];
-			firsttime = false;
-		}
-		if (!firsttime)	{
-			lineEnd--;
-			charEnd = lastline.length-1;
-		} else {
-			charEnd = pos;			
-		}
-
-		var posStart = new vscode.Position(lineStart,charStart);
-		var posEnd = new vscode.Position(lineEnd,charEnd);
-		var range = new vscode.Range(posStart, posEnd);
-
-		if (rulestr.length == 0) {
-			rulestr = lastline.substr(charStart,charEnd-charStart);
-		}
-
-		return [rulestr,range];
-	}
-
-	formatRule(ruleStr: string): string {
-
-		enum state { UNKNOWN, NODE, ATTR_START, ATTR, ATTR_END, COMMENT };
-
-		var formattedRule = ruleStr.replace(this.textFile.getSeparatorNormalized(),' ');
-
-		var tokens = ruleStr.split(/\s+/);
-		var currentState = state.UNKNOWN;
-		var lastState = state.UNKNOWN;
-		var lastToken = '';
-		var rulelines = new Array();
-		var rulelinesFinal = new Array();
-		var ruleline = '';
-		var maxline = 0;
-		const nodeNumRegex = /\([\d]+\)/g;
-
-		for (let token of tokens) {
-			if (!token.length)
-				continue;
-
-			if (token.localeCompare('###') == 0 || token.match(nodeNumRegex)) {
-				currentState = state.COMMENT;
-
-			} else if (currentState as state == state.NODE && token.startsWith('[')) {
-				currentState = state.ATTR_START;
-				if (token.endsWith(']'))
-					currentState = state.ATTR_END;
-
-			} else if (currentState == state.ATTR_START || currentState == state.ATTR ) {
-				if (token.endsWith(']'))
-					currentState = state.ATTR_END;
-				else
-					currentState = state.ATTR;
-
-			} else {
-				currentState = state.NODE;
-			}
-
-			if (currentState != state.COMMENT) {
-				if (currentState == state.NODE && (lastState == state.NODE || lastState as state == state.ATTR_END || lastState == state.COMMENT)) {
-					if (ruleline.length > maxline)
-						maxline = ruleline.length;
-					rulelines.push(ruleline);
-					ruleline = '';
-				}
-				if (ruleline.length > 1) {
-					ruleline = ruleline + ' ';
-				}
-				ruleline = ruleline + token;
-			}
-
-			lastToken = token;
-			lastState = currentState;
-		}
-		if (ruleline.length > maxline)
-			maxline = ruleline.length;
-		rulelines.push(ruleline);
-
-		var passnum = 1;
-		var tabsize = 4;
-		var tabsmax = Math.floor(maxline / tabsize);
-
-		for (var line of rulelines) {
-			var tabsline = Math.floor(line.length) / tabsize;
-			var tabs = tabsmax - tabsline + 1;
-			var tabstr = '\t';
-			for (let i=1; i<tabs; i++) {
-				tabstr = tabstr + '\t';
-			}
-			rulelinesFinal.push('\t' + line + tabstr + '### (' + passnum.toString() + ')');
-			passnum++;
-		}
-
-		formattedRule = rulelinesFinal.join(this.textFile.getSeparator());
-
-		return formattedRule;
+			filename = filename + '0';
+		filename = filename + pass.toString() + '.' + this.getExtension(type);
+		return vscode.Uri.file(path.join(this.analyzer.getOutputDirectory().path,filename));
 	}
 
 	findSelectedTree(editor: vscode.TextEditor) {
-		this.textFile.setDocument(editor);
-		if (this.textFile.getFileType() == nlpFileType.TXXT) {
-			this.setFilesNames(this.textFile.getUri());
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.TXXT) {
+			this.setFilesNames(this.getUri().path);
 
 			this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
 			var treeseg = this.findLogfileLines();
@@ -294,7 +158,7 @@ export class LogFile {
 	}
 
 	findLogfileLines(): string {
-		var file = new TextFile(this.logfile);
+		var file = new TextFile(this.logFile);
 		var sep = file.getSeparatorNormalized();
 		var linecount = 0;
 		var treeseg = '';
@@ -337,12 +201,8 @@ export class LogFile {
 	}
 
     getOutputFolder() {
-        return this.outfolder;
+        return this.analyzer.getOutputDirectory;
     }
-
-    setOutputFolder(folderpath: string) {
-        this.outfolder = folderpath;
-	}
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
 		var file = new TextFile(this.highlightFile);
@@ -421,8 +281,10 @@ export class LogFile {
 		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
 		if (!fs.existsSync(firefile.path)) {
 			var logfile = this.anaFile(pass);
-			this.parseFireds(logfile.path);
-			this.writeFiredText(logfile);
+			if (fs.existsSync(logfile.path)) {
+				this.parseFireds(logfile.path);
+				this.writeFiredText(logfile);				
+			}
 		}
 		return firefile;
     }
@@ -436,18 +298,8 @@ export class LogFile {
 		return new Date(1970, 1, 1);
 	}
 
-	setFilesNames(filepath: vscode.Uri) {
-		this.basename = path.basename(filepath.path,'.log');
-		this.basename = path.basename(this.basename,'.txxt');
-		this.basename = path.basename(this.basename,'.pat');
-		this.basename = path.basename(this.basename,'.nlp');
-		this.logfile = path.join(this.outfolder,this.basename+'.log');
-		this.highlightFile = path.join(this.outfolder,this.basename+'.txxt');
-		this.inputFile = path.join(this.outfolder,'input.txt');
-	}
-
 	writeFiredText(logfile: vscode.Uri): vscode.Uri {
-		this.setFilesNames(logfile);
+		this.setFilesNames(logfile.path);
 		var logDate: Date = this.fileCreateTime(logfile.path);
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
 		if (inputDate < logDate && fs.existsSync(this.highlightFile))
