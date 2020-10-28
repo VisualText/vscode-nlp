@@ -139,6 +139,14 @@
         ],
         "commands": [
             {
+                "command": "text.analyze",
+                "title": "Run Analyzer file",
+                "icon": {
+                    "light": "fileicons/images/light/code.svg",
+                    "dark": "fileicons/images/dark/code.svg"
+                }
+            },
+            {
                 "command": "nlp.analyze",
                 "category": "NLP",
                 "title": "Analyze Text",
@@ -297,6 +305,11 @@
                 }
             ],
             "view/item/context": [
+                {
+                    "command": "text.analyze",
+                    "when": "view == textView && viewItem == file",
+                    "group": "file"
+                },
                 {
                     "command": "analyzerSequence.openFile",
                     "when": "view == analyzerSequence && viewItem == file",

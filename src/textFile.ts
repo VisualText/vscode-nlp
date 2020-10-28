@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { sep } from 'path';
+import { timingSafeEqual } from 'crypto';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
-export enum nlpFileType { UNKNOWN, NLP, TXXT, LOG, KB }
+export enum nlpFileType { UNKNOWN, NLP, TXXT, TREE, KB }
 
 export class TextFile {
     private uri: vscode.Uri = vscode.Uri.file('');
@@ -18,9 +19,8 @@ export class TextFile {
     private linesNormalized = new Array();
     private filetype = nlpFileType.UNKNOWN;
     private tabsize = 4;
-	private nlpFileExts = new Array('txt', 'nlp', 'txxt', 'log', 'kb');
-
     public basename: string = '';
+    private nlpFileExts = new Array('txt', 'nlp', 'txxt', 'log', 'kb');
 
     constructor(filepath: string = '', separateLines: boolean = true) {
         this.setFile(filepath,separateLines);
@@ -63,7 +63,11 @@ export class TextFile {
 		else if (path.extname(filename) == '.kb')
 			this.filetype = nlpFileType.KB;
 		else if (path.extname(filename) == '.log')
-			this.filetype = nlpFileType.LOG;
+			this.filetype = nlpFileType.TREE;
+    }
+
+    isFileType(type: nlpFileType): boolean {
+        return type == this.filetype;
     }
 
 	getFileType(): nlpFileType {
@@ -88,7 +92,10 @@ export class TextFile {
     }
     
     separation(separateLines: boolean=true) {
-        if (this.filepath.length && this.text.length) {
+        if (this.filepath.length) {
+            if (this.text.length == 0)
+                this.setFile(this.filepath,separateLines);
+
             var counts_rn = this.text.split('\r\n');
             var counts_r = this.text.split('\r');
             var counts_n = this.text.split('\n');

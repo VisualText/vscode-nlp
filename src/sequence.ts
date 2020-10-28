@@ -3,14 +3,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { TextFile, nlpFileType } from './textFile';
 import { LogFile } from './logfile';
+import { Analyzer } from './analyzer';
 
 export enum moveDirection { UP, DOWN }
 export enum seqType { UNKNOWN, NLP, STUB, FOLDER }
 
 export class SequenceFile extends TextFile {
-	private textFile = new TextFile();
-	private workingDir: vscode.Uri = vscode.Uri.file('');
-	private specfolder: vscode.Uri = vscode.Uri.file('');
+	private seqFileName = 'analyzer.seq';
+	private analyzer = new Analyzer();
 	private pass: string = '';
 	private tokens = new Array();
 	private passes = new Array();
@@ -21,20 +21,10 @@ export class SequenceFile extends TextFile {
 
 	constructor() {
 		super();
-		if (vscode.workspace.workspaceFolders) {
-            const workspaceFolder = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
-            if (workspaceFolder) {
-				this.SetWorkingDir(workspaceFolder.uri);
-			}
-		}
 	}
 
-	HasWorkingDirectory(): boolean {
-		return this.workingDir.path.length ? true : false;
-	}
-
-	GetWorkingDirectory(): vscode.Uri {
-		return this.workingDir;
+	hasWorkingDirectory(): boolean {
+		return this.analyzer.hasWorkingDirectory();
 	}
 
 	BaseName(passname: string): string {
@@ -43,14 +33,7 @@ export class SequenceFile extends TextFile {
 		return basename;
 	}
 
-	SetWorkingDir(directory: vscode.Uri) {
-		this.workingDir = directory;
-		this.specfolder = vscode.Uri.file(path.join(directory.path,'spec'));
-		this.passes = fs.readFileSync(path.join(this.specfolder.fsPath, 'analyzer.seq'), 'utf8').split('\n');
-		this.CleanPasses();
-	}
-
-	SetSeqType(filename: string) {
+	setSeqType(filename: string) {
 		this.setFileType(filename);
 
 		this.seqType = seqType.NLP;
@@ -61,95 +44,95 @@ export class SequenceFile extends TextFile {
         }
     }
 
-	GetFileByNumber(num: number): string {
+	getFileByNumber(num: number): string {
 		var filepath = '';
 		if (this.passes.length) {
 			var line = this.passes[num];
-			this.SetPass(line);
-			filepath = path.join(this.specfolder.path,this.tokens[1]+'.'+this.tokens[0]);
+			this.setPass(line);
+			filepath = path.join(this.analyzer.getSpecDirectory().path,this.tokens[1]+'.'+this.tokens[0]);
 		}
 		return filepath;
 	}
 
-	CleanPasses() {
+	cleanPasses() {
 		this.cleanpasses = [];
 		for (let pass of this.passes) {
-			this.SetPass(pass);
-			if (this.IsValid()) {
-				this.cleanpasses.push(this.CleanLine(pass));
+			this.setPass(pass);
+			if (this.isValid()) {
+				this.cleanpasses.push(this.cleanLine(pass));
 			}					
 		}
 	}
 
-	RenamePass(origpassname: string, newpassname: string) {
+	renamePass(origpassname: string, newpassname: string) {
 		if (this.passes.length) {
 			for (var i=0; i < this.passes.length; i++) {
-				this.SetPass(this.passes[i]);
-				if (origpassname.localeCompare(this.GetName()) == 0) {
+				this.setPass(this.passes[i]);
+				if (origpassname.localeCompare(this.getName()) == 0) {
 					this.tokens[1] = newpassname;
-					this.passes[i] = this.PassString();
+					this.passes[i] = this.passString();
 					break;
 				}
 			}
-			this.SaveFile();
+			this.saveFile();
 		}
 	}
 	
-	InsertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
+	insertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
 		if (this.passes.length) {
-			this.textFile.setFile(passafter.path,false);
-			var row = this.FindPass(this.textFile.getBasename());
+			this.setFile(passafter.path,false);
+			var row = this.findPass(this.getBasename());
 			if (row >= 0) {
-				var newpassstr = this.CreatePassStrFromFile(newpass.path);
+				var newpassstr = this.createPassStrFromFile(newpass.path);
 				this.passes.splice(row+1,0,newpassstr);
-				this.SaveFile();			
+				this.saveFile();			
 			}
 		}	
 	}
 		
-	InsertNewPass(passafter: vscode.Uri, newpass: string) {
+	insertNewPass(passafter: vscode.Uri, newpass: string) {
 		if (this.passes.length) {
-			this.textFile.setFile(passafter.path,false);
-			var row = this.FindPass(this.textFile.getBasename());
+			this.setFile(passafter.path,false);
+			var row = this.findPass(this.getBasename());
 			if (row >= 0) {
-				var newfile = this.CreateNewPassFile(newpass);
-				var newpassstr = this.CreatePassStrFromFile(newfile);
+				var newfile = this.createNewPassFile(newpass);
+				var newpassstr = this.createPassStrFromFile(newfile);
 				this.passes.splice(row+1,0,newpassstr);
-				this.SaveFile();			
+				this.saveFile();			
 			}
 		}	
 	}
 
-	DeletePass(pass: vscode.Uri) {
+	deletePass(pass: vscode.Uri) {
 		if (this.passes.length) {
-			this.textFile.setFile(pass.path,false);
-			var row = this.FindPass(this.textFile.getBasename());
+			this.setFile(pass.path,false);
+			var row = this.findPass(this.getBasename());
 			if (row >= 0) {
 				this.passes.splice(row,1);
 			}
-			this.SaveFile();
+			this.saveFile();
 		}	
 	}
 
-	CreateNewPassFile(filename: string): string {
-		var newfilepath = path.join(this.specfolder.path,filename.concat('.pat'));
-		fs.writeFileSync(newfilepath,this.NewPassContent(filename),{flag:'w+'});
+	createNewPassFile(filename: string): string {
+		var newfilepath = path.join(this.analyzer.getSpecDirectory().path,filename.concat('.pat'));
+		fs.writeFileSync(newfilepath,this.newPassContent(filename),{flag:'w+'});
 		return newfilepath;
 	}
 
-	TodayDate(): string {
+	todayDate(): string {
 		var today = new Date();
 		var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 		var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 		return date + ' ' + time;
 	}
 
-	NewPassContent(filename: string) {
+	newPassContent(filename: string) {
 		var newpass = '###############################################\n';
 		newpass = newpass.concat('# FILE: ',filename,'\n');
 		newpass = newpass.concat('# SUBJ: comment\n');
 		newpass = newpass.concat('# AUTH: Your Name\n');
-		newpass = newpass.concat('# CREATED: ',this.TodayDate(),'\n');
+		newpass = newpass.concat('# CREATED: ',this.todayDate(),'\n');
 		newpass = newpass.concat('# MODIFIED:\n');
 		newpass = newpass.concat('###############################################\n\n');
 
@@ -167,7 +150,7 @@ export class SequenceFile extends TextFile {
 		return newpass;
 	}
 
-	CreatePassStrFromFile(filepath: string) {
+	createPassStrFromFile(filepath: string) {
 		var name = this.BaseName(filepath);
 		var ext = path.extname(filepath).substr(1);
 		var passStr: string = '';
@@ -175,7 +158,7 @@ export class SequenceFile extends TextFile {
 		return passStr;
 	}
 
-	PassString(): string {
+	passString(): string {
 		var passStr: string = '';
 		for (var i=0; i<this.tokens.length; i++) {
 			if (passStr.length) {
@@ -189,7 +172,7 @@ export class SequenceFile extends TextFile {
 		return passStr;
 	}
 
-	SetPass(pass: string) {
+	setPass(pass: string) {
 		this.pass = pass;
 		this.seqType = seqType.NLP;
 		if (pass.length) {
@@ -200,7 +183,7 @@ export class SequenceFile extends TextFile {
 			this.tokens = [];
 	}
 
-	CleanLine(pass: string): string {
+	cleanLine(pass: string): string {
 		var cleanstr: string = '';
 
 		for (var i=0; i < this.tokens.length; i++) {
@@ -215,7 +198,7 @@ export class SequenceFile extends TextFile {
 		return cleanstr;
 	}
 
-	IsValid() {
+	isValid() {
 		if (this.tokens.length) {
 			if (this.tokens.length >= 2 && this.tokens[0].localeCompare('#'))
 				return true;
@@ -223,37 +206,45 @@ export class SequenceFile extends TextFile {
 		return false;
 	}
 
-	IsRuleFile() {
+	isRuleFile() {
 		return this.seqType == seqType.NLP;
 	}
 
-	FileName(): string {
+	fileName(): string {
 		return this.tokens[1].concat('.pat');
 	}
 	
-	GetSeqType(): seqType {
+	getSeqType(): seqType {
 		return this.seqType;
-    }
+	}
+	
+	init() {
+		super.setFile(path.join(this.analyzer.getSpecDirectory().path,this.seqFileName),true);
+		this.passes = this.getLines();
+	}
 
-	GetPasses(): any[] {
+	getPasses(): string[] {
+		if (this.passes.length == 0) {
+			this.init();
+		}
 		return this.passes;
 	}
 
-	GetTypeName(): string {
+	getTypeName(): string {
 		return this.tokens[0];
 	}
 
-	GetSpecFolder(): vscode.Uri {
-		return this.specfolder;
+	getSpecDirectory(): vscode.Uri {
+		return this.analyzer.getSpecDirectory();
 	}
 
-	GetName(): string {
+	getName(): string {
 		if (this.tokens[0].localeCompare('tokenize') == 0)
 			return this.tokens[0];
 		return this.tokens[1];
 	}
 	
-	GetStubName(): string {
+	getStubName(): string {
 		if (this.tokens[0].localeCompare('tokenize') == 0)
 			return this.tokens[0];
 		else if (this.tokens[0].localeCompare('stub') == 0)
@@ -263,7 +254,7 @@ export class SequenceFile extends TextFile {
 		return this.tokens[1];
 	}
 
-	SaveFile() {
+	saveFile() {
 		this.newcontent = '';
 		for (var i = 0; i < this.passes.length; i++) {
 			if (i > 0)
@@ -271,10 +262,10 @@ export class SequenceFile extends TextFile {
 			this.newcontent = this.newcontent.concat(this.passes[i]);
 		}
 
-		fs.writeFileSync(path.join(this.specfolder.path,'analyzer.seq'),this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(this.analyzer.getOutputDirectory().path,this.seqFileName),this.newcontent,{flag:'w+'});
 	}
 
-	MovePass(direction: moveDirection, row: number) {
+	movePass(direction: moveDirection, row: number) {
 		for (var i = 0; i < this.passes.length; i++) {
 			if ((direction == moveDirection.UP && i+1 == row) || (direction == moveDirection.DOWN && i == row)) {
 				var next = this.passes[i+1];
@@ -285,12 +276,12 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	FindPass(passToMatch: string): number {
+	findPass(passToMatch: string): number {
 		var r = 0;
 		var found = false;
 		for (let pass of this.passes) {
-			this.SetPass(pass);
-			if (passToMatch.localeCompare(this.GetName()) == 0) {
+			this.setPass(pass);
+			if (passToMatch.localeCompare(this.getName()) == 0) {
 				found = true;
 				break;
 			}			
