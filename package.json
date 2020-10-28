@@ -19,32 +19,21 @@
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "explorer": [
+            "visualText": [
+                {
+                    "id": "textView",
+                    "name": "Text View"
+                },
                 {
                     "id": "analyzerSequence",
                     "name": "Analyzer Sequence"
                 }
-            ],
-            "visual-text": [
-                {
-                    "id": "analyzerSequence",
-                    "name": "VisualText",
-                    "icon": "resources/NLPIcon.svg",
-                    "contextualTitle": "VisualText"
-                }
             ]
         },
         "viewsContainers": {
-            "panel": [
-                {
-                    "id": "visual-text",
-                    "title": "VisualText",
-                    "icon": "resources/NLPIcon.svg"
-                }
-            ],
             "activitybar": [
                 {
-                    "id": "visual-text",
+                    "id": "visualText",
                     "title": "VisualText",
                     "icon": "resources/NLPIcon.svg"
                 }

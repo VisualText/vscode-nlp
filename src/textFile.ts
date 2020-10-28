@@ -18,11 +18,16 @@ export class TextFile {
     private linesNormalized = new Array();
     private filetype = nlpFileType.UNKNOWN;
     private tabsize = 4;
+	private nlpFileExts = new Array('txt', 'nlp', 'txxt', 'log', 'kb');
 
     public basename: string = '';
 
     constructor(filepath: string = '', separateLines: boolean = true) {
         this.setFile(filepath,separateLines);
+    }
+
+    getExtension(type: nlpFileType): string {
+        return this.nlpFileExts[type];
     }
 
     setFile(filepath: string, separateLines: boolean = true) {
