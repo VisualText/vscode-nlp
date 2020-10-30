@@ -27,6 +27,10 @@
                 {
                     "id": "analyzerSequence",
                     "name": "Analyzer Sequence"
+                },
+                {
+                    "id": "analyzerView",
+                    "name": "Analyzers"
                 }
             ]
         },
@@ -171,15 +175,15 @@
                 "description": "View the tree for the selected text"
             },
             {
-                "command": "analyzerSequence.reveal",
+                "command": "sequenceView.reveal",
                 "title": "Analyzer Sequence: Reveal"
             },
             {
-                "command": "analyzerSequence.changeTitle",
+                "command": "sequenceView.changeTitle",
                 "title": "Analyzer Sequence: Change Title"
             },
             {
-                "command": "analyzerSequence.moveUp",
+                "command": "sequenceView.moveUp",
                 "title": "Move Up",
                 "icon": {
                     "light": "resources/light/up.svg",
@@ -187,7 +191,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.moveDown",
+                "command": "sequenceView.moveDown",
                 "title": "Move Down",
                 "icon": {
                     "light": "resources/light/down.svg",
@@ -195,7 +199,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.openKB",
+                "command": "sequenceView.openKB",
                 "title": "Open KB",
                 "icon": {
                     "light": "fileicons/images/light/library.svg",
@@ -203,7 +207,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.openHighlight",
+                "command": "sequenceView.openHighlight",
                 "title": "Highlight Text",
                 "icon": {
                     "light": "fileicons/images/light/symbol-keyword.svg",
@@ -211,7 +215,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.openFile",
+                "command": "sequenceView.openFile",
                 "title": "Open NLP file",
                 "icon": {
                     "light": "fileicons/images/light/code.svg",
@@ -219,7 +223,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.openTree",
+                "command": "sequenceView.openTree",
                 "title": "Open Tree file",
                 "icon": {
                     "light": "fileicons/images/light/list-tree.svg",
@@ -227,7 +231,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.rename",
+                "command": "sequenceView.rename",
                 "title": "Rename pass",
                 "icon": {
                     "light": "fileicons/images/light/code.svg",
@@ -235,7 +239,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.insertNew",
+                "command": "sequenceView.insertNew",
                 "title": "Insert New pass",
                 "icon": {
                     "light": "fileicons/images/light/file-code.svg",
@@ -243,7 +247,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.insert",
+                "command": "sequenceView.insert",
                 "title": "Insert Existing pass",
                 "icon": {
                     "light": "fileicons/images/light/file-code.svg",
@@ -251,7 +255,7 @@
                 }
             },
             {
-                "command": "analyzerSequence.delete",
+                "command": "sequenceView.delete",
                 "title": "Delete pass",
                 "icon": {
                     "light": "fileicons/images/light/file-code.svg",
@@ -259,7 +263,23 @@
                 }
             },
             {
-                "command": "analyzerSequence.refreshEntry",
+                "command": "sequenceView.refreshAll",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "textView.refreshAll",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "analyzerView.refreshAll",
                 "title": "Refresh",
                 "icon": {
                     "light": "resources/light/refresh.svg",
@@ -299,8 +319,18 @@
             ],
             "view/title": [
                 {
-                    "command": "analyzerSequence.refreshEntry",
+                    "command": "sequenceView.refreshEntry",
                     "when": "view == analyzerSequence",
+                    "group": "navigation"
+                },
+                {
+                    "command": "textView.refreshAll",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "analyzerView.refreshAll",
+                    "when": "view == analyzerView",
                     "group": "navigation"
                 }
             ],
@@ -311,77 +341,77 @@
                     "group": "file"
                 },
                 {
-                    "command": "analyzerSequence.openFile",
+                    "command": "sequenceView.openFile",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
                 {
-                    "command": "analyzerSequence.openTree",
+                    "command": "sequenceView.openTree",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
                 {
-                    "command": "analyzerSequence.openHighlight",
+                    "command": "sequenceView.openHighlight",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
                 {
-                    "command": "analyzerSequence.openKB",
+                    "command": "sequenceView.openKB",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "display"
                 },
                 {
-                    "command": "analyzerSequence.moveUp",
+                    "command": "sequenceView.moveUp",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "move"
                 },
                 {
-                    "command": "analyzerSequence.moveDown",
+                    "command": "sequenceView.moveDown",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "move"
                 },
                 {
-                    "command": "analyzerSequence.rename",
+                    "command": "sequenceView.rename",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerSequence.insertNew",
+                    "command": "sequenceView.insertNew",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerSequence.insert",
+                    "command": "sequenceView.insert",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerSequence.delete",
+                    "command": "sequenceView.delete",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerSequence.openTree",
+                    "command": "sequenceView.openTree",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },
                 {
-                    "command": "analyzerSequence.openHighlight",
+                    "command": "sequenceView.openHighlight",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },
                 {
-                    "command": "analyzerSequence.openKB",
+                    "command": "sequenceView.openKB",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },
                 {
-                    "command": "analyzerSequence.moveUp",
+                    "command": "sequenceView.moveUp",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 },
                 {
-                    "command": "analyzerSequence.moveDown",
+                    "command": "sequenceView.moveDown",
                     "when": "view == analyzerSequence && viewItem == file",
                     "group": "inline"
                 }

@@ -32,7 +32,7 @@ export class TextFile {
 
     setFile(filepath: string, separateLines: boolean = true) {
         this.clear();
-        if (filepath.length) {
+        if (filepath.length && fs.existsSync(filepath)) {
             this.uri = vscode.Uri.file(filepath);
             this.filepath = filepath;
             this.text = fs.readFileSync(this.filepath, 'utf8');

@@ -1,20 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as rimraf from 'rimraf';
+import { visualText } from './visualText';
 import { SequenceFile, seqType, moveDirection } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
 import { LogFile } from './logfile';
-import { FileStat, _ } from './fileexplorer';
-import { url } from 'inspector';
-import { Analyzer } from './analyzer';
-
-//#region Utilities
-
-interface Entry2 {
-	uri: vscode.Uri;
-	type: vscode.FileType;
-}
+import { FileStat, _ } from './fileExplorer';
 
 class Entry extends vscode.TreeItem {
 	constructor(
@@ -29,8 +20,6 @@ class Entry extends vscode.TreeItem {
 		this.command = { command: 'analayzerSequence.openFile', title: "Open File", arguments: [this.uri] };
 	}
 }
-
-//#endregion
 
 export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
 
@@ -157,21 +146,22 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 			return [];
 		}
 
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
-			const children = await this.readDirectory(seqFile.getSpecDirectory());
+		if (visualText.hasWorkingDirectory()) {
+			var specDir = visualText.analyzer.getSpecDirectory();
+			const children = await this.readDirectory(specDir);
 			children.sort((a, b) => {
 				if (a[1] === b[1]) {
 					return a[0].localeCompare(b[0]);
 				}
 				return a[1] === vscode.FileType.Directory ? -1 : 1;
 			});
-			const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath, name)), type }));
+			const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specDir.fsPath, name)), type }));
 			const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
 			const orderedArray = new Array();
 			let passnum = 0;
 			var label: string = '';
 
+			var seqFile = new SequenceFile();
 			for (let pass of seqFile.getPasses()) {
 				seqFile.setPass(pass);
 				if (seqFile.isValid()) {
@@ -196,7 +186,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 
 	getTreeItem(element: Entry): vscode.TreeItem {
 		if (element.type === seqType.NLP) {
-			element.command = { command: 'analyzerSequence.openFile', title: "Open File", arguments: [element] };
+			element.command = { command: 'sequenceView.openFile', title: "Open File", arguments: [element] };
 			element.iconPath = {
 				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'gear.svg'),
 				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'gear.svg')
@@ -220,8 +210,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	moveSequence(resource: Entry, direction: moveDirection) {
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
+		if (visualText.hasWorkingDirectory()) {
+			var seqFile = new SequenceFile();
 			seqFile.setFile(resource.uri.path);
 			var basename = seqFile.getBasename();
 			var row = seqFile.findPass(basename);
@@ -246,8 +236,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 
 	deletePass(resource: Entry): void {
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
+		if (visualText.hasWorkingDirectory()) {
+			var seqFile = new SequenceFile();
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' pass');
@@ -268,8 +258,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 
 	insertPass(resource: Entry): void {
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
+		if (visualText.hasWorkingDirectory()) {
+			var seqFile = new SequenceFile();
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
 				openLabel: 'Open',
@@ -291,8 +281,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	insertNewPass(resource: Entry): void {
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
+		if (visualText.hasWorkingDirectory()) {
+			var seqFile = new SequenceFile();
 			vscode.window.showInputBox({ value: 'newpass' }).then(newname => {
 				var original = resource.uri;
 				if (newname) {
@@ -304,8 +294,8 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	renamePass(resource: Entry): void {
-		var seqFile = new SequenceFile();
-		if (seqFile.hasWorkingDirectory()) {
+		if (visualText.hasWorkingDirectory()) {
+			var seqFile = new SequenceFile();
 			var basename = path.basename(resource.uri.path,'.pat');
 			vscode.window.showInputBox({ value: basename }).then(newname => {
 				var original = resource.uri;
@@ -320,34 +310,33 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 }
 
-export let analyzerSequence: AnalyzerSequence;
-export class AnalyzerSequence {
+export let analyzerSequence: SequenceView;
+export class SequenceView {
 
 	private analyzerSequence: vscode.TreeView<Entry>;
 	workspacefolder: vscode.WorkspaceFolder | undefined;
-	private analyzer = new Analyzer();
 	private textFile = new TextFile();
 	private logFile = new LogFile();
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
 		this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
-		vscode.commands.registerCommand('analyzerSequence.openFile', (resource) => this.openNLP(resource));
-		vscode.commands.registerCommand('analyzerSequence.openTree', (resource) => this.openTree(resource));
-		vscode.commands.registerCommand('analyzerSequence.openHighlight', (resource) => this.openHighlight(resource));
-		vscode.commands.registerCommand('analyzerSequence.openKB', (resource) => this.openKB(resource));
-		vscode.commands.registerCommand('analyzerSequence.moveUp', (resource) => treeDataProvider.moveUp(resource));
-		vscode.commands.registerCommand('analyzerSequence.moveDown', (resource) => treeDataProvider.moveDown(resource));
-		vscode.commands.registerCommand('analyzerSequence.refreshEntry', () => treeDataProvider.refresh());
-		vscode.commands.registerCommand('analyzerSequence.insert', (resource) => treeDataProvider.insertPass(resource));
-		vscode.commands.registerCommand('analyzerSequence.insertNew', (resource) => treeDataProvider.insertNewPass(resource));
-		vscode.commands.registerCommand('analyzerSequence.delete', (resource) => treeDataProvider.deletePass(resource));
-		vscode.commands.registerCommand('analyzerSequence.rename', (resource) => treeDataProvider.renamePass(resource));
+		vscode.commands.registerCommand('sequenceView.openFile', (resource) => this.openNLP(resource));
+		vscode.commands.registerCommand('sequenceView.openTree', (resource) => this.openTree(resource));
+		vscode.commands.registerCommand('sequenceView.openHighlight', (resource) => this.openHighlight(resource));
+		vscode.commands.registerCommand('sequenceView.openKB', (resource) => this.openKB(resource));
+		vscode.commands.registerCommand('sequenceView.moveUp', (resource) => treeDataProvider.moveUp(resource));
+		vscode.commands.registerCommand('sequenceView.moveDown', (resource) => treeDataProvider.moveDown(resource));
+		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('sequenceView.insert', (resource) => treeDataProvider.insertPass(resource));
+		vscode.commands.registerCommand('sequenceView.insertNew', (resource) => treeDataProvider.insertNewPass(resource));
+		vscode.commands.registerCommand('sequenceView.delete', (resource) => treeDataProvider.deletePass(resource));
+		vscode.commands.registerCommand('sequenceView.rename', (resource) => treeDataProvider.renamePass(resource));
 	}
 
     static attach(ctx: vscode.ExtensionContext) {
         if (!analyzerSequence) {
-            analyzerSequence = new AnalyzerSequence(ctx);
+            analyzerSequence = new SequenceView(ctx);
         }
         return analyzerSequence;
     }
@@ -367,7 +356,7 @@ export class AnalyzerSequence {
 			vscode.window.showWarningMessage('Not editable');
 			return;
 		}
-		if (fs.existsSync(this.analyzer.getOutputDirectory().path)) {
+		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
 			this.logFile.setFile(resource.uri.path);
 			var logfile = this.logFile.anaFile(resource.pass,nlpFileType.TREE);
 			if (fs.existsSync(logfile.path))
@@ -383,7 +372,7 @@ export class AnalyzerSequence {
 			vscode.window.showWarningMessage('Not editable');
 			return;
 		}
-		if (fs.existsSync(this.analyzer.getOutputDirectory().path)) {
+		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
 			this.logFile.setFile(resource.uri.path);
 			var firefile = this.logFile.firedFile(resource.pass);
 			if (fs.existsSync(firefile.path))
@@ -399,7 +388,7 @@ export class AnalyzerSequence {
 			vscode.window.showWarningMessage('Not editable');
 			return;
 		}
-		if (fs.existsSync(this.analyzer.getOutputDirectory().path)) {
+		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
 			this.logFile.setFile(resource.uri.path);
 			var kbfile = this.logFile.anaFile(resource.pass,nlpFileType.KB);
 			if (fs.existsSync(kbfile.path))

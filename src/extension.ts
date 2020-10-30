@@ -1,11 +1,16 @@
 import * as vscode from "vscode";
+import { VisualText } from './visualText';
+import { AnalyzerView } from './analyzerView';
 import { NLPCommands } from "./command";
-import { AnalyzerSequence } from './analyzerSequence';
+import { SequenceView } from './sequenceView';
 import { TextView } from './textView';
-import { LogFile } from './logfile';
+
 
 export function activate(ctx: vscode.ExtensionContext): void {
+    VisualText.attach(ctx);
     NLPCommands.attach(ctx);
-    AnalyzerSequence.attach(ctx);
+    AnalyzerView.attach(ctx);
+    SequenceView.attach(ctx);
     TextView.attach(ctx);
 }
+

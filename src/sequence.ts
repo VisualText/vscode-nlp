@@ -2,15 +2,13 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { TextFile, nlpFileType } from './textFile';
-import { LogFile } from './logfile';
-import { Analyzer } from './analyzer';
+import { visualText } from './visualText';
 
 export enum moveDirection { UP, DOWN }
 export enum seqType { UNKNOWN, NLP, STUB, FOLDER }
 
 export class SequenceFile extends TextFile {
 	private seqFileName = 'analyzer.seq';
-	private analyzer = new Analyzer();
 	private pass: string = '';
 	private tokens = new Array();
 	private passes = new Array();
@@ -21,10 +19,6 @@ export class SequenceFile extends TextFile {
 
 	constructor() {
 		super();
-	}
-
-	hasWorkingDirectory(): boolean {
-		return this.analyzer.hasWorkingDirectory();
 	}
 
 	BaseName(passname: string): string {
@@ -49,7 +43,7 @@ export class SequenceFile extends TextFile {
 		if (this.passes.length) {
 			var line = this.passes[num];
 			this.setPass(line);
-			filepath = path.join(this.analyzer.getSpecDirectory().path,this.tokens[1]+'.'+this.tokens[0]);
+			filepath = path.join(visualText.analyzer.getSpecDirectory().path,this.tokens[1]+'.'+this.tokens[0]);
 		}
 		return filepath;
 	}
@@ -115,7 +109,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	createNewPassFile(filename: string): string {
-		var newfilepath = path.join(this.analyzer.getSpecDirectory().path,filename.concat('.pat'));
+		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().path,filename.concat('.pat'));
 		fs.writeFileSync(newfilepath,this.newPassContent(filename),{flag:'w+'});
 		return newfilepath;
 	}
@@ -219,7 +213,7 @@ export class SequenceFile extends TextFile {
 	}
 	
 	init() {
-		super.setFile(path.join(this.analyzer.getSpecDirectory().path,this.seqFileName),true);
+		super.setFile(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName),true);
 		this.passes = this.getLines();
 	}
 
@@ -235,7 +229,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	getSpecDirectory(): vscode.Uri {
-		return this.analyzer.getSpecDirectory();
+		return visualText.analyzer.getSpecDirectory();
 	}
 
 	getName(): string {
@@ -262,7 +256,7 @@ export class SequenceFile extends TextFile {
 			this.newcontent = this.newcontent.concat(this.passes[i]);
 		}
 
-		fs.writeFileSync(path.join(this.analyzer.getOutputDirectory().path,this.seqFileName),this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(visualText.analyzer.getOutputDirectory().path,this.seqFileName),this.newcontent,{flag:'w+'});
 	}
 
 	movePass(direction: moveDirection, row: number) {
