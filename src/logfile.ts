@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { isAbsolute } from 'path';
-import { SequenceFile, moveDirection } from './sequence';
+import { visualText } from './visualText';
 import { TextFile, nlpFileType, separatorType } from './textFile';
-import { Analyzer } from './analyzer';
+import { SequenceFile } from './sequence';
 
 export let logFile: LogFile;
 export class LogFile extends TextFile {
 	
-	private analyzer = new Analyzer();
 	private seqFile = new SequenceFile();
 	private fireds = new Array();
 	private highlights = new Array();
@@ -55,8 +53,10 @@ export class LogFile extends TextFile {
 	}
 
 	setFile(filepath: string, separateLines: boolean = true) {
-		super.setFile(filepath,separateLines);
-		this.setFilesNames(filepath);
+		if (filepath.length) {
+			super.setFile(filepath,separateLines);
+			this.setFilesNames(filepath);			
+		}
 	}
 	
 	setFilesNames(filepath: string) {
@@ -65,9 +65,9 @@ export class LogFile extends TextFile {
 			this.basename = path.basename(this.basename,'.txxt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
-			this.logFile = path.join(this.analyzer.getOutputDirectory().path,this.basename+'.log');
-			this.highlightFile = path.join(this.analyzer.getOutputDirectory().path,this.basename+'.txxt');
-			this.inputFile = path.join(this.analyzer.getOutputDirectory().path,'input.txt');			
+			this.logFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.log');
+			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.txxt');
+			this.inputFile = visualText.analyzer.getTextPath();
 		}
 	}
 
@@ -78,7 +78,7 @@ export class LogFile extends TextFile {
 		else
 			filename = filename + '0';
 		filename = filename + pass.toString() + '.' + this.getExtension(type);
-		return vscode.Uri.file(path.join(this.analyzer.getOutputDirectory().path,filename));
+		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,filename));
 	}
 
 	findSelectedTree(editor: vscode.TextEditor) {
@@ -199,10 +199,6 @@ export class LogFile extends TextFile {
 
 		return -1;
 	}
-
-    getOutputFolder() {
-        return this.analyzer.getOutputDirectory;
-    }
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
 		var file = new TextFile(this.highlightFile);
