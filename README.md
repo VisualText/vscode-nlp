@@ -1,8 +1,17 @@
-# nlp README
+# NLP++ Language Extension README
 
-This is the README for your extension "nlp". After writing up a brief description, we recommend including the following sections.
+This is a language extension for VSCode for NLP++ to recreate the functionality of VisualText.
 
 ## Features
+
+The VisualText language extension allows for the fast development of NLP++ analyzers allowing users to:
+
+* Quickly generate and edit NLP++ code
+* Display the syntax tree in insightful ways
+* Highlight text that has matched rules in each pass
+* Display the knowledge base at strategic places in the analayzer sequence
+* Easily edit and modify the pass sequence and texts to be analyze
+* Display syntax errors to NLP++
 
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
