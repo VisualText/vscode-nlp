@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { settings } from './settings';
@@ -28,14 +29,17 @@ export class VisualText {
     }
     
 	init() {
-        this.state = settings.parse(this.workspaceFold.uri,'state','visualText');
+        this.state = settings.jsonParse(this.workspaceFold.uri,'state','visualText');
         if (this.state) {
             var parse = this.state.visualText[0];
             if (parse.analyzerDir) {
                 this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
             }
             if (parse.currentAnalyzer) {
-                this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,parse.currentAnalyzer));
+                if (fs.existsSync(parse.currentAnalyzer))
+                    this.currentAnalyzer = vscode.Uri.file(parse.currentAnalyzer);
+                else
+                    this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,parse.currentAnalyzer));
                 this.analyzer.setWorkingDir(this.currentAnalyzer);
                 this.analyzer.readSettings();
             }
@@ -53,6 +57,7 @@ export class VisualText {
         this.analyzer.load(analyzerDirectory);
         vscode.commands.executeCommand('textView.refreshAll');
         vscode.commands.executeCommand('sequenceView.refreshAll');
+        settings.setCurrentAnalyzer(this.analyzerDir, 'state', 'visualText', this.analyzerDir);
     }
 
     getAnalyzer(analyzerDirectory: vscode.Uri) {
@@ -69,7 +74,7 @@ export class VisualText {
 
     setTextFile(textFile: vscode.Uri) {
         this.currentTextFile = textFile;
-        //this.setting.set('lastTextFile',textFile.path);
+        this.analyzer.saveCurrentFile(textFile);
     }
 
     getTextFile(): vscode.Uri {
