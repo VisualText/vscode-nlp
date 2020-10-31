@@ -17,14 +17,23 @@ export class Analyzer {
     }
 
 	readSettings() {
-        this.state = settings.parse(this.analyzerDir,'state','visualText');
+        this.state = settings.jsonParse(this.analyzerDir,'state','visualText');
         if (this.state) {
             var parse = this.state.visualText[0];
             if (parse.currentTextFile) {
-                this.textPath = path.join(this.getInputDirectory().path, parse.currentTextFile);
+                if (fs.existsSync(parse.currentTextFile))
+                    this.textPath = parse.currentTextFile;
+                else
+                    this.textPath = path.join(this.getInputDirectory().path, parse.currentTextFile);
                 this.outputDirectory();
             }
         }
+    }
+
+    saveCurrentFile(file: vscode.Uri) {
+        settings.setCurrentFile(this.analyzerDir, 'state', 'visualText', file);
+        this.textPath = file.path;
+        this.outputDirectory();
     }
 
     createConfig(name: string) {

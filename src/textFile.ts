@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { sep } from 'path';
-import { timingSafeEqual } from 'crypto';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
 export enum nlpFileType { UNKNOWN, NLP, TXXT, TREE, KB }
