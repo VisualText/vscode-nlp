@@ -160,13 +160,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 export let textView: TextView;
 export class TextView {
 
-	private textView: vscode.TreeView<Entry>;
+	public textView: vscode.TreeView<Entry>;
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
-		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
+		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
+		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
+		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -179,5 +181,22 @@ export class TextView {
 	private openResource(resource: vscode.Uri): void {
 		vscode.window.showTextDocument(resource);
 		visualText.setTextFile(resource);
+	}
+
+	private deleteText(resource: Entry): void {
+		if (visualText.hasWorkingDirectory()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' text');
+			items.push({label: 'Yes', description: deleteDescr});
+			items.push({label: 'No', description: 'Do not delete pass'});
+
+			vscode.window.showQuickPick(items).then(selection => {
+			});
+		}
+	}
+	
+	private newText(resource: Entry) {
+		console.log('New Analyzer code to be implemented');
 	}
 }

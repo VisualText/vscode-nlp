@@ -14,7 +14,7 @@
     ],
     "activationEvents": [
         "onLanguage:nlp",
-        "onView:analyzerSequence"
+        "onView:sequenceView"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -25,7 +25,7 @@
                     "name": "Text View"
                 },
                 {
-                    "id": "analyzerSequence",
+                    "id": "sequenceView",
                     "name": "Analyzer Sequence"
                 },
                 {
@@ -263,6 +263,38 @@
                 }
             },
             {
+                "command": "textView.newText",
+                "title": "New Text File",
+                "icon": {
+                    "light": "fileicons/images/light/new-file.svg",
+                    "dark": "fileicons/images/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "textView.deleteText",
+                "title": "Delete File",
+                "icon": {
+                    "light": "fileicons/images/light/chrome-close.svg",
+                    "dark": "fileicons/images/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "analyzerView.newAnalyzer",
+                "title": "New Analyzer",
+                "icon": {
+                    "light": "fileicons/images/light/new-folder.svg",
+                    "dark": "fileicons/images/dark/new-folder.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteAnalyzer",
+                "title": "Delete Analyzer",
+                "icon": {
+                    "light": "fileicons/images/light/chrome-close.svg",
+                    "dark": "fileicons/images/dark/chrome-close.svg"
+                }
+            },
+            {
                 "command": "sequenceView.refreshAll",
                 "title": "Refresh",
                 "icon": {
@@ -319,8 +351,8 @@
             ],
             "view/title": [
                 {
-                    "command": "sequenceView.refreshEntry",
-                    "when": "view == analyzerSequence",
+                    "command": "sequenceView.refreshAll",
+                    "when": "view == sequenceView",
                     "group": "navigation"
                 },
                 {
@@ -330,6 +362,11 @@
                 },
                 {
                     "command": "analyzerView.refreshAll",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "navigation"
                 }
@@ -342,77 +379,117 @@
                 },
                 {
                     "command": "sequenceView.openFile",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openTree",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openHighlight",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.rename",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insert",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.newText",
+                    "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.deleteText",
+                    "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerView.deleteAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerView.newAnalyzer",
+                    "when": "view == analyzerView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.openTree",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.openHighlight",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == analyzerSequence && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.newText",
+                    "when": "view == textView",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.deleteText",
+                    "when": "view == textView",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.newAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.deleteAnalyzer",
+                    "when": "view == analyzerView",
                     "group": "inline"
                 }
             ]

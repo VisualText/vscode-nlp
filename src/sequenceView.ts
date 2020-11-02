@@ -310,17 +310,17 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 }
 
-export let analyzerSequence: SequenceView;
+export let sequenceView: SequenceView;
 export class SequenceView {
 
-	private analyzerSequence: vscode.TreeView<Entry>;
+	private sequenceView: vscode.TreeView<Entry>;
 	workspacefolder: vscode.WorkspaceFolder | undefined;
 	private textFile = new TextFile();
 	private logFile = new LogFile();
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
-		this.analyzerSequence = vscode.window.createTreeView('analyzerSequence', { treeDataProvider });
+		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
 		vscode.commands.registerCommand('sequenceView.openFile', (resource) => this.openNLP(resource));
 		vscode.commands.registerCommand('sequenceView.openTree', (resource) => this.openTree(resource));
 		vscode.commands.registerCommand('sequenceView.openHighlight', (resource) => this.openHighlight(resource));
@@ -335,10 +335,10 @@ export class SequenceView {
 	}
 
     static attach(ctx: vscode.ExtensionContext) {
-        if (!analyzerSequence) {
-            analyzerSequence = new SequenceView(ctx);
+        if (!sequenceView) {
+            sequenceView = new SequenceView(ctx);
         }
-        return analyzerSequence;
+        return sequenceView;
     }
 
 	private openNLP(resource: Entry): void {

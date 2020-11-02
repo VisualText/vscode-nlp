@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { visualText } from './visualText';
 
 interface AnalyzerItem {
@@ -36,15 +37,18 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 		return [];
 	}
+
 }
 
 export let analyzerView: AnalyzerView;
 export class AnalyzerView {
 
 	constructor(context: vscode.ExtensionContext) {
-        const analyzerViewProvider = new AnalyzerTreeDataProvider();
-        vscode.window.registerTreeDataProvider('analyzerView', analyzerViewProvider);
+		const analyzerViewProvider = new AnalyzerTreeDataProvider();
+		vscode.window.registerTreeDataProvider('analyzerView', analyzerViewProvider);
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh);
+		vscode.commands.registerCommand('analyzerView.newAnalyzer', resource => this.newAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
     }
     
@@ -57,5 +61,22 @@ export class AnalyzerView {
 
 	private openAnalyzer(resource: vscode.Uri): void {
 		visualText.loadAnalyzer(resource);
+	}
+
+	private deleteAnalyzer(resource: AnalyzerItem): void {
+		if (visualText.hasWorkingDirectory()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');
+			items.push({label: 'Yes', description: deleteDescr});
+			items.push({label: 'No', description: 'Do not delete pass'});
+
+			vscode.window.showQuickPick(items).then(selection => {
+			});
+		}
+	}
+	
+	private newAnalyzer(resource: AnalyzerItem) {
+		console.log('New Analyzer code to be implemented');
 	}
 }
