@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { isAbsolute } from 'path';
-import { SequenceFile, moveDirection } from './sequence';
 import { TextFile, nlpFileType, separatorType } from './textFile';
+import { visualText } from './visualText';
 
 export let logFile: NLPFile;
 export class NLPFile extends TextFile {
@@ -14,9 +11,11 @@ export class NLPFile extends TextFile {
 
 	analyze(editor: vscode.TextEditor) {
 		var filepath = editor.document.uri.path;
+
 		var pos = filepath.search('/input/');
-		var anapath = filepath.substr(pos+7);
-		var cmd = `/home/dehilster/nlp-engine/nlp.exe -ANA DOJ-Quick ${anapath} -DEV`;
+		var anapath = filepath.substr(0,pos);
+		var workpath = '/home/dehilster/nlp-engine/';
+		var cmd = `${workpath}nlp.exe -ANA ${anapath} -WORK ${workpath} ${filepath} -DEV`;
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {
@@ -24,6 +23,8 @@ export class NLPFile extends TextFile {
 			console.log('stderr: ' + stderr);
 			if (err) {
 				console.log('error: ' + err);
+			} else {
+				visualText.analyzer.saveCurrentFile(editor.document.uri);				
 			}
 		});
 	}

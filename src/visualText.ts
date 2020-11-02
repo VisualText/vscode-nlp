@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Analyzer } from './analyzer';
+import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { settings } from './settings';
 
@@ -29,20 +30,23 @@ export class VisualText {
     }
     
 	init() {
-        this.state = settings.jsonParse(this.workspaceFold.uri,'state','visualText');
-        if (this.state) {
-            var parse = this.state.visualText[0];
-            if (parse.analyzerDir) {
-                this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
-            }
-            if (parse.currentAnalyzer) {
-                if (fs.existsSync(parse.currentAnalyzer))
-                    this.currentAnalyzer = vscode.Uri.file(parse.currentAnalyzer);
-                else
-                    this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,parse.currentAnalyzer));
-                this.analyzer.setWorkingDir(this.currentAnalyzer);
-                this.analyzer.readSettings();
-            }
+        if (this.workspaceFold) {
+            this.state = settings.jsonParse(this.workspaceFold.uri,'state','visualText');
+            if (this.state) {
+                var parse = this.state.visualText[0];
+                if (parse.analyzerDir) {
+                    this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
+                }
+                if (parse.currentAnalyzer) {
+                    if (fs.existsSync(parse.currentAnalyzer))
+                        this.currentAnalyzer = vscode.Uri.file(parse.currentAnalyzer);
+                    else
+                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,parse.currentAnalyzer));
+                    
+                    this.analyzer.setWorkingDir(this.currentAnalyzer);
+                    this.analyzer.readSettings();
+                }
+            }            
         }
     }
     
@@ -86,6 +90,9 @@ export class VisualText {
 	}
 
 	getWorkingDirectory(): vscode.Uri {
-		return this.workspaceFold.uri;
+        if (this.workspaceFold) {
+		    return this.workspaceFold.uri;            
+        }
+        return vscode.Uri.file('');
     }
 }
