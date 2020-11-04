@@ -22,7 +22,7 @@
             "visualText": [
                 {
                     "id": "textView",
-                    "name": "Text View"
+                    "name": "Text"
                 },
                 {
                     "id": "sequenceView",

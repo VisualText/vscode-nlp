@@ -160,7 +160,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 export let textView: TextView;
 export class TextView {
 
-	public textView: vscode.TreeView<Entry>;
+	private textView: vscode.TreeView<Entry>;
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
@@ -169,6 +169,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
 		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
+		vscode.commands.registerCommand('textView.updateTitle', resource => this.updateTitle(resource));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -176,11 +177,23 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
-    }
+	}
+	
+	private updateTitle(resource: vscode.Uri): void {
+		if (resource && resource.path.length) {
+			var filename = path.basename(resource.path);
+			if (filename.length) {
+				this.textView.title = `TEXT (${filename})`;	
+				return;					
+			}
+		}
+		this.textView.title = 'TEXT';
+	}
 
 	private openResource(resource: vscode.Uri): void {
+		this.updateTitle(resource);
 		vscode.window.showTextDocument(resource);
-		visualText.setTextFile(resource);
+		visualText.analyzer.saveCurrentFile(resource);
 	}
 
 	private deleteText(resource: Entry): void {

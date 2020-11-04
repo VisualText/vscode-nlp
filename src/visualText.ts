@@ -2,18 +2,17 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Analyzer } from './analyzer';
-import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
-import { settings } from './settings';
+import { JsonState } from './jsonState';
 
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
 
     public analyzer = new Analyzer();
+    private jsonState = new JsonState();
 
     private analyzers: vscode.Uri[] = new Array();
-    private currentTextFile: vscode.Uri = vscode.Uri.file('');
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
     private workspaceFold: vscode.WorkspaceFolder | undefined = undefined;
@@ -24,30 +23,9 @@ export class VisualText {
         if (vscode.workspace.workspaceFolders) {
             this.workspaceFold = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
             if (this.workspaceFold) {
-                this.init();
+                this.readState();
 			}
 		}
-    }
-    
-	init() {
-        if (this.workspaceFold) {
-            this.state = settings.jsonParse(this.workspaceFold.uri,'state','visualText');
-            if (this.state) {
-                var parse = this.state.visualText[0];
-                if (parse.analyzerDir) {
-                    this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
-                }
-                if (parse.currentAnalyzer) {
-                    if (fs.existsSync(parse.currentAnalyzer))
-                        this.currentAnalyzer = vscode.Uri.file(parse.currentAnalyzer);
-                    else
-                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,parse.currentAnalyzer));
-                    
-                    this.analyzer.setWorkingDir(this.currentAnalyzer);
-                    this.analyzer.readSettings();
-                }
-            }            
-        }
     }
     
     static attach(ctx: vscode.ExtensionContext): VisualText {
@@ -55,13 +33,56 @@ export class VisualText {
             visualText = new VisualText(ctx);
         }
         return visualText;
+    }    
+
+	readState() {
+        if (this.workspaceFold) {
+            this.analyzerDir = this.workspaceFold.uri;
+            if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+                var parse = this.jsonState.json.visualText[0];
+                if (parse.analyzerDir) {
+                    this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
+                }
+                if (parse.currentAnalyzer) {
+                    var dir = parse.currentAnalyzer;
+                    if (fs.existsSync(dir))
+                        this.currentAnalyzer = vscode.Uri.file(dir);
+                    else
+                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,dir));
+                    
+                    this.analyzer.load(this.currentAnalyzer);
+                }
+            }            
+        }
+    }
+
+    saveCurrentAnalyzer(currentFile: vscode.Uri) {
+        var stateJsonDefault: any = {
+            "visualText": [
+                {
+                    "name": "Analyzer",
+                    "type": "state",
+                    "currentAnalyzer": ""   
+                }
+            ]
+        }
+        this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);
+        this.setCurrentAnalyzer(currentFile);       
     }
 
     loadAnalyzer(analyzerDirectory: vscode.Uri) {
         this.analyzer.load(analyzerDirectory);
         vscode.commands.executeCommand('textView.refreshAll');
         vscode.commands.executeCommand('sequenceView.refreshAll');
-        settings.setCurrentAnalyzer(this.analyzerDir, 'state', 'visualText', this.analyzerDir);
+        this.saveCurrentAnalyzer(analyzerDirectory);
+    }
+
+    setCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
+        if (this.jsonState.json) {
+            var parse = this.jsonState.json.visualText[0];
+            parse.currentAnalyzer = currentAnalyzer.path;
+            this.jsonState.writeFile();
+        }
     }
 
     getAnalyzer(analyzerDirectory: vscode.Uri) {
@@ -75,16 +96,6 @@ export class VisualText {
         }
         return this.analyzers;
     }
-
-    setTextFile(textFile: vscode.Uri) {
-        this.currentTextFile = textFile;
-        this.analyzer.saveCurrentFile(textFile);
-    }
-
-    getTextFile(): vscode.Uri {
-        return this.currentTextFile;
-    }
-
 	hasWorkingDirectory(): boolean {
 		return this.workspaceFold ? true : false;
 	}
