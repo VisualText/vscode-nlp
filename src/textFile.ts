@@ -19,6 +19,7 @@ export class TextFile {
     private tabsize = 4;
     public basename: string = '';
     private nlpFileExts = new Array('txt', 'nlp', 'txxt', 'log', 'kb');
+    private exists: boolean = false;
 
     constructor(filepath: string = '', separateLines: boolean = true) {
         this.setFile(filepath,separateLines);
@@ -36,9 +37,10 @@ export class TextFile {
             this.text = fs.readFileSync(this.filepath, 'utf8');
             this.setFileType(this.filepath);   
             this.separation(separateLines);
+            this.exists = true;
         }        
     }
-
+    
     setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {
         this.clear();
         this.uri = editor.document.uri;
@@ -62,6 +64,10 @@ export class TextFile {
 			this.filetype = nlpFileType.KB;
 		else if (path.extname(filename) == '.log')
 			this.filetype = nlpFileType.TREE;
+    }
+
+    fileExists(): boolean {
+        return this.exists;
     }
 
     isFileType(type: nlpFileType): boolean {

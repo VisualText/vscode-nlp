@@ -17,6 +17,10 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		return {
 			resourceUri: element.uri,
 			collapsibleState: void 0,
+			iconPath: {
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'gear.svg'),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'gear.svg')
+			},
 			command: {
 				command: 'analyzerView.openAnalyzer',
 				arguments: [element.uri],
@@ -43,13 +47,16 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 export let analyzerView: AnalyzerView;
 export class AnalyzerView {
 
+	public analyzerView: vscode.TreeView<AnalyzerItem>;
+
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
-		vscode.window.registerTreeDataProvider('analyzerView', analyzerViewProvider);
+		this.analyzerView = vscode.window.createTreeView('analyzerView', { treeDataProvider: analyzerViewProvider });
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh);
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', resource => this.newAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -57,9 +64,18 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
-    }
+	}
+	
+	private updateTitle(resource: vscode.Uri): void {
+		var analyzerName = path.basename(resource.path);
+		if (analyzerName.length)
+			this.analyzerView.title = `ANALYZERS (${analyzerName})`;
+		else
+			this.analyzerView.title = 'ANALYZERS';
+	}
 
 	private openAnalyzer(resource: vscode.Uri): void {
+		this.updateTitle(resource);
 		visualText.loadAnalyzer(resource);
 	}
 
