@@ -52,22 +52,24 @@ export class VisualText {
                     
                     this.analyzer.load(this.currentAnalyzer);
                 }
-            }            
+            } else {
+                this.setCurrentAnalyzer(this.analyzerDir)
+            }       
         }
     }
 
-    saveCurrentAnalyzer(currentFile: vscode.Uri) {
+    saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
         var stateJsonDefault: any = {
             "visualText": [
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "currentAnalyzer": ""   
+                    "currentAnalyzer": currentAnalyzer.path   
                 }
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);
-        this.setCurrentAnalyzer(currentFile);       
+        this.setCurrentAnalyzer(currentAnalyzer);       
     }
 
     loadAnalyzer(analyzerDirectory: vscode.Uri) {

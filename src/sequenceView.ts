@@ -188,13 +188,13 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		if (element.type === seqType.NLP) {
 			element.command = { command: 'sequenceView.openFile', title: "Open File", arguments: [element] };
 			element.iconPath = {
-				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'gear.svg'),
-				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'gear.svg')
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'dna.svg'),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'dna.svg')
 			};
 		} else {
 			element.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'circle-filled.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'circle-filled.svg')
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'seq-circle.svg'),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'seq-circle.svg')
 			};
 		}
 		element.collapsibleState = vscode.TreeItemCollapsibleState.None;
