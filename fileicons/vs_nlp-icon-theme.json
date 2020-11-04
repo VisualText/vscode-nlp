@@ -14,10 +14,10 @@
 			"iconPath": "./images/light/triangle-right.svg"
 		},
 		"_nlp_dark": {
-			"iconPath": "./images/dark/gear.svg"
+			"iconPath": "./images/dark/nlp.svg"
 		},
 		"_nlp_light": {
-			"iconPath": "./images/light/gear.svg"
+			"iconPath": "./images/light/nlp.svg"
 		},
 		"_kb_dark": {
 			"iconPath": "./images/dark/library.svg"
