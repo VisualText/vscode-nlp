@@ -137,17 +137,6 @@
                 "path": "./snippets/nlp.json"
             }
         ],
-        "colors": [
-            {
-                "id": "keyword.region.nlp",
-                "description": "Color for NLP regions.",
-                "defaults": {
-                    "dark": "foreground",
-                    "light": "foreground",
-                    "highContrast": "#010203"
-                }
-            }
-        ],
         "commands": [
             {
                 "command": "text.analyze",
@@ -249,8 +238,8 @@
                 "command": "sequenceView.insertNew",
                 "title": "Insert New pass",
                 "icon": {
-                    "light": "fileicons/images/light/file-code.svg",
-                    "dark": "fileicons/images/dark/file-code.svg"
+                    "light": "fileicons/images/light/new-file.svg",
+                    "dark": "fileicons/images/dark/new-file.svg"
                 }
             },
             {
@@ -267,6 +256,14 @@
                 "icon": {
                     "light": "fileicons/images/light/file-code.svg",
                     "dark": "fileicons/images/dark/file-code.svg"
+                }
+            },
+            {
+                "command": "textView.newDir",
+                "title": "New Directory",
+                "icon": {
+                    "light": "fileicons/images/light/new-folder.svg",
+                    "dark": "fileicons/images/dark/new-folder.svg"
                 }
             },
             {
@@ -374,8 +371,23 @@
             ],
             "view/title": [
                 {
+                    "command": "sequenceView.insertNew",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
                     "command": "sequenceView.refreshAll",
                     "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "textView.newDir",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "textView.newText",
+                    "when": "view == textView",
                     "group": "navigation"
                 },
                 {
@@ -391,6 +403,11 @@
                 {
                     "command": "outputView.refreshAll",
                     "when": "view == outputView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "analyzerView.deleteAnalyzer",
+                    "when": "view == analyzerView",
                     "group": "navigation"
                 },
                 {
@@ -452,12 +469,22 @@
                 },
                 {
                     "command": "sequenceView.insert",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && (viewItem == file || viewItem == stub)",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.delete",
                     "when": "view == sequenceView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "sequenceView.insertNew",
+                    "when": "view == sequenceView && viewItem == stub",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.newDir",
+                    "when": "view == textView && viewItem == file",
                     "group": "edit"
                 },
                 {
@@ -479,6 +506,11 @@
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
+                },
+                {
+                    "command": "sequenceView.insertNew",
+                    "when": "view == sequenceView && viewItem == stub",
+                    "group": "inline"
                 },
                 {
                     "command": "sequenceView.openTree",
@@ -503,6 +535,11 @@
                 {
                     "command": "sequenceView.moveDown",
                     "when": "view == sequenceView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.newDir",
+                    "when": "view == textView",
                     "group": "inline"
                 },
                 {

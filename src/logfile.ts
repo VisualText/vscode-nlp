@@ -8,7 +8,6 @@ import { SequenceFile } from './sequence';
 export let logFile: LogFile;
 export class LogFile extends TextFile {
 	
-	private seqFile = new SequenceFile();
 	private fireds = new Array();
 	private highlights = new Array();
 	private selStart = 0;
@@ -35,8 +34,7 @@ export class LogFile extends TextFile {
 
 					if (firedNumber >= 0) {
 						var chosen = this.fireds[firedNumber];
-						this.seqFile.init();
-						var ruleFile = this.seqFile.getFileByNumber(chosen.rule-1);
+						var ruleFile = visualText.analyzer.seqFile.getFileByNumber(chosen.rule-1);
 						var ruleFileUri = vscode.Uri.file(ruleFile);
 
 						vscode.window.showTextDocument(ruleFileUri).then(editor => 
@@ -52,11 +50,13 @@ export class LogFile extends TextFile {
 		}
 	}
 
-	setFile(filepath: string, separateLines: boolean = true) {
+	setFile(filepath: string, separateLines: boolean = true): boolean {
 		if (filepath.length) {
 			super.setFile(filepath,separateLines);
-			this.setFilesNames(filepath);			
+			this.setFilesNames(filepath);
+			return true;	
 		}
+		return false;
 	}
 	
 	setFilesNames(filepath: string) {

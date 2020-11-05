@@ -3,6 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileStat, _ } from './fileExplorer';
 import { visualText } from './visualText';
+import { dirfuncs } from './dirfuncs';
+import { receiveMessageOnPort } from 'worker_threads';
 
 interface Entry {
 	uri: vscode.Uri;
@@ -169,6 +171,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
+		vscode.commands.registerCommand('textView.newDir', (resource) => this.newDir(resource));
 		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
 		vscode.commands.registerCommand('textView.updateTitle', resource => this.updateTitle(resource));
     }
@@ -208,16 +211,53 @@ export class TextView {
 		if (visualText.hasWorkingDirectory()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' text');
+			var filename = path.basename(resource.uri.path);
+			deleteDescr = deleteDescr.concat('Delete \'',filename,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete pass'});
+			items.push({label: 'No', description: 'Do not delete '+filename });
 
 			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				var path = resource.uri.path;
+				if (dirfuncs.isDir(path))
+					dirfuncs.delDir(path);
+				else
+					dirfuncs.delFile(path);
+				vscode.commands.executeCommand('textView.refreshAll');
+			});
+		}
+	}
+
+	private newDir(resource: Entry) {
+		if (visualText.hasWorkingDirectory()) {
+			vscode.window.showInputBox({ value: 'dirname' }).then(newdir => {
+				if (newdir) {
+					var dirPath = visualText.analyzer.getInputDirectory().path;
+					if (resource)
+						dirPath = dirfuncs.getDirPath(resource.uri.path);
+					dirPath = path.join(dirPath,newdir);
+					dirfuncs.makeDir(dirPath);
+					vscode.commands.executeCommand('textView.refreshAll');
+				}
 			});
 		}
 	}
 	
 	private newText(resource: Entry) {
-		console.log('New Analyzer code to be implemented');
+		if (visualText.hasWorkingDirectory()) {
+			vscode.window.showInputBox({ value: 'filename' }).then(newname => {
+				if (newname) {
+					var dirPath = visualText.analyzer.getInputDirectory().path;
+					if (resource)
+						dirPath = dirfuncs.getDirPath(resource.uri.path);
+					var filepath = path.join(dirPath,newname+'.txt');
+					if (path.extname(newname))
+						filepath = path.join(dirPath,newname);
+					dirfuncs.writeFile(filepath,'Hello world!');
+					vscode.commands.executeCommand('textView.refreshAll');
+				}
+			});
+		}
 	}
 }

@@ -147,6 +147,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		}
 
 		if (visualText.hasWorkingDirectory()) {
+			visualText.analyzer.seqFile.init();
 			var specDir = visualText.analyzer.getSpecDirectory();
 			const children = await this.readDirectory(specDir);
 			children.sort((a, b) => {
@@ -161,7 +162,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 			let passnum = 0;
 			var label: string = '';
 
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			for (let pass of seqFile.getPasses()) {
 				seqFile.setPass(pass);
 				if (seqFile.isValid()) {
@@ -211,7 +212,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	
 	moveSequence(resource: Entry, direction: moveDirection) {
 		if (visualText.hasWorkingDirectory()) {
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			seqFile.setFile(resource.uri.path);
 			var basename = seqFile.getBasename();
 			var row = seqFile.findPass(basename);
@@ -237,7 +238,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 
 	deletePass(resource: Entry): void {
 		if (visualText.hasWorkingDirectory()) {
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' pass');
@@ -246,20 +247,17 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 
 			vscode.window.showQuickPick(items).then(selection => {
 				seqFile.setFile(resource.uri.path);
-				if (!selection) {
+				if (!selection || selection.label == 'No')
 					return;
-				}
-				if (selection.label.localeCompare('Yes') == 0) {
-					seqFile.deletePass(resource.uri);
-					this.refresh();
-				}
+				seqFile.deletePass(resource.uri);
+				this.refresh();
 			});
 		}
 	}
 
 	insertPass(resource: Entry): void {
 		if (visualText.hasWorkingDirectory()) {
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
 				openLabel: 'Open',
@@ -282,11 +280,13 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	
 	insertNewPass(resource: Entry): void {
 		if (visualText.hasWorkingDirectory()) {
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass' }).then(newname => {
-				var original = resource.uri;
 				if (newname) {
-					seqFile.insertNewPass(resource.uri,newname);
+					if (resource)
+						seqFile.insertNewPass(resource.uri,newname);
+					else
+						seqFile.insertNewPassEnd(newname);
 					this.refresh();
 				}
 			});
@@ -295,7 +295,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	
 	renamePass(resource: Entry): void {
 		if (visualText.hasWorkingDirectory()) {
-			var seqFile = new SequenceFile();
+			var seqFile = visualText.analyzer.seqFile;
 			var basename = path.basename(resource.uri.path,'.pat');
 			vscode.window.showInputBox({ value: basename }).then(newname => {
 				var original = resource.uri;
