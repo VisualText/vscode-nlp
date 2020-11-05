@@ -139,11 +139,11 @@
         ],
         "commands": [
             {
-                "command": "text.analyze",
+                "command": "textView.analyze",
                 "title": "Run Analyzer file",
                 "icon": {
-                    "light": "fileicons/images/light/code.svg",
-                    "dark": "fileicons/images/dark/code.svg"
+                    "light": "fileicons/images/light/run.svg",
+                    "dark": "fileicons/images/dark/run.svg"
                 }
             },
             {
@@ -371,7 +371,7 @@
             ],
             "view/title": [
                 {
-                    "command": "sequenceView.insertNew",
+                    "command": "textView.openText",
                     "when": "view == sequenceView",
                     "group": "navigation"
                 },
@@ -423,7 +423,7 @@
             ],
             "view/item/context": [
                 {
-                    "command": "text.analyze",
+                    "command": "textView.analyze",
                     "when": "view == textView && viewItem == file",
                     "group": "file"
                 },
@@ -535,6 +535,11 @@
                 {
                     "command": "sequenceView.moveDown",
                     "when": "view == sequenceView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.analyze",
+                    "when": "view == textView && viewItem == file",
                     "group": "inline"
                 },
                 {
