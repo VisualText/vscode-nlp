@@ -29,8 +29,10 @@ export class TextFile {
         return this.nlpFileExts[type];
     }
 
-    setFile(filepath: string, separateLines: boolean = true) {
+    setFile(filepath: string, separateLines: boolean = true): boolean {
+        this.exists = false;
         this.clear();
+
         if (filepath.length && fs.existsSync(filepath)) {
             this.uri = vscode.Uri.file(filepath);
             this.filepath = filepath;
@@ -38,7 +40,8 @@ export class TextFile {
             this.setFileType(this.filepath);   
             this.separation(separateLines);
             this.exists = true;
-        }        
+        }
+        return this.exists;
     }
     
     setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {

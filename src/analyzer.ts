@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { analyzerView } from './analyzerView';
+import { SequenceFile } from './sequence';
+import { visualText } from './visualText';
 import { JsonState } from './jsonState';
+import { dirfuncs } from './dirfuncs';
 
 export let analyzer: Analyzer;
 export class Analyzer {
 
+    public seqFile = new SequenceFile();
     private jsonState = new JsonState();
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private specDir: vscode.Uri = vscode.Uri.file('');
@@ -27,9 +30,61 @@ export class Analyzer {
                     this.textPath = vscode.Uri.file(currentFile);
                 else
                     this.textPath = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
+
                 this.outputDirectory();               
             }
         }
+    }
+
+    newAnalyzer(): string {
+        if (visualText.hasWorkingDirectory()) {
+			vscode.window.showInputBox({ value: 'newanalyzer' }).then(newname => {
+				if (newname) {
+					return this.createNewAnalyzer(newname);
+				}
+			});
+        }
+        return '';
+    }
+
+    zeroAnalyzer() {
+        this.analyzerDir = vscode.Uri.file('');
+        this.specDir = vscode.Uri.file('');
+        this. inputDir = vscode.Uri.file('');
+        this.outputDir = vscode.Uri.file('');
+        this.textPath = vscode.Uri.file('');
+    }
+
+    createNewAnalyzer(analyzerName: string) {
+        var dirPath = path.join(visualText.getWorkingDirectory().path,analyzerName);
+        if (fs.existsSync(dirPath)) {
+            vscode.window.showWarningMessage('Analyzer folder already exists');
+        } else {
+            if (!dirfuncs.makeDir(dirPath))
+                return false;
+
+            this.setWorkingDir(vscode.Uri.file(dirPath));
+            if (!dirfuncs.makeDir(this.inputDir.path))
+                return false;
+            if (!dirfuncs.makeDir(this.specDir.path))
+                return false;
+            this.createAnaSequenceFile();
+        }
+        this.zeroAnalyzer();
+        this.load(this.analyzerDir);
+        vscode.commands.executeCommand('textView.refreshAll');
+        vscode.commands.executeCommand('outputView.refreshAll');
+        vscode.commands.executeCommand('sequenceView.refreshAll');
+        vscode.commands.executeCommand('analyzerView.refreshAll');
+    }
+
+    createAnaSequenceFile(content: string=''): boolean {
+        var cont = content.length ? content : '#\ntokenize	nil	# Gen:   Convert input to token list.';
+        if (this.getSpecDirectory()) {
+            var anaFile = path.join(this.getSpecDirectory().path,'analyzer.seq');
+            return dirfuncs.writeFile(anaFile,cont);
+        }
+        return false;
     }
 
     saveCurrentFile(currentFile: vscode.Uri) {

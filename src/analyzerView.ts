@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
+import { dirfuncs } from './dirfuncs';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -57,7 +58,7 @@ export class AnalyzerView {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
 		this.analyzerView = vscode.window.createTreeView('analyzerView', { treeDataProvider: analyzerViewProvider });
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
-		vscode.commands.registerCommand('analyzerView.newAnalyzer', resource => this.newAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
@@ -92,11 +93,16 @@ export class AnalyzerView {
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				dirfuncs.delDir(resource.uri.path);
+				vscode.commands.executeCommand('analyzerView.refreshAll');
 			});
 		}
 	}
 	
-	private newAnalyzer(resource: AnalyzerItem) {
-		console.log('New Analyzer code to be implemented');
+	private newAnalyzer() {
+		visualText.analyzer.newAnalyzer();
+		vscode.commands.executeCommand('analyzerView.refreshAll');
 	}
 }
