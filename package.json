@@ -25,12 +25,19 @@
                     "name": "Text"
                 },
                 {
+                    "id": "outputView",
+                    "name": "Output Files",
+                    "icon": "resources/dark/document.svg"
+                },
+                {
                     "id": "sequenceView",
-                    "name": "Analyzer Sequence"
+                    "name": "Analyzer Sequence",
+                    "icon": "fileicons/images/dark/dna.svg"
                 },
                 {
                     "id": "analyzerView",
-                    "name": "Analyzers"
+                    "name": "Analyzers",
+                    "icon": "fileicons/images/dark/gear.svg"
                 }
             ]
         },
@@ -311,7 +318,23 @@
                 }
             },
             {
+                "command": "textView.openText",
+                "title": "Open Text",
+                "icon": {
+                    "light": "resources/light/document.svg",
+                    "dark": "resources/dark/document.svg"
+                }
+            },
+            {
                 "command": "analyzerView.refreshAll",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "outputView.refreshAll",
                 "title": "Refresh",
                 "icon": {
                     "light": "resources/light/refresh.svg",
@@ -356,17 +379,27 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "textView.openText",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
                     "command": "textView.refreshAll",
                     "when": "view == textView",
                     "group": "navigation"
                 },
                 {
-                    "command": "analyzerView.refreshAll",
-                    "when": "view == analyzerView",
+                    "command": "outputView.refreshAll",
+                    "when": "view == outputView",
                     "group": "navigation"
                 },
                 {
                     "command": "analyzerView.newAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "analyzerView.refreshAll",
                     "when": "view == analyzerView",
                     "group": "navigation"
                 }
