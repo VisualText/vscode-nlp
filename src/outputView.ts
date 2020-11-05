@@ -71,7 +71,17 @@ export class OutputView {
         return outputView;
 	}
 
-	private directoryIsLog(path: string): boolean {
+	public directoryIsLog(path: string): boolean {
+		if (!path.endsWith('_log'))
+			return false;
+		const filepath = path.substr(0,path.length-4);
+		var stats = fs.lstatSync(filepath);
+		if (!stats)
+			return false;
+		return stats.isFile();
+	}
+
+	public fileHasLog(path: string): boolean {
 		this.logDirectory = vscode.Uri.file('');
 		if (path.length == 0)
 			return false;
@@ -87,7 +97,7 @@ export class OutputView {
 	public getOutputFiles() {
 		var path = visualText.analyzer.getTextPath();
 		this.outputFiles = [];
-		if (path.length && this.directoryIsLog(path)) {
+		if (path.length && this.fileHasLog(path)) {
             this.outputFiles = dirfuncs.getFiles(this.logDirectory);
         }
         return this.outputFiles;

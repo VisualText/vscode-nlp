@@ -97,7 +97,8 @@ export class Analyzer {
                 }
             ]
         }
-        this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);      
+        this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);  
+        this.textPath = currentFile;    
         this.outputDirectory();
     }
 

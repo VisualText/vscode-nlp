@@ -3,8 +3,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { FileStat, _ } from './fileExplorer';
 import { visualText } from './visualText';
+import { NLPFile } from './nlp';
+import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
-import { receiveMessageOnPort } from 'worker_threads';
 
 interface Entry {
 	uri: vscode.Uri;
@@ -62,8 +63,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 		const result: [string, vscode.FileType][] = [];
 		for (let i = 0; i < children.length; i++) {
 			const child = children[i];
-			const stat = await this._stat(path.join(uri.fsPath, child));
-			result.push([child, stat.type]);
+			const filepath = path.join(uri.fsPath, child);
+			const stat = await this._stat(filepath);
+			if (!outputView.directoryIsLog(filepath))
+				result.push([child, stat.type]);
 		}
 
 		return Promise.resolve(result);
@@ -142,7 +145,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 					return a[0].localeCompare(b[0]);
 				}
 				return a[1] === vscode.FileType.Directory ? -1 : 1;
-			});
+			})
 			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(inputDir.path, name)), type }));        
         }
 
@@ -154,6 +157,13 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 		if (element.type === vscode.FileType.File) {
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [element.uri], };
 			treeItem.contextValue = 'file';
+			var isLogDir = outputView.fileHasLog(element.uri.path);
+			treeItem.iconPath = {
+				light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
+									path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'file.svg'),
+				dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
+									path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'file.svg'),
+			}
 		}
 		return treeItem;
 	}
@@ -169,6 +179,7 @@ export class TextView {
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
+		vscode.commands.registerCommand('textView.analyze', (resource) => this.analyze(resource));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
 		vscode.commands.registerCommand('textView.newDir', (resource) => this.newDir(resource));
@@ -183,6 +194,14 @@ export class TextView {
         return textView;
 	}
 
+	private analyze(resource: vscode.Uri) {
+        if (resource.path.length) {
+			this.openResource(resource);
+            var nlp = new NLPFile();
+            nlp.analyze(resource);
+        }
+    }
+
 	private openText() {
 		var textFile = visualText.analyzer.getTextPath();
 		if (textFile.length)
@@ -190,7 +209,8 @@ export class TextView {
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
-		if (resource && resource.path.length) {
+		var filepath = resource.path;
+		if (resource && filepath.length) {
 			var filename = path.basename(resource.path);
 			if (filename.length) {
 				this.textView.title = `TEXT (${filename})`;	
