@@ -76,6 +76,7 @@ export class VisualText {
         this.analyzer.load(analyzerDirectory);
         vscode.commands.executeCommand('textView.refreshAll');
         vscode.commands.executeCommand('sequenceView.refreshAll');
+        vscode.commands.executeCommand('outputView.refreshAll');
         this.saveCurrentAnalyzer(analyzerDirectory);
     }
 

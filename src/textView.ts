@@ -167,6 +167,7 @@ export class TextView {
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
+		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
 		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
 		vscode.commands.registerCommand('textView.updateTitle', resource => this.updateTitle(resource));
@@ -177,6 +178,12 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	private openText() {
+		var textFile = visualText.analyzer.getTextPath();
+		if (textFile.length)
+			vscode.window.showTextDocument(vscode.Uri.file(textFile));
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
@@ -194,6 +201,7 @@ export class TextView {
 		this.updateTitle(resource);
 		vscode.window.showTextDocument(resource);
 		visualText.analyzer.saveCurrentFile(resource);
+		vscode.commands.executeCommand('outputView.refreshAll');
 	}
 
 	private deleteText(resource: Entry): void {

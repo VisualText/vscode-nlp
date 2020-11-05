@@ -4,6 +4,7 @@ import { AnalyzerView } from './analyzerView';
 import { NLPCommands } from "./command";
 import { SequenceView } from './sequenceView';
 import { TextView } from './textView';
+import { OutputView } from './outputView';
 
 export function activate(ctx: vscode.ExtensionContext): void {
     VisualText.attach(ctx);
@@ -11,5 +12,6 @@ export function activate(ctx: vscode.ExtensionContext): void {
     AnalyzerView.attach(ctx);
     SequenceView.attach(ctx);
     TextView.attach(ctx);
+    OutputView.attach(ctx);
 }
 
