@@ -140,7 +140,7 @@
         "commands": [
             {
                 "command": "textView.analyze",
-                "title": "Run Analyzer file",
+                "title": "Analyze file",
                 "icon": {
                     "light": "fileicons/images/light/run.svg",
                     "dark": "fileicons/images/dark/run.svg"
@@ -370,6 +370,11 @@
                 }
             ],
             "view/title": [
+                {
+                    "command": "textView.analyze",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
                 {
                     "command": "textView.openText",
                     "when": "view == sequenceView",

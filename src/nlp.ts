@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType, separatorType } from './textFile';
 import { visualText } from './visualText';
 
@@ -9,12 +10,15 @@ export class NLPFile extends TextFile {
         super();
 	}
 
-	analyze(filepath: vscode.Uri) {
+	analyze(filepath: vscode.Uri): boolean {
 		const filestr = filepath.path;
 		var pos = filestr.search('/input/');
 		var anapath = filestr.substr(0,pos);
-		var workpath = '/home/dehilster/nlp-engine/';
-		var cmd = `${workpath}nlp.exe -ANA ${anapath} -WORK ${workpath} ${filestr} -DEV`;
+		var workDir = visualText.getWorkDirectory().path;
+		var cmd = `${workDir}nlp.exe -ANA ${anapath} -WORK ${workDir} ${filestr} -DEV`;
+
+		// Delete files in output directory
+		dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {
@@ -22,10 +26,14 @@ export class NLPFile extends TextFile {
 			console.log('stderr: ' + stderr);
 			if (err) {
 				console.log('error: ' + err);
+				return false;
 			} else {
-				visualText.analyzer.saveCurrentFile(filepath);				
+				visualText.analyzer.saveCurrentFile(filepath);
+				vscode.commands.executeCommand('textView.refreshAll');
+				vscode.commands.executeCommand('outputView.refreshAll');
 			}
 		});
+		return true;
 	}
 
     reformatRule(editor: vscode.TextEditor) {

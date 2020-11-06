@@ -10,8 +10,8 @@ export function activate(ctx: vscode.ExtensionContext): void {
     VisualText.attach(ctx);
     NLPCommands.attach(ctx);
     AnalyzerView.attach(ctx);
-    SequenceView.attach(ctx);
     TextView.attach(ctx);
     OutputView.attach(ctx);
+    SequenceView.attach(ctx);
 }
 
