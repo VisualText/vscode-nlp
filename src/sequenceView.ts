@@ -146,7 +146,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 			return [];
 		}
 
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			visualText.analyzer.seqFile.init();
 			var specDir = visualText.analyzer.getSpecDirectory();
 			const children = await this.readDirectory(specDir);
@@ -211,7 +211,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	moveSequence(resource: Entry, direction: moveDirection) {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			seqFile.setFile(resource.uri.path);
 			var basename = seqFile.getBasename();
@@ -237,7 +237,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 
 	deletePass(resource: Entry): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
@@ -256,7 +256,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 
 	insertPass(resource: Entry): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
@@ -279,7 +279,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	insertNewPass(resource: Entry): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass' }).then(newname => {
 				if (newname) {
@@ -294,7 +294,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	}
 	
 	renamePass(resource: Entry): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			var basename = path.basename(resource.uri.path,'.pat');
 			vscode.window.showInputBox({ value: basename }).then(newname => {

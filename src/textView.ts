@@ -137,7 +137,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
 		}
 		
-        if (visualText.hasWorkingDirectory()) {
+        if (visualText.hasWorkspaceFolder()) {
 			var inputDir = visualText.analyzer.getInputDirectory();
 			const children = await this.readDirectory( visualText.analyzer.getInputDirectory());
 			children.sort((a, b) => {
@@ -179,7 +179,7 @@ export class TextView {
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
-		vscode.commands.registerCommand('textView.analyze', (resource) => this.analyze(resource));
+		vscode.commands.registerCommand('textView.analyze', () => this.analyze());
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
 		vscode.commands.registerCommand('textView.newDir', (resource) => this.newDir(resource));
@@ -194,11 +194,12 @@ export class TextView {
         return textView;
 	}
 
-	private analyze(resource: vscode.Uri) {
-        if (resource.path.length) {
-			this.openResource(resource);
+	private analyze() {
+        if (visualText.analyzer.hasText()) {
+			var textUri = vscode.Uri.file(visualText.analyzer.getTextPath());
+			this.openResource(textUri);
             var nlp = new NLPFile();
-            nlp.analyze(resource);
+			nlp.analyze(textUri);
         }
     }
 
@@ -228,7 +229,7 @@ export class TextView {
 	}
 
 	private deleteText(resource: Entry): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			var filename = path.basename(resource.uri.path);
@@ -250,7 +251,7 @@ export class TextView {
 	}
 
 	private newDir(resource: Entry) {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'dirname' }).then(newdir => {
 				if (newdir) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;
@@ -265,7 +266,7 @@ export class TextView {
 	}
 	
 	private newText(resource: Entry) {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;

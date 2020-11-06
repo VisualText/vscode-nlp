@@ -36,8 +36,12 @@ export class Analyzer {
         }
     }
 
+    hasText(): boolean {
+        return this.getTextPath().length ? true : false;
+    }
+
     newAnalyzer(): string {
-        if (visualText.hasWorkingDirectory()) {
+        if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'newanalyzer' }).then(newname => {
 				if (newname) {
 					return this.createNewAnalyzer(newname);
@@ -56,7 +60,7 @@ export class Analyzer {
     }
 
     createNewAnalyzer(analyzerName: string) {
-        var dirPath = path.join(visualText.getWorkingDirectory().path,analyzerName);
+        var dirPath = path.join(visualText.getWorkspaceFolder().path,analyzerName);
         if (fs.existsSync(dirPath)) {
             vscode.window.showWarningMessage('Analyzer folder already exists');
         } else {

@@ -35,7 +35,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	}
 
 	public getChildren(element?: AnalyzerItem): AnalyzerItem[] {
-        if (visualText.hasWorkingDirectory()) {
+        if (visualText.hasWorkspaceFolder()) {
             const analyzers = visualText.getAnalyzers();
             const children: AnalyzerItem[] = new Array();
             for (let analyzer of analyzers) {
@@ -85,7 +85,7 @@ export class AnalyzerView {
 	}
 
 	private deleteAnalyzer(resource: AnalyzerItem): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');

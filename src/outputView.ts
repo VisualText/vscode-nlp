@@ -32,7 +32,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	}
 
 	public getChildren(element?: OutputItem): OutputItem[] {
-        if (visualText.hasWorkingDirectory()) {
+        if (visualText.hasWorkspaceFolder()) {
             const children: OutputItem[] = new Array();
             for (let folder of outputView.getOutputFiles()) {
 				var base = path.basename(folder.path);
@@ -112,7 +112,7 @@ export class OutputView {
 	}
 
 	private deleteOutput(resource: OutputItem): void {
-		if (visualText.hasWorkingDirectory()) {
+		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');

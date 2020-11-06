@@ -13,6 +13,7 @@ export class VisualText {
     private jsonState = new JsonState();
 
     private analyzers: vscode.Uri[] = new Array();
+    private workDir: vscode.Uri = vscode.Uri.file('');
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
     private workspaceFold: vscode.WorkspaceFolder | undefined = undefined;
@@ -43,13 +44,15 @@ export class VisualText {
                 if (parse.analyzerDir) {
                     this.analyzerDir = vscode.Uri.file(parse.analyzerDir);
                 }
+
                 if (parse.currentAnalyzer) {
                     var dir = parse.currentAnalyzer;
                     if (fs.existsSync(dir))
                         this.currentAnalyzer = vscode.Uri.file(dir);
                     else
                         this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,dir));
-                    
+                    if (parse.workDir)
+                        this.workDir = vscode.Uri.file(parse.workDir);
                     this.analyzer.load(this.currentAnalyzer);
                 }
             } else {
@@ -64,6 +67,7 @@ export class VisualText {
                 {
                     "name": "Analyzer",
                     "type": "state",
+                    "exeDir": "/home/dehilster/nlp-engine/",
                     "currentAnalyzer": currentAnalyzer.path   
                 }
             ]
@@ -91,6 +95,10 @@ export class VisualText {
     getAnalyzer(analyzerDirectory: vscode.Uri) {
         return this.currentAnalyzer;
     }
+    
+    getWorkDirectory() {
+        return this.workDir;
+    }
 
     getAnalyzers(): vscode.Uri[] {
         if (this.analyzerDir.path.length) {
@@ -99,11 +107,11 @@ export class VisualText {
         }
         return this.analyzers;
     }
-	hasWorkingDirectory(): boolean {
+	hasWorkspaceFolder(): boolean {
 		return this.workspaceFold ? true : false;
 	}
 
-	getWorkingDirectory(): vscode.Uri {
+	getWorkspaceFolder(): vscode.Uri {
         if (this.workspaceFold) {
 		    return this.workspaceFold.uri;            
         }
