@@ -5,6 +5,7 @@ import { NLPCommands } from "./command";
 import { SequenceView } from './sequenceView';
 import { TextView } from './textView';
 import { OutputView } from './outputView';
+import { NLPStatusBar } from './status';
 
 export function activate(ctx: vscode.ExtensionContext): void {
     VisualText.attach(ctx);
@@ -13,5 +14,6 @@ export function activate(ctx: vscode.ExtensionContext): void {
     TextView.attach(ctx);
     OutputView.attach(ctx);
     SequenceView.attach(ctx);
+    NLPStatusBar.attach(ctx);
 }
 
