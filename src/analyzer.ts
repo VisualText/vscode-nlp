@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
+import { nlpStatusBar } from './status';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
 
@@ -31,13 +32,14 @@ export class Analyzer {
                 else
                     this.textPath = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
 
+                vscode.commands.executeCommand('statusBar.update');
                 this.outputDirectory();               
             }
         }
     }
 
     hasText(): boolean {
-        return this.getTextPath().length ? true : false;
+        return this.textPath.path.length ? true : false;
     }
 
     newAnalyzer(): string {

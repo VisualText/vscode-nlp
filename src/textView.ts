@@ -207,6 +207,7 @@ export class TextView {
 		var textFile = visualText.analyzer.getTextPath();
 		if (textFile.length)
 			vscode.window.showTextDocument(vscode.Uri.file(textFile));
+		vscode.commands.executeCommand('statusBar.update');
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
@@ -226,6 +227,7 @@ export class TextView {
 		vscode.window.showTextDocument(resource);
 		visualText.analyzer.saveCurrentFile(resource);
 		vscode.commands.executeCommand('outputView.refreshAll');
+		vscode.commands.executeCommand('statusBar.update');
 	}
 
 	private deleteText(resource: Entry): void {
