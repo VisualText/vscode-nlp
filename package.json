@@ -22,22 +22,35 @@
             "visualText": [
                 {
                     "id": "textView",
-                    "name": "Text"
-                },
-                {
-                    "id": "outputView",
-                    "name": "Output Files",
+                    "name": "Text",
                     "icon": "resources/dark/document.svg"
                 },
                 {
                     "id": "sequenceView",
                     "name": "Analyzer Sequence",
                     "icon": "fileicons/images/dark/dna.svg"
+                }
+            ],
+            "vtOutput": [
+                {
+                    "id": "outputView",
+                    "name": "Output Files",
+                    "icon": "resources/dark/document.svg"
                 },
                 {
                     "id": "analyzerView",
                     "name": "Analyzers",
                     "icon": "fileicons/images/dark/gear.svg"
+                },
+                {
+                    "id": "findView",
+                    "name": "Find Results",
+                    "icon": "fileicons/images/dark/search.svg"
+                },
+                {
+                    "id": "errorView",
+                    "name": "Syntax Errors",
+                    "icon": "fileicons/images/dark/error.svg"
                 }
             ]
         },
@@ -45,6 +58,13 @@
             "activitybar": [
                 {
                     "id": "visualText",
+                    "title": "VisualText",
+                    "icon": "resources/NLPIcon.svg"
+                }
+            ],
+            "panel": [
+                {
+                    "id": "vtOutput",
                     "title": "VisualText",
                     "icon": "resources/NLPIcon.svg"
                 }
@@ -299,6 +319,14 @@
                 }
             },
             {
+                "command": "sequenceView.search",
+                "title": "search",
+                "icon": {
+                    "light": "fileicons/images/light/search.svg",
+                    "dark": "fileicons/images/dark/search.svg"
+                }
+            },
+            {
                 "command": "sequenceView.refreshAll",
                 "title": "Refresh",
                 "icon": {
@@ -377,6 +405,11 @@
                 },
                 {
                     "command": "textView.openText",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.search",
                     "when": "view == sequenceView",
                     "group": "navigation"
                 },

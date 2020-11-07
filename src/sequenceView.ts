@@ -325,6 +325,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.openTree', (resource) => this.openTree(resource));
 		vscode.commands.registerCommand('sequenceView.openHighlight', (resource) => this.openHighlight(resource));
 		vscode.commands.registerCommand('sequenceView.openKB', (resource) => this.openKB(resource));
+		vscode.commands.registerCommand('sequenceView.search', () => this.search());
 		vscode.commands.registerCommand('sequenceView.moveUp', (resource) => treeDataProvider.moveUp(resource));
 		vscode.commands.registerCommand('sequenceView.moveDown', (resource) => treeDataProvider.moveDown(resource));
 		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
@@ -332,6 +333,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertNew', (resource) => treeDataProvider.insertNewPass(resource));
 		vscode.commands.registerCommand('sequenceView.delete', (resource) => treeDataProvider.deletePass(resource));
 		vscode.commands.registerCommand('sequenceView.rename', (resource) => treeDataProvider.renamePass(resource));
+
 	}
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -339,7 +341,10 @@ export class SequenceView {
             sequenceView = new SequenceView(ctx);
         }
         return sequenceView;
-    }
+	}
+	
+	search() {
+	}
 
 	private openNLP(resource: Entry): void {
 		this.textFile.setFile(resource.uri.fsPath);

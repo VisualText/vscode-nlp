@@ -13,7 +13,7 @@ export class VisualText {
     private jsonState = new JsonState();
 
     private analyzers: vscode.Uri[] = new Array();
-    private workDir: vscode.Uri = vscode.Uri.file('');
+    private engineDir: vscode.Uri = vscode.Uri.file('');
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
     private workspaceFold: vscode.WorkspaceFolder | undefined = undefined;
@@ -51,8 +51,8 @@ export class VisualText {
                         this.currentAnalyzer = vscode.Uri.file(dir);
                     else
                         this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,dir));
-                    if (parse.workDir)
-                        this.workDir = vscode.Uri.file(parse.workDir);
+                    if (parse.engineDir)
+                        this.engineDir = vscode.Uri.file(parse.engineDir);
                     this.analyzer.load(this.currentAnalyzer);
                 }
             } else {
@@ -67,7 +67,7 @@ export class VisualText {
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "exeDir": "/home/dehilster/nlp-engine/",
+                    "engineDir": "/home/dehilster/nlp-engine/",
                     "currentAnalyzer": currentAnalyzer.path   
                 }
             ]
@@ -96,8 +96,8 @@ export class VisualText {
         return this.currentAnalyzer;
     }
     
-    getWorkDirectory() {
-        return this.workDir;
+    getEngineDirectory() {
+        return this.engineDir;
     }
 
     getAnalyzers(): vscode.Uri[] {

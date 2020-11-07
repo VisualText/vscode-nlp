@@ -14,8 +14,8 @@ export class NLPFile extends TextFile {
 		const filestr = filepath.path;
 		var pos = filestr.search('/input/');
 		var anapath = filestr.substr(0,pos);
-		var workDir = visualText.getWorkDirectory().path;
-		var cmd = `${workDir}nlp.exe -ANA ${anapath} -WORK ${workDir} ${filestr} -DEV`;
+		var engineDir = visualText.getEngineDirectory().path;
+		var cmd = `${engineDir}nlp.exe -ANA ${anapath} -WORK ${engineDir} ${filestr} -DEV`;
 
 		// Delete files in output directory
 		dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
