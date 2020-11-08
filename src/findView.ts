@@ -1,14 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { visualText } from './visualText';
-import { dirfuncs } from './dirfuncs';
+import { FindItem } from './findFile';
 
-interface FindItem {
-	uri: vscode.Uri;
-}
-
-export class OutputTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
+export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 
 	private _onDidChangeTreeData: vscode.EventEmitter<FindItem> = new vscode.EventEmitter<FindItem>();
 	readonly onDidChangeTreeData: vscode.Event<FindItem> = this._onDidChangeTreeData.event;
@@ -19,20 +14,31 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<FindItem>
 
 	constructor() { }
 
-	public getTreeItem(element: FindItem): vscode.TreeItem {
+	public getTreeItem(findItem: FindItem): vscode.TreeItem {
+		var icon = 'document.svg';
+		if (findItem.uri.path.endsWith('.pat')) {
+			icon = 'gear.svg';
+		}
+
 		return {
-			resourceUri: element.uri,
+			label: findItem.label,
+			resourceUri: findItem.uri,
 			collapsibleState: void 0,
 			command: {
 				command: 'findView.openFile',
-				arguments: [element.uri],
-				title: 'Open File'
-			}
+				arguments: [findItem],
+				title: 'Open Found File'
+			},
+
+			iconPath: {
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', icon),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', icon)
+			},
 		};
 	}
 
 	public getChildren(element?: FindItem): FindItem[] {
-		return [];
+		return findView.findItems;
 	}
 }
 
@@ -40,18 +46,20 @@ export let findView: FindView;
 export class FindView {
 
 	public findView: vscode.TreeView<FindItem>;
-	private outputFiles: vscode.Uri[];
-	private logDirectory: vscode.Uri;
+	public filepath: vscode.Uri = vscode.Uri.file('');
+	public line: number = 0;
+	public pos: number = -1;
+	public text: string = '';
+	public findItems: FindItem[] = [];
+	private searchWord: string = '';
 
 	constructor(context: vscode.ExtensionContext) {
-		const outputViewProvider = new OutputTreeDataProvider();
-		this.findView = vscode.window.createTreeView('findView', { treeDataProvider: outputViewProvider });
-		vscode.commands.registerCommand('findView.refreshAll', () => outputViewProvider.refresh());
-		vscode.commands.registerCommand('findView.newOutput', resource => this.newOutput(resource));
-		vscode.commands.registerCommand('findView.deleteOutput', resource => this.deleteOutput(resource));
+		const findViewProvider = new FindTreeDataProvider();
+		this.findView = vscode.window.createTreeView('findView', { treeDataProvider: findViewProvider });
+		vscode.commands.registerCommand('findView.refreshAll', () => findViewProvider.refresh());
 		vscode.commands.registerCommand('findView.openFile', resource => this.openFile(resource));
-		this.outputFiles = [];
-		this.logDirectory = vscode.Uri.file('');
+		vscode.commands.registerCommand('findView.updateTitle', () => this.updateTitle());
+		vscode.commands.registerCommand('findView.clearAll', () => this.clearAll());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -61,60 +69,32 @@ export class FindView {
         return findView;
 	}
 
-	public directoryIsLog(path: string): boolean {
-		if (!path.endsWith('_log'))
-			return false;
-		const filepath = path.substr(0,path.length-4);
-		var stats = fs.lstatSync(filepath);
-		if (!stats)
-			return false;
-		return stats.isFile();
+	private clearAll() {
+		this.findItems = [];
+		vscode.commands.executeCommand('findView.refreshAll');
 	}
 
-	public fileHasLog(path: string): boolean {
-		this.logDirectory = vscode.Uri.file('');
-		if (path.length == 0)
-			return false;
-		this.logDirectory = vscode.Uri.file(path + '_log');
-		if (!fs.existsSync(this.logDirectory.path))
-			return false;
-		var stats = fs.lstatSync(this.logDirectory.path);
-		if (!stats)
-			return false;
-		return stats.isDirectory();
-	}
-
-	public getOutputFiles() {
-		var path = visualText.analyzer.getTextPath();
-		this.outputFiles = [];
-		if (path.length && this.fileHasLog(path)) {
-            this.outputFiles = dirfuncs.getFiles(this.logDirectory);
-        }
-        return this.outputFiles;
-	}
-
-	public load(file: vscode.Uri) {
-
-	}
-
-	private openFile(resource: vscode.Uri): void {
-        vscode.window.showTextDocument(resource);
-	}
-
-	private deleteOutput(resource: FindItem): void {
-		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete pass'});
-
-			vscode.window.showQuickPick(items).then(selection => {
-			});
+	private updateTitle(): void {
+		if (this.searchWord) {
+			let word = this.searchWord;
+			this.findView.title = `FIND RESULTS: (${word})`;				
 		}
+		this.findView.title = 'FIND RESULTS';
 	}
-	
-	private newOutput(resource: FindItem) {
-		console.log('New Output code to be implemented');
+
+	public loadFinds(searchWord: string, findItems: FindItem[]) {
+		this.findItems = findItems;
+		this.searchWord = searchWord;
+	}
+
+	private openFile(findItem: FindItem): void {
+		vscode.window.showTextDocument(findItem.uri).then(editor => 
+			{
+				var pos = new vscode.Position(findItem.line,findItem.pos);
+				var posEnd = new vscode.Position(findItem.line,findItem.pos+this.searchWord.length);
+				editor.selections = [new vscode.Selection(pos,posEnd)]; 
+				var range = new vscode.Range(pos, pos);
+				editor.revealRange(range);
+			});
 	}
 }

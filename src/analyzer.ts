@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
-import { nlpStatusBar } from './status';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
 
@@ -32,7 +31,7 @@ export class Analyzer {
                 else
                     this.textPath = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
 
-                vscode.commands.executeCommand('statusBar.update');
+                vscode.commands.executeCommand('status.update');
                 this.outputDirectory();               
             }
         }
@@ -44,7 +43,7 @@ export class Analyzer {
 
     newAnalyzer(): string {
         if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'newanalyzer' }).then(newname => {
+			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
 				if (newname) {
 					return this.createNewAnalyzer(newname);
 				}

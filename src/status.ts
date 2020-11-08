@@ -21,9 +21,9 @@ export class NLPStatusBar {
 
         nlpStatusBarText = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
         nlpStatusBarText.command = "textView.openText";
-        this.updateStatusBarItem();
+        this.update();
 
-        ctx.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(this.updateStatusBarItem));
+        vscode.commands.registerCommand('status.update', () => this.update());
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPStatusBar {
@@ -33,7 +33,7 @@ export class NLPStatusBar {
         return nlpStatusBar;
     }
 
-    updateStatusBarItem() {
+    update() {
         if (visualText.analyzer.hasText()) {
             var filepath = visualText.analyzer.getTextPath();
             var namepath = path.basename(filepath);

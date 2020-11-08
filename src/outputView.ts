@@ -102,11 +102,7 @@ export class OutputView {
         }
         return this.outputFiles;
 	}
-
-	public load(file: vscode.Uri) {
-
-	}
-
+	
 	private openFile(resource: vscode.Uri): void {
         vscode.window.showTextDocument(resource);
 	}
