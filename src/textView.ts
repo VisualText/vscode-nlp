@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { FileStat, _ } from './fileExplorer';
 import { visualText } from './visualText';
 import { NLPFile } from './nlp';
+import { FindFile } from './findFile';
+import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
 
@@ -173,14 +175,16 @@ export let textView: TextView;
 export class TextView {
 
 	private textView: vscode.TreeView<Entry>;
+	private findFile = new FindFile();
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
-		vscode.commands.registerCommand('textView.openFile', (resource) => this.openResource(resource));
+		vscode.commands.registerCommand('textView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('textView.analyze', () => this.analyze());
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
+		vscode.commands.registerCommand('textView.search', () => this.search());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
 		vscode.commands.registerCommand('textView.newDir', (resource) => this.newDir(resource));
 		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
@@ -197,17 +201,31 @@ export class TextView {
 	private analyze() {
         if (visualText.analyzer.hasText()) {
 			var textUri = vscode.Uri.file(visualText.analyzer.getTextPath());
-			this.openResource(textUri);
+			this.openFile(textUri);
             var nlp = new NLPFile();
 			nlp.analyze(textUri);
         }
-    }
+	}
+
+	search() {
+		if (visualText.hasWorkspaceFolder()) {
+			if (visualText.hasWorkspaceFolder()) {
+				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
+					if (searchWord) {
+						this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),searchWord,'.txt');
+						findView.loadFinds(searchWord,this.findFile.getMatches());
+						vscode.commands.executeCommand('findView.refreshAll');
+					}
+				});
+			}
+		}
+	}
 
 	private openText() {
 		var textFile = visualText.analyzer.getTextPath();
 		if (textFile.length)
 			vscode.window.showTextDocument(vscode.Uri.file(textFile));
-		vscode.commands.executeCommand('statusBar.update');
+			vscode.commands.executeCommand('status.update');
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
@@ -222,12 +240,12 @@ export class TextView {
 		this.textView.title = 'TEXT';
 	}
 
-	private openResource(resource: vscode.Uri): void {
+	private openFile(resource: vscode.Uri): void {
 		this.updateTitle(resource);
 		vscode.window.showTextDocument(resource);
 		visualText.analyzer.saveCurrentFile(resource);
 		vscode.commands.executeCommand('outputView.refreshAll');
-		vscode.commands.executeCommand('statusBar.update');
+		vscode.commands.executeCommand('status.update');
 	}
 
 	private deleteText(resource: Entry): void {
@@ -254,7 +272,7 @@ export class TextView {
 
 	private newDir(resource: Entry) {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'dirname' }).then(newdir => {
+			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter directory name' }).then(newdir => {
 				if (newdir) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;
 					if (resource)
@@ -269,7 +287,7 @@ export class TextView {
 	
 	private newText(resource: Entry) {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'filename' }).then(newname => {
+			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter text file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;
 					if (resource)

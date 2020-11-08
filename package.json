@@ -295,6 +295,14 @@
                 }
             },
             {
+                "command": "textView.search",
+                "title": "Search",
+                "icon": {
+                    "light": "fileicons/images/light/search.svg",
+                    "dark": "fileicons/images/dark/search.svg"
+                }
+            },
+            {
                 "command": "textView.deleteText",
                 "title": "Delete File",
                 "icon": {
@@ -337,6 +345,22 @@
             {
                 "command": "textView.refreshAll",
                 "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "findView.clearAll",
+                "title": "Clear All",
+                "icon": {
+                    "light": "fileicons/images/light/close.svg",
+                    "dark": "fileicons/images/dark/close.svg"
+                }
+            },
+            {
+                "command": "findView.refreshAll",
+                "title": "Finds",
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
@@ -399,6 +423,11 @@
             ],
             "view/title": [
                 {
+                    "command": "textView.search",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
                     "command": "textView.analyze",
                     "when": "view == textView",
                     "group": "navigation"
@@ -456,6 +485,16 @@
                 {
                     "command": "analyzerView.refreshAll",
                     "when": "view == analyzerView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "findView.clearAll",
+                    "when": "view == findView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "findView.refreshAll",
+                    "when": "view == findView",
                     "group": "navigation"
                 }
             ],
@@ -611,6 +650,8 @@
     "dependencies": {
         "@types/mkdirp": "^1.0.0",
         "@types/rimraf": "^3.0.0",
+        "find-in-files": "^0.5.0",
+        "findit": "^2.0.0",
         "fs": "0.0.1-security",
         "ftp": "^0.3.10",
         "mkdirp": "^1.0.4",

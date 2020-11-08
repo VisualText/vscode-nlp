@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { SequenceFile, seqType, moveDirection } from './sequence';
+import { seqType, moveDirection } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
 import { LogFile } from './logfile';
+import { FindFile } from './findFile';
+import { findView } from './findView';
 import { FileStat, _ } from './fileExplorer';
 
 class Entry extends vscode.TreeItem {
@@ -281,7 +283,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 	insertNewPass(resource: Entry): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			vscode.window.showInputBox({ value: 'newpass' }).then(newname => {
+			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
 					if (resource)
 						seqFile.insertNewPass(resource.uri,newname);
@@ -297,7 +299,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			var basename = path.basename(resource.uri.path,'.pat');
-			vscode.window.showInputBox({ value: basename }).then(newname => {
+			vscode.window.showInputBox({ value: basename, prompt: 'Enter new name for pass' }).then(newname => {
 				var original = resource.uri;
 				if (newname) {
 					seqFile.renamePass(basename,newname);
@@ -317,6 +319,7 @@ export class SequenceView {
 	workspacefolder: vscode.WorkspaceFolder | undefined;
 	private textFile = new TextFile();
 	private logFile = new LogFile();
+	private findFile = new FindFile();
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
@@ -333,7 +336,6 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertNew', (resource) => treeDataProvider.insertNewPass(resource));
 		vscode.commands.registerCommand('sequenceView.delete', (resource) => treeDataProvider.deletePass(resource));
 		vscode.commands.registerCommand('sequenceView.rename', (resource) => treeDataProvider.renamePass(resource));
-
 	}
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -344,6 +346,18 @@ export class SequenceView {
 	}
 	
 	search() {
+		if (visualText.hasWorkspaceFolder()) {
+			if (visualText.hasWorkspaceFolder()) {
+				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
+					if (searchWord) {
+						this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),searchWord,'.pat');
+						findView.loadFinds(searchWord,this.findFile.getMatches());
+						vscode.commands.executeCommand('findView.refreshAll');
+						vscode.commands.executeCommand('findView.updateTitle');
+					}
+				});
+			}
+		}
 	}
 
 	private openNLP(resource: Entry): void {
