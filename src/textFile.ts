@@ -42,8 +42,9 @@ export class TextFile {
             this.uri = vscode.Uri.file(filepath);
             this.filepath = filepath;
             this.text = fs.readFileSync(this.filepath, 'utf8');
-            this.setFileType(this.filepath);   
-            this.separation(separateLines);
+            this.setFileType(this.filepath);
+            if (this.text.length)
+                this.separation(separateLines);
             this.exists = true;
         }
         return this.exists;

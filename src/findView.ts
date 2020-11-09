@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { visualText } from './visualText';
 import { FindItem } from './findFile';
 
 export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
@@ -15,7 +14,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 	constructor() { }
 
 	public getTreeItem(findItem: FindItem): vscode.TreeItem {
-		var icon = 'document.svg';
+		var icon = 'file.svg';
 		if (findItem.uri.path.endsWith('.pat')) {
 			icon = 'gear.svg';
 		}
@@ -38,7 +37,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 	}
 
 	public getChildren(element?: FindItem): FindItem[] {
-		return findView.findItems;
+		return findView.getFinds();
 	}
 }
 
@@ -67,6 +66,10 @@ export class FindView {
             findView = new FindView(ctx);
         }
         return findView;
+	}
+
+	public getFinds(): FindItem[] {
+		return this.findItems;
 	}
 
 	private clearAll() {
