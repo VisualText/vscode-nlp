@@ -18,6 +18,22 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "visualText",
+                    "title": "VisualText",
+                    "icon": "resources/NLPIcon.svg"
+                }
+            ],
+            "panel": [
+                {
+                    "id": "vtOutput",
+                    "title": "VisualText",
+                    "icon": "resources/dark/document.svg"
+                }
+            ]
+        },
         "views": {
             "visualText": [
                 {
@@ -51,22 +67,6 @@
                     "id": "errorView",
                     "name": "Syntax Errors",
                     "icon": "fileicons/images/dark/error.svg"
-                }
-            ]
-        },
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "visualText",
-                    "title": "VisualText",
-                    "icon": "resources/NLPIcon.svg"
-                }
-            ],
-            "panel": [
-                {
-                    "id": "vtOutput",
-                    "title": "VisualText",
-                    "icon": "resources/NLPIcon.svg"
                 }
             ]
         },
