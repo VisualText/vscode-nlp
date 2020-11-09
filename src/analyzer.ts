@@ -15,8 +15,8 @@ export class Analyzer {
     private specDir: vscode.Uri = vscode.Uri.file('');
     private inputDir: vscode.Uri = vscode.Uri.file('');
     private outputDir: vscode.Uri = vscode.Uri.file('');
-    private textPath: vscode.Uri = vscode.Uri.file('');
-    private state: any;
+    private currentTextFile: vscode.Uri = vscode.Uri.file('');
+    private currentPassFile: vscode.Uri = vscode.Uri.file('');
 
 	constructor() {
     }
@@ -27,9 +27,15 @@ export class Analyzer {
             if (parse.currentTextFile) {
                 var currentFile = parse.currentTextFile;
                 if (fs.existsSync(currentFile))
-                    this.textPath = vscode.Uri.file(currentFile);
+                    this.currentTextFile = vscode.Uri.file(currentFile);
                 else
-                    this.textPath = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
+                    this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
+
+                currentFile = parse.currentPassFile;
+                if (fs.existsSync(currentFile))
+                    this.currentPassFile = vscode.Uri.file(currentFile);
+                else
+                    this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));
 
                 vscode.commands.executeCommand('status.update');
                 this.outputDirectory();               
@@ -38,7 +44,7 @@ export class Analyzer {
     }
 
     hasText(): boolean {
-        return this.textPath.path.length ? true : false;
+        return this.currentTextFile.path.length ? true : false;
     }
 
     newAnalyzer(): string {
@@ -57,7 +63,7 @@ export class Analyzer {
         this.specDir = vscode.Uri.file('');
         this. inputDir = vscode.Uri.file('');
         this.outputDir = vscode.Uri.file('');
-        this.textPath = vscode.Uri.file('');
+        this.currentTextFile = vscode.Uri.file('');
     }
 
     createNewAnalyzer(analyzerName: string) {
@@ -92,32 +98,62 @@ export class Analyzer {
         return false;
     }
 
-    saveCurrentFile(currentFile: vscode.Uri) {
+    saveStateFile() {
+        if (this.currentPassFile.path.length == 0 || this.currentTextFile.path.length == 0) {
+            if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+                var parse = this.jsonState.json.visualText[0];
+                if (parse.currentTextFile && this.currentPassFile.path.length == 0) {
+                    var currentFile = parse.currentTextFile;
+                    if (fs.existsSync(currentFile))
+                        this.currentTextFile = vscode.Uri.file(currentFile);
+                    else
+                        this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));           
+                }
+                if (parse.currentPassFile && this.currentPassFile.path.length == 0) {
+                    var currentFile = parse.currentPassFile;
+                    if (fs.existsSync(currentFile))
+                        this.currentPassFile = vscode.Uri.file(currentFile);
+                    else
+                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));           
+                }
+            }            
+        }
+
         var stateJsonDefault: any = {
             "visualText": [
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "currentTextFile": currentFile.path  
+                    "currentTextFile": this.currentTextFile.path,
+                    "currentPassFile": this.currentPassFile.path
                 }
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);  
-        this.textPath = currentFile;    
         this.outputDirectory();
+    }
+
+    saveCurrentFile(currentFile: vscode.Uri) {
+        this.currentTextFile = currentFile;
+        this.saveStateFile();
+    }
+
+    saveCurrentPass(passFile: vscode.Uri) {
+        this.currentPassFile = passFile;
+        this.saveStateFile();
     }
 
     load(analyzerDir: vscode.Uri) {
         this.setWorkingDir(analyzerDir);
         this.readState();
         vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
-        if (this.textPath.path.length)
-            vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.textPath.path));
+        if (this.currentTextFile.path.length)
+            vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.path));
     }
 
     outputDirectory() {
-        if (this.textPath.path.length) {
-            this.outputDir = vscode.Uri.file(this.textPath.path + '_log');
+        if (this.currentTextFile.path.length) {
+            this.outputDir = vscode.Uri.file(this.currentTextFile.path + '_log');
         } else {
             this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.path,'output'));
         }
@@ -150,7 +186,11 @@ export class Analyzer {
     }
 
     getTextPath(): string {
-        return this.textPath.path;
+        return this.currentTextFile.path;
+    }
+
+    getPassPath(): string {
+        return this.currentPassFile.path;
     }
 
 	setWorkingDir(directory: vscode.Uri) {

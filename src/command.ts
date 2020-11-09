@@ -12,6 +12,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -39,6 +40,13 @@ export class NLPCommands {
         if (vscode.window.activeTextEditor) {
             var logFile = new LogFile();
             logFile.findSelectedTree(vscode.window.activeTextEditor);
+        }
+    }
+        
+    generateRule() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.generateRule(vscode.window.activeTextEditor);
         }
     }
 

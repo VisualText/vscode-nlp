@@ -3,21 +3,34 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
 import { TextFile, nlpFileType, separatorType } from './textFile';
-import { SequenceFile } from './sequence';
+import { NLPFile, nlpFile } from './nlp';
+
+export interface LogLine {
+	node: string
+	start: number;
+	end: number;
+	phraseStart: number;
+	phraseEnd: number;
+	type: string;
+	rest: string;
+}
 
 export let logFile: LogFile;
 export class LogFile extends TextFile {
 	
 	private fireds = new Array();
 	private highlights = new Array();
+	private selectedTreeStr = '';
 	private selStart = 0;
 	private selEnd = 0;
 	private logFile = '';
 	private highlightFile = '';
 	private inputFile = '';
+	private selectedLines: LogLine[];
 
 	constructor() {
 		super();
+		this.selectedLines = [];
 	}
 	
     findRule(editor: vscode.TextEditor) {
@@ -80,32 +93,100 @@ export class LogFile extends TextFile {
 		filename = filename + pass.toString() + '.' + this.getExtension(type);
 		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,filename));
 	}
-
-	findSelectedTree(editor: vscode.TextEditor) {
+	
+	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
+		this.selectedTreeStr = '';
 		if (this.getFileType() == nlpFileType.TXXT) {
 			this.setFilesNames(this.getUri().path);
-
 			this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
-			var treeseg = this.findLogfileLines();
+			this.findLogfileLines();
+		}
+		return this.selectedTreeStr.length ? true : false;
+	}
+
+	generateRule(editor: vscode.TextEditor) {
+		if (visualText.analyzer.getPassPath().length) {
+			let passFilePath = visualText.analyzer.getPassPath();
+			let passFile = path.basename(passFilePath);
+			let passNum = visualText.analyzer.seqFile.findPass(passFile);
+			this.logFile = this.anaFile(passNum).path;
+
+			if (this.findSelectedTreeStr(editor)) {
+				let num = 1;
+				let ruleStr = '';
+				let lastend = 0;
+
+				for (let line of this.selectedLines) {
+					let node = line.node;
+					if (line.end > lastend) {
+						if (line.type.localeCompare('white') == 0)
+							node = '_xWHITE';
+						else if (line.type.localeCompare('num') == 0)
+							node = '_xNUM';
+						else if (line.type.localeCompare('punct') == 0)
+							node = `\\${node}`;
+						let newRuleStr = `\t${node}\t### (${num})`;
+						ruleStr = ruleStr + '\n' + newRuleStr;
+						num++;						
+					}
+					lastend = line.end;
+				}
+
+				let nlp = new NLPFile();
+				nlp.setStr(ruleStr);
+				ruleStr = nlp.formatRule(ruleStr);
+
+				let ruleStrFinal = `
+				
+@RULES
+_newNode <-
+${ruleStr}
+\t@@
+`;
+				nlp.setFile(passFilePath);
+				nlp.insertRule(ruleStrFinal);
+			}
+		}
+	}
+
+	parseLogLine(line: string): LogLine {
+		let logLine: LogLine = {node: '', start: 0, end: 0, phraseStart: 0, phraseEnd: 0, type: '', rest: ''};
+		var tokens = line.split('[');
+		if (tokens.length > 1) {
+			logLine.node = tokens[0].trim();
+			var toks = tokens[1].split(/[,\]]/);
+			if (toks.length >= 4) {
+				logLine.start = +toks[0];
+				logLine.end = +toks[1];
+				logLine.phraseStart = +toks[2];
+				logLine.phraseEnd = +toks[3];	
+				logLine.type = toks[4];	
+			}
+		}
+		return logLine;
+	}
+
+	findSelectedTree(editor: vscode.TextEditor) {
+		if (this.findSelectedTreeStr(editor)) {
 			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.log';
-			this.openNewFile(filename,treeseg);
+			this.openNewFile(filename,this.selectedTreeStr);
 		}
 	}
 
 	openNewFile(filepath: string, content: string) {
 		const newFile = vscode.Uri.parse('untitled:' + filepath);
-			vscode.workspace.openTextDocument(newFile).then(document => {
-				const edit = new vscode.WorkspaceEdit();
-				edit.insert(newFile, new vscode.Position(0, 0), content);
-				return vscode.workspace.applyEdit(edit).then(success => {
-					if (success) {
-						vscode.window.showTextDocument(document);
-					} else {
-						vscode.window.showInformationMessage('Error!');
-					}
-				});
+		vscode.workspace.openTextDocument(newFile).then(document => {
+			const edit = new vscode.WorkspaceEdit();
+			edit.insert(newFile, new vscode.Position(0, 0), content);
+			return vscode.workspace.applyEdit(edit).then(success => {
+				if (success) {
+					vscode.window.showTextDocument(document);
+				} else {
+					vscode.window.showInformationMessage('Error!');
+				}
 			});
+		});
 	}
 
 	bracketCount(text: string, end: number = 0): number {
@@ -157,14 +238,14 @@ export class LogFile extends TextFile {
 		this.selEnd = absEnd;
 	}
 
-	findLogfileLines(): string {
+	findLogfileLines() {
 		var file = new TextFile(this.logFile);
 		var sep = file.getSeparatorNormalized();
-		var linecount = 0;
-		var treeseg = '';
 		var from = 0;
 		var to = 0;
 		var add = false;
+		this.selectedLines = [];
+		this.selectedTreeStr = '';
 
 		for (let line of file.getLines()) {
 			from = 0;
@@ -178,13 +259,12 @@ export class LogFile extends TextFile {
 					from = +toks[0];
 					to = +toks[1];
 					if (from >= this.selStart && to <= this.selEnd) {
-						treeseg = treeseg.concat(line,sep);
+						this.selectedLines.push(this.parseLogLine(line));
+						this.selectedTreeStr = this.selectedTreeStr.concat(line,sep);
 					}		
 				}
 			}
 		}
-
-		return treeseg;
 	}
 
 	findMatchByAbsolute(absolute: number): number {

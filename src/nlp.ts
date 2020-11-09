@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { dirfuncs } from './dirfuncs';
-import { TextFile, nlpFileType, separatorType } from './textFile';
+import { LogFile } from './logfile';
+import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 
 export let nlpFile: NLPFile;
@@ -34,6 +35,16 @@ export class NLPFile extends TextFile {
 			}
 		});
 		return true;
+	}
+
+	insertRule(ruleStr: string) {
+		vscode.window.showTextDocument(this.getUri()).then(editor => {
+			let len = this.getText().length
+			let pos = editor.document.positionAt(len);
+			editor.edit(edit => {
+				edit.insert(pos, ruleStr);
+			});
+		});
 	}
 
     reformatRule(editor: vscode.TextEditor) {

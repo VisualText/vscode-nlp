@@ -42,8 +42,8 @@ export class JsonState {
     saveFile(dirPath: string, filename: string, json: any): boolean {
         this.json = json;
         this.setFilePath(dirPath,filename);
-        if (fs.existsSync(this.filePath))
-            return false;
+        //if (fs.existsSync(this.filePath))
+        //   return false;
         this.writeFile();
         return true;
     }
