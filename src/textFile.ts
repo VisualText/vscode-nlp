@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
-export enum nlpFileType { UNKNOWN, NLP, TXXT, TREE, KB }
+export enum nlpFileType { UNKNOWN, TXT, NLP, TXXT, TREE, KB }
 
 export class TextFile {
     private uri: vscode.Uri = vscode.Uri.file('');
@@ -18,7 +18,7 @@ export class TextFile {
     private filetype = nlpFileType.UNKNOWN;
     private tabsize = 4;
     public basename: string = '';
-    private nlpFileExts = new Array('txt', 'nlp', 'txxt', 'log', 'kb');
+    private nlpFileExts = new Array('unknown', 'txt', 'nlp', 'txxt', 'log', 'kb');
     private exists: boolean = false;
 
     constructor(filepath: string = '', separateLines: boolean = true) {
@@ -27,6 +27,11 @@ export class TextFile {
 
     getExtension(type: nlpFileType): string {
         return this.nlpFileExts[type];
+    }
+
+    setStr(str: string, separateLines: boolean = true) {
+        this.text = str;
+        this.separation(separateLines);
     }
 
     setFile(filepath: string, separateLines: boolean = true): boolean {
@@ -60,8 +65,10 @@ export class TextFile {
 		this.basename = path.basename(filename, '.nlp');
 		this.basename = path.basename(this.basename, '.pat');
         
-		this.filetype = nlpFileType.NLP
-		if (path.extname(filename) == '.txxt')
+        this.filetype = nlpFileType.NLP
+        if (path.extname(filename) == '.txt')
+            this.filetype = nlpFileType.TXT;
+		else if (path.extname(filename) == '.txxt')
 			this.filetype = nlpFileType.TXXT;
 		else if (path.extname(filename) == '.kb')
 			this.filetype = nlpFileType.KB;
@@ -99,10 +106,10 @@ export class TextFile {
     }
     
     separation(separateLines: boolean=true) {
-        if (this.filepath.length) {
-            if (this.text.length == 0)
-                this.setFile(this.filepath,separateLines);
+        if (this.text.length == 0)
+            this.setFile(this.filepath,separateLines);
 
+        if (this.text.length) {
             var counts_rn = this.text.split('\r\n');
             var counts_r = this.text.split('\r');
             var counts_n = this.text.split('\n');

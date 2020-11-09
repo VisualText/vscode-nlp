@@ -366,6 +366,7 @@ export class SequenceView {
 			vscode.window.showWarningMessage('Not editable');
 			return;
 		}
+		visualText.analyzer.saveCurrentPass(resource.uri);
 		vscode.window.showTextDocument(resource.uri);
 	}
 	

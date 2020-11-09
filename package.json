@@ -185,6 +185,12 @@
                 "description": "Reformat the rule with node numbers"
             },
             {
+                "command": "nlp.generateRule",
+                "category": "NLP",
+                "title": "Generate Rule",
+                "description": "Generate a rule from selected text"
+            },
+            {
                 "command": "nlp.openSelTree",
                 "category": "NLP",
                 "title": "View selected tree",
@@ -411,13 +417,18 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
                     "command": "nlp.openSelTree",
                     "group": "nlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txxt",
+                    "command": "nlp.generateRule",
                     "group": "nlp"
                 }
             ],

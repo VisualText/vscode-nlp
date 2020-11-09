@@ -180,15 +180,18 @@ export class SequenceFile extends TextFile {
 		return passStr;
 	}
 
-	setPass(pass: string) {
+	setPass(pass: string): seqType {
 		this.pass = pass;
-		this.seqType = seqType.NLP;
+		this.seqType = seqType.UNKNOWN;
 		if (pass.length) {
 			this.tokens = pass.split(/[\t\s]/);
-			if (this.tokens[0].localeCompare('pat') && this.tokens[0].localeCompare('rec'))
+			if (this.tokens[0].localeCompare('pat') == 0 || this.tokens[0].localeCompare('rec') == 0)
+				this.seqType = seqType.NLP;
+			else if (this.tokens[0].localeCompare('tokenize') == 0 || this.tokens[0].localeCompare('stub') == 0 || this.tokens[0].localeCompare('end') == 0)
 				this.seqType = seqType.STUB;
 		} else
 			this.tokens = [];
+		return this.seqType;
 	}
 
 	cleanLine(pass: string): string {
@@ -287,15 +290,17 @@ export class SequenceFile extends TextFile {
 	}
 
 	findPass(passToMatch: string): number {
-		var row = 0;
+		var row = 1;
 		var found = false;
+		passToMatch = this.BaseName(passToMatch);
 		for (let pass of this.passes) {
-			this.setPass(pass);
-			if (passToMatch.localeCompare(this.getName()) == 0) {
-				found = true;
-				break;
-			}			
-			row++;
+			if (this.setPass(pass) != seqType.UNKNOWN) {
+				if (passToMatch.localeCompare(this.getName()) == 0) {
+					found = true;
+					break;
+				}			
+				row++;				
+			}
 		}
 		if (!found)
 			row = -1;
