@@ -5,6 +5,7 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
+import { PassThrough } from 'stream';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -15,6 +16,7 @@ export class Analyzer {
     private specDir: vscode.Uri = vscode.Uri.file('');
     private inputDir: vscode.Uri = vscode.Uri.file('');
     private outputDir: vscode.Uri = vscode.Uri.file('');
+    private logDir: vscode.Uri = vscode.Uri.file('');
     private currentTextFile: vscode.Uri = vscode.Uri.file('');
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
 
@@ -173,6 +175,15 @@ export class Analyzer {
         }
     }
 
+    logFile(name: string): vscode.Uri {
+        if (this.logDir.path.length) {
+            var pather = path.join(this.logDir.path,name);
+            pather = pather.concat('.log');
+            return vscode.Uri.file(pather);        
+        }
+        return vscode.Uri.file('');
+    }
+
     getInputDirectory(): vscode.Uri {
         return this.inputDir;
     }
@@ -183,6 +194,10 @@ export class Analyzer {
 
     getOutputDirectory(): vscode.Uri {
         return this.outputDir;
+    }
+    
+    getLogDirectory(): vscode.Uri {
+        return this.logDir;
     }
 
     getTextPath(): vscode.Uri {
@@ -197,5 +212,6 @@ export class Analyzer {
 		this.analyzerDir = directory;
         this.specDir = vscode.Uri.file(path.join(directory.path,'spec'));
         this.inputDir = vscode.Uri.file(path.join(directory.path,'input'));
+        this.logDir = vscode.Uri.file(path.join(directory.path,'logs'));
 	}
 }
