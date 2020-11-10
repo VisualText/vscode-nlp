@@ -22,6 +22,7 @@ export class FindFile {
 		this.finds = [];
 		this.dirPath = '';
 	}
+	
 	getMatches(): FindItem[] {
 		return this.finds;
 	}

@@ -41,14 +41,16 @@ export class LogFile extends TextFile {
 				var seqFile = new SequenceFile();
 				seqFile.init();
 				var passNum = this.selectedLines[0].passNum;
-				var passFile = vscode.Uri.file(seqFile.getFileByNumber(passNum));
-				vscode.window.showTextDocument(passFile).then(edit => 
-					{
-						var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
-						var range = new vscode.Range(pos,pos);
-						edit.selections = [new vscode.Selection(pos,pos)]; 
-						edit.revealRange(range);
-					});	
+				if (passNum) {
+					var passFile = vscode.Uri.file(seqFile.getFileByNumber(passNum));
+					vscode.window.showTextDocument(passFile).then(edit => 
+						{
+							var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
+							var range = new vscode.Range(pos,pos);
+							edit.selections = [new vscode.Selection(pos,pos)]; 
+							edit.revealRange(range);
+						});
+				}
 			}
 		}
 	}

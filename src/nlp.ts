@@ -20,6 +20,7 @@ export class NLPFile extends TextFile {
 
 		// Delete files in output directory
 		dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
+		dirfuncs.delDir(visualText.analyzer.getLogDirectory().path);
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {
@@ -31,9 +32,10 @@ export class NLPFile extends TextFile {
 			} else {
 				visualText.analyzer.saveCurrentFile(filepath);
 				vscode.commands.executeCommand('textView.refreshAll');
-				vscode.commands.executeCommand('outputView.refreshAll');
 			}
 		});
+		vscode.commands.executeCommand('outputView.refreshAll');
+		vscode.commands.executeCommand('errorView.refreshAll');
 		return true;
 	}
 

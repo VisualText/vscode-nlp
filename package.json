@@ -64,8 +64,8 @@
                     "icon": "fileicons/images/dark/search.svg"
                 },
                 {
-                    "id": "errorView",
-                    "name": "Syntax Errors",
+                    "id": "logView",
+                    "name": "Logging",
                     "icon": "fileicons/images/dark/error.svg"
                 }
             ]
@@ -419,6 +419,14 @@
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
                 }
+            },
+            {
+                "command": "logView.refreshAll",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             }
         ],
         "menus": {
@@ -525,6 +533,11 @@
                 {
                     "command": "outputView.refreshAll",
                     "when": "view == outputView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "logView.refreshAll",
+                    "when": "view == logView",
                     "group": "navigation"
                 },
                 {
