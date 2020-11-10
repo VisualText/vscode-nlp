@@ -191,6 +191,18 @@
                 "description": "Generate a rule from selected text"
             },
             {
+                "command": "log.foldAll",
+                "category": "Tree",
+                "title": "Fold All",
+                "description": "Fold all indents for entire text"
+            },
+            {
+                "command": "log.unfoldAll",
+                "category": "Tree",
+                "title": "Unfold All",
+                "description": "UnFold all indents for entire text"
+            },
+            {
                 "command": "nlp.openSelTree",
                 "category": "NLP",
                 "title": "View selected tree",
@@ -430,6 +442,16 @@
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.generateRule",
                     "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .log",
+                    "command": "log.foldAll",
+                    "group": "fold"
+                },
+                {
+                    "when": "resourceExtname == .log",
+                    "command": "log.unfoldAll",
+                    "group": "fold"
                 }
             ],
             "view/title": [
