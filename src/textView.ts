@@ -200,7 +200,7 @@ export class TextView {
 
 	private analyze() {
         if (visualText.analyzer.hasText()) {
-			var textUri = vscode.Uri.file(visualText.analyzer.getTextPath());
+			var textUri = visualText.analyzer.getTextPath();
 			this.openFile(textUri);
             var nlp = new NLPFile();
 			nlp.analyze(textUri);
@@ -223,9 +223,8 @@ export class TextView {
 	}
 
 	private openText() {
-		var textFile = visualText.analyzer.getTextPath();
-		if (textFile.length)
-			vscode.window.showTextDocument(vscode.Uri.file(textFile));
+		if (visualText.analyzer.hasText())
+			vscode.window.showTextDocument(visualText.analyzer.getTextPath());
 			vscode.commands.executeCommand('status.update');
 	}
 	

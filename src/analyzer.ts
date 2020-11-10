@@ -185,12 +185,12 @@ export class Analyzer {
         return this.outputDir;
     }
 
-    getTextPath(): string {
-        return this.currentTextFile.path;
+    getTextPath(): vscode.Uri {
+        return this.currentTextFile;
     }
 
-    getPassPath(): string {
-        return this.currentPassFile.path;
+    getPassPath(): vscode.Uri {
+        return this.currentPassFile;
     }
 
 	setWorkingDir(directory: vscode.Uri) {
