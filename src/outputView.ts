@@ -95,11 +95,14 @@ export class OutputView {
 	}
 
 	public getOutputFiles() {
-		var path = visualText.analyzer.getTextPath();
 		this.outputFiles = [];
-		if (path.length && this.fileHasLog(path)) {
-            this.outputFiles = dirfuncs.getFiles(this.logDirectory);
-        }
+		if (visualText.analyzer.hasText()) {
+			var path = visualText.analyzer.getTextPath().path;
+			this.outputFiles = [];
+			if (path.length && this.fileHasLog(path)) {
+				this.outputFiles = dirfuncs.getFiles(this.logDirectory);
+			}			
+		}
         return this.outputFiles;
 	}
 	

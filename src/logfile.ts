@@ -4,13 +4,14 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { TextFile, nlpFileType, separatorType } from './textFile';
 import { NLPFile, nlpFile } from './nlp';
+import { SequenceFile } from './sequence';
 
 export interface LogLine {
 	node: string
 	start: number;
 	end: number;
-	phraseStart: number;
-	phraseEnd: number;
+	passNum: number;
+	ruleLine: number;
 	type: string;
 	rest: string;
 }
@@ -21,18 +22,71 @@ export class LogFile extends TextFile {
 	private fireds = new Array();
 	private highlights = new Array();
 	private selectedTreeStr = '';
-	private selStart = 0;
-	private selEnd = 0;
+	private selStart = -1;
+	private selEnd = -1;
 	private logFile = '';
 	private highlightFile = '';
 	private inputFile = '';
-	private selectedLines: LogLine[];
+	private selectedLines: LogLine[] = [];
 
 	constructor() {
 		super();
-		this.selectedLines = [];
 	}
-	
+
+	ruleFired(editor: vscode.TextEditor) {
+		if (visualText.analyzer.hasText()) {
+			this.setFile(editor.document.uri.path);
+			this.parseLogLines(editor);
+			if (this.selStart >= 0) {
+				var seqFile = new SequenceFile();
+				seqFile.init();
+				var passNum = this.selectedLines[0].passNum;
+				var passFile = vscode.Uri.file(seqFile.getFileByNumber(passNum));
+				vscode.window.showTextDocument(passFile).then(edit => 
+					{
+						var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
+						var range = new vscode.Range(pos,pos);
+						edit.selections = [new vscode.Selection(pos,pos)]; 
+						edit.revealRange(range);
+					});	
+			}
+		}
+	}
+
+	hightlightText(editor: vscode.TextEditor) {
+		if (visualText.analyzer.hasText()) {
+			this.setFile(editor.document.uri.path);
+			this.parseLogLines(editor);
+			if (this.selStart >= 0) {
+				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
+					{
+						var txt = new TextFile(visualText.analyzer.getTextPath().path);
+						var posStart = txt.positionAt(this.selStart-1);
+						var posEnd = txt.positionAt(this.selEnd);
+						var range = new vscode.Range(posStart,posEnd);
+						edit.selections = [new vscode.Selection(posStart,posEnd)]; 
+						edit.revealRange(range);
+					});
+				}				
+			}
+	}
+
+	parseLogLines(editor: vscode.TextEditor) {
+		let lines = this.getSelectedLines(editor);
+		this.selectedLines = [];
+		this.selStart = -1;
+		this.selEnd = -1;
+
+		for (let line of lines) {
+			let logLine = this.parseLogLine(line);
+			if (this.selStart < 0 || logLine.start < this.selStart)
+				this.selStart = logLine.start;
+			if (this.selEnd < 0 || logLine.end > this.selEnd)
+				this.selEnd = logLine.end;
+			this.selectedLines.push(logLine);
+		}
+	}
+
     findRule(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.TXXT) {
@@ -80,7 +134,7 @@ export class LogFile extends TextFile {
 			this.basename = path.basename(this.basename,'.nlp');
 			this.logFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.log');
 			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.txxt');
-			this.inputFile = visualText.analyzer.getTextPath();
+			this.inputFile = visualText.analyzer.getTextPath().path;
 		}
 	}
 
@@ -106,8 +160,8 @@ export class LogFile extends TextFile {
 	}
 
 	generateRule(editor: vscode.TextEditor) {
-		if (visualText.analyzer.getPassPath().length) {
-			let passFilePath = visualText.analyzer.getPassPath();
+		if (visualText.analyzer.hasText()) {
+			let passFilePath = visualText.analyzer.getPassPath().path;
 			let passFile = path.basename(passFilePath);
 			let passNum = visualText.analyzer.seqFile.findPass(passFile);
 			this.logFile = this.anaFile(passNum).path;
@@ -151,7 +205,7 @@ ${ruleStr}
 	}
 
 	parseLogLine(line: string): LogLine {
-		let logLine: LogLine = {node: '', start: 0, end: 0, phraseStart: 0, phraseEnd: 0, type: '', rest: ''};
+		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', rest: ''};
 		var tokens = line.split('[');
 		if (tokens.length > 1) {
 			logLine.node = tokens[0].trim();
@@ -159,8 +213,8 @@ ${ruleStr}
 			if (toks.length >= 4) {
 				logLine.start = +toks[0];
 				logLine.end = +toks[1];
-				logLine.phraseStart = +toks[2];
-				logLine.phraseEnd = +toks[3];	
+				logLine.passNum = +toks[2];
+				logLine.ruleLine = +toks[3];	
 				logLine.type = toks[4];	
 			}
 		}

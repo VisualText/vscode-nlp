@@ -203,6 +203,18 @@
                 "description": "UnFold all indents for entire text"
             },
             {
+                "command": "log.highlightText",
+                "category": "Tree",
+                "title": "Hightlight Text",
+                "description": "Highlight the text of selected tree nodes"
+            },
+            {
+                "command": "log.ruleFired",
+                "category": "Tree",
+                "title": "Display Rule",
+                "description": "Display the rule fired"
+            },
+            {
                 "command": "nlp.openSelTree",
                 "category": "NLP",
                 "title": "View selected tree",
@@ -452,6 +464,16 @@
                     "when": "resourceExtname == .log",
                     "command": "log.unfoldAll",
                     "group": "fold"
+                },
+                {
+                    "when": "resourceExtname == .log",
+                    "command": "log.highlightText",
+                    "group": "display"
+                },
+                {
+                    "when": "resourceExtname == .log",
+                    "command": "log.ruleFired",
+                    "group": "display"
                 }
             ],
             "view/title": [

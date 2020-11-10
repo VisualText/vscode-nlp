@@ -35,7 +35,7 @@ export class NLPStatusBar {
 
     update() {
         if (visualText.analyzer.hasText()) {
-            var filepath = visualText.analyzer.getTextPath();
+            var filepath = visualText.analyzer.getTextPath().path;
             var namepath = path.basename(filepath);
             nlpStatusBarText.text = namepath; 
             nlpStatusBarText.show();

@@ -20,9 +20,36 @@ export class TextFile {
     public basename: string = '';
     private nlpFileExts = new Array('unknown', 'txt', 'nlp', 'txxt', 'log', 'kb');
     private exists: boolean = false;
+    private selLines: string[] = [];
 
     constructor(filepath: string = '', separateLines: boolean = true) {
         this.setFile(filepath,separateLines);
+    }
+
+    positionAt(offset: number): vscode.Position {
+        let lineNum = 0;
+        let character = 0;
+        let len = 0;
+        for (let line of this.lines) {
+            if (len + line.length >= offset) {
+                character = offset - len + 1;
+                break;
+            }
+            len += line.length + 1;
+            lineNum++;
+        }
+        return new vscode.Position(lineNum, character);
+    }
+
+    getSelectedLines(editor: vscode.TextEditor): string[] {
+        this.selLines = [];
+        let start = editor.selection.start;
+        let end = editor.selection.end;
+        var i;
+        for (i=start.line; i<=end.line; i++) {
+            this.selLines.push(this.lines[i]);
+        }
+        return this.selLines;
     }
 
     getExtension(type: nlpFileType): string {

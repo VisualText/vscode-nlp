@@ -15,7 +15,8 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
-        ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldOne', this.unfoldOne));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.ruleFired', this.ruleFiredLog));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -70,6 +71,20 @@ export class NLPCommands {
     unfoldAll() {
         if (vscode.window.activeTextEditor) {
             vscode.commands.executeCommand('editor.unfoldAll');
+        }
+    }
+    
+    highlightText() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.hightlightText(vscode.window.activeTextEditor);
+        }
+    }
+    
+    ruleFiredLog() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.ruleFired(vscode.window.activeTextEditor);
         }
     }
 }

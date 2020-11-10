@@ -247,6 +247,13 @@ export class SequenceFile extends TextFile {
 		return this.tokens[0];
 	}
 
+	getSequenceFile(): vscode.Uri {
+		var uri = visualText.analyzer.getSpecDirectory();
+		if (uri.path.length)
+			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName));
+		return uri;
+	}
+
 	getSpecDirectory(): vscode.Uri {
 		return visualText.analyzer.getSpecDirectory();
 	}
