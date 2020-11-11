@@ -13,6 +13,8 @@ The VisualText language extension allows for the fast development of NLP++ analy
 * Easily edit and modify the pass sequence and texts to be analyze
 * Display syntax errors to NLP++
 
+![VSCode NLP Extension](resources/VSCodeNLP.jpg)
+
 Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
 
 For example if there is an image subfolder under your extension project workspace:
