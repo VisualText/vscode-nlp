@@ -36,7 +36,7 @@ export class FindFile {
 		for (let file of files) {
 			if (endswith.length && !file.path.endsWith(endswith))
 				continue;
-			this.textFile.setFile(file.path);
+			this.textFile.setFile(file);
 			if (this.textFile.getText().search(searchTerm) >= 0) {
 				let num = 0;
 				for (let line of this.textFile.getLines()) {

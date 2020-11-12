@@ -16,7 +16,7 @@ export class NLPStatusBar {
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
         nlpStatusBarRun.text = `$(run)`;
         nlpStatusBarRun.tooltip = 'Analyze the text';
-        nlpStatusBarRun.command = "textView.analyze";
+        nlpStatusBarRun.command = "textView.analyzeLast";
         nlpStatusBarRun.show();
 
         nlpStatusBarText = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);

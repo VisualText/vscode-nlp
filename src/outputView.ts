@@ -36,7 +36,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
             const children: OutputItem[] = new Array();
             for (let folder of outputView.getOutputFiles()) {
 				var base = path.basename(folder.path);
-				if (!(base.startsWith('ana') && (base.endsWith('.log') || base.endsWith('.txxt') || base.endsWith('.kb'))))
+				if (!((base.startsWith('ana') && base.endsWith('.log')) || base.endsWith('.txxt') || base.endsWith('.kb')))
 					children.push({uri: folder});
             }
             return children;
@@ -101,7 +101,9 @@ export class OutputView {
 			this.outputFiles = [];
 			if (path.length && this.fileHasLog(path)) {
 				this.outputFiles = dirfuncs.getFiles(this.logDirectory);
-			}			
+			} else {
+				dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
+			}	
 		}
         return this.outputFiles;
 	}

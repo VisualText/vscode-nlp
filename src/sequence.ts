@@ -5,7 +5,7 @@ import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 
 export enum moveDirection { UP, DOWN }
-export enum seqType { UNKNOWN, NLP, STUB, FOLDER }
+export enum seqType { UNKNOWN, NLP, STUB, FOLDER, MISSING }
 
 export class SequenceFile extends TextFile {
 	private seqFileName = 'analyzer.seq';
@@ -74,7 +74,7 @@ export class SequenceFile extends TextFile {
 	
 	insertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
 		if (this.passes.length) {
-			this.setFile(passafter.path,false);
+			this.setFile(passafter,false);
 			var row = this.findPass(this.getBasename());
 			if (row >= 0) {
 				var newpassstr = this.createPassStrFromFile(newpass.path);
@@ -87,7 +87,7 @@ export class SequenceFile extends TextFile {
 	insertNewPass(passafter: vscode.Uri, newpass: string) {
 		if (this.passes.length && newpass.length) {
 			var passname = '';
-			if (this.setFile(passafter.path,false)) {
+			if (this.setFile(passafter,false)) {
 				passname = this.getBasename();
 			} else {
 				passname = path.basename(passafter.path,'.stub');
@@ -112,14 +112,18 @@ export class SequenceFile extends TextFile {
 	}
 
 	deletePass(pass: vscode.Uri) {
-		if (this.passes.length) {
-			this.setFile(pass.path,false);
-			var row = this.findPass(this.getBasename());
-			if (row >= 0) {
-				this.passes.splice(row,1);
-			}
-			this.saveFile();
+		if (pass.path.length) {
+			this.setFile(pass,false);
+			this.deletePassInSeqFile(this.getBasename());
 		}	
+	}
+
+	deletePassInSeqFile(passname: string) {
+		var row = this.findPass(passname);
+		if (row >= 0) {
+			this.passes.splice(row,1);
+		}
+		this.saveFile();		
 	}
 
 	createNewPassFile(filename: string): string {
@@ -231,7 +235,7 @@ export class SequenceFile extends TextFile {
 	
 	init() {
 		if (visualText.analyzer.getSpecDirectory()) {
-			super.setFile(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName),true);
+			super.setFile(vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName)),true);
 			this.passes = this.getLines();			
 		}
 	}

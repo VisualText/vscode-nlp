@@ -9,7 +9,17 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { FileStat, _ } from './fileExplorer';
 
-class Entry extends vscode.TreeItem {
+
+interface SequenceItem {
+	uri: vscode.Uri;
+	label: string;
+	name: string;
+	passNum: number;
+	type: seqType;
+}
+
+/*
+class SequenceItem extends vscode.TreeItem {
 	constructor(
 		public readonly uri: vscode.Uri,
 		public readonly label: string,
@@ -22,13 +32,14 @@ class Entry extends vscode.TreeItem {
 		this.command = { command: 'analayzerSequence.openFile', title: "Open File", arguments: [this.uri] };
 	}
 }
+*/
 
-export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
+export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.FileSystemProvider {
 
 	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
 	
-	private _onDidChangeTreeData: vscode.EventEmitter<Entry> = new vscode.EventEmitter<Entry>();
-	readonly onDidChangeTreeData: vscode.Event<Entry> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem> = new vscode.EventEmitter<SequenceItem>();
+	readonly onDidChangeTreeData: vscode.Event<SequenceItem> = this._onDidChangeTreeData.event;
 
 	refresh(): void {
 		this._onDidChangeTreeData.fire();
@@ -143,7 +154,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 
 	// tree data provider
 
-	async getChildren(element?: Entry): Promise<Entry[]> {
+	async getChildren(element?: SequenceItem): Promise<SequenceItem[]> {
 		if (element) {
 			return [];
 		}
@@ -173,11 +184,11 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 					if (seqFile.isRuleFile()) {
 						var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqFile.fileName()));
 						if (found.length)
-							orderedArray.push({uri: found[0].uri, label: label, contextValue: 'file', type: seqType.NLP, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+							orderedArray.push({uri: found[0].uri, label: label, name: seqFile.getName(), tooltip: found[0].uri.path, contextValue: 'file', type: seqType.NLP, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 						else
-							orderedArray.push({uri: vscode.Uri.file(seqFile.fileName()), label: label, contextValue: 'file', type: seqType.NLP, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+							orderedArray.push({label: label, name: seqFile.getName(), tooltip: 'MISSING', contextValue: 'missing', type: seqType.MISSING, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 					} else {
-						orderedArray.push({uri: vscode.Uri.file(seqFile.getStubName().concat('.stub')), label: label, contextValue: 'stub', type: seqType.STUB, pass: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+						orderedArray.push({label: label, name: seqFile.getName(), tooltip: seqFile.getStubName(), contextValue: 'stub', type: seqType.STUB, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 					}			
 				}
 			}
@@ -187,35 +198,45 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		return [];
 	}
 
-	getTreeItem(element: Entry): vscode.TreeItem {
-		if (element.type === seqType.NLP) {
-			element.command = { command: 'sequenceView.openFile', title: "Open File", arguments: [element] };
-			element.iconPath = {
-				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'dna.svg'),
-				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'dna.svg')
-			};
+	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
+		if (seqItem.type === seqType.NLP || seqItem.type === seqType.MISSING) {
+			return {
+				resourceUri: seqItem.uri,
+				label: seqItem.label,
+				contextValue: 'file',
+				collapsibleState: vscode.TreeItemCollapsibleState.None,
+				command: { command: 'sequenceView.openFile', title: "Open File", arguments: [seqItem] },
+				iconPath: {
+					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'dna.svg'),
+					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'dna.svg')
+				}
+			}
 		} else {
-			element.iconPath = {
-				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'seq-circle.svg'),
-				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'seq-circle.svg')
-			};
+			return {
+				resourceUri: seqItem.uri,
+				label: seqItem.label,
+				contextValue: 'stub',
+				collapsibleState: vscode.TreeItemCollapsibleState.None,
+				iconPath: {
+					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'seq-circle.svg'),
+					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'seq-circle.svg')
+				}
+			}
 		}
-		element.collapsibleState = vscode.TreeItemCollapsibleState.None;
-		return element;
 	}
 
-	moveUp(resource: Entry): void {
-		this.moveSequence(resource,moveDirection.UP);
+	moveUp(seqItem: SequenceItem): void {
+		this.moveSequence(seqItem,moveDirection.UP);
 	}
 
-	moveDown(resource: Entry): void {
-		this.moveSequence(resource,moveDirection.DOWN);
+	moveDown(seqItem: SequenceItem): void {
+		this.moveSequence(seqItem,moveDirection.DOWN);
 	}
 	
-	moveSequence(resource: Entry, direction: moveDirection) {
+	moveSequence(seqItem: SequenceItem, direction: moveDirection) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			seqFile.setFile(resource.uri.path);
+			seqFile.setFile(seqItem.uri);
 			var basename = seqFile.getBasename();
 			var row = seqFile.findPass(basename);
 
@@ -238,26 +259,31 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		}
 	}
 
-	deletePass(resource: Entry): void {
+	deletePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' pass');
+			deleteDescr = deleteDescr.concat('Delete \'',seqItem.name,'\' pass');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
-				seqFile.setFile(resource.uri.path);
-				if (!selection || selection.label == 'No')
-					return;
-				seqFile.deletePass(resource.uri);
-				this.refresh();
+				if (seqItem.type == seqType.MISSING) {
+					seqFile.deletePassInSeqFile(seqItem.name);
+				} else {
+					seqFile.setFile(seqItem.uri);
+					if (!selection || selection.label == 'No')
+						return;
+					seqFile.deletePass(seqItem.uri);
+					this.refresh();					
+				}
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});
 		}
 	}
 
-	insertPass(resource: Entry): void {
+	insertPass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
@@ -274,19 +300,19 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 					return;
 				}
 				var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
-				seqFile.insertPass(resource.uri,newfile);
+				seqFile.insertPass(seqItem.uri,newfile);
 				this.refresh();
 			});			
 		}
 	}
 	
-	insertNewPass(resource: Entry): void {
+	insertNewPass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
-					if (resource)
-						seqFile.insertNewPass(resource.uri,newname);
+					if (seqItem)
+						seqFile.insertNewPass(seqItem.uri,newname);
 					else
 						seqFile.insertNewPassEnd(newname);
 					this.refresh();
@@ -295,12 +321,12 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 		}
 	}
 	
-	renamePass(resource: Entry): void {
+	renamePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			var basename = path.basename(resource.uri.path,'.pat');
+			var basename = path.basename(seqItem.uri.path,'.pat');
 			vscode.window.showInputBox({ value: basename, prompt: 'Enter new name for pass' }).then(newname => {
-				var original = resource.uri;
+				var original = seqItem.uri;
 				if (newname) {
 					seqFile.renamePass(basename,newname);
 					var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().path,newname.concat(path.extname(original.path))));
@@ -315,7 +341,7 @@ export class PassTree implements vscode.TreeDataProvider<Entry>, vscode.FileSyst
 export let sequenceView: SequenceView;
 export class SequenceView {
 
-	private sequenceView: vscode.TreeView<Entry>;
+	private sequenceView: vscode.TreeView<SequenceItem>;
 	workspacefolder: vscode.WorkspaceFolder | undefined;
 	private textFile = new TextFile();
 	private logFile = new LogFile();
@@ -324,18 +350,18 @@ export class SequenceView {
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
-		vscode.commands.registerCommand('sequenceView.openFile', (resource) => this.openNLP(resource));
-		vscode.commands.registerCommand('sequenceView.openTree', (resource) => this.openTree(resource));
-		vscode.commands.registerCommand('sequenceView.openHighlight', (resource) => this.openHighlight(resource));
-		vscode.commands.registerCommand('sequenceView.openKB', (resource) => this.openKB(resource));
+		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
+		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
+		vscode.commands.registerCommand('sequenceView.openHighlight', (seqItem) => this.openHighlight(seqItem));
+		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
 		vscode.commands.registerCommand('sequenceView.search', () => this.search());
-		vscode.commands.registerCommand('sequenceView.moveUp', (resource) => treeDataProvider.moveUp(resource));
-		vscode.commands.registerCommand('sequenceView.moveDown', (resource) => treeDataProvider.moveDown(resource));
+		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
+		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
 		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
-		vscode.commands.registerCommand('sequenceView.insert', (resource) => treeDataProvider.insertPass(resource));
-		vscode.commands.registerCommand('sequenceView.insertNew', (resource) => treeDataProvider.insertNewPass(resource));
-		vscode.commands.registerCommand('sequenceView.delete', (resource) => treeDataProvider.deletePass(resource));
-		vscode.commands.registerCommand('sequenceView.rename', (resource) => treeDataProvider.renamePass(resource));
+		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
 	}
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -360,61 +386,74 @@ export class SequenceView {
 		}
 	}
 
-	private openNLP(resource: Entry): void {
-		this.textFile.setFile(resource.uri.fsPath);
-		if (!this.textFile.isFileType(nlpFileType.NLP)) {
-			vscode.window.showWarningMessage('Not editable');
-			return;
+	private notMissing(seqItem: SequenceItem): boolean {
+		if (seqItem.type == seqType.MISSING) {
+			vscode.window.showInformationMessage('File is missing: ' + seqItem.name);
+			return false;
 		}
-		visualText.analyzer.saveCurrentPass(resource.uri);
-		vscode.window.showTextDocument(resource.uri);
+		return true;
+	}
+
+	private openNLP(seqItem: SequenceItem): void {
+		if (this.notMissing(seqItem)) {
+			this.textFile.setFile(seqItem.uri);
+			if (!this.textFile.isFileType(nlpFileType.NLP)) {
+				vscode.window.showWarningMessage('Not editable');
+				return;
+			}
+			visualText.analyzer.saveCurrentPass(seqItem.uri);
+			vscode.window.showTextDocument(seqItem.uri);			
+		}
 	}
 	
-	private openTree(resource: Entry): void {
-		this.textFile.setFile(resource.uri.fsPath);
-		if (!this.textFile.isFileType(nlpFileType.NLP)) {
-			vscode.window.showWarningMessage('Not editable');
-			return;
-		}
-		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
-			this.logFile.setFile(resource.uri.path);
-			var logfile = this.logFile.anaFile(resource.pass,nlpFileType.TREE);
-			if (fs.existsSync(logfile.path))
-				vscode.window.showTextDocument(logfile);
-			else
-				vscode.window.showWarningMessage('No tree file for this pass');
-		}
-	}
-
-	private openHighlight(resource: Entry): void {
-		this.textFile.setFile(resource.uri.path);
-		if (!this.textFile.isFileType(nlpFileType.NLP)) {
-			vscode.window.showWarningMessage('Not editable');
-			return;
-		}
-		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
-			this.logFile.setFile(resource.uri.path);
-			var firefile = this.logFile.firedFile(resource.pass);
-			if (fs.existsSync(firefile.path))
-				vscode.window.showTextDocument(firefile);
-			else
-				vscode.window.showWarningMessage('No highlight file with this pass');
+	private openTree(seqItem: SequenceItem): void {
+		if (this.notMissing(seqItem)) {
+			this.textFile.setFile(seqItem.uri);
+			if (!this.textFile.isFileType(nlpFileType.NLP)) {
+				vscode.window.showWarningMessage('Not editable');
+				return;
+			}
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+				var logfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.TREE);
+				if (fs.existsSync(logfile.path))
+					vscode.window.showTextDocument(logfile);
+				else
+					vscode.window.showWarningMessage('No tree file for this pass');
+			}
 		}
 	}
 
-	private openKB(resource: Entry): void {
-		this.textFile.setFile(resource.uri.path);
-		if (!this.textFile.isFileType(nlpFileType.NLP)) {
-			vscode.window.showWarningMessage('Not editable');
-			return;
+	private openHighlight(seqItem: SequenceItem): void {
+		if (this.notMissing(seqItem)) {
+			this.textFile.setFile(seqItem.uri);
+			if (!this.textFile.isFileType(nlpFileType.NLP)) {
+				vscode.window.showWarningMessage('Not editable');
+				return;
+			}
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+				var firefile = this.logFile.firedFile(seqItem.passNum);
+				if (fs.existsSync(firefile.path))
+					vscode.window.showTextDocument(firefile);
+				else
+					vscode.window.showWarningMessage('No highlight file with this pass');
+			}
 		}
-		if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
-			this.logFile.setFile(resource.uri.path);
-			var kbfile = this.logFile.anaFile(resource.pass,nlpFileType.KB);
-			if (fs.existsSync(kbfile.path))
-				vscode.window.showTextDocument(kbfile);
-			else
-				vscode.window.showWarningMessage('No KB file for this pass');
+	}
+
+	private openKB(seqItem: SequenceItem): void {
+		if (this.notMissing(seqItem)) {
+			this.textFile.setFile(seqItem.uri);
+			if (!this.textFile.isFileType(nlpFileType.NLP)) {
+				vscode.window.showWarningMessage('Not editable');
+				return;
+			}
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+				var kbfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.KB);
+				if (fs.existsSync(kbfile.path))
+					vscode.window.showTextDocument(kbfile);
+				else
+					vscode.window.showWarningMessage('No KB file for this pass');
+			}
 		}
 	}
 }
