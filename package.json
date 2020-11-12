@@ -470,9 +470,9 @@
         ],
         "keybindings": [
             {
-              "command": "textView.analyzeLast",
-              "key": "f5",
-              "mac": "f5"
+                "command": "textView.analyzeLast",
+                "key": "f5",
+                "mac": "f5"
             }
         ],
         "menus": {
@@ -784,6 +784,7 @@
     "dependencies": {
         "@types/mkdirp": "^1.0.0",
         "@types/rimraf": "^3.0.0",
+        "copy-dir": "^1.3.0",
         "find-in-files": "^0.5.0",
         "findit": "^2.0.0",
         "fs": "0.0.1-security",

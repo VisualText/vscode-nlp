@@ -4,6 +4,17 @@ import * as fs from 'fs';
 
 export namespace dirfuncs {
 
+    export function copyDirectory(fromPath: string, toPath: string): boolean {
+        var copydir = require('copy-dir');
+ 
+        copydir(fromPath,toPath, function(err) {
+            if (err)
+                return false;
+        });
+
+        return true;
+    }
+
     export function isDir(path: string): boolean {
         try {
             const stats = fs.statSync(path);

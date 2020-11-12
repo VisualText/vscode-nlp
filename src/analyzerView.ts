@@ -43,10 +43,8 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
             }
             return children;
         }
-
 		return [];
 	}
-
 }
 
 export let analyzerView: AnalyzerView;
@@ -103,6 +101,5 @@ export class AnalyzerView {
 	
 	private newAnalyzer() {
 		visualText.analyzer.newAnalyzer();
-		vscode.commands.executeCommand('analyzerView.refreshAll');
 	}
 }

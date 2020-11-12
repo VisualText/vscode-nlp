@@ -5,7 +5,6 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
-import { PassThrough } from 'stream';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -53,7 +52,8 @@ export class Analyzer {
         if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
 				if (newname) {
-					return this.createNewAnalyzer(newname);
+                    this.createNewAnalyzer(newname);
+                    return newname;
 				}
 			});
         }
@@ -68,27 +68,32 @@ export class Analyzer {
         this.currentTextFile = vscode.Uri.file('');
     }
 
-    createNewAnalyzer(analyzerName: string) {
+    createNewAnalyzer(analyzerName: string): boolean {
         var dirPath = path.join(visualText.getWorkspaceFolder().path,analyzerName);
         if (fs.existsSync(dirPath)) {
             vscode.window.showWarningMessage('Analyzer folder already exists');
+            return false;
+        } else if (!visualText.visualTextDirectoryExists()) {
+            vscode.window.showWarningMessage('Cannot find VisualText directory in nlp engine directory');
+            return false;
         } else {
-            if (!dirfuncs.makeDir(dirPath))
+            var fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
+            if (!dirfuncs.makeDir(dirPath)) {
+                vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
                 return false;
-
-            this.setWorkingDir(vscode.Uri.file(dirPath));
-            if (!dirfuncs.makeDir(this.inputDir.path))
+            }
+            if (!dirfuncs.copyDirectory(fromDir,dirPath)) {
+                vscode.window.showWarningMessage('Copy directory for new analyzer failed');
                 return false;
-            if (!dirfuncs.makeDir(this.specDir.path))
-                return false;
-            this.createAnaSequenceFile();
+            }
+            this.zeroAnalyzer();
+            this.load(this.analyzerDir);
+            vscode.commands.executeCommand('textView.refreshAll');
+            vscode.commands.executeCommand('outputView.refreshAll');
+            vscode.commands.executeCommand('sequenceView.refreshAll');
+            vscode.commands.executeCommand('analyzerView.refreshAll');
+            return true; 
         }
-        this.zeroAnalyzer();
-        this.load(this.analyzerDir);
-        vscode.commands.executeCommand('textView.refreshAll');
-        vscode.commands.executeCommand('outputView.refreshAll');
-        vscode.commands.executeCommand('sequenceView.refreshAll');
-        vscode.commands.executeCommand('analyzerView.refreshAll');
     }
 
     createAnaSequenceFile(content: string=''): boolean {

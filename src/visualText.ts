@@ -107,6 +107,7 @@ export class VisualText {
         }
         return this.analyzers;
     }
+
 	hasWorkspaceFolder(): boolean {
 		return this.workspaceFold ? true : false;
 	}
@@ -116,5 +117,16 @@ export class VisualText {
 		    return this.workspaceFold.uri;            
         }
         return vscode.Uri.file('');
+    }
+
+    visualTextDirectoryExists(): boolean {
+        return fs.existsSync(this.getVisualTextDirectory());
+    }
+
+    getVisualTextDirectory(dirName: string=''): string {
+        if (dirName.length)
+            return path.join(this.getEngineDirectory().path,'visualtext',dirName);
+        else
+            return path.join(this.getEngineDirectory().path,'visualtext');
     }
 }
