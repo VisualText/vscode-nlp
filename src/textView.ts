@@ -182,7 +182,8 @@ export class TextView {
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('textView.analyze', () => this.analyze());
+		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());
+		vscode.commands.registerCommand('textView.analyze', (resource) => this.analyze(resource));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
 		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
@@ -198,13 +199,22 @@ export class TextView {
         return textView;
 	}
 
-	private analyze() {
-        if (visualText.analyzer.hasText()) {
+	private analyzeLast() {
+		if (visualText.analyzer.hasText()) {
 			var textUri = visualText.analyzer.getTextPath();
 			this.openFile(textUri);
             var nlp = new NLPFile();
 			nlp.analyze(textUri);
         }
+	}
+
+	private analyze(entry: Entry) {
+        if (entry.uri.path.length) {
+			this.openFile(entry.uri);
+            var nlp = new NLPFile();
+			nlp.analyze(entry.uri);
+		}
+
 	}
 
 	search() {

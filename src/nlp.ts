@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { dirfuncs } from './dirfuncs';
-import { LogFile } from './logfile';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
+import { logView } from './logView';
 
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
@@ -12,15 +12,21 @@ export class NLPFile extends TextFile {
 	}
 
 	analyze(filepath: vscode.Uri): boolean {
+		vscode.commands.executeCommand('workbench.action.files.saveAll');
+
+		// Delete files in output directory
+		dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().path);
+		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().path);
+
+		logView.clearLogs();
+		logView.addMessage('Analyzing...');
+		vscode.commands.executeCommand('logView.refreshAll');
+
 		const filestr = filepath.path;
 		var pos = filestr.search('/input/');
 		var anapath = filestr.substr(0,pos);
 		var engineDir = visualText.getEngineDirectory().path;
 		var cmd = `${engineDir}nlp.exe -ANA ${anapath} -WORK ${engineDir} ${filestr} -DEV`;
-
-		// Delete files in output directory
-		dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
-		dirfuncs.delDir(visualText.analyzer.getLogDirectory().path);
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {
@@ -28,14 +34,19 @@ export class NLPFile extends TextFile {
 			console.log('stderr: ' + stderr);
 			if (err) {
 				console.log('error: ' + err);
+				vscode.commands.executeCommand('outputView.refreshAll');
+				vscode.commands.executeCommand('logView.refreshAll');
 				return false;
 			} else {
+				logView.addMessage('Done');
+				logView.addLogFile(visualText.analyzer.logFile('make_ana'));
 				visualText.analyzer.saveCurrentFile(filepath);
 				vscode.commands.executeCommand('textView.refreshAll');
+				vscode.commands.executeCommand('outputView.refreshAll');
+				vscode.commands.executeCommand('logView.refreshAll');
 			}
 		});
-		vscode.commands.executeCommand('outputView.refreshAll');
-		vscode.commands.executeCommand('errorView.refreshAll');
+
 		return true;
 	}
 

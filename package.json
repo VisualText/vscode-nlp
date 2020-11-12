@@ -18,28 +18,11 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "visualText",
-                    "title": "VisualText",
-                    "icon": "resources/NLPIcon.svg"
-                }
-            ],
-            "panel": [
-                {
-                    "id": "vtOutput",
-                    "title": "VisualText",
-                    "icon": "resources/dark/document.svg"
-                }
-            ]
-        },
         "views": {
             "visualText": [
                 {
                     "id": "textView",
-                    "name": "Text",
-                    "icon": "resources/dark/document.svg"
+                    "name": "Text"
                 },
                 {
                     "id": "sequenceView",
@@ -67,6 +50,22 @@
                     "id": "logView",
                     "name": "Logging",
                     "icon": "fileicons/images/dark/error.svg"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "visualText",
+                    "title": "VisualText",
+                    "icon": "resources/NLPIcon.svg"
+                }
+            ],
+            "panel": [
+                {
+                    "id": "vtOutput",
+                    "title": "VisualText",
+                    "icon": "resources/dark/document.svg"
                 }
             ]
         },
@@ -161,6 +160,14 @@
             {
                 "command": "textView.analyze",
                 "title": "Analyze file",
+                "icon": {
+                    "light": "fileicons/images/light/run.svg",
+                    "dark": "fileicons/images/dark/run.svg"
+                }
+            },
+            {
+                "command": "textView.analyzeLast",
+                "title": "Analyze Last file",
                 "icon": {
                     "light": "fileicons/images/light/run.svg",
                     "dark": "fileicons/images/dark/run.svg"
@@ -427,6 +434,45 @@
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
                 }
+            },
+            {
+                "command": "logView.conceptualGrammar",
+                "title": "Conceptual Grammar",
+                "icon": {
+                    "light": "fileicons/images/light/library.svg",
+                    "dark": "fileicons/images/dark/library.svg"
+                }
+            },
+            {
+                "command": "logView.timing",
+                "title": "Timings",
+                "icon": {
+                    "light": "fileicons/images/light/watch.svg",
+                    "dark": "fileicons/images/dark/watch.svg"
+                }
+            },
+            {
+                "command": "logView.clear",
+                "title": "Timings",
+                "icon": {
+                    "light": "fileicons/images/light/close.svg",
+                    "dark": "fileicons/images/dark/close.svg"
+                }
+            },
+            {
+                "command": "logView.makeAna",
+                "title": "Timings",
+                "icon": {
+                    "light": "fileicons/images/light/gear.svg",
+                    "dark": "fileicons/images/dark/gear.svg"
+                }
+            }
+        ],
+        "keybindings": [
+            {
+              "command": "textView.analyzeLast",
+              "key": "f5",
+              "mac": "f5"
             }
         ],
         "menus": {
@@ -491,7 +537,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.analyze",
+                    "command": "textView.analyzeLast",
                     "when": "view == textView",
                     "group": "navigation"
                 },
@@ -537,6 +583,26 @@
                 },
                 {
                     "command": "logView.refreshAll",
+                    "when": "view == logView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "logView.conceptualGrammar",
+                    "when": "view == logView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "logView.timing",
+                    "when": "view == logView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "logView.clear",
+                    "when": "view == logView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "logView.makeAna",
                     "when": "view == logView",
                     "group": "navigation"
                 },
@@ -589,7 +655,7 @@
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem == file && viewItem != missing",
                     "group": "display"
                 },
                 {
@@ -609,7 +675,7 @@
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && (viewItem == file || viewItem == stub)",
                     "group": "edit"
                 },
                 {

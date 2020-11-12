@@ -35,7 +35,7 @@ export class LogFile extends TextFile {
 
 	ruleFired(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
-			this.setFile(editor.document.uri.path);
+			this.setFile(editor.document.uri);
 			this.parseLogLines(editor);
 			if (this.selStart >= 0) {
 				var seqFile = new SequenceFile();
@@ -57,7 +57,7 @@ export class LogFile extends TextFile {
 
 	hightlightText(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
-			this.setFile(editor.document.uri.path);
+			this.setFile(editor.document.uri);
 			this.parseLogLines(editor);
 			if (this.selStart >= 0) {
 				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
@@ -119,10 +119,10 @@ export class LogFile extends TextFile {
 		}
 	}
 
-	setFile(filepath: string, separateLines: boolean = true): boolean {
-		if (filepath.length) {
-			super.setFile(filepath,separateLines);
-			this.setFilesNames(filepath);
+	setFile(file: vscode.Uri, separateLines: boolean = true): boolean {
+		if (file.path.length) {
+			super.setFile(file,separateLines);
+			this.setFilesNames(file.path);
 			return true;	
 		}
 		return false;
@@ -163,8 +163,8 @@ export class LogFile extends TextFile {
 
 	generateRule(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
-			let passFilePath = visualText.analyzer.getPassPath().path;
-			let passFile = path.basename(passFilePath);
+			let passFilePath = visualText.analyzer.getPassPath();
+			let passFile = path.basename(passFilePath.path);
 			let passNum = visualText.analyzer.seqFile.findPass(passFile);
 			this.logFile = this.anaFile(passNum).path;
 

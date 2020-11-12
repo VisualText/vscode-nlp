@@ -98,4 +98,15 @@ export namespace dirfuncs {
         } 
         return false;
     }
+
+    export function emptyDir(dirPath: string): boolean {
+        try {
+            fs.rmdirSync(dirPath,{recursive: true});
+            fs.mkdirSync(dirPath);
+            return true;
+        } catch (err) {
+            vscode.window.showInformationMessage('Error emptying folder ' + dirPath + ': ' + err.message);
+        } 
+        return false;
+    }
 }

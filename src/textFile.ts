@@ -23,7 +23,8 @@ export class TextFile {
     private selLines: string[] = [];
 
     constructor(filepath: string = '', separateLines: boolean = true) {
-        this.setFile(filepath,separateLines);
+        if (filepath.length)
+            this.setFile(vscode.Uri.file(filepath),separateLines);
     }
 
     positionAt(offset: number): vscode.Position {
@@ -45,7 +46,7 @@ export class TextFile {
         this.selLines = [];
         let start = editor.selection.start;
         let end = editor.selection.end;
-        var i;
+        var i = 0;
         for (i=start.line; i<=end.line; i++) {
             this.selLines.push(this.lines[i]);
         }
@@ -61,13 +62,13 @@ export class TextFile {
         this.separation(separateLines);
     }
 
-    setFile(filepath: string, separateLines: boolean = true): boolean {
+    setFile(file: vscode.Uri, separateLines: boolean = true): boolean {
         this.exists = false;
         this.clear();
 
-        if (filepath.length && fs.existsSync(filepath)) {
-            this.uri = vscode.Uri.file(filepath);
-            this.filepath = filepath;
+        if (file.path.length && fs.existsSync(file.path)) {
+            this.uri = file;
+            this.filepath = file.path;
             this.text = fs.readFileSync(this.filepath, 'utf8');
             this.setFileType(this.filepath);
             if (this.text.length)
@@ -135,7 +136,7 @@ export class TextFile {
     
     separation(separateLines: boolean=true) {
         if (this.text.length == 0)
-            this.setFile(this.filepath,separateLines);
+            this.setFile(this.uri,separateLines);
 
         if (this.text.length) {
             var counts_rn = this.text.split('\r\n');

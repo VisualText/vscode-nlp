@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { visualText } from './visualText';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
@@ -9,6 +10,7 @@ interface LogItem {
 	passNum: number;
 	line: number;
 	label: string;
+	icon: string;
 }
 
 export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> {
@@ -31,6 +33,10 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 				command: 'logView.openFile',
 				arguments: [element],
 				title: 'Open File with Error'
+			},
+			iconPath: {
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', element.icon),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', element.icon)
 			}
 		};
 	}
@@ -48,12 +54,18 @@ export let logView: LogView;
 export class LogView {
 
 	public logView: vscode.TreeView<LogItem>;
+	private logs: LogItem[] = new Array();
 
 	constructor(context: vscode.ExtensionContext) {
 		const logViewProvider = new OutputTreeDataProvider();
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
 		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
 		vscode.commands.registerCommand('logView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('logView.addMessage', (message) => this.addMessage(message));
+		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
+		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
+		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
+		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -63,33 +75,62 @@ export class LogView {
         return logView;
 	}
 
-	getLogs(): LogItem[] {
-		const logs: LogItem[] = new Array();
+	private loadTimingLog() {
+		this.clearLogs();
+		var cgFile = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,'dbg.log'));
+		this.addLogFile(cgFile);
+	}
 
-		if (visualText.analyzer.hasText()) {
-			const makeAna = visualText.analyzer.logFile('make_ana');
-			if (fs.existsSync(makeAna.path)) {
-				const logFile = new TextFile(makeAna.path);
-				var seqFile = new SequenceFile();
-				seqFile.init();
+	private loadCGLog() {
+		this.clearLogs();
+		var timingFile = vscode.Uri.file(path.join(visualText.analyzer.getLogDirectory().path,'cgerr.log'));
+		this.addLogFile(timingFile);
+	}
+	
+	private loadMakeAna() {
+		this.clearLogs();
+		var timingFile = vscode.Uri.file(path.join(visualText.analyzer.getLogDirectory().path,'make_ana.log'));
+		this.addLogFile(timingFile);
+	}
 
-				for (let line of logFile.getLines()) {
-					line = line.substr(0,line.length-1);
-					if (line.length) {
-						let log = this.parseLogLine(line);
-						logs.push(log);						
-					}
+	public clearLogs() {
+		this.logs = [];
+		vscode.commands.executeCommand('logView.refreshAll');
+	}
+
+	public addMessage(message: string) {
+		this.logs.push(this.messageLine(message));
+	}
+
+	public addLogFile(logFileName: vscode.Uri) {
+		if (fs.existsSync(logFileName.path)) {
+			const logFile = new TextFile(logFileName.path);
+			var seqFile = new SequenceFile();
+			seqFile.init();
+
+			for (let line of logFile.getLines()) {
+				line = line.substr(0,line.length-1);
+				if (line.length) {
+					let log = this.parseLogLine(line);
+					this.logs.push(log);						
 				}
 			}
-		}
+		}		
+	}
 
-		return logs;
+	getLogs(): LogItem[] {
+		return this.logs;
+	}
+
+	private messageLine(label: string): LogItem {
+		return ({label: label, uri: visualText.analyzer.getTextPath(), passNum: 0, line: 0, icon: 'arrow-small-right.svg'});	
 	}
 
 	private parseLogLine(line: string): LogItem {
 		var uri = vscode.Uri.file('');
 		var passNum = 0;
 		var lineNum = -1;
+		var icon = 'arrow-small-right.svg';
 
 		if (line.length) {
 			let tokens = line.split(/[\t\s]/,2);  
@@ -97,13 +138,15 @@ export class LogView {
 				var seqFile = new SequenceFile();
 				seqFile.init();
 				passNum = +tokens[0];
-				if (passNum)
+				if (passNum) {
 					uri = vscode.Uri.file(seqFile.getFileByNumber(passNum));
+					icon = 'gear.svg';
+				}
 				lineNum = +tokens[1];
 			}
 		}
 
-		return ({label: line, uri: uri, passNum: passNum, line: lineNum});
+		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon});
 	}
 
 	private openFile(logItem: LogItem): void {
