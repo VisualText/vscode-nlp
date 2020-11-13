@@ -126,10 +126,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
-				if (seqItem.type.localeCompare('missing')) {
+				if (seqItem.type.localeCompare('missing') == 0) {
 					seqFile.deletePassInSeqFile(seqItem.name);
 				} else {
-					seqFile.setFile(seqItem.uri);
 					if (!selection || selection.label == 'No')
 						return;
 					seqFile.deletePass(seqItem.uri);

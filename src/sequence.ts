@@ -141,10 +141,10 @@ export class SequenceFile extends TextFile {
 	
 	insertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
 		if (this.passItems.length) {
-			var row = this.findPass(this.getBasename());
+			var row = this.findPass(path.basename(passafter.path));
 			if (row >= 0) {
 				var passItem = this.createPassItemFromFile(newpass.path);
-				this.passItems.splice(row+1,0,passItem);
+				this.passItems.splice(row,0,passItem);
 				this.saveFile();			
 			}
 		}	
@@ -154,7 +154,7 @@ export class SequenceFile extends TextFile {
 		if (this.passItems.length && newpass.length) {
 			var passname = '';
 			if (this.setFile(passafter,false)) {
-				passname = this.getBasename();
+				passname = path.basename(passafter.path);
 			} else {
 				passname = path.basename(passafter.path,'.stub');
 			}
@@ -162,7 +162,7 @@ export class SequenceFile extends TextFile {
 			if (row >= 0) {
 				var newfile = this.createNewPassFile(newpass);
 				var passItem = this.createPassItemFromFile(newfile);
-				this.passItems.splice(row+1,0,passItem);
+				this.passItems.splice(row,0,passItem);
 				this.saveFile();			
 			}
 		}	
@@ -174,20 +174,19 @@ export class SequenceFile extends TextFile {
 			var passItem = this.createPassItemFromFile(newfile);
 			this.passItems.push(passItem);
 			this.saveFile();			
-		}	
+		}
 	}
 
 	deletePass(pass: vscode.Uri) {
 		if (pass.path.length) {
-			this.setFile(pass,false);
-			this.deletePassInSeqFile(this.getBasename());
+			this.deletePassInSeqFile(path.basename(pass.path));
 		}	
 	}
 
 	deletePassInSeqFile(passname: string) {
 		var row = this.findPass(passname);
 		if (row >= 0) {
-			this.passItems.splice(row,1);
+			this.passItems.splice(row-1,1);
 		}
 		this.saveFile();		
 	}

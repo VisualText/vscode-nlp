@@ -80,6 +80,24 @@ export namespace dirfuncs {
         return dirUris;
     }
 
+    export function getDirectoryTypes(folder: vscode.Uri): {uri: vscode.Uri, type: vscode.FileType}[] {
+        var dirsAndTypes = Array();
+        const filenames = fs.readdirSync(folder.path);
+        for (let filename of filenames) {
+            if (!filename.startsWith('.')) {
+                var filepath = path.join(folder.path,filename);
+                try {
+                    const stats = fs.statSync(filepath);
+                    var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
+                    dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type});
+                } catch (err) {
+                    console.error(err)
+                }
+            }
+        }
+        return dirsAndTypes;
+    }
+
     export function getFiles(folder: vscode.Uri): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.path);
