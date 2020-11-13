@@ -18,22 +18,6 @@ interface SequenceItem {
 	type: seqType;
 }
 
-/*
-class SequenceItem extends vscode.TreeItem {
-	constructor(
-		public readonly uri: vscode.Uri,
-		public readonly label: string,
-		public readonly contextValue: string,
-		public pass: number,
-		public type: seqType,
-		public collapsibleState: vscode.TreeItemCollapsibleState
-	) {
-		super(label, collapsibleState);
-		this.command = { command: 'analayzerSequence.openFile', title: "Open File", arguments: [this.uri] };
-	}
-}
-*/
-
 export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.FileSystemProvider {
 
 	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
@@ -159,7 +143,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 			return [];
 		}
 
-		if (visualText.hasWorkspaceFolder()) {
+		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
 			visualText.analyzer.seqFile.init();
 			var specDir = visualText.analyzer.getSpecDirectory();
 			const children = await this.readDirectory(specDir);
@@ -311,7 +295,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
-					if (seqItem)
+					if (seqItem && seqItem.uri)
 						seqFile.insertNewPass(seqItem.uri,newname);
 					else
 						seqFile.insertNewPassEnd(newname);
