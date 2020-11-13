@@ -28,7 +28,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			},
 			command: {
 				command: 'analyzerView.openAnalyzer',
-				arguments: [element.uri],
+				arguments: [element],
 				title: 'Open Analyzer'
 			}
 		};
@@ -69,31 +69,31 @@ export class AnalyzerView {
         return analyzerView;
 	}
 	
-	private updateTitle(resource: vscode.Uri): void {
-		var analyzerName = path.basename(resource.path);
+	private updateTitle(analyzerItem: AnalyzerItem): void {
+		var analyzerName = path.basename(analyzerItem.uri.path);
 		if (analyzerName.length)
 			this.analyzerView.title = `ANALYZERS (${analyzerName})`;
 		else
 			this.analyzerView.title = 'ANALYZERS';
 	}
 
-	private openAnalyzer(resource: vscode.Uri): void {
-		this.updateTitle(resource);
-		visualText.loadAnalyzer(resource);
+	private openAnalyzer(analyzerItem: AnalyzerItem): void {
+		this.updateTitle(analyzerItem);
+		visualText.loadAnalyzer(analyzerItem.uri);
 	}
 
-	private deleteAnalyzer(resource: AnalyzerItem): void {
+	private deleteAnalyzer(analyzerItem: AnalyzerItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.path),'\' analzyer');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				dirfuncs.delDir(resource.uri.path);
+				dirfuncs.delDir(analyzerItem.uri.path);
 				vscode.commands.executeCommand('analyzerView.refreshAll');
 			});
 		}

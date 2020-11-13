@@ -675,22 +675,17 @@
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && (viewItem == file || viewItem == stub)",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub)/)",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insert",
-                    "when": "view == sequenceView && (viewItem == file || viewItem == stub)",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub)/",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.delete",
                     "when": "view == sequenceView && viewItem == file",
-                    "group": "edit"
-                },
-                {
-                    "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem == stub",
                     "group": "edit"
                 },
                 {

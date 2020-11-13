@@ -19,6 +19,7 @@ export class Analyzer {
     private logDir: vscode.Uri = vscode.Uri.file('');
     private currentTextFile: vscode.Uri = vscode.Uri.file('');
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
+    private loaded: boolean = false;
 
 	constructor() {
     }
@@ -66,9 +67,10 @@ export class Analyzer {
     zeroAnalyzer() {
         this.analyzerDir = vscode.Uri.file('');
         this.specDir = vscode.Uri.file('');
-        this. inputDir = vscode.Uri.file('');
+        this.inputDir = vscode.Uri.file('');
         this.outputDir = vscode.Uri.file('');
         this.currentTextFile = vscode.Uri.file('');
+        this.loaded = false;
     }
 
     createNewAnalyzer(analyzerName: string): boolean {
@@ -95,6 +97,7 @@ export class Analyzer {
             vscode.commands.executeCommand('outputView.refreshAll');
             vscode.commands.executeCommand('sequenceView.refreshAll');
             vscode.commands.executeCommand('analyzerView.refreshAll');
+            this.loaded = true;
             return true; 
         }
     }
@@ -192,6 +195,10 @@ export class Analyzer {
         return vscode.Uri.file('');
     }
 
+    isLoaded(): boolean {
+        return this.loaded;
+    }
+
     getInputDirectory(): vscode.Uri {
         return this.inputDir;
     }
@@ -217,9 +224,14 @@ export class Analyzer {
     }
 
 	setWorkingDir(directory: vscode.Uri) {
-		this.analyzerDir = directory;
-        this.specDir = vscode.Uri.file(path.join(directory.path,'spec'));
-        this.inputDir = vscode.Uri.file(path.join(directory.path,'input'));
-        this.logDir = vscode.Uri.file(path.join(directory.path,'logs'));
+        this.analyzerDir = directory;
+        if (fs.existsSync(directory.path)) {
+            this.specDir = vscode.Uri.file(path.join(directory.path,'spec'));
+            this.inputDir = vscode.Uri.file(path.join(directory.path,'input'));
+            this.logDir = vscode.Uri.file(path.join(directory.path,'logs'));
+            this.loaded = true;          
+        }
+        else
+            this.loaded = false;
 	}
 }

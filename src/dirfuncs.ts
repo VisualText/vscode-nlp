@@ -29,6 +29,38 @@ export namespace dirfuncs {
         }
         return false;
     }
+
+    export function renameFile(oldPath: string, newPath: string): boolean {
+        try {
+            fs.renameSync(oldPath,newPath);
+            return true;
+        } catch (err) {
+            vscode.window.showInformationMessage('Could not rename file ' + oldPath + ' to ' + newPath + ' - ' + err.message);
+        }
+        return false;
+    }
+
+    export function findFolder(dirPath: vscode.Uri, folderToFind: string): vscode.Uri {
+        var parentDir = path.dirname(dirPath.path);
+        if (path.basename(parentDir).localeCompare(folderToFind) == 0) {
+            return vscode.Uri.file(parentDir);
+        }
+
+        if (parentDir && parentDir?.length > 1) {
+            var found = findFolder(vscode.Uri.file(parentDir), folderToFind);
+            if (found.path.length > 2)
+                return found;
+        }
+
+        var dirs = getDirectories(dirPath);
+        for (let dir of dirs) {
+            if (dir.path.localeCompare(folderToFind) == 0) {
+                return dir;
+            }
+        }
+
+        return vscode.Uri.file('');
+    }
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {
         const dirUris: vscode.Uri[] = new Array();

@@ -3,22 +3,106 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
+import { endianness } from 'os';
 
 export enum moveDirection { UP, DOWN }
-export enum seqType { UNKNOWN, NLP, STUB, FOLDER, MISSING }
+
+export class PassItem {
+	public uri = vscode.Uri.file('');
+	public text: string = '';
+	public name: string = '';
+	public comment: string = '';
+	public num: number = 0;
+	public typeStr: string = '';
+
+	constructor() {
+	}
+
+	public isRuleFile() {
+		return this.typeStr.localeCompare('pat') == 0;
+	}
+
+	public fileExists(): boolean {
+		return fs.existsSync(this.uri.path) ? true : false;
+	}
+
+	clear() {
+		this.uri = vscode.Uri.file('');
+		this.text = '';
+		this.name = '';
+		this.comment = '';
+		this.num = 0;
+		this.typeStr = '';
+	}
+}
 
 export class SequenceFile extends TextFile {
+	private specDir = vscode.Uri.file('');
 	private seqFileName = 'analyzer.seq';
-	private tokens = new Array();
-	private passes = new Array();
+	private passItems = new Array();
 	private cleanpasses = new Array();
-	private pass = '';
 	private newcontent: string = '';
 	private basenamestub: string = '';
-	private seqType = seqType.UNKNOWN;
 
 	constructor() {
 		super();
+	}
+
+	init() {
+		if (visualText.analyzer.isLoaded()) {
+			this.specDir = visualText.analyzer.getSpecDirectory();
+			super.setFile(vscode.Uri.file(path.join(this.specDir.path,this.seqFileName)),true);
+			let passNum = 1;
+			this.passItems = [];
+			for (let passStr of this.getLines()) {
+				var passItem = this.setPass(passStr,passNum);
+				if (passItem.text.length)
+					this.passItems.push(this.setPass(passStr,passNum++));
+			}
+		}
+	}
+
+	setPass(passStr: string, passNum: number): PassItem {
+		const passItem = new PassItem();
+		var tokens = passStr.split(/[\t\s]/);
+
+		if (tokens.length >= 3) {
+			passItem.text = passStr;
+			passItem.num = passNum;
+
+			if (tokens[0].localeCompare('#') == 0) {
+				passItem.comment = this.tokenStr(tokens,2);
+				passItem.typeStr = '#';
+
+			} else {
+				passItem.typeStr = tokens[0];
+				passItem.name = tokens[1];
+
+				if (tokens[0].localeCompare('pat') == 0 || tokens[0].localeCompare('rec') == 0) {			
+					passItem.uri = vscode.Uri.file(path.join(this.specDir.path,this.passFileName(passItem.name)));
+				}
+				passItem.comment = this.tokenStr(tokens,2);				
+			}
+		}
+
+		return passItem;
+	}
+
+	tokenStr(tokens: string[], start: number): string {
+		var tokenStr = '';
+		let i = 0;
+		let end = tokens.length;
+		for (i=start; i<end; i++) {
+			var tok = tokens[i];
+			if (tokenStr.length)
+				tokenStr = tokenStr + ' ';
+			tokenStr = tokenStr + tok;
+		}
+		return tokenStr;
+	}
+
+	passString(passItem: PassItem): string {
+		return passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
 	}
 
 	BaseName(passname: string): string {
@@ -27,44 +111,27 @@ export class SequenceFile extends TextFile {
 		return basename;
 	}
 
-	setSeqType(filename: string) {
-		this.setFileType(filename);
-
-		this.seqType = seqType.NLP;
-		var basenamestub = path.basename(filename, '.stub');
-		if (this.basenamestub.length < this.basename.length) {
-			this.seqType = seqType.STUB;
-			this.basename = basenamestub;
-        }
-    }
-
 	getFileByNumber(num: number): string {
 		var filepath = '';
-		if (this.passes.length) {
-			var line = this.passes[num];
-			this.setPass(line);
-			filepath = path.join(visualText.analyzer.getSpecDirectory().path,this.tokens[1]+'.'+this.tokens[0]);
+		if (this.passItems.length) {
+			return this.passItems[num-1].text;
 		}
-		return filepath;
+		return '';
 	}
 
 	cleanPasses() {
 		this.cleanpasses = [];
-		for (let pass of this.passes) {
-			this.setPass(pass);
-			if (this.isValid()) {
-				this.cleanpasses.push(this.cleanLine(pass));
-			}					
+		let passNum = 1;
+		for (let passItem of this.passItems) {
+			this.cleanpasses.push(this.passString(passItem));
 		}
 	}
 
-	renamePass(origpassname: string, newpassname: string) {
-		if (this.passes.length) {
-			for (var i=0; i < this.passes.length; i++) {
-				this.setPass(this.passes[i]);
-				if (origpassname.localeCompare(this.getName()) == 0) {
-					this.tokens[1] = newpassname;
-					this.passes[i] = this.passString();
+	renamePass(origPassName: string, newPassName: string) {
+		if (this.passItems.length) {
+			for (let passItem of this.passItems) {
+				if (origPassName.localeCompare(passItem.name) == 0) {
+					passItem.name = newPassName;
 					break;
 				}
 			}
@@ -73,19 +140,18 @@ export class SequenceFile extends TextFile {
 	}
 	
 	insertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
-		if (this.passes.length) {
-			this.setFile(passafter,false);
+		if (this.passItems.length) {
 			var row = this.findPass(this.getBasename());
 			if (row >= 0) {
-				var newpassstr = this.createPassStrFromFile(newpass.path);
-				this.passes.splice(row+1,0,newpassstr);
+				var passItem = this.createPassItemFromFile(newpass.path);
+				this.passItems.splice(row+1,0,passItem);
 				this.saveFile();			
 			}
 		}	
 	}
 		
 	insertNewPass(passafter: vscode.Uri, newpass: string) {
-		if (this.passes.length && newpass.length) {
+		if (this.passItems.length && newpass.length) {
 			var passname = '';
 			if (this.setFile(passafter,false)) {
 				passname = this.getBasename();
@@ -95,18 +161,18 @@ export class SequenceFile extends TextFile {
 			var row = this.findPass(passname);
 			if (row >= 0) {
 				var newfile = this.createNewPassFile(newpass);
-				var newpassstr = this.createPassStrFromFile(newfile);
-				this.passes.splice(row+1,0,newpassstr);
+				var passItem = this.createPassItemFromFile(newfile);
+				this.passItems.splice(row+1,0,passItem);
 				this.saveFile();			
 			}
 		}	
 	}
 
 	insertNewPassEnd(newpass: string) {
-		if (this.passes.length && newpass.length) {
+		if (this.passItems.length && newpass.length) {
 			var newfile = this.createNewPassFile(newpass);
-			var newpassstr = this.createPassStrFromFile(newfile);
-			this.passes.push(newpassstr);
+			var passItem = this.createPassItemFromFile(newfile);
+			this.passItems.push(passItem);
 			this.saveFile();			
 		}	
 	}
@@ -121,7 +187,7 @@ export class SequenceFile extends TextFile {
 	deletePassInSeqFile(passname: string) {
 		var row = this.findPass(passname);
 		if (row >= 0) {
-			this.passes.splice(row,1);
+			this.passItems.splice(row,1);
 		}
 		this.saveFile();		
 	}
@@ -162,93 +228,25 @@ export class SequenceFile extends TextFile {
 		return newpass;
 	}
 
-	createPassStrFromFile(filepath: string) {
-		var name = this.BaseName(filepath);
-		var ext = path.extname(filepath).substr(1);
-		var passStr: string = '';
-		passStr = passStr.concat(ext,'\t',name,'\t# comment');
-		return passStr;
+	createPassItemFromFile(filePath: string): PassItem {
+		const passItem = new PassItem();
+		passItem.uri = vscode.Uri.file(filePath);
+		passItem.name = this.BaseName(filePath);
+		passItem.typeStr = path.extname(filePath).substr(1);
+		passItem.comment = '# comment';
+		passItem.text = this.passString(passItem);
+		return passItem;
 	}
 
-	passString(): string {
-		var passStr: string = '';
-		for (var i=0; i<this.tokens.length; i++) {
-			if (passStr.length) {
-				if (i < 3)
-					passStr = passStr.concat('\t');
-				else				
-					passStr = passStr.concat(' ');
-			}
-			passStr = passStr.concat(this.tokens[i]);
-		}
-		return passStr;
+	passFileName(passName: string): string {
+		return passName.concat('.pat');
 	}
 
-	setPass(pass: string): seqType {
-		this.pass = pass;
-		this.seqType = seqType.UNKNOWN;
-		if (pass.length) {
-			this.tokens = pass.split(/[\t\s]/);
-			if (this.tokens[0].localeCompare('pat') == 0 || this.tokens[0].localeCompare('rec') == 0)
-				this.seqType = seqType.NLP;
-			else if (this.tokens[0].localeCompare('tokenize') == 0 || this.tokens[0].localeCompare('stub') == 0 || this.tokens[0].localeCompare('end') == 0)
-				this.seqType = seqType.STUB;
-		} else
-			this.tokens = [];
-		return this.seqType;
-	}
-
-	cleanLine(pass: string): string {
-		var cleanstr: string = '';
-
-		for (var i=0; i < this.tokens.length; i++) {
-			if (i == 0)
-				cleanstr = this.tokens[i];
-			else if (i < 3)
-				cleanstr = cleanstr.concat('\t',this.tokens[i]);
-			else
-				cleanstr = cleanstr.concat(' ',this.tokens[i]);
-		}
-
-		return cleanstr;
-	}
-
-	isValid() {
-		if (this.tokens.length) {
-			if (this.tokens.length >= 2 && this.tokens[0].localeCompare('#'))
-				return true;
-		}
-		return false;
-	}
-
-	isRuleFile() {
-		return this.seqType == seqType.NLP;
-	}
-
-	fileName(): string {
-		return this.tokens[1].concat('.pat');
-	}
-	
-	getSeqType(): seqType {
-		return this.seqType;
-	}
-	
-	init() {
-		if (visualText.analyzer.getSpecDirectory()) {
-			super.setFile(vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName)),true);
-			this.passes = this.getLines();			
-		}
-	}
-
-	getPasses(): string[] {
-		if (this.passes.length == 0) {
+	getPasses(): PassItem[] {
+		if (this.passItems.length == 0) {
 			this.init();
 		}
-		return this.passes;
-	}
-
-	getTypeName(): string {
-		return this.tokens[0];
+		return this.passItems;
 	}
 
 	getSequenceFile(): vscode.Uri {
@@ -262,56 +260,54 @@ export class SequenceFile extends TextFile {
 		return visualText.analyzer.getSpecDirectory();
 	}
 
-	getName(): string {
-		if (this.tokens[0].localeCompare('tokenize') == 0)
-			return this.tokens[0];
-		return this.tokens[1];
-	}
-	
-	getStubName(): string {
-		if (this.tokens[0].localeCompare('tokenize') == 0)
-			return this.tokens[0];
-		else if (this.tokens[0].localeCompare('stub') == 0)
-			return this.tokens[1];
-		else if (this.tokens[0].localeCompare('end') == 0)
-			return this.tokens[0].concat('_',this.tokens[1]);
-		return this.tokens[1];
-	}
-
 	saveFile() {
 		this.newcontent = '';
-		for (var i = 0; i < this.passes.length; i++) {
-			if (i > 0)
+		for (let passItem of this.passItems) {
+			if (this.newcontent.length)
 				this.newcontent = this.newcontent.concat('\n');
-			this.newcontent = this.newcontent.concat(this.passes[i]);
+			this.newcontent = this.newcontent.concat(this.passString(passItem));
 		}
 
-		fs.writeFileSync(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName),this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(this.specDir.path,this.seqFileName),this.newcontent,{flag:'w+'});
 	}
 
 	movePass(direction: moveDirection, row: number) {
-		for (var i = 0; i < this.passes.length; i++) {
+		let i = 0;
+		for (let passItem of this.passItems) {
 			if ((direction == moveDirection.UP && i+1 == row) || (direction == moveDirection.DOWN && i == row)) {
-				var next = this.passes[i+1];
-				this.passes[i+1] = this.passes[i];
-				this.passes[i] = next;
+				this.swapItems(this.passItems[i-1],this.passItems[i]);
 				break;
 			}
+			i++;
 		}
+	}
+
+	swapItems(itemOne: PassItem, itemTwo: PassItem) {
+		var hold = new PassItem();
+		this.copyItem(hold,itemOne);
+		this.copyItem(itemOne,itemTwo);	
+		this.copyItem(itemTwo,hold);
+	}
+
+	copyItem(toItem: PassItem, fromItem: PassItem) {
+		toItem.name = fromItem.name;
+		toItem.num = fromItem.num;
+		toItem.text = fromItem.text;
+		toItem.typeStr = fromItem.typeStr;
+		toItem.uri = fromItem.uri;
+		toItem.comment = fromItem.comment;
 	}
 
 	findPass(passToMatch: string): number {
 		var row = 1;
 		var found = false;
 		passToMatch = this.BaseName(passToMatch);
-		for (let pass of this.passes) {
-			if (this.setPass(pass) != seqType.UNKNOWN) {
-				if (passToMatch.localeCompare(this.getName()) == 0) {
-					found = true;
-					break;
-				}			
-				row++;				
+		for (let passItem of this.passItems) {
+			if (passToMatch.localeCompare(passItem.name) == 0) {
+				found = true;
+				break;
 			}
+			row++;	
 		}
 		if (!found)
 			row = -1;
