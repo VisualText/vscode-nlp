@@ -6,6 +6,10 @@ export namespace dirfuncs {
 
     export function copyDirectory(fromPath: string, toPath: string): boolean {
         var copydir = require('copy-dir');
+        if (!fs.existsSync(toPath)) {
+            if (!makeDir(toPath))
+                return false;
+        }
  
         copydir(fromPath,toPath, function(err) {
             if (err)

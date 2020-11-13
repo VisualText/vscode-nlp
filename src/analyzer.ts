@@ -5,6 +5,7 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
+import { AsyncResource } from 'async_hooks';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -32,11 +33,13 @@ export class Analyzer {
                 else
                     this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
 
-                currentFile = parse.currentPassFile;
-                if (fs.existsSync(currentFile))
-                    this.currentPassFile = vscode.Uri.file(currentFile);
-                else
-                    this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));
+                if (parse.currentPassFile) {
+                    currentFile = parse.currentPassFile;
+                    if (fs.existsSync(currentFile))
+                        this.currentPassFile = vscode.Uri.file(currentFile);
+                    else
+                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));                    
+                }
 
                 vscode.commands.executeCommand('status.update');
                 this.outputDirectory();               
@@ -69,24 +72,24 @@ export class Analyzer {
     }
 
     createNewAnalyzer(analyzerName: string): boolean {
-        var dirPath = path.join(visualText.getWorkspaceFolder().path,analyzerName);
-        if (fs.existsSync(dirPath)) {
+        visualText.readState();
+        this.analyzerDir = vscode.Uri.file(path.join(visualText.getWorkspaceFolder().path,analyzerName));
+        if (fs.existsSync(this.analyzerDir.path)) {
             vscode.window.showWarningMessage('Analyzer folder already exists');
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
-            vscode.window.showWarningMessage('Cannot find VisualText directory in nlp engine directory');
+            vscode.window.showWarningMessage('NLP Engine not set. Set in state.json in main directory.');
             return false;
         } else {
             var fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
-            if (!dirfuncs.makeDir(dirPath)) {
+            if (!dirfuncs.makeDir(this.analyzerDir.path)) {
                 vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
                 return false;
             }
-            if (!dirfuncs.copyDirectory(fromDir,dirPath)) {
+            if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.path)) {
                 vscode.window.showWarningMessage('Copy directory for new analyzer failed');
                 return false;
             }
-            this.zeroAnalyzer();
             this.load(this.analyzerDir);
             vscode.commands.executeCommand('textView.refreshAll');
             vscode.commands.executeCommand('outputView.refreshAll');

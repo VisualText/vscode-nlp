@@ -15,21 +15,26 @@ export class JsonState {
     constructor() {
     }
 
-    setFilePath(dirPath: string, filename: string): string {
+    setFilePath(dirPath: string, filename: string): boolean {
+        this.exists = false;
         this.dirPath = path.join(dirPath,'.vscode');
         this.filePath = path.join(this.dirPath,filename+'.json');
-        return this.filePath;
+        if (fs.existsSync(this.filePath)) {
+            this.exists = true;
+        }
+        return this.exists;
     }
 
     fileExists(): boolean {
         return this.exists;
     }
 
+    getFilePath(): string {
+        return this.filePath;
+    }
+
     jsonParse(dirPath: vscode.Uri, filename: string, label: string): boolean {
-        this.exists = false;
-        this.setFilePath(dirPath.path,filename);
-        if (fs.existsSync(this.filePath)) {
-            this.exists = true;
+        if (this.setFilePath(dirPath.path,filename)) {
             this.jsonStr = fs.readFileSync(this.filePath, 'utf8');
             if (this.jsonStr.length) {
                 this.json = JSON.parse(this.jsonStr);
@@ -42,8 +47,6 @@ export class JsonState {
     saveFile(dirPath: string, filename: string, json: any): boolean {
         this.json = json;
         this.setFilePath(dirPath,filename);
-        //if (fs.existsSync(this.filePath))
-        //   return false;
         this.writeFile();
         return true;
     }

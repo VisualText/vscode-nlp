@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
@@ -12,6 +13,7 @@ export class NLPFile extends TextFile {
 	}
 
 	analyze(filepath: vscode.Uri): boolean {
+		visualText.readState();
 		vscode.commands.executeCommand('workbench.action.files.saveAll');
 
 		// Delete files in output directory
@@ -26,7 +28,8 @@ export class NLPFile extends TextFile {
 		var pos = filestr.search('/input/');
 		var anapath = filestr.substr(0,pos);
 		var engineDir = visualText.getEngineDirectory().path;
-		var cmd = `${engineDir}nlp.exe -ANA ${anapath} -WORK ${engineDir} ${filestr} -DEV`;
+		var exe = path.join(engineDir,'nlp.exe');
+		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} -DEV`;
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {

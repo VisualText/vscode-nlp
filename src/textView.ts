@@ -139,7 +139,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
 		}
 		
-        if (visualText.hasWorkspaceFolder()) {
+        if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
 			var inputDir = visualText.analyzer.getInputDirectory();
 			const children = await this.readDirectory( visualText.analyzer.getInputDirectory());
 			children.sort((a, b) => {
@@ -148,7 +148,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 				}
 				return a[1] === vscode.FileType.Directory ? -1 : 1;
 			})
-			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(inputDir.path, name)), type }));        
+			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(inputDir.path, name)), type }));    				
         }
 
 		return [];
