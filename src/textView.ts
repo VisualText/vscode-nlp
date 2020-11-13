@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { FileStat, _ } from './fileExplorer';
 import { visualText } from './visualText';
 import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
@@ -14,9 +13,8 @@ interface Entry {
 	type: vscode.FileType;
 }
 
-export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
+export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 
-	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
 	private _onDidChangeTreeData: vscode.EventEmitter<Entry> = new vscode.EventEmitter<Entry>();
 	readonly onDidChangeTreeData: vscode.Event<Entry> = this._onDidChangeTreeData.event;
 
@@ -24,142 +22,24 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 		this._onDidChangeTreeData.fire();
 	}
 
-	constructor() {
-		this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-	}
+	constructor() {}
 
-	get onDidChangeFile(): vscode.Event<vscode.FileChangeEvent[]> {
-		return this._onDidChangeFile.event;
-	}
-
-	watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
-		const watcher = fs.watch(uri.fsPath, { recursive: options.recursive }, async (event: string, filename: string | Buffer) => {
-			const filepath = path.join(uri.fsPath, _.normalizeNFC(filename.toString()));
-
-			// TODO support excludes (using minimatch library?)
-
-			this._onDidChangeFile.fire([{
-				type: event === 'change' ? vscode.FileChangeType.Changed : await _.exists(filepath) ? vscode.FileChangeType.Created : vscode.FileChangeType.Deleted,
-				uri: uri.with({ path: filepath })
-			} as vscode.FileChangeEvent]);
-		});
-
-		return { dispose: () => watcher.close() };
-	}
-
-	stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
-		return this._stat(uri.fsPath);
-	}
-
-	async _stat(path: string): Promise<vscode.FileStat> {
-		return new FileStat(await _.stat(path));
-	}
-
-	readDirectory(uri: vscode.Uri): [string, vscode.FileType][] | Thenable<[string, vscode.FileType][]> {
-		return this._readDirectory(uri);
-	}
-
-	async _readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-		const children = await _.readdir(uri.fsPath);
-
-		const result: [string, vscode.FileType][] = [];
-		for (let i = 0; i < children.length; i++) {
-			const child = children[i];
-			const filepath = path.join(uri.fsPath, child);
-			const stat = await this._stat(filepath);
-			if (!outputView.directoryIsLog(filepath))
-				result.push([child, stat.type]);
+	async getChildren(entry?: Entry): Promise<Entry[]> {
+		if (entry) {
+			return this.getKeepers(entry.uri); 
 		}
-
-		return Promise.resolve(result);
-	}
-
-	createDirectory(uri: vscode.Uri): void | Thenable<void> {
-		return _.mkdir(uri.fsPath);
-	}
-
-	readFile(uri: vscode.Uri): Uint8Array | Thenable<Uint8Array> {
-		return _.readfile(uri.fsPath);
-	}
-
-	writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
-		return this._writeFile(uri, content, options);
-	}
-
-	async _writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(uri.fsPath);
-		if (!exists) {
-			if (!options.create) {
-				throw vscode.FileSystemError.FileNotFound();
-			}
-
-			await _.mkdir(path.dirname(uri.fsPath));
-		} else {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
-			}
-		}
-
-		return _.writefile(uri.fsPath, content as Buffer);
-	}
-
-	delete(uri: vscode.Uri, options: { recursive: boolean; }): void | Thenable<void> {
-		if (options.recursive) {
-			return _.rmrf(uri.fsPath);
-		}
-
-		return _.unlink(uri.fsPath);
-	}
-
-	rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): void | Thenable<void> {
-		return this._rename(oldUri, newUri, options);
-	}
-
-	async _rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(newUri.fsPath);
-		if (exists) {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
-			} else {
-				await _.rmrf(newUri.fsPath);
-			}
-		}
-
-		const parentExists = await _.exists(path.dirname(newUri.fsPath));
-		if (!parentExists) {
-			await _.mkdir(path.dirname(newUri.fsPath));
-		}
-
-		return _.rename(oldUri.fsPath, newUri.fsPath);
-	}
-
-	async getChildren(element?: Entry): Promise<Entry[]> {
-		if (element) {
-			const children = await this.readDirectory(element.uri);
-			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(element.uri.fsPath, name)), type }));
-		}
-		
-        if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
-			var inputDir = visualText.analyzer.getInputDirectory();
-			const children = await this.readDirectory( visualText.analyzer.getInputDirectory());
-			children.sort((a, b) => {
-				if (a[1] === b[1]) {
-					return a[0].localeCompare(b[0]);
-				}
-				return a[1] === vscode.FileType.Directory ? -1 : 1;
-			})
-			return children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(inputDir.path, name)), type }));    				
+		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers() && visualText.analyzer.isLoaded()) {
+			return this.getKeepers(visualText.analyzer.getInputDirectory());   				
         }
-
 		return [];
-        }
+	}
 
-	getTreeItem(element: Entry): vscode.TreeItem {
-		const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-		if (element.type === vscode.FileType.File) {
-			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [element.uri], };
+	getTreeItem(entry: Entry): vscode.TreeItem {
+		const treeItem = new vscode.TreeItem(entry.uri, entry.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+		if (entry.type === vscode.FileType.File) {
+			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [entry], };
 			treeItem.contextValue = 'file';
-			var isLogDir = outputView.fileHasLog(element.uri.path);
+			var isLogDir = outputView.fileHasLog(entry.uri.path);
 			treeItem.iconPath = {
 				light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
 									path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'file.svg'),
@@ -168,6 +48,19 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscod
 			}
 		}
 		return treeItem;
+	}
+
+	getKeepers(dir: vscode.Uri): Entry[] {
+		var keepers = Array();
+		var entries = dirfuncs.getDirectoryTypes(dir);
+
+		for (let entry of entries) {
+			if (!(entry.type == vscode.FileType.Directory && outputView.directoryIsLog(entry.uri.path))) {
+				keepers.push(entry);
+			}
+		} 
+
+		return keepers;
 	}
 }
 
@@ -180,16 +73,16 @@ export class TextView {
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
-		vscode.commands.registerCommand('textView.refreshAll', (resource) => treeDataProvider.refresh());
-		vscode.commands.registerCommand('textView.openFile', (resource) => this.openFile(resource));
+		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('textView.openFile', (entry) => this.openFile(entry));
 		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());
-		vscode.commands.registerCommand('textView.analyze', (resource) => this.analyze(resource));
+		vscode.commands.registerCommand('textView.analyze', (entry) => this.analyze(entry));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
-		vscode.commands.registerCommand('textView.newText', (resource) => this.newText(resource));
-		vscode.commands.registerCommand('textView.newDir', (resource) => this.newDir(resource));
-		vscode.commands.registerCommand('textView.deleteText', (resource) => this.deleteText(resource));
-		vscode.commands.registerCommand('textView.updateTitle', resource => this.updateTitle(resource));
+		vscode.commands.registerCommand('textView.newText', (entry) => this.newText(entry));
+		vscode.commands.registerCommand('textView.newDir', (entry) => this.newDir(entry));
+		vscode.commands.registerCommand('textView.deleteText', (entry) => this.deleteText(entry));
+		vscode.commands.registerCommand('textView.updateTitle', (entry) => this.updateTitle(entry));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -202,7 +95,7 @@ export class TextView {
 	private analyzeLast() {
 		if (visualText.analyzer.hasText()) {
 			var textUri = visualText.analyzer.getTextPath();
-			this.openFile(textUri);
+			this.openFile({uri: textUri, type: vscode.FileType.File});
             var nlp = new NLPFile();
 			nlp.analyze(textUri);
         }
@@ -210,7 +103,7 @@ export class TextView {
 
 	private analyze(entry: Entry) {
         if (entry.uri.path.length) {
-			this.openFile(entry.uri);
+			this.openFile(entry);
             var nlp = new NLPFile();
 			nlp.analyze(entry.uri);
 		}
@@ -250,19 +143,19 @@ export class TextView {
 		this.textView.title = 'TEXT';
 	}
 
-	private openFile(resource: vscode.Uri): void {
-		this.updateTitle(resource);
-		vscode.window.showTextDocument(resource);
-		visualText.analyzer.saveCurrentFile(resource);
+	private openFile(entry: Entry): void {
+		this.updateTitle(entry.uri);
+		vscode.window.showTextDocument(entry.uri);
+		visualText.analyzer.saveCurrentFile(entry.uri);
 		vscode.commands.executeCommand('outputView.refreshAll');
 		vscode.commands.executeCommand('status.update');
 	}
 
-	private deleteText(resource: Entry): void {
+	private deleteText(entry: Entry): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			var filename = path.basename(resource.uri.path);
+			var filename = path.basename(entry.uri.path);
 			deleteDescr = deleteDescr.concat('Delete \'',filename,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete '+filename });
@@ -270,7 +163,7 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var path = resource.uri.path;
+				var path = entry.uri.path;
 				if (dirfuncs.isDir(path))
 					dirfuncs.delDir(path);
 				else
@@ -280,13 +173,13 @@ export class TextView {
 		}
 	}
 
-	private newDir(resource: Entry) {
+	private newDir(entry: Entry) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter directory name' }).then(newdir => {
 				if (newdir) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;
-					if (resource)
-						dirPath = dirfuncs.getDirPath(resource.uri.path);
+					if (entry)
+						dirPath = dirfuncs.getDirPath(entry.uri.path);
 					dirPath = path.join(dirPath,newdir);
 					dirfuncs.makeDir(dirPath);
 					vscode.commands.executeCommand('textView.refreshAll');
@@ -295,13 +188,13 @@ export class TextView {
 		}
 	}
 	
-	private newText(resource: Entry) {
+	private newText(entry: Entry) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter text file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getInputDirectory().path;
-					if (resource)
-						dirPath = dirfuncs.getDirPath(resource.uri.path);
+					if (entry)
+						dirPath = dirfuncs.getDirPath(entry.uri.path);
 					var filepath = path.join(dirPath,newname+'.txt');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);

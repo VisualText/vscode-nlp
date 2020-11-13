@@ -29,6 +29,38 @@ export namespace dirfuncs {
         }
         return false;
     }
+
+    export function renameFile(oldPath: string, newPath: string): boolean {
+        try {
+            fs.renameSync(oldPath,newPath);
+            return true;
+        } catch (err) {
+            vscode.window.showInformationMessage('Could not rename file ' + oldPath + ' to ' + newPath + ' - ' + err.message);
+        }
+        return false;
+    }
+
+    export function findFolder(dirPath: vscode.Uri, folderToFind: string): vscode.Uri {
+        var parentDir = path.dirname(dirPath.path);
+        if (path.basename(parentDir).localeCompare(folderToFind) == 0) {
+            return vscode.Uri.file(parentDir);
+        }
+
+        if (parentDir && parentDir?.length > 1) {
+            var found = findFolder(vscode.Uri.file(parentDir), folderToFind);
+            if (found.path.length > 2)
+                return found;
+        }
+
+        var dirs = getDirectories(dirPath);
+        for (let dir of dirs) {
+            if (dir.path.localeCompare(folderToFind) == 0) {
+                return dir;
+            }
+        }
+
+        return vscode.Uri.file('');
+    }
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {
         const dirUris: vscode.Uri[] = new Array();
@@ -46,6 +78,24 @@ export namespace dirfuncs {
             }
         }
         return dirUris;
+    }
+
+    export function getDirectoryTypes(folder: vscode.Uri): {uri: vscode.Uri, type: vscode.FileType}[] {
+        var dirsAndTypes = Array();
+        const filenames = fs.readdirSync(folder.path);
+        for (let filename of filenames) {
+            if (!filename.startsWith('.')) {
+                var filepath = path.join(folder.path,filename);
+                try {
+                    const stats = fs.statSync(filepath);
+                    var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
+                    dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type});
+                } catch (err) {
+                    console.error(err)
+                }
+            }
+        }
+        return dirsAndTypes;
     }
 
     export function getFiles(folder: vscode.Uri): vscode.Uri[] {

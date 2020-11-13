@@ -75,6 +75,9 @@ export class VisualText {
     }
 
     saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
+        if (this.getEngineDirectory().path.length < 2) {
+            this.engineDir = dirfuncs.findFolder(this.getWorkspaceFolder(),'nlp-engine');
+        }
         var stateJsonDefault: any = {
             "visualText": [
                 {

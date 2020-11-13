@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { visualText } from './visualText';
-import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 
 interface LogItem {
@@ -105,9 +104,6 @@ export class LogView {
 	public addLogFile(logFileName: vscode.Uri) {
 		if (fs.existsSync(logFileName.path)) {
 			const logFile = new TextFile(logFileName.path);
-			var seqFile = new SequenceFile();
-			seqFile.init();
-
 			for (let line of logFile.getLines()) {
 				line = line.substr(0,line.length-1);
 				if (line.length) {
@@ -135,8 +131,7 @@ export class LogView {
 		if (line.length) {
 			let tokens = line.split(/[\t\s]/,2);  
 			if (tokens.length >= 2) {
-				var seqFile = new SequenceFile();
-				seqFile.init();
+				var seqFile = visualText.analyzer.seqFile;
 				passNum = +tokens[0];
 				if (passNum) {
 					uri = vscode.Uri.file(seqFile.getFileByNumber(passNum));
@@ -151,8 +146,7 @@ export class LogView {
 
 	private openFile(logItem: LogItem): void {
 		if (logItem.passNum) {
-			var seqFile = new SequenceFile();
-			seqFile.init();
+			var seqFile = visualText.analyzer.seqFile;
 			var passFile = vscode.Uri.file(seqFile.getFileByNumber(logItem.passNum));
 
 			vscode.window.showTextDocument(logItem.uri).then(editor => 

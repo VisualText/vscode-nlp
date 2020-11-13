@@ -2,25 +2,22 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { seqType, moveDirection } from './sequence';
+import { moveDirection } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
 import { LogFile } from './logfile';
 import { FindFile } from './findFile';
 import { findView } from './findView';
-import { FileStat, _ } from './fileExplorer';
-
+import { dirfuncs } from './dirfuncs';
 
 interface SequenceItem {
 	uri: vscode.Uri;
 	label: string;
 	name: string;
 	passNum: number;
-	type: seqType;
+	type: string;
 }
 
-export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.FileSystemProvider {
-
-	private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
+export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	
 	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem> = new vscode.EventEmitter<SequenceItem>();
 	readonly onDidChangeTreeData: vscode.Event<SequenceItem> = this._onDidChangeTreeData.event;
@@ -29,114 +26,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 		this._onDidChangeTreeData.fire();
 	}
 
-	constructor() {
-		this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-	}
-
-	get onDidChangeFile(): vscode.Event<vscode.FileChangeEvent[]> {
-		return this._onDidChangeFile.event;
-	}
-
-	watch(uri: vscode.Uri, options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
-		const watcher = fs.watch(uri.fsPath, { recursive: options.recursive }, async (event: string, filename: string | Buffer) => {
-			const filepath = path.join(uri.fsPath, _.normalizeNFC(filename.toString()));
-
-			// TODO support excludes (using minimatch library?)
-
-			this._onDidChangeFile.fire([{
-				type: event === 'change' ? vscode.FileChangeType.Changed : await _.exists(filepath) ? vscode.FileChangeType.Created : vscode.FileChangeType.Deleted,
-				uri: uri.with({ path: filepath })
-			} as vscode.FileChangeEvent]);
-		});
-
-		return { dispose: () => watcher.close() };
-	}
-
-	stat(uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
-		return this._stat(uri.fsPath);
-	}
-
-	async _stat(path: string): Promise<vscode.FileStat> {
-		return new FileStat(await _.stat(path));
-	}
-
-	readDirectory(uri: vscode.Uri): [string, vscode.FileType][] | Thenable<[string, vscode.FileType][]> {
-		return this._readDirectory(uri);
-	}
-
-	async _readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-		const children = await _.readdir(uri.fsPath);
-
-		const result: [string, vscode.FileType][] = [];
-		for (let i = 0; i < children.length; i++) {
-			const child = children[i];
-			const stat = await this._stat(path.join(uri.fsPath, child));
-			result.push([child, stat.type]);
-		}
-
-		return Promise.resolve(result);
-	}
-
-	createDirectory(uri: vscode.Uri): void | Thenable<void> {
-		return _.mkdir(uri.fsPath);
-	}
-
-	readFile(uri: vscode.Uri): Uint8Array | Thenable<Uint8Array> {
-		return _.readfile(uri.fsPath);
-	}
-
-	writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
-		return this._writeFile(uri, content, options);
-	}
-
-	async _writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(uri.fsPath);
-		if (!exists) {
-			if (!options.create) {
-				throw vscode.FileSystemError.FileNotFound();
-			}
-
-			await _.mkdir(path.dirname(uri.fsPath));
-		} else {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
-			}
-		}
-
-		return _.writefile(uri.fsPath, content as Buffer);
-	}
-
-	delete(uri: vscode.Uri, options: { recursive: boolean; }): void | Thenable<void> {
-		if (options.recursive) {
-			return _.rmrf(uri.fsPath);
-		}
-
-		return _.unlink(uri.fsPath);
-	}
-
-	rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): void | Thenable<void> {
-		return this._rename(oldUri, newUri, options);
-	}
-
-	async _rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
-		const exists = await _.exists(newUri.fsPath);
-		if (exists) {
-			if (!options.overwrite) {
-				throw vscode.FileSystemError.FileExists();
-			} else {
-				await _.rmrf(newUri.fsPath);
-			}
-		}
-
-		const parentExists = await _.exists(path.dirname(newUri.fsPath));
-		if (!parentExists) {
-			await _.mkdir(path.dirname(newUri.fsPath));
-		}
-
-		return _.rename(oldUri.fsPath, newUri.fsPath);
-	}
-
-	// tree data provider
+	constructor() { }
 
 	async getChildren(element?: SequenceItem): Promise<SequenceItem[]> {
 		if (element) {
@@ -145,45 +35,30 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 
 		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
 			visualText.analyzer.seqFile.init();
-			var specDir = visualText.analyzer.getSpecDirectory();
-			const children = await this.readDirectory(specDir);
-			children.sort((a, b) => {
-				if (a[1] === b[1]) {
-					return a[0].localeCompare(b[0]);
-				}
-				return a[1] === vscode.FileType.Directory ? -1 : 1;
-			});
-			const chittlins = children.map(([name, type]) => ({ uri: vscode.Uri.file(path.join(specDir.fsPath, name)), type }));
-			const patsOnly = chittlins.filter(item => item.uri.fsPath.endsWith('.pat') || item.uri.fsPath.endsWith('.nlp'));
-			const orderedArray = new Array();
-			let passnum = 0;
-			var label: string = '';
-
 			var seqFile = visualText.analyzer.seqFile;
-			for (let pass of seqFile.getPasses()) {
-				seqFile.setPass(pass);
-				if (seqFile.isValid()) {
-					passnum++;
-					label = passnum.toString() + ' ' + seqFile.getName();
-					if (seqFile.isRuleFile()) {
-						var found = patsOnly.filter(item => item.uri.fsPath.endsWith(seqFile.fileName()));
-						if (found.length)
-							orderedArray.push({uri: found[0].uri, label: label, name: seqFile.getName(), tooltip: found[0].uri.path, contextValue: 'file', type: seqType.NLP, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
-						else
-							orderedArray.push({label: label, name: seqFile.getName(), tooltip: 'MISSING', contextValue: 'missing', type: seqType.MISSING, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
-					} else {
-						orderedArray.push({label: label, name: seqFile.getName(), tooltip: seqFile.getStubName(), contextValue: 'stub', type: seqType.STUB, passNum: passnum, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
-					}			
-				}
+			const seqItems = new Array();
+
+			for (let passItem of seqFile.getPasses()) {
+				var label = passItem.num.toString() + ' ' + passItem.name;
+				if (passItem.isRuleFile()) {
+					if (passItem.fileExists())
+						seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'file', type: passItem.typeStr, passNum: passItem.num, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+					else
+						seqItems.push({label: label, name: passItem.name, tooltip: 'MISSING', contextValue: 'missing', type: 'missing', passNum: passItem.num, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+				} else {
+					if (passItem.typeStr.localeCompare('tokenize') == 0)
+						label = '1 tokenize';
+					seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'stub', type: passItem.typeStr, passNum: passItem.num, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+				}			
 			}
-			return orderedArray;
+			return seqItems;
 		}
 
 		return [];
 	}
 
 	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
-		if (seqItem.type === seqType.NLP || seqItem.type === seqType.MISSING) {
+		if (seqItem.type.localeCompare('pat') == 0) {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
@@ -220,9 +95,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 	moveSequence(seqItem: SequenceItem, direction: moveDirection) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			seqFile.setFile(seqItem.uri);
-			var basename = seqFile.getBasename();
-			var row = seqFile.findPass(basename);
+			var row = seqFile.findPass(seqItem.name);
 
 			// Build new file
 			if (row == 0) {
@@ -253,10 +126,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
-				if (seqItem.type == seqType.MISSING) {
+				if (seqItem.type.localeCompare('missing') == 0) {
 					seqFile.deletePassInSeqFile(seqItem.name);
 				} else {
-					seqFile.setFile(seqItem.uri);
 					if (!selection || selection.label == 'No')
 						return;
 					seqFile.deletePass(seqItem.uri);
@@ -308,13 +180,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem>, vscode.F
 	renamePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			var basename = path.basename(seqItem.uri.path,'.pat');
-			vscode.window.showInputBox({ value: basename, prompt: 'Enter new name for pass' }).then(newname => {
+			vscode.window.showInputBox({ value: seqItem.name, prompt: 'Enter new name for pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
-					seqFile.renamePass(basename,newname);
+					seqFile.renamePass(seqItem.name,newname);
 					var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().path,newname.concat(path.extname(original.path))));
-					this.rename(original,newfile,{overwrite: false});
+					dirfuncs.renameFile(original.path,newfile.path);
 					this.refresh();
 				}
 			});
@@ -371,7 +242,7 @@ export class SequenceView {
 	}
 
 	private notMissing(seqItem: SequenceItem): boolean {
-		if (seqItem.type == seqType.MISSING) {
+		if (seqItem.type.localeCompare('missing') == 0) {
 			vscode.window.showInformationMessage('File is missing: ' + seqItem.name);
 			return false;
 		}
@@ -402,7 +273,7 @@ export class SequenceView {
 				if (fs.existsSync(logfile.path))
 					vscode.window.showTextDocument(logfile);
 				else
-					vscode.window.showWarningMessage('No tree file for this pass');
+					vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.path));
 			}
 		}
 	}
