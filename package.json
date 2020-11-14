@@ -236,6 +236,22 @@
                 "title": "Analyzer Sequence: Change Title"
             },
             {
+                "command": "sequenceView.typePat",
+                "title": "Pattern"
+            },
+            {
+                "command": "sequenceView.typeRec",
+                "title": "Recursive"
+            },
+            {
+                "command": "sequenceView.typeOn",
+                "title": "Active"
+            },
+            {
+                "command": "sequenceView.typeOff",
+                "title": "Inactive"
+            },
+            {
                 "command": "sequenceView.moveUp",
                 "title": "Move Up",
                 "icon": {
@@ -687,6 +703,26 @@
                     "command": "sequenceView.delete",
                     "when": "view == sequenceView && viewItem == file",
                     "group": "edit"
+                },
+                {
+                    "command": "sequenceView.typePat",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "attribute"
+                },
+                {
+                    "command": "sequenceView.typeRec",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "attribute"
+                },
+                {
+                    "command": "sequenceView.typeOn",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "attribute"
+                },
+                {
+                    "command": "sequenceView.typeOff",
+                    "when": "view == sequenceView && viewItem == file",
+                    "group": "attribute"
                 },
                 {
                     "command": "textView.newDir",

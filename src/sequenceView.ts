@@ -58,27 +58,37 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
-		if (seqItem.type.localeCompare('pat') == 0) {
+		var icon = 'dna.svg';
+		var context = 'file';
+		var active = true;
+
+		if (seqItem.type[0] == '/') {
+			active = false;
+		} else if (seqItem.type.localeCompare('rec') == 0) {
+			icon = 'dnar.svg';
+		}
+		else if (seqItem.type.localeCompare('pat')) {
+			context = 'stub';
+			icon = 'seq-circle.svg';
+		}
+
+		if (!active) {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
-				contextValue: 'file',
-				collapsibleState: vscode.TreeItemCollapsibleState.None,
-				command: { command: 'sequenceView.openFile', title: "Open File", arguments: [seqItem] },
-				iconPath: {
-					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'dna.svg'),
-					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'dna.svg')
-				}
+				contextValue: context,
+				collapsibleState: vscode.TreeItemCollapsibleState.None
 			}
+
 		} else {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
-				contextValue: 'stub',
+				contextValue: context,
 				collapsibleState: vscode.TreeItemCollapsibleState.None,
 				iconPath: {
-					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'seq-circle.svg'),
-					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'seq-circle.svg')
+					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', icon),
+					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', icon)
 				}
 			}
 		}
@@ -191,6 +201,26 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			});
 		}
 	}
+
+	typePat(seqItem: SequenceItem) {
+		visualText.analyzer.seqFile.saveType(seqItem.passNum,'pat');
+		this.refresh();
+	}
+	
+	typeRec(seqItem: SequenceItem) {
+		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
+		this.refresh();
+	}
+	
+	typeOn(seqItem: SequenceItem) {
+		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'');
+		this.refresh();
+	}
+	
+	typeOff(seqItem: SequenceItem) {
+		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'/');
+		this.refresh();
+	}
 }
 
 export let sequenceView: SequenceView;
@@ -202,23 +232,6 @@ export class SequenceView {
 	private logFile = new LogFile();
 	private findFile = new FindFile();
 
-	constructor(context: vscode.ExtensionContext) {
-		const treeDataProvider = new PassTree();
-		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
-		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
-		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
-		vscode.commands.registerCommand('sequenceView.openHighlight', (seqItem) => this.openHighlight(seqItem));
-		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
-		vscode.commands.registerCommand('sequenceView.search', () => this.search());
-		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
-		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
-		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
-		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
-		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
-		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
-		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
-	}
-
     static attach(ctx: vscode.ExtensionContext) {
         if (!sequenceView) {
             sequenceView = new SequenceView(ctx);
@@ -226,6 +239,29 @@ export class SequenceView {
         return sequenceView;
 	}
 	
+	constructor(context: vscode.ExtensionContext) {
+		const treeDataProvider = new PassTree();
+
+		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
+		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
+		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
+		vscode.commands.registerCommand('sequenceView.openHighlight', (seqItem) => this.openHighlight(seqItem));
+		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
+		vscode.commands.registerCommand('sequenceView.search', () => this.search());
+
+		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
+		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
+		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.typePat', (seqItem) => treeDataProvider.typePat(seqItem));
+		vscode.commands.registerCommand('sequenceView.typeRec', (seqItem) => treeDataProvider.typeRec(seqItem));
+		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
+		vscode.commands.registerCommand('sequenceView.typeOn', (seqItem) => treeDataProvider.typeOn(seqItem));
+	}
+
 	search() {
 		if (visualText.hasWorkspaceFolder()) {
 			if (visualText.hasWorkspaceFolder()) {
