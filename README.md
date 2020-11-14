@@ -26,7 +26,7 @@ There are several json files that hold configuration and states for VisualText f
 * state.json - in the analyzer folder holding information such as the path to nlp.exe and the last analyzer selected
 * state.json - in each analyzer directory holding the last text processed
 
-## General state.json
+### General state.json
 
 This json file is located in the .vscode directory in a folder that holds analyzers for that workspace.
 
@@ -41,7 +41,7 @@ This json file is located in the .vscode directory in a folder that holds analyz
         ]
     }
 
-## Analyzer state.json
+### Analyzer state.json
 
 This file will automatically get generated when a new analyzer is created in VisualText VSCode. It is located in the .vscode directory under the folder for an individual analyzer.
 
