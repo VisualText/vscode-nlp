@@ -28,7 +28,7 @@ There are several json files that hold configuration and states for VisualText f
 
 ## General state.json
 
-This json file holds information you need to fill in.
+This json file is located in the .vscode directory in a folder that holds analyzers for that workspace.
 
     {
         "visualText": [
@@ -43,7 +43,7 @@ This json file holds information you need to fill in.
 
 ## Analyzer state.json
 
-This file will automatically get generated when a new analyzer is created in VisualText VSCode.
+This file will automatically get generated when a new analyzer is created in VisualText VSCode. It is located in the .vscode directory under the folder for an individual analyzer.
 
     {
         "visualText": [
