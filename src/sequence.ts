@@ -259,6 +259,19 @@ export class SequenceFile extends TextFile {
 		return visualText.analyzer.getSpecDirectory();
 	}
 
+	saveType(passNum: number, type: string) {
+		var pass = this.passItems[passNum-1];
+		pass.typeStr = type;
+		this.saveFile();
+	}
+
+	saveActive(passNum: number, active: string) {
+		var pass = this.passItems[passNum-1];
+		var type = pass.typeStr.replace('/','');
+		pass.typeStr = active + type;
+		this.saveFile();
+	}
+
 	saveFile() {
 		this.newcontent = '';
 		for (let passItem of this.passItems) {
