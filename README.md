@@ -81,8 +81,8 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+This extension has not yet been pushed to the official microsoft extensions repository. Once the beta version has been thoroughly tested, it will be submitted.
 
 ### Beta
 
-Currently this VSCode language extension for NLP++ is in beta.
+0.1
