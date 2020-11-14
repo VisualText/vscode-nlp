@@ -36,8 +36,7 @@ This json file holds information you need to fill in.
                 "name": "Analyzer",
                 "type": "state",
                 "engineDir": "/YOUR-PATH-HERE/nlp-engine/",
-                "currentAnalyzer": "/YOUR-PATH-HERE/nlp-engine/analyzers/DOJ-Quick",
-                "username": "Your Name Here"
+                "currentAnalyzer": "/YOUR-PATH-HERE/nlp-engine/analyzers/DOJ-Quick"
             }
         ]
     }
