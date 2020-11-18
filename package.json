@@ -252,6 +252,14 @@
                 "title": "Inactive"
             },
             {
+                "command": "sequenceView.newFolder",
+                "title": "New Folder",
+                "icon": {
+                    "light": "fileicons/images/light/new-folder.svg",
+                    "dark": "fileicons/images/dark/new-folder.svg"
+                }
+            },
+            {
                 "command": "sequenceView.moveUp",
                 "title": "Move Up",
                 "icon": {
@@ -305,6 +313,14 @@
                 "icon": {
                     "light": "fileicons/images/light/code.svg",
                     "dark": "fileicons/images/dark/code.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertLibrary",
+                "title": "Insert Library pass",
+                "icon": {
+                    "light": "fileicons/images/light/new-file.svg",
+                    "dark": "fileicons/images/dark/new-file.svg"
                 }
             },
             {
@@ -676,32 +692,42 @@
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.rename",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|folder)/",
+                    "group": "edit"
+                },
+                {
+                    "command": "sequenceView.newFolder",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
+                    "group": "edit"
+                },
+                {
+                    "command": "sequenceView.insertLibrary",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub)/)",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insert",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub)/",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|folder)/",
                     "group": "edit"
                 },
                 {
@@ -751,7 +777,7 @@
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem == stub",
+                    "when": "view == sequenceView && viewItem =~ /(stub|folder)/",
                     "group": "inline"
                 },
                 {
@@ -771,12 +797,12 @@
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
                     "group": "inline"
                 },
                 {

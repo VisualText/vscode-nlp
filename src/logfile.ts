@@ -164,9 +164,9 @@ export class LogFile extends TextFile {
 	generateRule(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
 			let passFilePath = visualText.analyzer.getPassPath();
-			let passFile = path.basename(passFilePath.path);
-			let passNum = visualText.analyzer.seqFile.findPass(passFile);
-			this.logFile = this.anaFile(passNum).path;
+			let passName = visualText.analyzer.seqFile.base(passFilePath.path);
+			let passItem = visualText.analyzer.seqFile.findPass('pat',passName);
+			this.logFile = this.anaFile(passItem.passNum).path;
 
 			if (this.findSelectedTreeStr(editor)) {
 				let num = 1;

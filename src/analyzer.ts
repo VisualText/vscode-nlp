@@ -5,7 +5,6 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
-import { AsyncResource } from 'async_hooks';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -159,6 +158,7 @@ export class Analyzer {
     load(analyzerDir: vscode.Uri) {
         this.setWorkingDir(analyzerDir);
         this.readState();
+        this.seqFile.init();
         vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
         if (this.currentTextFile.path.length)
             vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.path));

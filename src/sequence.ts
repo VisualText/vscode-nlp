@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { SequenceItem } from './sequenceView';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
-import { endianness } from 'os';
+import { dirfuncs } from './dirfuncs';
 
 export enum moveDirection { UP, DOWN }
 
@@ -12,14 +13,29 @@ export class PassItem {
 	public text: string = '';
 	public name: string = '';
 	public comment: string = '';
-	public num: number = 0;
+	public passNum: number = 0;
+	public order: number = 0;
 	public typeStr: string = '';
+	public inFolder: boolean = false;
+	public empty: boolean = true;
 
 	constructor() {
 	}
 
 	public isRuleFile() {
-		return this.typeStr.localeCompare('pat') == 0;
+		return this.typeStr.localeCompare('pat') == 0 || this.typeStr.localeCompare('rec') == 0;
+	}
+	
+	public isFolder() {
+		return this.typeStr.localeCompare('folder') == 0;
+	}
+		
+	public isStub() {
+		return this.typeStr.localeCompare('stub') == 0;
+	}
+		
+	public isEnd(name: string) {
+		return this.typeStr.localeCompare('end') == 0 && this.name.localeCompare(name) == 0;
 	}
 
 	public fileExists(): boolean {
@@ -31,8 +47,9 @@ export class PassItem {
 		this.text = '';
 		this.name = '';
 		this.comment = '';
-		this.num = 0;
+		this.passNum = 0;
 		this.typeStr = '';
+		this.inFolder = false;
 	}
 }
 
@@ -42,7 +59,6 @@ export class SequenceFile extends TextFile {
 	private passItems = new Array();
 	private cleanpasses = new Array();
 	private newcontent: string = '';
-	private basenamestub: string = '';
 
 	constructor() {
 		super();
@@ -54,10 +70,27 @@ export class SequenceFile extends TextFile {
 			super.setFile(vscode.Uri.file(path.join(this.specDir.path,this.seqFileName)),true);
 			let passNum = 1;
 			this.passItems = [];
+			var folder = '';
+			var order = 0;
+
 			for (let passStr of this.getLines()) {
 				var passItem = this.setPass(passStr,passNum);
-				if (passItem.text.length)
-					this.passItems.push(this.setPass(passStr,passNum++));
+				if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
+					folder = passItem.name;
+				} else if (folder.length) {
+					if (passItem.typeStr == 'end' &&  passItem.name.localeCompare(folder) == 0) {
+						folder = '';
+					} else {
+						passItem.inFolder = true;
+						passNum++;
+					}
+				} else
+					passNum++;
+
+				if (passItem.text.length) {
+					passItem.order = order++;
+					this.passItems.push(passItem);
+				}
 			}
 		}
 	}
@@ -68,7 +101,7 @@ export class SequenceFile extends TextFile {
 
 		if (tokens.length >= 3) {
 			passItem.text = passStr;
-			passItem.num = passNum;
+			passItem.passNum = passNum;
 
 			if (tokens[0].localeCompare('#') == 0) {
 				passItem.comment = this.tokenStr(tokens,2);
@@ -105,7 +138,7 @@ export class SequenceFile extends TextFile {
 		return passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
 	}
 
-	BaseName(passname: string): string {
+	base(passname: string): string {
 		var basename = path.basename(passname,'.pat');
 		basename = path.basename(basename,'.nlp');
 		return basename;
@@ -119,6 +152,21 @@ export class SequenceFile extends TextFile {
 		return '';
 	}
 
+	passCount(): number {
+		return this.passItems.length;
+	}
+
+	atBottom(passItem: PassItem): boolean {
+		let passes = this.getFolderPasses(passItem.typeStr,passItem.name,true);
+		return passes.length + passItem.order == this.passCount();
+	}
+
+	insertFolder(passafter: vscode.Uri) {
+		if (passafter.path.length > 1) {
+			this.saveFile();
+		}
+	}
+
 	cleanPasses() {
 		this.cleanpasses = [];
 		let passNum = 1;
@@ -127,42 +175,55 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	renamePass(origPassName: string, newPassName: string) {
+	renamePass(seqItem: SequenceItem, newPassName: string) {
 		if (this.passItems.length) {
-			for (let passItem of this.passItems) {
-				if (origPassName.localeCompare(passItem.name) == 0) {
-					passItem.name = newPassName;
-					break;
-				}
+			var passItem = this.passItems[seqItem.passNum-1];
+			if (seqItem.type.localeCompare('folder') == 0) {
+				var passes = this.getFolderPasses(seqItem.type,seqItem.name,true);
+				passes[passes.length-1].name = newPassName;
 			}
+			passItem.name = newPassName;
 			this.saveFile();
 		}
 	}
 	
-	insertPass(passafter: vscode.Uri, newpass: vscode.Uri) {
+	insertPass(seqItem: SequenceItem, newpass: vscode.Uri) {
 		if (this.passItems.length) {
-			var row = this.findPass(path.basename(passafter.path));
+			var row = seqItem.passNum;
+
 			if (row >= 0) {
-				var passItem = this.createPassItemFromFile(newpass.path);
-				this.passItems.splice(row,0,passItem);
+				var passes = new Array();
+				passes.push(newpass);
+				var copy = false;
+				var specDir = visualText.analyzer.getSpecDirectory().path;
+
+				if (specDir.localeCompare(path.dirname(newpass.path))) {
+					if (dirfuncs.isDir(newpass.path)) {
+						passes = [];
+						passes = dirfuncs.getFiles(newpass);
+					}
+					copy = true;
+				}
+				for (let pass of passes) {
+					if (copy) {
+						var herepass = path.join(specDir,path.basename(pass.path));
+						fs.copyFileSync(pass.path,herepass);								
+					}		
+					var passItem = this.createPassItemFromFile(pass.path);
+					this.passItems.splice(row++,0,passItem);
+				}
 				this.saveFile();			
 			}
 		}	
 	}
 		
-	insertNewPass(passafter: vscode.Uri, newpass: string) {
-		if (this.passItems.length && newpass.length) {
-			var passname = '';
-			if (this.setFile(passafter,false)) {
-				passname = path.basename(passafter.path);
-			} else {
-				passname = path.basename(passafter.path,'.stub');
-			}
-			var row = this.findPass(passname);
-			if (row >= 0) {
-				var newfile = this.createNewPassFile(newpass);
+	insertNewPass(seqItem: SequenceItem, newPass: string) {
+		if (this.passItems.length && newPass.length) {
+			var foundItem = this.findPass(seqItem.type,seqItem.name);
+			if (foundItem) {
+				var newfile = this.createNewPassFile(newPass);
 				var passItem = this.createPassItemFromFile(newfile);
-				this.passItems.splice(row,0,passItem);
+				this.passItems.splice(foundItem.order,0,passItem);
 				this.saveFile();			
 			}
 		}	
@@ -177,18 +238,56 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	deletePass(pass: vscode.Uri) {
-		if (pass.path.length) {
-			this.deletePassInSeqFile(path.basename(pass.path));
+	insertNewFolder(seqItem: SequenceItem, newFolder: string) {
+		if (this.passItems.length && newFolder.length) {
+			var foundItem = this.findPass(seqItem.type,seqItem.name);
+			if (foundItem) {
+				var passItem = this.createPassItemFolder('end',newFolder);
+				this.passItems.splice(foundItem.order,0,passItem);
+				passItem = this.createPassItemFolder('folder',newFolder);
+				this.passItems.splice(foundItem.order,0,passItem);
+				this.saveFile();	
+			}		
+		}
+	}
+
+	insertNewFolderEnd(newFolder: string) {
+		if (this.passItems.length && newFolder.length) {
+			var passItem = this.createPassItemFolder('folder',newFolder);
+			this.passItems.push(passItem);
+			passItem = this.createPassItemFolder('end',newFolder);
+			this.passItems.push(passItem);
+			this.saveFile();			
 		}	
 	}
 
-	deletePassInSeqFile(passname: string) {
-		var row = this.findPass(passname);
-		if (row >= 0) {
-			this.passItems.splice(row-1,1);
+	createPassItemFolder(type: string, name: string): PassItem {
+		var passItem = new PassItem();
+		passItem.typeStr = type;
+		passItem.name = name;
+		passItem.comment = '# new folder';
+		return passItem;
+	}
+
+	deletePass(seqItem: SequenceItem) {
+		let passItem = this.findPass(seqItem.type,seqItem.name);
+		if (passItem.isFolder()) {
+			this.deleteFolder(passItem);
+		} else
+			this.deletePassInSeqFile(passItem.typeStr,passItem.name);
+		this.saveFile();
+	}
+
+	deleteFolder(passItem: PassItem) {
+		let passes = this.getFolderPasses(passItem.typeStr,passItem.name,true);
+		this.passItems.splice(passes[0].order,passes.length);
+	}
+
+	deletePassInSeqFile(type: string, name: string) {
+		var passItem = this.findPass(type, name);
+		if (passItem) {
+			this.passItems.splice(passItem.order,1);
 		}
-		this.saveFile();		
 	}
 
 	createNewPassFile(filename: string): string {
@@ -230,7 +329,7 @@ export class SequenceFile extends TextFile {
 	createPassItemFromFile(filePath: string): PassItem {
 		const passItem = new PassItem();
 		passItem.uri = vscode.Uri.file(filePath);
-		passItem.name = this.BaseName(filePath);
+		passItem.name = this.base(filePath);
 		passItem.typeStr = path.extname(filePath).substr(1);
 		passItem.comment = '# comment';
 		passItem.text = this.passString(passItem);
@@ -239,6 +338,31 @@ export class SequenceFile extends TextFile {
 
 	passFileName(passName: string): string {
 		return passName.concat('.pat');
+	}
+
+	getFolderPasses(type: string, name: string, includeStubs: boolean = false): PassItem[]  {
+		var passes = Array();
+		var collect = '';
+
+		for (let pass of this.getPasses()) {
+
+			if (collect.length == 0 && pass.typeStr.localeCompare(type) == 0 && pass.name.localeCompare(name) == 0) {
+				collect = pass.name;
+				if (includeStubs)
+					passes.push(pass);
+
+			} else if (collect.length) {
+				if (pass.typeStr.localeCompare('end') == 0 && pass.name.localeCompare(collect) == 0) {
+					if (includeStubs)
+						passes.push(pass);
+					break;
+				} else {
+					passes.push(pass);
+				}
+			}
+		}
+
+		return passes;
 	}
 
 	getPasses(): PassItem[] {
@@ -253,6 +377,10 @@ export class SequenceFile extends TextFile {
 		if (uri.path.length)
 			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName));
 		return uri;
+	}
+
+	getLibraryDirectory(): vscode.Uri {
+		return vscode.Uri.file(visualText.getVisualTextDirectory('spec'));
 	}
 
 	getSpecDirectory(): vscode.Uri {
@@ -283,15 +411,91 @@ export class SequenceFile extends TextFile {
 		fs.writeFileSync(path.join(this.specDir.path,this.seqFileName),this.newcontent,{flag:'w+'});
 	}
 
-	movePass(direction: moveDirection, row: number) {
-		let i = 0;
-		for (let passItem of this.passItems) {
-			if ((direction == moveDirection.UP && i+1 == row) || (direction == moveDirection.DOWN && i == row)) {
-				this.swapItems(this.passItems[i-1],this.passItems[i]);
-				break;
+	movePass(seqItem: SequenceItem, direction: moveDirection) {
+		let passItem = this.findPass(seqItem.type, seqItem.name);
+		let order = passItem.order;
+
+		if (passItem.isRuleFile()) {
+			if (direction == moveDirection.UP) {
+				let prev = this.passItems[order-1];			
+				this.swapItems(passItem,prev);
+
+			} else {
+				let next = this.passItems[order+1];			
+				this.swapItems(passItem,next);
 			}
-			i++;
+
+		} else {
+			let nextTop = this.nextTop(passItem);
+			let prevTop = this.prevTop(passItem);
+
+			if (direction == moveDirection.DOWN && nextTop.isFolder()) {
+				let passesOne = this.getFolderPasses(seqItem.type,seqItem.name,true);
+				let passesTwo = this.getFolderPasses(nextTop.typeStr,nextTop.name,true);
+				let totalPassCount = passesOne.length + passesTwo.length - 1;
+
+				let i = 0;
+				let top = passesOne[0].order;
+				for (i=0; i<passesOne.length; i++) {
+					let pass = this.passItems[top];
+					this.moveCount(pass,totalPassCount);
+				}
+
+			} else if (direction == moveDirection.UP && prevTop.isFolder()) {
+				let passesOne = this.getFolderPasses(prevTop.typeStr,prevTop.name,true);
+				let passesTwo = this.getFolderPasses(seqItem.type,seqItem.name,true);
+				let totalPassCount = passesOne.length + passesTwo.length - 1;
+
+				let i = 0;
+				let top = passesOne[0].order;
+				for (i=0; i<passesOne.length; i++) {
+					let pass = this.passItems[top];
+					this.moveCount(pass,totalPassCount);
+				}
+
+			} else {
+				let passes = this.getFolderPasses(seqItem.type,seqItem.name,true);
+				order = direction == moveDirection.UP ? order - 1 : order + 1;
+				let other = this.passItems[order];	
+				for (let pass of passes) {
+					this.swapItems(other,pass);
+					if (direction == moveDirection.UP)
+						other = pass;
+				}					
+			}
 		}
+	}
+
+	moveCount(passItem: PassItem, count: number) {
+		let i = 0;
+		let pass = passItem;
+		let next = passItem;
+		for (i=passItem.order; i<count+passItem.order; i++ ) {
+			next = this.passItems[i+1];
+			this.swapItems(pass,next);
+			pass = next;
+		}
+		this.passItems;
+	}
+
+	prevTop(passItem: PassItem): PassItem {
+		let order = passItem.order;
+		let prev = this.passItems[--order];
+		while (prev.inFolder || prev.typeStr.localeCompare('end') == 0) {
+			prev = this.passItems[--order];
+		}
+		return prev;
+	}
+
+	nextTop(passItem: PassItem): PassItem {
+		let order = passItem.order;
+		let next = this.passItems[++order];
+		while (next.inFolder) {
+			next = this.passItems[++order];
+		}
+		if (next.typeStr.localeCompare('end') == 0)
+			next = this.passItems[++order];
+		return next;
 	}
 
 	swapItems(itemOne: PassItem, itemTwo: PassItem) {
@@ -303,26 +507,21 @@ export class SequenceFile extends TextFile {
 
 	copyItem(toItem: PassItem, fromItem: PassItem) {
 		toItem.name = fromItem.name;
-		toItem.num = fromItem.num;
+		toItem.passNum = fromItem.passNum;
 		toItem.text = fromItem.text;
 		toItem.typeStr = fromItem.typeStr;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
 	}
 
-	findPass(passToMatch: string): number {
+	findPass(type: string, name: string): PassItem {
 		var row = 1;
 		var found = false;
-		passToMatch = this.BaseName(passToMatch);
 		for (let passItem of this.passItems) {
-			if (passToMatch.localeCompare(passItem.name) == 0) {
-				found = true;
-				break;
+			if (type.localeCompare(passItem.typeStr) == 0 && name.localeCompare(passItem.name) == 0) {
+				return passItem;
 			}
-			row++;	
 		}
-		if (!found)
-			row = -1;
-		return row;
+		return new PassItem();
 	}
 }

@@ -19,6 +19,10 @@ export namespace dirfuncs {
         return true;
     }
 
+    export function sameParentDirectory(dir1: vscode.Uri, dir2: vscode.Uri): boolean {
+        return path.dirname(dir1.path).localeCompare(path.dirname(dir2.path)) == 0 ? true : false;
+    }
+
     export function isDir(path: string): boolean {
         try {
             const stats = fs.statSync(path);
