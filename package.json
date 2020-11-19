@@ -99,7 +99,7 @@
                     ".SEQ",
                     ".seq"
                 ],
-                "configuration": "./seq.configuration.json"
+                "configuration": "./seq-configuration.json"
             },
             {
                 "id": "txxt",
@@ -110,7 +110,7 @@
                     ".TXXT",
                     ".txxt"
                 ],
-                "configuration": "./txxt.configuration.json"
+                "configuration": "./txxt-configuration.json"
             },
             {
                 "id": "tree",
@@ -124,7 +124,19 @@
                     "TREE",
                     "tree"
                 ],
-                "configuration": "./tree.configuration.json"
+                "configuration": "./tree-configuration.json"
+            },
+            {
+                "id": "kb",
+                "extensions": [
+                    ".kb"
+                ],
+                "aliases": [
+                    "KB",
+                    "Kb",
+                    "kb"
+                ],
+                "configuration": "./kb-configuration.json"
             }
         ],
         "grammars": [
@@ -147,6 +159,11 @@
                 "language": "tree",
                 "scopeName": "source.tree",
                 "path": "./syntaxes/tree.tmLanguage.json"
+            },
+            {
+                "language": "kb",
+                "scopeName": "source.kb",
+                "path": "./syntaxes/kb.tmLanguage.json"
             }
         ],
         "snippets": [
