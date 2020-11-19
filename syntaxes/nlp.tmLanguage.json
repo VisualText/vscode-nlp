@@ -44,7 +44,7 @@
     "repository": {
         "functions-node": {
             "name": "entity.name.function.letter.nlp",
-            "match": "\\b(G|N|S|X)\\b"
+            "match": "\\b(G|N|S|X|L)\\b"
         },
         "functions": {
             "name": "entity.name.function.nlp",
