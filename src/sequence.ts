@@ -144,12 +144,13 @@ export class SequenceFile extends TextFile {
 		return basename;
 	}
 
-	getFileByNumber(num: number): string {
+	getUriByPassNumber(passNumber: number): vscode.Uri {
 		var filepath = '';
-		if (this.passItems.length) {
-			return this.passItems[num-1].text;
+		for (let passItem of this.passItems) {
+			if (passItem.passNum == passNumber)
+				return passItem.uri;
 		}
-		return '';
+		return vscode.Uri.file('');
 	}
 
 	passCount(): number {

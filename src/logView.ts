@@ -23,19 +23,19 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 
 	constructor() { }
 
-	public getTreeItem(element: LogItem): vscode.TreeItem {
+	public getTreeItem(logItem: LogItem): vscode.TreeItem {
 		return {
-			label: element.label,
-			resourceUri: element.uri,
+			label: logItem.label,
+			resourceUri: logItem.uri,
 			collapsibleState: void 0,
 			command: {
 				command: 'logView.openFile',
-				arguments: [element],
+				arguments: [logItem],
 				title: 'Open File with Error'
 			},
 			iconPath: {
-				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', element.icon),
-				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', element.icon)
+				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', logItem.icon),
+				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', logItem.icon)
 			}
 		};
 	}
@@ -44,7 +44,6 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
         if (visualText.hasWorkspaceFolder()) {
             return logView.getLogs();
 		}
-		
 		return [];
 	}
 }
@@ -59,7 +58,7 @@ export class LogView {
 		const logViewProvider = new OutputTreeDataProvider();
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
 		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
-		vscode.commands.registerCommand('logView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('logView.addMessage', (message) => this.addMessage(message));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
@@ -134,7 +133,7 @@ export class LogView {
 				var seqFile = visualText.analyzer.seqFile;
 				passNum = +tokens[0];
 				if (passNum) {
-					uri = vscode.Uri.file(seqFile.getFileByNumber(passNum));
+					uri = seqFile.getUriByPassNumber(passNum);
 					icon = 'gear.svg';
 				}
 				lineNum = +tokens[1];
@@ -147,7 +146,7 @@ export class LogView {
 	private openFile(logItem: LogItem): void {
 		if (logItem.passNum) {
 			var seqFile = visualText.analyzer.seqFile;
-			var passFile = vscode.Uri.file(seqFile.getFileByNumber(logItem.passNum));
+			var passFile = seqFile.getUriByPassNumber(logItem.passNum);
 
 			vscode.window.showTextDocument(logItem.uri).then(editor => 
 				{

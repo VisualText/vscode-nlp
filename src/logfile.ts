@@ -42,7 +42,7 @@ export class LogFile extends TextFile {
 				seqFile.init();
 				var passNum = this.selectedLines[0].passNum;
 				if (passNum) {
-					var passFile = vscode.Uri.file(seqFile.getFileByNumber(passNum));
+					var passFile = seqFile.getUriByPassNumber(passNum);
 					vscode.window.showTextDocument(passFile).then(edit => 
 						{
 							var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
@@ -103,8 +103,7 @@ export class LogFile extends TextFile {
 
 					if (firedNumber >= 0) {
 						var chosen = this.fireds[firedNumber];
-						var ruleFile = visualText.analyzer.seqFile.getFileByNumber(chosen.rule-1);
-						var ruleFileUri = vscode.Uri.file(ruleFile);
+						var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rule-1);
 
 						vscode.window.showTextDocument(ruleFileUri).then(editor => 
 						{

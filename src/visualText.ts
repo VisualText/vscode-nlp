@@ -101,7 +101,6 @@ export class VisualText {
         vscode.commands.executeCommand('textView.refreshAll');
         vscode.commands.executeCommand('sequenceView.refreshAll');
         vscode.commands.executeCommand('outputView.refreshAll');
-        vscode.commands.executeCommand('analyzerView.reveal', analyzerDirectory);
     }
 
     setCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
