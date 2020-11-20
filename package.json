@@ -175,6 +175,12 @@
         ],
         "commands": [
             {
+                "command": "nlp.openLegacyHelp",
+                "category": "NLP",
+                "title": "Open legacy help",
+                "description": "Open the help on the textanalysis website"
+            },
+            {
                 "command": "helpView.lookup",
                 "category": "NLP",
                 "title": "Lookup Word",
@@ -567,6 +573,11 @@
                 {
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.generateRule",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.openLegacyHelp",
                     "group": "nlp"
                 },
                 {
