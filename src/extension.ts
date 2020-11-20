@@ -6,6 +6,7 @@ import { SequenceView } from './sequenceView';
 import { TextView } from './textView';
 import { OutputView } from './outputView';
 import { FindView } from './findView';
+import { HelpView } from './helpView';
 import { LogView } from './logView';
 import { NLPStatusBar } from './status';
 
@@ -17,7 +18,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     SequenceView.attach(ctx);
     FindView.attach(ctx);
     LogView.attach(ctx);
+    HelpView.attach(ctx);
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
 }
-

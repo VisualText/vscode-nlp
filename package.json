@@ -175,6 +175,12 @@
         ],
         "commands": [
             {
+                "command": "helpView.lookup",
+                "category": "NLP",
+                "title": "Lookup Word",
+                "description": "Lookup a term in the help"
+            },
+            {
                 "command": "textView.analyze",
                 "title": "Analyze file",
                 "icon": {
@@ -546,6 +552,11 @@
                 {
                     "when": "resourceExtname == .txxt || resourceExtname == .txt",
                     "command": "nlp.openSelTree",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.lookup",
                     "group": "nlp"
                 },
                 {

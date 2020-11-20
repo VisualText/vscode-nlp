@@ -113,7 +113,7 @@ export class LogView {
 		}		
 	}
 
-	getLogs(): LogItem[] {
+	public getLogs(): LogItem[] {
 		return this.logs;
 	}
 
