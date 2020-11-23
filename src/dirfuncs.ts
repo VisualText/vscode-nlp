@@ -58,7 +58,7 @@ export namespace dirfuncs {
 
         var dirs = getDirectories(dirPath);
         for (let dir of dirs) {
-            if (dir.path.localeCompare(folderToFind) == 0) {
+            if (path.basename(dir.path).localeCompare(folderToFind) == 0) {
                 return dir;
             }
         }
