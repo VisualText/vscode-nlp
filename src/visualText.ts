@@ -40,21 +40,27 @@ export class VisualText {
         if (this.workspaceFold) {
             this.analyzerDir = this.workspaceFold.uri;
             if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+                var saveit = false;
                 var parse = this.jsonState.json.visualText[0];
                 var currAnalyzer = parse.currentAnalyzer;
                 if (currAnalyzer.length == 0) {
                     var analyzers = dirfuncs.getDirectories(this.workspaceFold.uri);
                     currAnalyzer = analyzers[0].path;
+                    saveit = true;
                 }
                 if (currAnalyzer) {
                     if (fs.existsSync(currAnalyzer))
                         this.currentAnalyzer = vscode.Uri.file(currAnalyzer);
                     else
                         this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,currAnalyzer));
-                    if (parse.engineDir) {
+                    if (parse.engineDir.length > 1) {
                         this.engineDir = vscode.Uri.file(path.join(parse.engineDir));
-                        this.initSettings();
+                    } else {
+                        this.findEngine();
+                        saveit = true;
                     }
+                    if (saveit)
+                        this.saveCurrentAnalyzer(this.analyzerDir);
                     this.loadAnalyzer(this.currentAnalyzer);
                     return true;
                 }
@@ -77,10 +83,14 @@ export class VisualText {
         return false;
     }
 
-    saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
+    findEngine() {
         if (this.getEngineDirectory().path.length < 2) {
             this.engineDir = dirfuncs.findFolder(this.getWorkspaceFolder(),'nlp-engine');
         }
+    }
+
+    saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
+        this.findEngine();
         var stateJsonDefault: any = {
             "visualText": [
                 {
