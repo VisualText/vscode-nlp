@@ -36,15 +36,15 @@
         },
         "concept-name1": {
             "name": "variable.parameter.nlp",
-            "match": "^\\s\\s[a-zA-Z][^:^\\[]+:"
+            "match": "^\\s\\s[a-zA-Z0-9][^:^\\[]+:"
         },
         "concept-name2": {
             "name": "keyword.node.tree",
-            "match": "^\\s\\s\\s\\s[a-zA-Z][^:^\\[]+[:]*"
+            "match": "^\\s\\s\\s\\s[a-zA-Z0-9][^:^\\[]+:"
         },
         "attribute-name": {
             "name": "constant.numeric.tree",
-            "match": "\\b[a-zA-Z]+="
+            "match": "\\b[a-zA-Z0-9]+="
         },
         "attributes": {
             "begin": "\\[",

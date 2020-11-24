@@ -211,7 +211,8 @@ export class SequenceFile extends TextFile {
 						fs.copyFileSync(pass.path,herepass);								
 					}		
 					var passItem = this.createPassItemFromFile(pass.path);
-					this.passItems.splice(row++,0,passItem);
+					this.passItems.splice(row+1,0,passItem);
+					row++;
 				}
 				this.saveFile();			
 			}
@@ -224,7 +225,7 @@ export class SequenceFile extends TextFile {
 			if (foundItem) {
 				var newfile = this.createNewPassFile(newPass);
 				var passItem = this.createPassItemFromFile(newfile);
-				this.passItems.splice(foundItem.order,0,passItem);
+				this.passItems.splice(foundItem.order+1,0,passItem);
 				this.saveFile();			
 			}
 		}	
@@ -244,9 +245,9 @@ export class SequenceFile extends TextFile {
 			var foundItem = this.findPass(seqItem.type,seqItem.name);
 			if (foundItem) {
 				var passItem = this.createPassItemFolder('end',newFolder);
-				this.passItems.splice(foundItem.order,0,passItem);
+				this.passItems.splice(foundItem.order+1,0,passItem);
 				passItem = this.createPassItemFolder('folder',newFolder);
-				this.passItems.splice(foundItem.order,0,passItem);
+				this.passItems.splice(foundItem.order+1,0,passItem);
 				this.saveFile();	
 			}		
 		}
