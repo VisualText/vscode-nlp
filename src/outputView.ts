@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 
+export enum outputFileType { TXT, KB }
+
 interface OutputItem {
 	uri: vscode.Uri;
 }
@@ -33,16 +35,43 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 
 	public getChildren(element?: OutputItem): OutputItem[] {
         if (visualText.hasWorkspaceFolder()) {
-            const children: OutputItem[] = new Array();
+			const children: OutputItem[] = new Array();
             for (let folder of outputView.getOutputFiles()) {
-				var base = path.basename(folder.path);
-				if (!((base.startsWith('ana') && base.endsWith('.log')) || base.endsWith('.txxt') || base.endsWith('.kb')))
-					children.push({uri: folder});
+				children.push({uri: folder});
             }
             return children;
         }
 
 		return [];
+	}
+
+	addKB() {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			const options: vscode.OpenDialogOptions = {
+				canSelectMany: false,
+				openLabel: 'Add KB File',
+				defaultUri: visualText.getWorkspaceFolder(),
+				canSelectFiles: true,
+				canSelectFolders: true,
+				filters: {
+					'Text files': ['kb'],
+					'All files': ['*']
+				}
+			};
+			vscode.window.showOpenDialog(options).then(selection => {
+				if (!selection) {
+					return;
+				}
+				var oldPath = selection[0].path;
+				var filename = path.basename(oldPath);
+				var dir = visualText.analyzer.getAnalyzerDirectory('kb').path;
+				var newPath = path.join(dir,filename);
+				fs.copyFileSync(oldPath,newPath);
+				outputView.setType(outputFileType.KB);		
+				this.refresh();
+			});	
+		}
 	}
 }
 
@@ -52,16 +81,21 @@ export class OutputView {
 	public outputView: vscode.TreeView<OutputItem>;
 	private outputFiles: vscode.Uri[];
 	private logDirectory: vscode.Uri;
+	private type: outputFileType;
 
 	constructor(context: vscode.ExtensionContext) {
 		const outputViewProvider = new OutputTreeDataProvider();
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
 		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
-		vscode.commands.registerCommand('outputView.newOutput', resource => this.newOutput(resource));
+		vscode.commands.registerCommand('outputView.addKB', () => outputViewProvider.addKB());
+
 		vscode.commands.registerCommand('outputView.deleteOutput', resource => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
+		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
+		this.type = outputFileType.TXT;
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -69,6 +103,28 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	public setType(type: outputFileType) {
+		this.type = type;
+	}
+
+	public getType(): outputFileType {
+		return this.type;
+	}
+
+	private loadTxt() {
+		this.clearOutput(outputFileType.TXT);
+	}
+
+	private loadKB() {
+		this.clearOutput(outputFileType.KB);
+	}
+
+	public clearOutput(type: outputFileType) {
+		this.type =type;
+		this.outputFiles = [];
+		vscode.commands.executeCommand('outputView.refreshAll');
 	}
 
 	public directoryIsLog(path: string): boolean {
@@ -97,13 +153,24 @@ export class OutputView {
 	public getOutputFiles() {
 		this.outputFiles = [];
 		if (visualText.analyzer.hasText()) {
-			var path = visualText.analyzer.getTextPath().path;
-			this.outputFiles = [];
-			if (path.length && this.fileHasLog(path)) {
-				this.outputFiles = dirfuncs.getFiles(this.logDirectory);
+			if (this.type == outputFileType.KB) {
+				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb'],true);
+				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kb'],true);
+				this.outputFiles = this.outputFiles.concat(kbFiles);
 			} else {
-				dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
-			}	
+				var textPath = visualText.analyzer.getTextPath().path;
+				this.outputFiles = [];
+				if (textPath.length && this.fileHasLog(textPath)) {
+					var candidates = dirfuncs.getFiles(this.logDirectory,['.txt','.log']);
+					for (let cand of candidates) {
+						let base = path.basename(cand.path);
+						if (!base.startsWith('ana'))
+							this.outputFiles.push(cand);
+					}
+				} else {
+					dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
+				}					
+			}
 		}
         return this.outputFiles;
 	}
@@ -125,7 +192,7 @@ export class OutputView {
 		}
 	}
 	
-	private newOutput(resource: OutputItem) {
+	private addKB(resource: OutputItem) {
 		console.log('New Output code to be implemented');
 	}
 }

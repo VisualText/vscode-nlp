@@ -68,12 +68,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
-				openLabel: 'Open',
+				openLabel: 'Add Existing File',
 				defaultUri: visualText.getWorkspaceFolder(),
 				canSelectFiles: true,
 				canSelectFolders: true,
 				filters: {
-					'Text files': ['txt','xml','html'],
+					'Text files': ['txt','xml','html','cvs'],
 					'All files': ['*']
 				}
 			};

@@ -4,6 +4,7 @@ import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView } from './logView';
+import { outputView, outputFileType } from './outputView';
 
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
@@ -23,6 +24,7 @@ export class NLPFile extends TextFile {
 		logView.clearLogs();
 		logView.addMessage('Analyzing...');
 		vscode.commands.executeCommand('logView.refreshAll');
+		outputView.setType(outputFileType.TXT);
 
 		const filestr = filepath.path;
 		var pos = filestr.search('/input/');
