@@ -393,6 +393,14 @@
                 }
             },
             {
+                "command": "textView.existingText",
+                "title": "Insert existing text",
+                "icon": {
+                    "light": "fileicons/images/light/new-file.svg",
+                    "dark": "fileicons/images/dark/new-file.svg"
+                }
+            },
+            {
                 "command": "textView.search",
                 "title": "Search",
                 "icon": {
@@ -638,6 +646,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "textView.existingText",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
                     "command": "textView.openText",
                     "when": "view == textView",
                     "group": "navigation"
@@ -796,6 +809,11 @@
                 },
                 {
                     "command": "textView.newText",
+                    "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.existingText",
                     "when": "view == textView && viewItem == file",
                     "group": "edit"
                 },
