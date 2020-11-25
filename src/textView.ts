@@ -62,6 +62,34 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 
 		return keepers;
 	}
+
+	existingText(entry: Entry) {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			const options: vscode.OpenDialogOptions = {
+				canSelectMany: false,
+				openLabel: 'Open',
+				defaultUri: visualText.getWorkspaceFolder(),
+				canSelectFiles: true,
+				canSelectFolders: true,
+				filters: {
+					'Text files': ['txt','xml','html'],
+					'All files': ['*']
+				}
+			};
+			vscode.window.showOpenDialog(options).then(selection => {
+				if (!selection) {
+					return;
+				}
+				var oldPath = selection[0].path;
+				var filename = path.basename(oldPath);
+				var dir = path.dirname(entry.uri.path);
+				var newPath = path.join(dir,filename);
+				fs.copyFileSync(oldPath,newPath);		
+				this.refresh();
+			});	
+		}
+	}
 }
 
 export let textView: TextView;
@@ -74,6 +102,8 @@ export class TextView {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('textView.existingText', (entry) => treeDataProvider.existingText(entry));
+
 		vscode.commands.registerCommand('textView.openFile', (entry) => this.openFile(entry));
 		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());
 		vscode.commands.registerCommand('textView.analyze', (entry) => this.analyze(entry));
