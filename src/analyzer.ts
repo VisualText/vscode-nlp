@@ -199,6 +199,11 @@ export class Analyzer {
         return this.loaded;
     }
 
+    getAnalyzerDirectory(subDir: string=''): vscode.Uri {
+        
+        return vscode.Uri.file(path.join(this.analyzerDir.path,subDir));
+    }
+
     getInputDirectory(): vscode.Uri {
         return this.inputDir;
     }

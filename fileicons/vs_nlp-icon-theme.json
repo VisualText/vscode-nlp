@@ -20,10 +20,10 @@
 			"iconPath": "./images/light/nlp.svg"
 		},
 		"_kb_dark": {
-			"iconPath": "./images/dark/library.svg"
+			"iconPath": "./images/dark/kb.svg"
 		},
 		"_kb_light": {
-			"iconPath": "./images/light/library.svg"
+			"iconPath": "./images/light/kb.svg"
 		},
 		"_seq_dark": {
 			"iconPath": "./images/dark/list-tree.svg"

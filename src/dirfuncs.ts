@@ -102,13 +102,16 @@ export namespace dirfuncs {
         return dirsAndTypes;
     }
 
-    export function getFiles(folder: vscode.Uri): vscode.Uri[] {
+    export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.path);
         for (let filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filepath = path.join(folder.path,filename);
-                fileUris.push(vscode.Uri.file(filepath));
+                var filePath = path.join(folder.path,filename);
+                var ext = path.extname(filePath);
+                const stats = fs.statSync(filePath);
+                if (!(skipDirectories && stats.isDirectory()) && (filter.length == 0 || filter.includes(ext)))
+                    fileUris.push(vscode.Uri.file(filePath));
             }
         }
         return fileUris;
