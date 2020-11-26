@@ -257,6 +257,14 @@
                 "description": "View the tree for the selected text"
             },
             {
+                "command": "sequenceView.finalTree",
+                "title": "Display Final Tree",
+                "icon": {
+                    "light": "fileicons/images/light/list-tree.svg",
+                    "dark": "fileicons/images/dark/list-tree.svg"
+                }
+            },
+            {
                 "command": "sequenceView.reveal",
                 "title": "Analyzer Sequence: Reveal"
             },
@@ -646,6 +654,11 @@
                 },
                 {
                     "command": "textView.openText",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.finalTree",
                     "when": "view == sequenceView",
                     "group": "navigation"
                 },

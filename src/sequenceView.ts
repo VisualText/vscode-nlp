@@ -253,7 +253,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
-					if (seqItem && seqItem.uri)
+					if (seqItem && (seqItem.uri || seqFile.getPasses().length > 1))
 						seqFile.insertNewPass(seqItem,newname);
 					else
 						seqFile.insertNewPassEnd(newname);
@@ -341,6 +341,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.openHighlight', (seqItem) => this.openHighlight(seqItem));
 		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
 		vscode.commands.registerCommand('sequenceView.search', () => this.search());
+		vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree());
 
 		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
@@ -355,6 +356,16 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOn', (seqItem) => treeDataProvider.typeOn(seqItem));
 		vscode.commands.registerCommand('sequenceView.newFolder', (seqItem) => treeDataProvider.newFolder(seqItem));
+	}
+
+	finalTree() {
+		var dir = visualText.analyzer.getOutputDirectory();
+		var finalLog = path.join(dir.path,'final.log');
+		if (fs.existsSync(finalLog)) {
+			vscode.window.showTextDocument(vscode.Uri.file(finalLog));	
+		} else {
+			vscode.window.showInformationMessage('No final tree foud');
+		}
 	}
 
 	search() {
