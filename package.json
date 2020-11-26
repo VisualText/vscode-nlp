@@ -308,8 +308,8 @@
                 "command": "sequenceView.openKB",
                 "title": "Open KB",
                 "icon": {
-                    "light": "fileicons/images/light/library.svg",
-                    "dark": "fileicons/images/dark/library.svg"
+                    "light": "fileicons/images/light/kb.svg",
+                    "dark": "fileicons/images/dark/kb.svg"
                 }
             },
             {
@@ -497,6 +497,30 @@
                 }
             },
             {
+                "command": "outputView.kb",
+                "title": "Refresh",
+                "icon": {
+                    "light": "fileicons/images/light/kb.svg",
+                    "dark": "fileicons/images/dark/kb.svg"
+                }
+            },
+            {
+                "command": "outputView.txt",
+                "title": "Refresh",
+                "icon": {
+                    "light": "fileicons/images/light/document.svg",
+                    "dark": "fileicons/images/dark/document.svg"
+                }
+            },
+            {
+                "command": "outputView.addKB",
+                "title": "Refresh",
+                "icon": {
+                    "light": "fileicons/images/light/kb-new.svg",
+                    "dark": "fileicons/images/dark/kb-new.svg"
+                }
+            },
+            {
                 "command": "logView.refreshAll",
                 "title": "Refresh",
                 "icon": {
@@ -508,8 +532,8 @@
                 "command": "logView.conceptualGrammar",
                 "title": "Conceptual Grammar",
                 "icon": {
-                    "light": "fileicons/images/light/library.svg",
-                    "dark": "fileicons/images/dark/library.svg"
+                    "light": "fileicons/images/light/kb.svg",
+                    "dark": "fileicons/images/dark/kb.svg"
                 }
             },
             {
@@ -658,6 +682,21 @@
                 {
                     "command": "textView.refreshAll",
                     "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "outputView.txt",
+                    "when": "view == outputView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "outputView.kb",
+                    "when": "view == outputView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "outputView.addKB",
+                    "when": "view == outputView",
                     "group": "navigation"
                 },
                 {
