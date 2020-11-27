@@ -506,7 +506,7 @@
             },
             {
                 "command": "outputView.kb",
-                "title": "Refresh",
+                "title": "Display KB Files",
                 "icon": {
                     "light": "fileicons/images/light/kb.svg",
                     "dark": "fileicons/images/dark/kb.svg"
@@ -514,7 +514,7 @@
             },
             {
                 "command": "outputView.txt",
-                "title": "Refresh",
+                "title": "Display Output Files",
                 "icon": {
                     "light": "fileicons/images/light/document.svg",
                     "dark": "fileicons/images/dark/document.svg"
@@ -522,7 +522,7 @@
             },
             {
                 "command": "outputView.addKB",
-                "title": "Refresh",
+                "title": "Add KB File",
                 "icon": {
                     "light": "fileicons/images/light/kb-new.svg",
                     "dark": "fileicons/images/dark/kb-new.svg"
