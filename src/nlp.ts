@@ -4,6 +4,7 @@ import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView } from './logView';
+import { nlpStatusBar,DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
 export let nlpFile: NLPFile;
@@ -31,7 +32,8 @@ export class NLPFile extends TextFile {
 		var anapath = filestr.substr(0,pos);
 		var engineDir = visualText.getEngineDirectory().path;
 		var exe = path.join(engineDir,'nlp.exe');
-		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} -DEV`;
+		var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
+		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
 		const cp = require('child_process');
 		cp.exec(cmd, (err, stdout, stderr) => {
