@@ -4,10 +4,21 @@
         "txxt"
     ],
     "name": "TXXT",
-    "patterns": [{ "include": "#paren-expression" }],
+    "patterns": [{ "include": "#expression" }],
 
     "repository": {
-        "paren-expression": {
+        "expression": {
+            "name": "meta.expression.tree",
+            "patterns": [
+                {
+                    "include": "#bracket-highlight"
+                },
+                {
+                    "include": "#curly-highlight"
+                }               
+            ]
+        },
+        "bracket-highlight": {
             "begin": "\\[\\[",
             "end": "\\]\\]",
             "beginCaptures": {
@@ -17,6 +28,17 @@
                 "0": { "name": "variable.parameter.txxt" }
             },
             "name": "keyword.other.txxt"
+        },
+        "curly-highlight": {
+            "begin": "\\{\\{",
+            "end": "\\}\\}",
+            "beginCaptures": {
+                "0": { "name": "variable.parameter.txxt" }
+            },
+            "endCaptures": {
+                "0": { "name": "variable.parameter.txxt" }
+            },
+            "name": "comment.line.txxt"
         }
     }
 }
