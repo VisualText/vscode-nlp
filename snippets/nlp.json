@@ -53,7 +53,7 @@
         "body": [
             "while (L(\"${1:con}\")) {",
             "\t$0",
-            "\tL(\"$1\") = next(L(\"$1\");", 
+            "\tL(\"$1\") = next(L(\"$1\"));", 
             "}"
         ],
         "description": "While loop."
@@ -63,7 +63,7 @@
         "body": [
             "while (L(\"${1:node}\")) {",
             "\t$0",
-            "\tL(\"$1\") = pnnext(L(\"$1\");", 
+            "\tL(\"$1\") = pnnext(L(\"$1\"));", 
             "}"
         ],
         "description": "While loop."
