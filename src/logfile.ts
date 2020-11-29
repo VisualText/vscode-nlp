@@ -383,7 +383,7 @@ ${ruleStr}
 	}
 	
 	parseFireds(logfile: string) {
-		var refire = new RegExp('[\[,\]', 'g');
+		var refire = /[\[,\]]/g;
 		this.fireds = [];
 
 		var file = new TextFile(logfile);
@@ -396,7 +396,8 @@ ${ruleStr}
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
 				var tts = line.split(refire);
-				if (+tts[2] > to) {
+				var blt = (tts.length >= 7 && tts[7] === 'blt') ? true : false;
+				if (blt && +tts[2] > to) {
 					from = +tts[1];
 					to = +tts[2];
 					rulenum = +tts[3];
