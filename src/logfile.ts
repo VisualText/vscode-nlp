@@ -14,6 +14,8 @@ export interface LogLine {
 	ruleLine: number;
 	type: string;
 	rest: string;
+	fired: boolean;
+	built: boolean;
 }
 
 export let logFile: LogFile;
@@ -206,7 +208,7 @@ ${ruleStr}
 	}
 
 	parseLogLine(line: string): LogLine {
-		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', rest: ''};
+		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: ''};
 		var tokens = line.split('[');
 		if (tokens.length > 1) {
 			logLine.node = tokens[0].trim();
@@ -216,7 +218,13 @@ ${ruleStr}
 				logLine.end = +toks[1];
 				logLine.passNum = +toks[2];
 				logLine.ruleLine = +toks[3];	
-				logLine.type = toks[4];	
+				logLine.type = toks[4];
+				if (toks.length >= 5) {
+					logLine.fired = true;
+				}
+				if (toks.length >= 6 && toks[6].length > 0) {
+					logLine.built = true;
+				}
 			}
 		}
 		return logLine;
@@ -250,7 +258,11 @@ ${ruleStr}
 		}
 		var brackets = text.split(/\[\[/);
 		var brackets2 = text.split(/\]\]/);
-		return ((brackets.length + brackets2.length - 2))*2;
+		var curly = text.split(/\{\{/);
+		var curly2 = text.split(/\}\}/);
+		var bracketCount = ((brackets.length + brackets2.length - 2))*2;
+		var curlyCount = ((curly.length + curly2.length - 2))*2;
+		return bracketCount + curlyCount;
 	}
 
 	absoluteRangeFromSelection(textfile: string, selection: vscode.Selection) {
@@ -276,7 +288,8 @@ ${ruleStr}
 			else if (selection.start.line == linecount) {
 				absStart += selection.start.character - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
-					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(line,selection.end.character) - 1;
+					var selStr = line.substr(selection.start.character,selection.end.character-selection.start.character);
+					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(selStr) - 1;
 					break;
 				}
 				absEnd = absStart + line.length - this.bracketCount(line);
@@ -351,11 +364,19 @@ ${ruleStr}
 	}
 
 	parseBrackets(): number {
-		var bracketNumber = -1;
+		var squares = this.parseBracketsRegex('[');
+		var curlies = this.parseBracketsRegex('{');
+		return squares + curlies;
+	}
+
+	parseBracketsRegex(bracket: string): number {
 		this.highlights = [];
 
+		var startPattern = bracket === '[' ? '\[\[' : '\{\{';
+		var endPattern = bracket === '[' ? '\]\]' : '\}\}';
+
 		var file = new TextFile(this.highlightFile,false);
-		var tokens = file.getText(true).split(/\[\[/);
+		var tokens = file.getText(true).split(startPattern);
 		var tokencount = 0;
 		var len = 0;
 		var lenBracket = 0;
@@ -367,19 +388,19 @@ ${ruleStr}
 		for (let token of tokens) {
 			token = token.replace(/[\n\r]/g, '');
 			if (tokencount) {
-				var toks = token.split(/\]\]/);
+				var toks = token.split(endPattern);
 				start = len;
 				end = len + toks[0].length;
 				startBracket = lenBracket;
 				endBracket = lenBracket + toks[0].length;
 
-				this.highlights.push({start: start, end: end, startb: startBracket, endb: endBracket});						
+				this.highlights.push({start: start, end: end, startb: startBracket, endb: endBracket});
 			}
 			len += token.length;
 			tokencount++;
 			lenBracket += token.length + 2;
 		}
-		return bracketNumber;
+		return tokencount - 1;
 	}
 	
 	parseFireds(logfile: string) {
@@ -397,12 +418,12 @@ ${ruleStr}
 			if (tokens.length > 1) {
 				var tts = line.split(refire);
 				var blt = (tts.length >= 7 && tts[7] === 'blt') ? true : false;
-				if (blt && +tts[2] > to) {
+				if (+tts[2] > to) {
 					from = +tts[1];
 					to = +tts[2];
 					rulenum = +tts[3];
 					ruleline = +tts[4];
-					this.fireds.push({from: from, to: to, rule: rulenum, ruleline: ruleline});						
+					this.fireds.push({from: from, to: to, rule: rulenum, ruleline: ruleline, built: blt});						
 				}
 			}
 		}
@@ -447,14 +468,20 @@ ${ruleStr}
 		var highlight = '';
 		var from = 0;
 		var to = 0;
+		var built = false;
 
 		if (this.fireds.length) {
 			for (var i = 0; i < this.fireds.length; i++) {
 				from = this.fireds[i].from;
 				to = this.fireds[i].to;
+				built = this.fireds[i].built;
 				between = file.getText(true).substring(lastTo,from);
 				highlight = file.getText(true).substring(from,to+1);
-				textfire = textfire.concat(between,'[[',highlight,']]');
+				if (built)
+					textfire = textfire.concat(between,'[[',highlight,']]');
+				else
+					textfire = textfire.concat(between,'{{',highlight,'}}');
+
 				lastTo = to + 1;
 			}
 			textfire = textfire.concat(file.getText(true).substring(lastTo,file.getText(true).length));
