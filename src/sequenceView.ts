@@ -9,7 +9,7 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 
-export interface SequenceItem {
+export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
 	label: string;
 	name: string;
@@ -48,6 +48,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	getPasses(passes: PassItem[]): SequenceItem[] {
 		var folder = '';
 		const seqItems = new Array();
+		const logFile = new LogFile();
+		const textFile = new TextFile();
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
 
@@ -65,8 +67,17 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					folder = '';
 			
 			} else if (passItem.isRuleFile()) {
+				var logPath = logFile.anaFile(passItem.passNum,nlpFileType.TREE);
+				var hasLog = fs.existsSync(logPath.path) ? true : false;
+				var conVal = '';
+				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
+					conVal = 'hasLog';
+				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.KB))
+					conVal = conVal + 'hasKB';
+				if (conVal.length == 0)
+					conVal = 'file';
 				if (passItem.fileExists())
-					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'file',
+					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: conVal,
 						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse});
 				else
 					seqItems.push({label: label, name: passItem.name, tooltip: 'MISSING', contextValue: 'missing', inFolder: passItem.inFolder,
@@ -88,7 +99,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
 		var icon = 'dna.svg';
-		var context = 'file';
 		var active = true;
 		var collapse = vscode.TreeItemCollapsibleState.None;
 
@@ -99,12 +109,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			icon = 'dnar.svg';
 
 		} else if (seqItem.type.localeCompare('folder') == 0) {
-			context = 'folder';
 			icon = 'folder.svg';
 			collapse = vscode.TreeItemCollapsibleState.Collapsed;
 
 		} else if (seqItem.type.localeCompare('pat')) {
-			context = 'stub';
 			icon = 'seq-circle.svg';
 		}
 
@@ -112,7 +120,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
-				contextValue: context,
+				contextValue: seqItem.contextValue,
 				collapsibleState: collapse,
 				command: {
 					command: 'sequenceView.openFile',
@@ -125,7 +133,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
-				contextValue: context,
+				contextValue: seqItem.contextValue,
 				collapsibleState: collapse,
 				iconPath: {
 					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', icon),
