@@ -42,14 +42,24 @@ export class PassItem {
 		return fs.existsSync(this.uri.path) ? true : false;
 	}
 
+	public exists(): boolean {
+		return this.empty ? false : true;
+	}
+
+	public isEmpty(): boolean {
+		return this.empty;
+	}
+
 	clear() {
 		this.uri = vscode.Uri.file('');
 		this.text = '';
 		this.name = '';
 		this.comment = '';
 		this.passNum = 0;
+		this.order = 0;
 		this.typeStr = '';
 		this.inFolder = false;
+		this.empty = true;
 	}
 }
 
@@ -84,7 +94,7 @@ export class SequenceFile extends TextFile {
 						passItem.inFolder = true;
 						passNum++;
 					}
-				} else
+				} else if (passItem.exists())
 					passNum++;
 
 				if (passItem.text.length) {
@@ -116,6 +126,7 @@ export class SequenceFile extends TextFile {
 				}
 				passItem.comment = this.tokenStr(tokens,2);				
 			}
+			passItem.empty = false;
 		}
 
 		return passItem;
@@ -144,12 +155,18 @@ export class SequenceFile extends TextFile {
 		return basename;
 	}
 
-	getUriByPassNumber(passNumber: number): vscode.Uri {
-		var filepath = '';
+	getPassByNumber(passNumber: number): PassItem {
 		for (let passItem of this.passItems) {
 			if (passItem.passNum == passNumber)
-				return passItem.uri;
+				return passItem;
 		}
+		return new PassItem();
+	}
+
+	getUriByPassNumber(passNumber: number): vscode.Uri {
+		var passItem = this.getPassByNumber(passNumber);
+		if (!passItem.isEmpty())
+			return passItem.uri;
 		return vscode.Uri.file('');
 	}
 
@@ -335,6 +352,7 @@ export class SequenceFile extends TextFile {
 		passItem.typeStr = path.extname(filePath).substr(1);
 		passItem.comment = '# comment';
 		passItem.text = this.passString(passItem);
+		passItem.empty = false;
 		return passItem;
 	}
 
@@ -390,16 +408,20 @@ export class SequenceFile extends TextFile {
 	}
 
 	saveType(passNum: number, type: string) {
-		var pass = this.passItems[passNum-1];
-		pass.typeStr = type;
-		this.saveFile();
+		var passItem = this.getPassByNumber(passNum);
+		if (passItem.exists()) {
+			passItem.typeStr = type;
+			this.saveFile();
+		}
 	}
 
 	saveActive(passNum: number, active: string) {
-		var pass = this.passItems[passNum-1];
-		var type = pass.typeStr.replace('/','');
-		pass.typeStr = active + type;
-		this.saveFile();
+		var passItem = this.getPassByNumber(passNum);
+		if (passItem.exists()) {
+			var type = passItem.typeStr.replace('/','');
+			passItem.typeStr = active + type;
+			this.saveFile();			
+		}
 	}
 
 	saveFile() {
@@ -508,10 +530,12 @@ export class SequenceFile extends TextFile {
 	}
 
 	copyItem(toItem: PassItem, fromItem: PassItem) {
+		toItem.text = fromItem.text;
 		toItem.name = fromItem.name;
 		toItem.passNum = fromItem.passNum;
-		toItem.text = fromItem.text;
+		toItem.order = fromItem.order;
 		toItem.typeStr = fromItem.typeStr;
+		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
 	}
