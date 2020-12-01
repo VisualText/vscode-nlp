@@ -4,7 +4,10 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { TextFile, nlpFileType } from './textFile';
 import { NLPFile } from './nlp';
+import { nlpStatusBar, FiredMode } from './status';
 import { SequenceFile } from './sequence';
+import { dirfuncs } from './dirfuncs';
+import { emitKeypressEvents } from 'readline';
 
 export interface LogLine {
 	node: string
@@ -441,13 +444,13 @@ ${ruleStr}
 		return this.fireds.length ? true : false;
 	}
 
-	firedFile(pass: number): vscode.Uri {
+	firedFile(pass: number, rewrite: boolean=false): vscode.Uri {
 		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
-		if (!fs.existsSync(firefile.path)) {
+		if (!fs.existsSync(firefile.path) || rewrite) {
 			var logfile = this.anaFile(pass);
 			if (fs.existsSync(logfile.path)) {
 				this.parseFireds(logfile.path);
-				this.writeFiredText(logfile);				
+				this.writeFiredText(logfile,rewrite);				
 			}
 		}
 		return firefile;
@@ -462,13 +465,13 @@ ${ruleStr}
 		return new Date(1970, 1, 1);
 	}
 
-	writeFiredText(logfile: vscode.Uri): vscode.Uri {
+	writeFiredText(logfile: vscode.Uri, rewrite: boolean=false): vscode.Uri {
 		this.setFilesNames(logfile.path);
 		var logDate: Date = this.fileCreateTime(logfile.path);
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
-		if (inputDate < logDate && fs.existsSync(this.highlightFile))
+		if (!rewrite && inputDate < logDate && fs.existsSync(this.highlightFile))
 			return vscode.Uri.file(this.highlightFile);
-		else if (!fs.existsSync(this.inputFile))
+		else if (!rewrite && !fs.existsSync(this.inputFile))
 			return logfile;
 
 		var file = new TextFile(this.inputFile,false);
@@ -490,8 +493,10 @@ ${ruleStr}
 				highlight = file.getText(true).substring(from,to+1);
 				if (built)
 					textfire = textfire.concat(between,'[[',highlight,']]');
-				else
+				else if (nlpStatusBar.getFiredMode() == FiredMode.FIRED)
 					textfire = textfire.concat(between,'{{',highlight,'}}');
+				else
+					textfire = textfire.concat(between,highlight);
 
 				lastTo = to + 1;
 			}
@@ -500,8 +505,23 @@ ${ruleStr}
 			textfire = file.getText(true);
 		}
 
-		fs.writeFileSync(this.highlightFile,file.unnormalizeText(textfire),{flag:'w+'});
+		fs.writeFileSync(this.highlightFile,file.unnormalizeText(textfire));
 		this.fireds = [];
 		return vscode.Uri.file(this.highlightFile);
+	}
+
+	updateTxxtFiles(fileType: nlpFileType) {
+		var exts = new Array('.'+this.getExtension(fileType));
+		var files = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),exts);
+		for (let file of files) {
+			var numStr = path.basename(file.path).substr(3,3);
+			var passNum = Number.parseInt(numStr);
+			this.firedFile(passNum,true);
+		}
+	}
+
+	deleteLogs(fileType: nlpFileType) {
+		var exts = new Array('.'+this.getExtension(fileType));
+		dirfuncs.deleteFiles(visualText.analyzer.getOutputDirectory(),exts);
 	}
 }

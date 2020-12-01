@@ -4,7 +4,7 @@ import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView } from './logView';
-import { nlpStatusBar,DevMode } from './status';
+import { nlpStatusBar, DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
 export let nlpFile: NLPFile;
@@ -51,6 +51,7 @@ export class NLPFile extends TextFile {
 				vscode.commands.executeCommand('textView.refreshAll');
 				vscode.commands.executeCommand('outputView.refreshAll');
 				vscode.commands.executeCommand('logView.refreshAll');
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			}
 		});
 

@@ -170,6 +170,22 @@ export namespace dirfuncs {
         } 
         return false;
     }
+    
+    export function deleteFiles(folder: vscode.Uri, filter: string[]=[]): vscode.Uri[] {
+        const fileUris: vscode.Uri[] = new Array();
+        const filenames = fs.readdirSync(folder.path);
+        for (let filename of filenames) {
+            if (!filename.startsWith('.')) {
+                var filePath = path.join(folder.path,filename);
+                var ext = path.extname(filePath);
+                const stats = fs.statSync(filePath);
+                if (!stats.isDirectory() && (filter.length == 0 || filter.includes(ext)))
+                    delFile(filePath);
+            }
+        }
+        return fileUris;
+    }
+
 
     export function emptyDir(dirPath: string): boolean {
         try {
