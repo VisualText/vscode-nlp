@@ -781,77 +781,77 @@
                 },
                 {
                     "command": "sequenceView.openTree",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openHighlight",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == sequenceView && viewItem == file && viewItem != missing",
+                    "when": "view == sequenceView && viewItem =~ /(hasKB|hasLoghasKB)/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
+                    "when": "view == sequenceView",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
+                    "when": "view == sequenceView",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.rename",
-                    "when": "view == sequenceView && viewItem =~ /(file|folder)/",
+                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)/",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.newFolder",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
+                    "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insertLibrary",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
+                    "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/)",
+                    "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.insert",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
+                    "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == sequenceView && viewItem =~ /(file|folder)/",
+                    "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.typePat",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeRec",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeOn",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeOff",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "attribute"
                 },
                 {
@@ -891,27 +891,27 @@
                 },
                 {
                     "command": "sequenceView.openTree",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /hasLog/",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.openHighlight",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /(hasKB|hasLoghasKB)/",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
+                    "when": "view == sequenceView",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem =~ /(file|stub|folder)/",
+                    "when": "view == sequenceView",
                     "group": "inline"
                 },
                 {

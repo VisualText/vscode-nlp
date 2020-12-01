@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { TextFile, nlpFileType, separatorType } from './textFile';
-import { NLPFile, nlpFile } from './nlp';
+import { TextFile, nlpFileType } from './textFile';
+import { NLPFile } from './nlp';
 import { SequenceFile } from './sequence';
 
 export interface LogLine {
@@ -139,6 +139,17 @@ export class LogFile extends TextFile {
 			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.txxt');
 			this.inputFile = visualText.analyzer.getTextPath().path;
 		}
+	}
+
+	hasLogFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
+		var anaFile = this.anaFile(pass,type);
+		if (type == nlpFileType.TREE) {
+			this.setFile(anaFile,true);
+			if (this.numberOfLines() > 6)
+				return true;
+			return false;
+		}
+		return fs.existsSync(anaFile.path);
 	}
 
 	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
