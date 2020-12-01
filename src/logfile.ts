@@ -230,11 +230,13 @@ ${ruleStr}
 				logLine.passNum = +toks[2];
 				logLine.ruleLine = +toks[3];	
 				logLine.type = toks[4];
-				if (toks.length >= 5) {
-					logLine.fired = true;
+				if (toks.length > 5 ) {
+					if (toks[5].length)
+						logLine.fired = true;
 				}
-				if (toks.length >= 6 && toks[6].length > 0) {
-					logLine.built = true;
+				if (toks.length > 6) {
+					if (toks[6].length > 0)
+						logLine.built = true;
 				}
 			}
 		}
