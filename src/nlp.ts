@@ -51,6 +51,7 @@ export class NLPFile extends TextFile {
 				vscode.commands.executeCommand('textView.refreshAll');
 				vscode.commands.executeCommand('outputView.refreshAll');
 				vscode.commands.executeCommand('logView.refreshAll');
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			}
 		});
 
