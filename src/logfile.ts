@@ -7,7 +7,6 @@ import { NLPFile } from './nlp';
 import { nlpStatusBar, FiredMode } from './status';
 import { SequenceFile } from './sequence';
 import { dirfuncs } from './dirfuncs';
-import { emitKeypressEvents } from 'readline';
 
 export interface LogLine {
 	node: string
@@ -108,7 +107,7 @@ export class LogFile extends TextFile {
 
 					if (firedNumber >= 0) {
 						var chosen = this.fireds[firedNumber];
-						var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rule-1);
+						var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rule);
 
 						vscode.window.showTextDocument(ruleFileUri).then(editor => 
 						{
@@ -380,14 +379,13 @@ ${ruleStr}
 	}
 
 	parseBrackets(): number {
+		this.highlights = [];
 		var squares = this.parseBracketsRegex('[');
 		var curlies = this.parseBracketsRegex('{');
 		return squares + curlies;
 	}
 
 	parseBracketsRegex(bracket: string): number {
-		this.highlights = [];
-
 		var startPattern = bracket === '[' ? '\[\[' : '\{\{';
 		var endPattern = bracket === '[' ? '\]\]' : '\}\}';
 
@@ -406,9 +404,9 @@ ${ruleStr}
 			if (tokencount) {
 				var toks = token.split(endPattern);
 				start = len;
-				end = len + toks[0].length;
+				end = len + toks[0].length - 1;
 				startBracket = lenBracket;
-				endBracket = lenBracket + toks[0].length;
+				endBracket = lenBracket + toks[0].length - 1;
 
 				this.highlights.push({start: start, end: end, startb: startBracket, endb: endBracket});
 			}
@@ -439,7 +437,8 @@ ${ruleStr}
 					to = +tts[2];
 					rulenum = +tts[3];
 					ruleline = +tts[4];
-					this.fireds.push({from: from, to: to, rule: rulenum, ruleline: ruleline, built: blt});						
+					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || blt)
+						this.fireds.push({from: from, to: to, rule: rulenum, ruleline: ruleline, built: blt});						
 				}
 			}
 		}
