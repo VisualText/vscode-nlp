@@ -85,7 +85,7 @@ export class LogView {
 		this.addLogFile(timingFile);
 	}
 	
-	private loadMakeAna() {
+	public loadMakeAna() {
 		this.clearLogs();
 		var timingFile = vscode.Uri.file(path.join(visualText.analyzer.getLogDirectory().path,'make_ana.log'));
 		this.addLogFile(timingFile);
