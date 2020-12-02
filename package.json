@@ -516,8 +516,8 @@
                 "command": "outputView.txt",
                 "title": "Display Output Files",
                 "icon": {
-                    "light": "fileicons/images/light/document.svg",
-                    "dark": "fileicons/images/dark/document.svg"
+                    "light": "resources/light/document.svg",
+                    "dark": "resources/dark/document.svg"
                 }
             },
             {
