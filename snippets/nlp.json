@@ -1,4 +1,1282 @@
 {
+    "deaccent": {
+        "prefix": ["deaccent"],
+        "body": [
+            "deaccent(${1:str})"
+        ],
+        "description": "Convert string to replace accented characters."
+    },
+    "dejunk": {
+        "prefix": ["dejunk"],
+        "body": [
+            "dejunk(${1:str})"
+        ],
+        "description": "Convert string to replace all but simple ASCII chars. New in 2.6.0.3."
+    },
+    "flt": {
+        "prefix": ["flt"],
+        "body": [
+            "flt(${1:str})"
+        ],
+        "description": "Convert string or int to float, if possible."
+    },
+    "levenshtein": {
+        "prefix": ["levenshtein"],
+        "body": [
+            "levenshtein(${1:str1},${2:str2})"
+        ],
+        "description": "Levenshtein edit-distance between two strings. New in 2.0.2.9"
+    },
+    "num": {
+        "prefix": ["num"],
+        "body": [
+            "num(${1:str})"
+        ],
+        "description": "Convert string to number, if possible. (Also accepts num arg)."
+    },
+    "split": {
+        "prefix": ["split"],
+        "body": [
+            "split(${1:str},${2:char_str})"
+        ],
+        "description": "Split a string using the given char as separator."
+    },
+    "stem": {
+        "prefix": ["stem"],
+        "body": [
+            "stem(${1:str})"
+        ],
+        "description": "Compute stem of noun and verb. Return lowercase string."
+    },
+    "strchar": {
+        "prefix": ["strchar"],
+        "body": [
+            "strchar(${1:str},${2:num})"
+        ],
+        "description": "Index to numth char of string"
+    },
+    "strchr": {
+        "prefix": ["strchr"],
+        "body": [
+            "strchr(${1:str},${2:ch_str})"
+        ],
+        "description": "Find first occurrence of char in string. Return string headed by char."
+    },
+    "strchrcount": {
+        "prefix": ["strchrcount"],
+        "body": [
+            "strchrcount(${1:str},${2:ch_str})"
+        ],
+        "description": "Count the occurrences of a character in a string."
+    },
+    "strclean": {
+        "prefix": ["strclean"],
+        "body": [
+            "strclean(${1:str})"
+        ],
+        "description": "Remove leading, trailing, and repeat whitespace separators."
+    },
+    "strcontains": {
+        "prefix": ["strcontains"],
+        "body": [
+            "strcontains(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1is contained in str2."
+    },
+    "strcontainsnocase": {
+        "prefix": ["strcontainsnocase"],
+        "body": [
+            "strcontainsnocase(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 is contained in str2, ignoring letter case."
+    },
+    "strendswith": {
+        "prefix": ["strendswith"],
+        "body": [
+            "strendswith(${1:str},${2:suffix_str})"
+        ],
+        "description": "Does given str end with given suffix_str"
+    },
+    "strequal": {
+        "prefix": ["strequal"],
+        "body": [
+            "strequal(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 is identical to str2."
+    },
+    "strisalpha": {
+        "prefix": ["strisalpha"],
+        "body": [
+            "strisalpha(${1:str})"
+        ],
+        "description": "Check if str is all alphabetic chars."
+    },
+    "strisdigit": {
+        "prefix": ["strisdigit"],
+        "body": [
+            "strisdigit(${1:str})"
+        ],
+        "description": "Check if str is all numeric chars."
+    },
+    "strislower": {
+        "prefix": ["strislower"],
+        "body": [
+            "strislower(${1:str})"
+        ],
+        "description": "Check if first char of string is lowercase."
+    },
+    "strisupper": {
+        "prefix": ["strisupper"],
+        "body": [
+            "strisupper(${1:str})"
+        ],
+        "description": "Check if first char of string is uppercase."
+    },
+    "strnotequal": {
+        "prefix": ["strnotequal"],
+        "body": [
+            "strnotequal(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 differs from str2."
+    },
+    "strequalnocase": {
+        "prefix": ["strequalnocase"],
+        "body": [
+            "strequalnocase(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 is identical to str2, ignoring letter case."
+    },
+    "strnotequalnocase": {
+        "prefix": ["strnotequalnocase"],
+        "body": [
+            "strnotequalnocase(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 differs from str2, ignoring letter case."
+    },
+    "strlessthan": {
+        "prefix": ["strlessthan"],
+        "body": [
+            "strlessthan(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 is lexically before str2."
+    },
+    "strgreaterthan": {
+        "prefix": ["strgreaterthan"],
+        "body": [
+            "strgreaterthan(${1:str1},${2:str2})"
+        ],
+        "description": "Check if str1 is lexically after str2."
+    },
+    "strlength": {
+        "prefix": ["strlength"],
+        "body": [
+            "strlength(${1:str})"
+        ],
+        "description": "Return length of string."
+    },
+    "strpiece": {
+        "prefix": ["strpiece"],
+        "body": [
+            "strpiece(${1:str},${2:start_num},${3:end_num})"
+        ],
+        "description": "Fetch substring of string from start_num to end_num indexes. Zero-based"
+    },
+    "strrchr": {
+        "prefix": ["strrchr"],
+        "body": [
+            "strrchr(${1:str},${2:ch_str})"
+        ],
+        "description": "Find last occurrence of char in string. Return string headed by char"
+    },
+    "strsubst": {
+        "prefix": ["strsubst"],
+        "body": [
+            "strsubst(${1:str},${2:old_str},${3:new_str})"
+        ],
+        "description": "Replace substring old_str of a string str with new_str."
+    },
+    "strtolower": {
+        "prefix": ["strtolower"],
+        "body": [
+            "strtolower(${1:str})"
+        ],
+        "description": "Convert string to lowercase."
+    },
+    "strtotitle": {
+        "prefix": ["strtotitle"],
+        "body": [
+            "strtotitle(${1:str})"
+        ],
+        "description": "Convert string to title capitalization."
+    },
+    "strtoupper": {
+        "prefix": ["strtoupper"],
+        "body": [
+            "strtoupper(${1:str})"
+        ],
+        "description": "Convert string to uppercase."
+    },
+    "strtrim": {
+        "prefix": ["strtrim"],
+        "body": [
+            "strtrim(${1:str})"
+        ],
+        "description": "Remove leading and trailing whitespace from str."
+    },
+    "strwrap": {
+        "prefix": ["strwrap"],
+        "body": [
+            "strwrap(${1:str},${2:num})"
+        ],
+        "description": "Break string at specified length."
+    },
+    "str": {
+        "prefix": ["str"],
+        "body": [
+            "str(${1:num})"
+        ],
+        "description": "Convert numeric value to string. (Also accepts string arg)."
+    },
+    "strescape": {
+        "prefix": ["strescape"],
+        "body": [
+            "strescape(${1:str},${2:charsToEscapeStr},${3:escapeStr})"
+        ],
+        "description": "Escape characters in string."
+    },
+    "strunescape": {
+        "prefix": ["strunescape"],
+        "body": [
+            "strunescape(${1:str},${2:escapedCharsStr},${3:escapeStr})"
+        ],
+        "description": "Unescape characters in string."
+    },
+    "suffix": {
+        "prefix": ["suffix"],
+        "body": [
+            "suffix(${1:wordStr},${2:suffixStr})"
+        ],
+        "description": "True if suffixStr may be the suffix of wordStr."
+    },
+    "unpackdirs": {
+        "prefix": ["unpackdirs"],
+        "body": [
+            "unpackdirs(${1:dir_str})"
+        ],
+        "description": "Unpack directory names from a full directory path string."
+    },
+    "xmlstr": {
+        "prefix": ["xmlstr"],
+        "body": [
+            "xmlstr(${1:str})"
+        ],
+        "description": "Convert chars to appropriate chars for an XML/HTML file."
+    },
+    
+
+
+
+
+    "batchstart": {
+        "prefix": ["batchstart"],
+        "body": [
+            "batchstart()"
+        ],
+        "description": "Check if start of a batch analysis. True if current file is first in a batch run."
+    },
+    "debug": {
+        "prefix": ["debug"],
+        "body": [
+            "debug()"
+        ],
+        "description": "No op. Convenient breakpoint for debugging from C++ compiler."
+    },
+    "exitpass": {
+        "prefix": ["exitpass"],
+        "body": [
+            "exitpass()"
+        ],
+        "description": "Exit from the current pass file immediately, without performing rule matching (if any)."
+    },
+    "exittopopup": {
+        "prefix": ["exittopopup"],
+        "body": [
+            "exittopopup(${1:message_str},${2:type_str})"
+        ],
+        "description": "Exit from current pass, invoking a popup if within VisualText."
+    },
+    "fail": {
+        "prefix": ["fail"],
+        "body": [
+            "fail()"
+        ],
+        "description": "In CHECK Region, abort the rule that has just matched. Noop elsewhere. See succeed()."
+    },
+    "findana": {
+        "prefix": ["findana"],
+        "body": [
+            "findana()"
+        ],
+        "description": "See if named project is already resident in memory. (New in 1.6)"
+    },
+    "getpopupdata": {
+        "prefix": ["getpopupdata"],
+        "body": [
+            "getpopupdata()"
+        ],
+        "description": "Get the data typed in by a call to exittopopup()."
+    },
+    "hitconf": {
+        "prefix": ["hitconf"],
+        "body": [
+            "hitconf(${1:hits_num},${2:total_num},${3:fudge_num})"
+        ],
+        "description": "Calculate the keyword density. Fudge factor is typically 3 to 20."
+    },
+    "interactive": {
+        "prefix": ["interactive"],
+        "body": [
+            "interactive()"
+        ],
+        "description": "True if analyzer is being run in an interactive environment, e.g., inside VisualText."
+    },
+    "mkdir": {
+        "prefix": ["mkdir"],
+        "body": [
+            "mkdir(${1:dir_str})"
+        ],
+        "description": "Create a directory. Operating system-dependent."
+    },
+    "permuten": {
+        "prefix": ["permuten"],
+        "body": [
+            "permuten(${1:tot_num})"
+        ],
+        "description": "Permute integers 0 to (tot_num - 1) such that array element k will never be equal to k."
+    },
+    "succeed": {
+        "prefix": ["succeed"],
+        "body": [
+            "succeed()"
+        ],
+        "description": "In CHECK Region and CODE Region, succeed without executing further code. See fail()."
+    },
+    "system": {
+        "prefix": ["system"],
+        "body": [
+            "system(${1:str})"
+        ],
+        "description": "Execute str as operating system command."
+    },
+    "today": {
+        "prefix": ["today"],
+        "body": [
+            "today()"
+        ],
+        "description": "Format the current date and time as a string."
+    },
+    "cbuf": {
+        "prefix": ["cbuf"],
+        "body": [
+            "cbuf()"
+        ],
+        "description": "Output to buffer that user supplied for the current parse (standalone or embedded only)."
+    },
+    "cout": {
+        "prefix": ["cout"],
+        "body": [
+            "cout()"
+        ],
+        "description": "Output to standard output or user-supplied stream (the latter in standalone or embedded only)."
+    },
+    "coutreset": {
+        "prefix": ["coutreset"],
+        "body": [
+            "coutreset(${1:fileNameStr})"
+        ],
+        "description": "Bind cout() stream to the given filename."
+    },
+    "closefile": {
+        "prefix": ["closefile"],
+        "body": [
+            "closefile(${1:fileOstream})"
+        ],
+        "description": "Close the output file stream."
+    },
+    "inputrangetofile": {
+        "prefix": ["inputrangetofile"],
+        "body": [
+            "inputrangetofile(${1:start_n},${2:end_n},${3:out_ostr})"
+        ],
+        "description": "Print a range of chars from the input text to an output stream. (Listed with Parse Tree Functions)"
+    },
+    "LJ": {
+        "prefix": ["LJ"],
+        "body": [
+            "LJ(${1:num},${2:fieldsize_num})"
+        ],
+        "description": "Left-justify num in given field size."
+    },
+    "openfile": {
+        "prefix": ["openfile"],
+        "body": [
+            "openfile(${1:fileNameStr})"
+        ],
+        "description": "Open output file stream."
+    },
+    "percentstr": {
+        "prefix": ["percentstr"],
+        "body": [
+            "percentstr(${1:numerator_num},${2:denominator_num})"
+        ],
+        "description": "Format a percentage (right-justified in field of 3 chars)."
+    },
+    "rightjustifynum": {
+        "prefix": ["rightjustifynum"],
+        "body": [
+            "rightjustifynum(${1:num},${2:fieldsize_num})"
+        ],
+        "description": "Right-justify num in given field size."
+    },
+    "spellcandidates": {
+        "prefix": ["spellcandidates"],
+        "body": [
+            "spellcandidates(${1:word_str})"
+        ],
+        "description": "Make a list of space separated candidates for spell-correcting given word."
+    },
+    "spellcorrect": {
+        "prefix": ["spellcorrect"],
+        "body": [
+            "spellcorrect(${1:word_str})"
+        ],
+        "description": "Correct spelling of word. If word is not known, returns best spelling guess."
+    },
+    "spellword": {
+        "prefix": ["spellword"],
+        "body": [
+            "spellword(${1:word_str})"
+        ],
+        "description": "Check if word is a known English word."
+    },
+    "strspellcandidate": {
+        "prefix": ["strspellcandidate"],
+        "body": [
+            "strspellcandidate(${1:word_str},${2:list_str})"
+        ],
+        "description": "Select best spell-correct candidate for a word, given a list of space-separated candidates (as returned by spellcandidates, e.g.)"
+    },
+    "strspellcompare": {
+        "prefix": ["strspellcompare"],
+        "body": [
+            "strspellcompare(${1:str1},${2:str2})"
+        ],
+        "description": "Measure spelling \"distance\" between two given words. The smaller the number, the fewer the corrections to get from one to the other."
+    },
+    
+
+
+
+
+    "arraylength": {
+        "prefix": ["arraylength"],
+        "body": [
+            "arraylength(${1:VAR})"
+        ],
+        "description": "Count number of values in given variable or expr. (Like a call-by-reference)"
+    },
+    "eltnode": {
+        "prefix": ["eltnode"],
+        "body": [
+            "eltnode(${1:elt_num})"
+        ],
+        "description": "Fetch the first node that matched the nth element of a rule."
+    },
+    "group": {
+        "prefix": ["group"],
+        "body": [
+            "group(${1:start_n},${2:end_n},${3:name_str})"
+        ],
+        "description": "Perform a reduction in the @POST region. Replaces the old group action. (2.3.1.9 return the created node.)"
+    },
+    "inputrange": {
+        "prefix": ["inputrange"],
+        "body": [
+            "inputrange(${1:start_n},${2:end_n})"
+        ],
+        "description": "Return a substring of the input text as specified by start and end offsets."
+    },
+    "inputrange1": {
+        "prefix": ["inputrange"],
+        "body": [
+            "inputrange(${1:start_n},${2:end_n},${3:out_ostr})"
+        ],
+        "description": "Print a range of chars from the input text to an output stream."
+    },
+    "lasteltnode": {
+        "prefix": ["lasteltnode"],
+        "body": [
+            "lasteltnode(${1:elt_num})"
+        ],
+        "description": "Fetch the last node that matched the nth element of a rule."
+    },
+    "phrasetext": {
+        "prefix": ["phrasetext"],
+        "body": [
+            "phrasetext()"
+        ],
+        "description": "Fetch the text that matched the right hand side phrase of a rule. Analogous to $text."
+    },
+    "phraseraw": {
+        "prefix": ["phraseraw"],
+        "body": [
+            "phraseraw()"
+        ],
+        "description": "Fetch the raw text that matched the right hand side phrase of a rule. Analogous to $raw"
+    },
+    "pncopyvars": {
+        "prefix": ["pncopyvars"],
+        "body": [
+            "pncopyvars()"
+        ],
+        "description": "Copy a node's variables to the suggested node of a rule match. Must be called from the POST Region and can be considered a new-style NLP++ action."
+    },
+    "pncopyvars1": {
+        "prefix": ["pncopyvars"],
+        "body": [
+            "pncopyvars(${1:aPnode})"
+        ],
+        "description": "Copy a node's variables to the suggested node of a rule match. Must be called from the POST Region and can be considered a new-style NLP++ action."
+    },
+    "pncopyvars2": {
+        "prefix": ["pncopyvars"],
+        "body": [
+            "pncopyvars(${1:0})"
+        ],
+        "description": "Copy a node's variables to the suggested node of a rule match. Must be called from the POST Region and can be considered a new-style NLP++ action."
+    },
+    "pndeletechilds": {
+        "prefix": ["pndeletechilds"],
+        "body": [
+            "pndeletechilds(${1:pnode})"
+        ],
+        "description": "Delete children of given pnode."
+    },
+    "pninsert": {
+        "prefix": ["pninsert"],
+        "body": [
+            "pninsert(${1:name},${2:pnode},${3:after_n})"
+        ],
+        "description": "Insert nonliteral node with name into parse tree. If after_n == 1, insert after pnode, else if 0 then before pnode."
+    },
+    "pnmakevar": {
+        "prefix": ["pnmakevar"],
+        "body": [
+            "pnmakevar(${1:pnode},${2:var_str},${3:val})"
+        ],
+        "description": "Make a variable for a given pnode."
+    },
+    "pnname": {
+        "prefix": ["pnname"],
+        "body": [
+            "pnname(${1:pnode})"
+        ],
+        "description": "Fetch the name of a pnode."
+    },
+    "pnnext": {
+        "prefix": ["pnnext"],
+        "body": [
+            "pnnext(${1:pnode})"
+        ],
+        "description": "Fetch a pnode's right sibling, if any."
+    },
+    "pnprev": {
+        "prefix": ["pnprev"],
+        "body": [
+            "pnprev(${1:pnode})"
+        ],
+        "description": "Fetch a pnode's left sibling, if any."
+    },
+    "pnrename": {
+        "prefix": ["pnrename"],
+        "body": [
+            "pnrename(${1:pnode},${2:str})"
+        ],
+        "description": "Rename given pnode. Returns the interned name."
+    },
+    "pnreplaceval": {
+        "prefix": ["pnreplaceval"],
+        "body": [
+            "pnreplaceval()"
+        ],
+        "description": "Replace the value of pnode's variable."
+    },
+    "pnroot": {
+        "prefix": ["pnroot"],
+        "body": [
+            "pnroot()"
+        ],
+        "description": "Fetch the root of a parse tree."
+    },
+    "pndown": {
+        "prefix": ["pndown"],
+        "body": [
+            "pndown(${1:pnode})"
+        ],
+        "description": "Fetch the child of a parse tree node."
+    },
+    "pnsingletdown": {
+        "prefix": ["pnsingletdown"],
+        "body": [
+            "pnsingletdown(${1:pnode})"
+        ],
+        "description": "Fetch the child of a parse tree node, obeying rules about going down a \"singlet chain.\" I.e., get child only if no branching and if not going past node with BASE flag set."
+    },
+    "pnup": {
+        "prefix": ["pnup"],
+        "body": [
+            "pnup(${1:pnode})"
+        ],
+        "description": "Fetch a pnode's parent, if any. Only leftmost pnode in a list has a parent."
+    },
+    "pnvar": {
+        "prefix": ["pnvar"],
+        "body": [
+            "pnvar(${1:pnode},${2:var_str})"
+        ],
+        "description": "Fetch a pnode's variable value(s)."
+    },
+    "pnvarnames": {
+        "prefix": ["pnvarnames"],
+        "body": [
+            "pnvarnames(${1:pnode})"
+        ],
+        "description": "Fetch a node's variable names as an array."
+    },
+    "varinlist": {
+        "prefix": ["varinlist"],
+        "body": [
+            "varinlist(${1:var_str},${2:elt_num})"
+        ],
+        "description": "Find var_str variable's value(s) in any pnode that matched elt_numth element"
+    },
+    
+
+
+
+ 
+    "kbdumptree": {
+        "prefix": ["kbdumptree"],
+        "body": [
+            "kbdumptree(${1:root_con},${2:file_str})"
+        ],
+        "description": "Create a dump file of knowledge base concept."
+    },
+    "take": {
+        "prefix": ["take"],
+        "body": [
+            "take(${1:file_str})"
+        ],
+        "description": "Execute commands in a knowledge base command file (.KB file)"
+    },
+    "findroot": {
+        "prefix": ["findroot"],
+        "body": [
+            "findroot()"
+        ],
+        "description": "Find the root concept of the knowledge base (named concept)."
+    },
+    "findconcept": {
+        "prefix": ["findconcept"],
+        "body": [
+            "findconcept(${1:con},${2:str})"
+        ],
+        "description": "Find and return the concept with name str under the parent concept con."
+    },
+    "findconcept1": {
+        "prefix": ["findconcept"],
+        "body": [
+            "findconcept(${1:con},${2:num})"
+        ],
+        "description": "Find concept number num under the parent concept con."
+    },
+    "findattr": {
+        "prefix": ["findattr"],
+        "body": [
+            "findattr(${1:con},${2:str})"
+        ],
+        "description": "Fetch attribute named str belonging to concept con."
+    },
+    "findattrs": {
+        "prefix": ["findattrs"],
+        "body": [
+            "findattrs(${1:con})"
+        ],
+        "description": "Fetch concept's list of attributes."
+    },
+    "attrname": {
+        "prefix": ["attrname"],
+        "body": [
+            "attrname(${1:attr})"
+        ],
+        "description": "Fetch attribute's name."
+    },
+    "attrvals": {
+        "prefix": ["attrvals"],
+        "body": [
+            "attrvals(${1:attr})"
+        ],
+        "description": "Fetch attribute's list of values."
+    },
+    "findvals": {
+        "prefix": ["findvals"],
+        "body": [
+            "findvals(${1:con},${2:name})"
+        ],
+        "description": "Fetch list of values for a concept's attribute."
+    },
+    "numval": {
+        "prefix": ["numval"],
+        "body": [
+            "numval(${1:con},${2:name})"
+        ],
+        "description": "Fetch numeric-value of attribute (must be first)."
+    },
+    "fltval": {
+        "prefix": ["fltval"],
+        "body": [
+            "fltval(${1:con},${2:name})"
+        ],
+        "description": "Fetch float value of attribute (must be first)."
+    },
+    "strval": {
+        "prefix": ["strval"],
+        "body": [
+            "strval(${1:con},${2:name})"
+        ],
+        "description": "Fetch string-value of attribute (must be first)."
+    },
+    "conval": {
+        "prefix": ["conval"],
+        "body": [
+            "conval(${1:con},${2:name})"
+        ],
+        "description": "Fetch concept-value of attribute (must be first)."
+    },
+    "attrwithval": {
+        "prefix": ["attrwithval"],
+        "body": [
+            "attrwithval(${1:con},${2:attr_str},${3:val_str})"
+        ],
+        "description": "Check if concept's attribute has given value (multiple-value aware). Note that second two arguments must be STR."
+    },
+    "inheritval": {
+        "prefix": ["inheritval"],
+        "body": [
+            "inheritval(${1:con},${2:name},${3:topCon})"
+        ],
+        "description": "Find string attribute's value up the hierarchy. con is the current concept, topCon is the root to be searched up to, and name is the name of the attribute. If hier==0, goes to root of KB."
+    },
+    "conceptname": {
+        "prefix": ["conceptname"],
+        "body": [
+            "conceptname(${1:con})"
+        ],
+        "description": "Fetch name of given concept."
+    },
+    "conceptpath": {
+        "prefix": ["conceptpath"],
+        "body": [
+            "conceptpath(${1:con})"
+        ],
+        "description": "Fetch entire path of given concept as a string."
+    },
+    "pathconcept": {
+        "prefix": ["pathconcept"],
+        "body": [
+            "pathconcept(${1:str})"
+        ],
+        "description": "Fetch concept, given the path str."
+    },
+    "wordpath": {
+        "prefix": ["wordpath"],
+        "body": [
+            "wordpath(${1:str})"
+        ],
+        "description": "Get entire path of dictionary concept for the given string."
+    },
+    "findwordpath": {
+        "prefix": ["findwordpath"],
+        "body": [
+            "findwordpath(${1:str})"
+        ],
+        "description": "Find entire path of dictionary concept for the given string. (If not present, don't add the word.)"
+    },
+    "wordindex": {
+        "prefix": ["wordindex"],
+        "body": [
+            "wordindex(${1:str})"
+        ],
+        "description": "Fetch index entry for dictionary concept. Gets index concept that str would be added under."
+    },
+    "findhierconcept": {
+        "prefix": ["findhierconcept"],
+        "body": [
+            "findhierconcept(${1:name},${2:hier})"
+        ],
+        "description": "Find a concept in the subhierarchy of a given concept. e.g.: G(\"returnedConcept\") = findhierconcept(\"child\",G(\"ancestor\")); finds the concept named \"child\" anywhere under the concept pointed to by G(\"ancestor\")."
+    },
+    "dictfindword": {
+        "prefix": ["dictfindword"],
+        "body": [
+            "dictfindword(${1:str})"
+        ],
+        "description": "Find dictionary concept in dictionary hierarchy of KB."
+    },
+    "dictfirst": {
+        "prefix": ["dictfirst"],
+        "body": [
+            "dictfirst()"
+        ],
+        "description": "Fetch the first word-concept in the KB dictionary hierarchy. (New in 1.6)"
+    },
+    "dictnext": {
+        "prefix": ["dictnext"],
+        "body": [
+            "dictnext(${1:con})"
+        ],
+        "description": "Fetch the word following the given word in the KB dictionary hierarchy. (New in 1.6)"
+    },
+    "attrexists": {
+        "prefix": ["attrexists"],
+        "body": [
+            "attrexists(${1:hier},${2:attr_s},${3:val_s})"
+        ],
+        "description": "Find attribute and value pair in the subhierarchy of a concept."
+    },
+    "attrchange": {
+        "prefix": ["attrchange"],
+        "body": [
+            "attrchange(${1:hier},${2:attr_s},${3:val_s},${4:new_s})"
+        ],
+        "description": "Replace all matching attribute-value pairs in the given hierarchy to have the new string value, new_s."
+    },
+    "down": {
+        "prefix": ["down"],
+        "body": [
+            "down(${1:con})"
+        ],
+        "description": "Fetch the first child of given concept."
+    },
+    "up": {
+        "prefix": ["up"],
+        "body": [
+            "up(${1:con})"
+        ],
+        "description": "Fetch the parent of the given concept."
+    },
+    "prev": {
+        "prefix": ["prev"],
+        "body": [
+            "prev(${1:con})"
+        ],
+        "description": "Fetch the left or previous sibling of concept."
+    },
+    "next": {
+        "prefix": ["next"],
+        "body": [
+            "next(${1:con})"
+        ],
+        "description": "Fetch the right or next sibling of concept."
+    },
+    "nextattr": {
+        "prefix": ["nextattr"],
+        "body": [
+            "nextattr(${1:attr})"
+        ],
+        "description": "Fetch the next attribute in a list of attributes"
+    },
+    "nextval": {
+        "prefix": ["nextval"],
+        "body": [
+            "nextval(${1:val})"
+        ],
+        "description": "Fetch the next value in a list of values."
+    },
+    "getsval": {
+        "prefix": ["getsval"],
+        "body": [
+            "getsval(${1:val})"
+        ],
+        "description": "Fetch value as a string from a numeric or string-valued KB value object."
+    },
+    "getstrval": {
+        "prefix": ["getstrval"],
+        "body": [
+            "getstrval(${1:val})"
+        ],
+        "description": "Fetch the string value from a KB value object."
+    },
+    "getnumval": {
+        "prefix": ["getnumval"],
+        "body": [
+            "getnumval(${1:val})"
+        ],
+        "description": "Fetch number from numeric VAL."
+    },
+    "getconval": {
+        "prefix": ["getconval"],
+        "body": [
+            "getconval(${1:val})"
+        ],
+        "description": "Fetch concept from value."
+    },
+    "makeconcept": {
+        "prefix": ["makeconcept"],
+        "body": [
+            "makeconcept(${1:parent},${2:name [},${3:num]})"
+        ],
+        "description": "Make concept under given parent concept. Optionally as the numth child of the parent. num==0 or absent places concept at end of list of children. name is the name of new concept."
+    },
+    "addattr": {
+        "prefix": ["addattr"],
+        "body": [
+            "addattr(${1:con},${2:attr_s})"
+        ],
+        "description": "Add an attribute with no value to given concept."
+    },
+    "addsval": {
+        "prefix": ["addsval"],
+        "body": [
+            "addsval(${1:con},${2:name},${3:num})"
+        ],
+        "description": "Add numeric value num as a string to concept con's attribute called name."
+    },
+    "addstrval": {
+        "prefix": ["addstrval"],
+        "body": [
+            "addstrval(${1:con},${2:name},${3:str})"
+        ],
+        "description": "Add str as string value to concept con's attribute called name."
+    },
+    "addnumval": {
+        "prefix": ["addnumval"],
+        "body": [
+            "addnumval(${1:con},${2:name},${3:num})"
+        ],
+        "description": "Add num as numeric value to concept con's attribute called name."
+    },
+    "addconval": {
+        "prefix": ["addconval"],
+        "body": [
+            "addconval(${1:con},${2:name},${3:con_val})"
+        ],
+        "description": "Add concept value con_val to concept's name attribute."
+    },
+    "getconcept": {
+        "prefix": ["getconcept"],
+        "body": [
+            "getconcept(${1:parent},${2:name})"
+        ],
+        "description": "Get or make named concept under parent."
+    },
+    "addword": {
+        "prefix": ["addword"],
+        "body": [
+            "addword(${1:str})"
+        ],
+        "description": "Add dictionary concept to the dictionary within the KB, if not present. In either case, fetch the dictionary concept for the word."
+    },
+    "dictgetword": {
+        "prefix": ["dictgetword"],
+        "body": [
+            "dictgetword(${1:str})"
+        ],
+        "description": "Same as addword; more principled function name."
+    },
+    "sortconsbyattr": {
+        "prefix": ["sortconsbyattr"],
+        "body": [
+            "sortconsbyattr(${1:arr_c},${2:attr_s},${3:numeric_b},${4:descending_b})"
+        ],
+        "description": "Given an array (multi-valued variable) of KB concepts, sort the concepts by the given attribute. numeric_b = 1 if num, 0 if string type attribute. descending_b = 1 if descending order, 0 if ascending. E.g., G(\"sorted\") = sortconsbyattr(G(\"cons\"),\"count\",1,0); will sort an array of KB concepts by their \"count\" attribute in ascending order, assigning a new sorted array to G(\"sorted\"). The given array in G(\"cons\") is left unaltered. New in 1.6"
+    },
+    "rmconcept": {
+        "prefix": ["rmconcept"],
+        "body": [
+            "rmconcept(${1:con})"
+        ],
+        "description": "Remove concept con from Knowledge Base. Removes entire subhierarchy."
+    },
+    "rmchild": {
+        "prefix": ["rmchild"],
+        "body": [
+            "rmchild(${1:con},${2:str})"
+        ],
+        "description": "Remove child named str from parent concept con."
+    },
+    "rmchild1": {
+        "prefix": ["rmchild"],
+        "body": [
+            "rmchild(${1:con},${2:num})"
+        ],
+        "description": "Remove number num child of parent concept con."
+    },
+    "rmvals": {
+        "prefix": ["rmvals"],
+        "body": [
+            "rmvals(${1:con},${2:str})"
+        ],
+        "description": "Remove attributes and values of concept con's attribute named str."
+    },
+    "rmval": {
+        "prefix": ["rmval"],
+        "body": [
+            "rmval(${1:attr},${2:val})"
+        ],
+        "description": "Remove value val from attribute attr."
+    },
+    "rmattrval": {
+        "prefix": ["rmattrval"],
+        "body": [
+            "rmattrval(${1:con},${2:str1},${3:str2})"
+        ],
+        "description": "Remove value named str2 from attribute named str1 under concept con. Also removes the attribute."
+    },
+    "rmattrs": {
+        "prefix": ["rmattrs"],
+        "body": [
+            "rmattrs(${1:con})"
+        ],
+        "description": "Remove concept's attributes (except for system internal ones)."
+    },
+    "rmattr": {
+        "prefix": ["rmattr"],
+        "body": [
+            "rmattr(${1:con},${2:name})"
+        ],
+        "description": "Remove concept's named attr and values."
+    },
+    "rmchildren": {
+        "prefix": ["rmchildren"],
+        "body": [
+            "rmchildren(${1:con})"
+        ],
+        "description": "Remove concept's children and phrase."
+    },
+    "rmword": {
+        "prefix": ["rmword"],
+        "body": [
+            "rmword(${1:str})"
+        ],
+        "description": "Remove dictionary concept from KB."
+    },
+    "prunephrases": {
+        "prefix": ["prunephrases"],
+        "body": [
+            "prunephrases(${1:hier})"
+        ],
+        "description": "Remove all phrases from given subhierarchy."
+    },
+    "replaceval": {
+        "prefix": ["replaceval"],
+        "body": [
+            "replaceval(${1:con},${2:name},${3:str})"
+        ],
+        "description": "Replace named attribute's value(s) with str."
+    },
+    "replaceval1": {
+        "prefix": ["replaceval"],
+        "body": [
+            "replaceval(${1:con},${2:name},${3:num})"
+        ],
+        "description": "Replace named attribute's value(s) with num."
+    },
+    "replaceval2": {
+        "prefix": ["replaceval"],
+        "body": [
+            "replaceval(${1:con},${2:name},${3:con_val})"
+        ],
+        "description": "Replace named attribute's value(s) with concept con_val"
+    },
+    "renameconcept": {
+        "prefix": ["renameconcept"],
+        "body": [
+            "renameconcept(${1:con},${2:name})"
+        ],
+        "description": "Rename given concept to name."
+    },
+    "renamechild": {
+        "prefix": ["renamechild"],
+        "body": [
+            "renamechild(${1:con},${2:num},${3:name})"
+        ],
+        "description": "Rename con's numth child concept to name."
+    },
+    "renameattr": {
+        "prefix": ["renameattr"],
+        "body": [
+            "renameattr(${1:con},${2:name},${3:new})"
+        ],
+        "description": "Rename con's named attribute to new."
+    },
+    "movecleft": {
+        "prefix": ["movecleft"],
+        "body": [
+            "movecleft(${1:con})"
+        ],
+        "description": "Move concept before previous sibling. (Moves concept to the left in its list.)"
+    },
+    "movecright": {
+        "prefix": ["movecright"],
+        "body": [
+            "movecright(${1:con})"
+        ],
+        "description": "Move concept after next sibling. (Moves concept to the right in its list.)"
+    },
+    "sortchilds": {
+        "prefix": ["sortchilds"],
+        "body": [
+            "sortchilds(${1:con})"
+        ],
+        "description": "Sort concept's immediate children alphabetically."
+    },
+    "sorthier": {
+        "prefix": ["sorthier"],
+        "body": [
+            "sorthier(${1:con})"
+        ],
+        "description": "Sort concept's subhierarchy alphabetically."
+    },
+    "findphrase": {
+        "prefix": ["findphrase"],
+        "body": [
+            "findphrase(${1:con})"
+        ],
+        "description": "Fetch concept's phrase."
+    },
+    "sortphrase": {
+        "prefix": ["sortphrase"],
+        "body": [
+            "sortphrase(${1:con})"
+        ],
+        "description": "Sort concept's phrase nodes alphabetically."
+    },
+    "phraselength": {
+        "prefix": ["phraselength"],
+        "body": [
+            "phraselength(${1:con})"
+        ],
+        "description": "Get number of nodes in concept's phrase."
+    },
+    "nodeconcept": {
+        "prefix": ["nodeconcept"],
+        "body": [
+            "nodeconcept(${1:node})"
+        ],
+        "description": "Fetch the concept that node is a proxy for. (Changed in 1.6)"
+    },
+    "nodeowner": {
+        "prefix": ["nodeowner"],
+        "body": [
+            "nodeowner(${1:node})"
+        ],
+        "description": "Fetch the concept that owns the node's phrase. (NEW in 1.6)"
+    },
+    "findnode": {
+        "prefix": ["findnode"],
+        "body": [
+            "findnode(${1:phrase},${2:name})"
+        ],
+        "description": "Find first named node in phrase."
+    },
+    "findnode1": {
+        "prefix": ["findnode"],
+        "body": [
+            "findnode(${1:phrase},${2:num})"
+        ],
+        "description": "Find the numth node in phrase."
+    },
+    "listnode": {
+        "prefix": ["listnode"],
+        "body": [
+            "listnode(${1:node})"
+        ],
+        "description": "Fetch the first node in given node's list."
+    },
+    "firstnode": {
+        "prefix": ["firstnode"],
+        "body": [
+            "firstnode(${1:phrase})"
+        ],
+        "description": "Fetch the first node in phrase."
+    },
+    "lastnode": {
+        "prefix": ["lastnode"],
+        "body": [
+            "lastnode(${1:phrase})"
+        ],
+        "description": "Fetch the last node in phrase."
+    },
+    "makephrase": {
+        "prefix": ["makephrase"],
+        "body": [
+            "makephrase(${1:con},${2:name})"
+        ],
+        "description": "Make a phrase in con by creating named node."
+    },
+    "addcnode": {
+        "prefix": ["addcnode"],
+        "body": [
+            "addcnode(${1:con},${2:name})"
+        ],
+        "description": "Add named node at end of con's phrase."
+    },
+    "addnode": {
+        "prefix": ["addnode"],
+        "body": [
+            "addnode(${1:phrase},${2:name},${3:num})"
+        ],
+        "description": "Add named node as numth in phrase."
+    },
+    "rmnode": {
+        "prefix": ["rmnode"],
+        "body": [
+            "rmnode(${1:con})"
+        ],
+        "description": "Remove node from concept's phrase."
+    },
+    "rmphrase": {
+        "prefix": ["rmphrase"],
+        "body": [
+            "rmphrase(${1:phrase})"
+        ],
+        "description": "Remove phrase from its concept."
+    },
+    "rmcphrase": {
+        "prefix": ["rmcphrase"],
+        "body": [
+            "rmcphrase(${1:con})"
+        ],
+        "description": "Remove a concept's phrase."
+    },
+    "renamenode": {
+        "prefix": ["renamenode"],
+        "body": [
+            "renamenode(${1:phrase},${2:name},${3:new})"
+        ],
+        "description": "Rename phrase's named node to new."
+    },
+    "renamenode1": {
+        "prefix": ["renamenode"],
+        "body": [
+            "renamenode(${1:phrase},${2:num},${3:new})"
+        ],
+        "description": "Rename phrase's numth node to new."
+    },
+    
+
+      
     "header": {
         "prefix": ["header comment"],
         "body": [
@@ -28,7 +1306,7 @@
     "rule": {
         "prefix": ["rule 3 POST"],
         "body": [
-            "@POST",
+            "POST",
             "single();",
             "@RULES",
             "_xNIL <-\t",
