@@ -40,7 +40,7 @@ export class NLPFile extends TextFile {
 			console.log('stdout: ' + stdout);
 			console.log('stderr: ' + stderr);
 			if (err) {
-				console.log('error: ' + err);
+				logView.loadMakeAna();
 				vscode.commands.executeCommand('outputView.refreshAll');
 				vscode.commands.executeCommand('logView.refreshAll');
 				return false;

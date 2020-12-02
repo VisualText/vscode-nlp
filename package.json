@@ -554,7 +554,7 @@
             },
             {
                 "command": "logView.clear",
-                "title": "Timings",
+                "title": "Clear",
                 "icon": {
                     "light": "fileicons/images/light/close.svg",
                     "dark": "fileicons/images/dark/close.svg"
@@ -562,7 +562,7 @@
             },
             {
                 "command": "logView.makeAna",
-                "title": "Timings",
+                "title": "Analyzer Log Output",
                 "icon": {
                     "light": "fileicons/images/light/gear.svg",
                     "dark": "fileicons/images/dark/gear.svg"
