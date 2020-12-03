@@ -5,6 +5,7 @@ import { SequenceItem } from './sequenceView';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
+import { LogFile } from './logfile';
 
 export enum moveDirection { UP, DOWN }
 
@@ -527,6 +528,8 @@ export class SequenceFile extends TextFile {
 		this.copyItem(hold,itemOne);
 		this.copyItem(itemOne,itemTwo);	
 		this.copyItem(itemTwo,hold);
+		this.swapAuxFiles(itemOne,itemTwo,nlpFileType.TXXT);
+		this.swapAuxFiles(itemOne,itemTwo,nlpFileType.KB);
 	}
 
 	copyItem(toItem: PassItem, fromItem: PassItem) {
@@ -538,6 +541,26 @@ export class SequenceFile extends TextFile {
 		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
+	}
+
+	swapAuxFiles(itemOne: PassItem, itemTwo: PassItem, type: nlpFileType) {
+		var logFile = new LogFile();
+		var oneFile = logFile.anaFile(itemOne.passNum,type).path;
+		var swapFile = oneFile + ".swap";
+		var twoFile = logFile.anaFile(itemTwo.passNum,type).path;
+		var oneExists = fs.existsSync(oneFile);
+		var twoExists = fs.existsSync(twoFile);
+
+		if (oneExists && twoExists) {
+			fs.copyFileSync(oneFile,swapFile);
+			fs.copyFileSync(twoFile,oneFile);
+			fs.copyFileSync(swapFile,twoFile);
+			dirfuncs.delFile(swapFile);				
+		} else if (oneExists) {
+			dirfuncs.renameFile(oneFile,twoFile);
+		} else if (twoExists) {
+			dirfuncs.renameFile(twoFile,oneFile);
+		}
 	}
 
 	findPass(type: string, name: string): PassItem {
