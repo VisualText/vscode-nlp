@@ -30,6 +30,7 @@ export class VisualText {
                 if (visualText.workspaceFold) {
                     visualText.readState();
                     visualText.getAnalyzers();
+                    visualText.initSettings();
                 }
             }
         }
@@ -43,22 +44,28 @@ export class VisualText {
                 var saveit = false;
                 var parse = this.jsonState.json.visualText[0];
                 var currAnalyzer = parse.currentAnalyzer;
+
                 if (currAnalyzer.length == 0) {
                     var analyzers = dirfuncs.getDirectories(this.workspaceFold.uri);
                     currAnalyzer = analyzers[0].path;
                     saveit = true;
                 }
+
                 if (currAnalyzer) {
                     if (fs.existsSync(currAnalyzer))
                         this.currentAnalyzer = vscode.Uri.file(currAnalyzer);
                     else
                         this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,currAnalyzer));
-                    if (parse.engineDir.length > 1) {
-                        this.engineDir = vscode.Uri.file(path.join(parse.engineDir));
-                    } else {
-                        this.findEngine();
-                        saveit = true;
+
+                    if (parse.engineDir) {
+                        if (parse.engineDir.length > 1) {
+                            this.engineDir = vscode.Uri.file(path.join(parse.engineDir));
+                        } else {
+                            this.findEngine();
+                            saveit = true;
+                        }                        
                     }
+
                     if (saveit)
                         this.saveCurrentAnalyzer(this.analyzerDir);
                     this.loadAnalyzer(this.currentAnalyzer);
@@ -75,12 +82,25 @@ export class VisualText {
         var fromDir = this.getVisualTextDirectory('.vscode');
         if (fs.existsSync(fromDir)) {
             var toDir = path.join(this.analyzerDir.path,'.vscode');
-            if (!dirfuncs.copyDirectory(fromDir,toDir)) {
-                vscode.window.showWarningMessage('Copy settings file failed');
-                return false;
-            }            
+            if (!fs.existsSync(toDir)) {
+                if (!dirfuncs.copyDirectory(fromDir,toDir)) {
+                    vscode.window.showWarningMessage('Copy settings file failed');
+                    return false;
+                }
+                return true;           
+            }
+            this.ensureExists('settings.json',toDir,fromDir);
+            this.ensureExists('state.json',toDir,fromDir);
         }
         return false;
+    }
+
+    ensureExists(fileName: string, toDir: string, fromDir: string) {
+        var toFile = path.join(toDir,fileName);
+        if (!fs.existsSync(toFile)) {
+            var fromFile = path.join(fromDir,fileName);
+           fs.copyFileSync(fromFile,toFile);
+        }   
     }
 
     findEngine() {

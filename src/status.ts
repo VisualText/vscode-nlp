@@ -23,7 +23,7 @@ export class NLPStatusBar {
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
         this.devMode = DevMode.DEV;
-        this.firedMode = FiredMode.BUILT;
+        this.firedMode = FiredMode.FIRED;
 
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
         nlpStatusBarRun.text = `$(run)`;
