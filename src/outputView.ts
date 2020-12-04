@@ -92,10 +92,11 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
 		vscode.commands.registerCommand('outputView.addKB', () => outputViewProvider.addKB());
 
-		vscode.commands.registerCommand('outputView.deleteOutput', resource => this.deleteOutput(resource));
-		vscode.commands.registerCommand('outputView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
+		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
 		this.type = outputFileType.TXT;
@@ -191,6 +192,12 @@ export class OutputView {
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				if (!dirfuncs.delFile(resource.uri.path)) {
+					vscode.window.showWarningMessage('Could not delete file: '+resource.uri.path);
+				} else
+					vscode.commands.executeCommand('outputView.refreshAll');
 			});
 		}
 	}

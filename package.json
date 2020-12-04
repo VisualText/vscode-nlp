@@ -514,6 +514,14 @@
                 }
             },
             {
+                "command": "outputView.deleteOutput",
+                "title": "DeleteFile",
+                "icon": {
+                    "light": "fileicons/images/light/close.svg",
+                    "dark": "fileicons/images/dark/close.svg"
+                }
+            },
+            {
                 "command": "outputView.refreshAll",
                 "title": "Refresh",
                 "icon": {
@@ -959,6 +967,11 @@
                 {
                     "command": "analyzerView.deleteAnalyzer",
                     "when": "view == analyzerView",
+                    "group": "inline"
+                },
+                {
+                    "command": "outputView.deleteOutput",
+                    "when": "view == outputView",
                     "group": "inline"
                 }
             ]
