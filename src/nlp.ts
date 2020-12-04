@@ -22,12 +22,14 @@ export class NLPFile extends TextFile {
 		dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().path);
 		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().path);
 
+		const filestr = filepath.path;
+		
 		logView.clearLogs();
-		logView.addMessage('Analyzing...');
+		logView.addMessage('Analyzing...',vscode.Uri.file(filestr));
 		vscode.commands.executeCommand('logView.refreshAll');
 		outputView.setType(outputFileType.TXT);
 
-		const filestr = filepath.path;
+
 		var pos = filestr.search('/input/');
 		var anapath = filestr.substr(0,pos);
 		var engineDir = visualText.getEngineDirectory().path;
@@ -45,7 +47,7 @@ export class NLPFile extends TextFile {
 				vscode.commands.executeCommand('logView.refreshAll');
 				return false;
 			} else {
-				logView.addMessage('Done');
+				logView.addMessage('Done',vscode.Uri.file(filestr));
 				logView.addLogFile(visualText.analyzer.logFile('make_ana'));
 				visualText.analyzer.saveCurrentFile(filepath);
 				vscode.commands.executeCommand('textView.refreshAll');

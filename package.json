@@ -137,6 +137,18 @@
                     "kb"
                 ],
                 "configuration": "./kb-configuration.json"
+            },
+            {
+                "id": "kbb",
+                "extensions": [
+                    ".kbb"
+                ],
+                "aliases": [
+                    "KBB",
+                    "Kbb",
+                    "kbb"
+                ],
+                "configuration": "./kbb-configuration.json"
             }
         ],
         "grammars": [
@@ -164,6 +176,11 @@
                 "language": "kb",
                 "scopeName": "source.kb",
                 "path": "./syntaxes/kb.tmLanguage.json"
+            },
+            {
+                "language": "kbb",
+                "scopeName": "source.kbb",
+                "path": "./syntaxes/kbb.tmLanguage.json"
             }
         ],
         "snippets": [
@@ -494,6 +511,14 @@
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "outputView.deleteOutput",
+                "title": "DeleteFile",
+                "icon": {
+                    "light": "fileicons/images/light/close.svg",
+                    "dark": "fileicons/images/dark/close.svg"
                 }
             },
             {
@@ -942,6 +967,11 @@
                 {
                     "command": "analyzerView.deleteAnalyzer",
                     "when": "view == analyzerView",
+                    "group": "inline"
+                },
+                {
+                    "command": "outputView.deleteOutput",
+                    "when": "view == outputView",
                     "group": "inline"
                 }
             ]

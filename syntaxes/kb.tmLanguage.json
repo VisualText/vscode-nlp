@@ -3,8 +3,20 @@
     "fileTypes": [
         "kb"
     ],
-    "name": "KB",
+    "name": "kb",
     "patterns": [
+        {
+            "name": "variable.parameter.nlp",
+            "match": "\\b(?i:(add|ind))\\b"
+        },
+        {
+            "name": "keyword.other.kb",
+            "match": "\\b(?i:(heir|attr|end|pst))\\b"
+        },
+        {
+            "name": "variable.parameter.kb",
+            "match": "\"(concept)\""
+        },
         {
             "include": "#expression"
         }
@@ -14,43 +26,6 @@
             "name": "meta.expression.kb",
             "patterns": [
                 {
-                    "include": "#top-concept"
-                },
-                {
-                    "include": "#concept-name1"
-                },
-                {
-                    "include": "#concept-name2"
-                },
-                {
-                    "include": "#attribute-name"
-                },
-                {
-                    "include": "#attributes"
-                }                
-            ]
-        },
-        "top-concept": {
-            "match": "^([a-zA-Z0-9]+)$",
-            "name": "keyword.other.kb"
-        },
-        "concept-name1": {
-            "name": "variable.parameter.nlp",
-            "match": "^\\s\\s[a-zA-Z0-9][^:^\\[]+:"
-        },
-        "concept-name2": {
-            "name": "keyword.node.tree",
-            "match": "^\\s\\s\\s\\s[a-zA-Z0-9][^:^\\[]+:"
-        },
-        "attribute-name": {
-            "name": "constant.numeric.tree",
-            "match": "\\b[a-zA-Z0-9]+="
-        },
-        "attributes": {
-            "begin": "\\[",
-            "end": "\\]",
-            "patterns": [
-                {
                     "include": "#number"
                 },
                 {
@@ -58,9 +33,8 @@
                 },
                 {
                     "include": "#comment"
-                }
-            ],
-            "name": "meta.attribute.kb"
+                }              
+            ]
         },
         "comment": {
             "match": "\\*.*$\\n?",

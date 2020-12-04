@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
+import { logView } from './logView';
 import { dirfuncs } from './dirfuncs';
 
 export enum outputFileType { TXT, KB }
@@ -68,7 +69,9 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 				var dir = visualText.analyzer.getAnalyzerDirectory('kb').path;
 				var newPath = path.join(dir,filename);
 				fs.copyFileSync(oldPath,newPath);
-				outputView.setType(outputFileType.KB);		
+				outputView.setType(outputFileType.KB);
+				logView.addMessage('KB File copied: '+filename,vscode.Uri.file(oldPath));
+				vscode.commands.executeCommand('logView.refreshAll');	
 				this.refresh();
 			});	
 		}
@@ -89,10 +92,11 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
 		vscode.commands.registerCommand('outputView.addKB', () => outputViewProvider.addKB());
 
-		vscode.commands.registerCommand('outputView.deleteOutput', resource => this.deleteOutput(resource));
-		vscode.commands.registerCommand('outputView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
+		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
 		this.type = outputFileType.TXT;
@@ -122,7 +126,7 @@ export class OutputView {
 	}
 
 	public clearOutput(type: outputFileType) {
-		this.type =type;
+		this.type = type;
 		this.outputFiles = [];
 		vscode.commands.executeCommand('outputView.refreshAll');
 	}
@@ -155,7 +159,7 @@ export class OutputView {
 		if (visualText.analyzer.hasText()) {
 			if (this.type == outputFileType.KB) {
 				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb'],true);
-				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kb'],true);
+				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb'],true);
 				this.outputFiles = this.outputFiles.concat(kbFiles);
 			} else {
 				var textPath = visualText.analyzer.getTextPath().path;
@@ -188,6 +192,12 @@ export class OutputView {
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				if (!dirfuncs.delFile(resource.uri.path)) {
+					vscode.window.showWarningMessage('Could not delete file: '+resource.uri.path);
+				} else
+					vscode.commands.executeCommand('outputView.refreshAll');
 			});
 		}
 	}
