@@ -529,7 +529,7 @@ export class SequenceFile extends TextFile {
 		this.copyItem(itemOne,itemTwo);	
 		this.copyItem(itemTwo,hold);
 		this.swapAuxFiles(itemOne,itemTwo,nlpFileType.TXXT);
-		this.swapAuxFiles(itemOne,itemTwo,nlpFileType.KB);
+		this.swapAuxFiles(itemOne,itemTwo,nlpFileType.KBB);
 	}
 
 	copyItem(toItem: PassItem, fromItem: PassItem) {

@@ -59,7 +59,7 @@ export class LogView {
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
 		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
 		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('logView.addMessage', (message) => this.addMessage(message));
+		vscode.commands.registerCommand('logView.addMessage', (message,uri) => this.addMessage(message,uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
@@ -96,8 +96,8 @@ export class LogView {
 		vscode.commands.executeCommand('logView.refreshAll');
 	}
 
-	public addMessage(message: string) {
-		this.logs.push(this.messageLine(message));
+	public addMessage(message: string, uri: vscode.Uri) {
+		this.logs.push(this.messageLine(message, uri));
 	}
 
 	public addLogFile(logFileName: vscode.Uri) {
@@ -117,8 +117,8 @@ export class LogView {
 		return this.logs;
 	}
 
-	private messageLine(label: string): LogItem {
-		return ({label: label, uri: visualText.analyzer.getTextPath(), passNum: 0, line: 0, icon: 'arrow-small-right.svg'});	
+	private messageLine(label: string, uri: vscode.Uri): LogItem {
+		return ({label: label, uri: uri, passNum: 0, line: 0, icon: 'arrow-small-right.svg'});	
 	}
 
 	private parseLogLine(line: string): LogItem {
@@ -155,6 +155,8 @@ export class LogView {
 					var range = new vscode.Range(pos, pos);
 					editor.revealRange(range);
 				});
+		} else if (logItem.uri.path.length) {
+			vscode.window.showTextDocument(logItem.uri);
 		}
 	}
 }

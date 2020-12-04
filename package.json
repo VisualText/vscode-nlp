@@ -137,6 +137,18 @@
                     "kb"
                 ],
                 "configuration": "./kb-configuration.json"
+            },
+            {
+                "id": "kbb",
+                "extensions": [
+                    ".kbb"
+                ],
+                "aliases": [
+                    "KBB",
+                    "Kbb",
+                    "kbb"
+                ],
+                "configuration": "./kbb-configuration.json"
             }
         ],
         "grammars": [
@@ -164,6 +176,11 @@
                 "language": "kb",
                 "scopeName": "source.kb",
                 "path": "./syntaxes/kb.tmLanguage.json"
+            },
+            {
+                "language": "kbb",
+                "scopeName": "source.kbb",
+                "path": "./syntaxes/kbb.tmLanguage.json"
             }
         ],
         "snippets": [

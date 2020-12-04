@@ -1,0 +1,88 @@
+{
+    "scopeName": "source.kbb",
+    "fileTypes": [
+        "kbb"
+    ],
+    "name": "kbb",
+    "patterns": [
+        {
+            "include": "#expression"
+        }
+    ],
+    "repository": {
+        "expression": {
+            "name": "meta.expression.kbb",
+            "patterns": [
+                {
+                    "include": "#top-concept"
+                },
+                {
+                    "include": "#concept-name1"
+                },
+                {
+                    "include": "#concept-name2"
+                },
+                {
+                    "include": "#attribute-name"
+                },
+                {
+                    "include": "#attributes"
+                }                
+            ]
+        },
+        "top-concept": {
+            "match": "^([a-zA-Z0-9]+)$",
+            "name": "keyword.other.kbb"
+        },
+        "concept-name1": {
+            "name": "variable.parameter.nlp",
+            "match": "^\\s\\s[a-zA-Z0-9][^:^\\[]+:"
+        },
+        "concept-name2": {
+            "name": "keyword.node.tree",
+            "match": "^\\s\\s\\s\\s[a-zA-Z0-9][^:^\\[]+:"
+        },
+        "attribute-name": {
+            "name": "constant.numeric.tree",
+            "match": "\\b[a-zA-Z0-9]+="
+        },
+        "attributes": {
+            "begin": "\\[",
+            "end": "\\]",
+            "patterns": [
+                {
+                    "include": "#number"
+                },
+                {
+                    "include": "#qstring-double"
+                },
+                {
+                    "include": "#comment"
+                }
+            ],
+            "name": "meta.attribute.kbb"
+        },
+        "comment": {
+            "match": "\\*.*$\\n?",
+            "name": "comment.line.kbb"
+        },
+        "qstring-double": {
+            "begin": "\"",
+            "end": "\\\"|(?:[^\\\\\\n]$)",
+            "name": "string.double.kbb",
+            "patterns": [
+                {
+                    "include": "#string-character-escape"
+                }
+            ]
+        },
+        "string-character-escape": {
+            "match": "\\\\(x\\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)",
+            "name": "constant.character.escape.kbb"
+        },
+        "number": {
+            "match": "\\b[0-9]+\\b",
+            "name": "constant.numeric.kbb"
+        }
+    }
+}

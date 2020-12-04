@@ -72,7 +72,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				var conVal = '';
 				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
 					conVal = 'hasLog';
-				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.KB))
+				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
 				if (conVal.length == 0)
 					conVal = 'file';
@@ -453,7 +453,7 @@ export class SequenceView {
 				return;
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
-				var kbfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.KB);
+				var kbfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.KBB);
 				if (fs.existsSync(kbfile.path))
 					vscode.window.showTextDocument(kbfile);
 				else
