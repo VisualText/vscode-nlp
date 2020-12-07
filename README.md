@@ -13,7 +13,7 @@ The NLP++ language extension allows for the fast development of NLP++ analyzers 
 * Easily edit and modify the pass sequence and texts to be analyze
 * Display syntax errors to NLP++
 
-![NLP++ Language Extension Screenshot](resources/VSCodeNLP.jpg)
+![NLP++ Language Extension Screenshot](resources/VSCodeNLP.png)
 
 ## Requirements
 
