@@ -4,6 +4,7 @@ import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView } from './logView';
+import { sequenceView } from './sequenceView';
 import { nlpStatusBar, DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
@@ -68,6 +69,15 @@ export class NLPFile extends TextFile {
 				edit.insert(pos, ruleStr);
 			});
 		});
+	}
+	
+    searchWord(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			var selection = editor.selection;
+            var text = editor.document.getText(selection);
+			sequenceView.search(text);
+		}
 	}
 
     reformatRule(editor: vscode.TextEditor) {

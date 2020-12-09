@@ -238,6 +238,12 @@
                 "description": "Reformat the rule with node numbers"
             },
             {
+                "command": "nlp.searchWord",
+                "category": "NLP",
+                "title": "Search",
+                "description": "Search for chosen word in passes"
+            },
+            {
                 "command": "nlp.generateRule",
                 "category": "NLP",
                 "title": "Generate Rule",
@@ -633,6 +639,11 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.searchWord",
                     "group": "nlp"
                 },
                 {
