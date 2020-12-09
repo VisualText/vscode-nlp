@@ -10,6 +10,7 @@ export class NLPCommands {
         this._ctx = ctx;
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.searchWord', this.searchWord));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
@@ -29,6 +30,13 @@ export class NLPCommands {
 
     openLegacyHelp() {
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://www.textanalysis.com/help/help.htm'));
+    }
+
+    searchWord() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.searchWord(vscode.window.activeTextEditor);
+        }
     }
 
     reformatRule() {

@@ -376,17 +376,22 @@ export class SequenceView {
 		}
 	}
 
-	search() {
+	public search(word: string='') {
 		if (visualText.hasWorkspaceFolder()) {
-			if (visualText.hasWorkspaceFolder()) {
+			var findWord = word;
+			if (findWord.length == 0) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord) {
-						this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),searchWord,'.pat');
-						findView.loadFinds(searchWord,this.findFile.getMatches());
-						vscode.commands.executeCommand('findView.refreshAll');
-						vscode.commands.executeCommand('findView.updateTitle');
+						findWord = searchWord;
 					}
-				});
+				});				
+			}
+
+			if (findWord.length) {
+				this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),findWord,'.pat');
+				findView.loadFinds(findWord,this.findFile.getMatches());
+				vscode.commands.executeCommand('findView.refreshAll');
+				vscode.commands.executeCommand('findView.updateTitle');
 			}
 		}
 	}
