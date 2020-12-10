@@ -135,6 +135,7 @@ export class LogFile extends TextFile {
 		if (filepath.length) {
 			this.basename = path.basename(filepath,'.log');
 			this.basename = path.basename(this.basename,'.txxt');
+			this.basename = path.basename(this.basename,'.txt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
 			this.logFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.log');
@@ -167,9 +168,15 @@ export class LogFile extends TextFile {
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
 		this.selectedTreeStr = '';
-		if (this.getFileType() == nlpFileType.TXXT) {
-			this.setFilesNames(this.getUri().path);
-			this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
+		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
+
+			if (this.getFileType() == nlpFileType.TXT) {
+				this.setFilesNames(visualText.analyzer.getAnaLogFile().path);
+				this.absoluteRangeFromSelection(this.getUri().path, editor.selection);	
+			} else {
+				this.setFilesNames(this.getUri().path);
+				this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
+			}
 			this.findLogfileLines();
 		}
 		return this.selectedTreeStr.length ? true : false;

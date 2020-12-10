@@ -378,21 +378,23 @@ export class SequenceView {
 
 	public search(word: string='') {
 		if (visualText.hasWorkspaceFolder()) {
-			var findWord = word;
-			if (findWord.length == 0) {
+			if (word.length == 0) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
-					if (searchWord) {
-						findWord = searchWord;
-					}
+					if (searchWord?.length)
+						this.findWord(searchWord);
 				});				
+			} else {
+				this.findWord(word);
 			}
+		}
+	}
 
-			if (findWord.length) {
-				this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),findWord,'.pat');
-				findView.loadFinds(findWord,this.findFile.getMatches());
-				vscode.commands.executeCommand('findView.refreshAll');
-				vscode.commands.executeCommand('findView.updateTitle');
-			}
+	private findWord(word: string) {
+		if (word.length) {
+			this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,'.pat');
+			findView.loadFinds(word,this.findFile.getMatches());
+			vscode.commands.executeCommand('findView.refreshAll');
+			vscode.commands.executeCommand('findView.updateTitle');
 		}
 	}
 
@@ -411,7 +413,7 @@ export class SequenceView {
 				vscode.window.showWarningMessage('Not editable');
 				return;
 			}
-			visualText.analyzer.saveCurrentPass(seqItem.uri);
+			visualText.analyzer.saveCurrentPass(seqItem.uri, seqItem.passNum);
 			vscode.window.showTextDocument(seqItem.uri);			
 		}
 	}

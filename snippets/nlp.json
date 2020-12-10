@@ -1345,5 +1345,17 @@
             "}"
         ],
         "description": "While loop."
+    },
+    "word list": {
+        "prefix": ["word list"],
+        "body": [
+            "@POST",
+            "@RULES",
+            "\t_xNIL <- _xWILD [match=(",
+            "\t$1",
+            "\t)]",
+            "\t@@"
+        ],
+        "description": "While loop."
     }
 }
