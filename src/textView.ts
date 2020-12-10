@@ -65,7 +65,6 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 
 	existingText(entry: Entry) {
 		if (visualText.hasWorkspaceFolder()) {
-			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
 				openLabel: 'Add Existing File',
@@ -83,7 +82,14 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 				}
 				var oldPath = selection[0].path;
 				var filename = path.basename(oldPath);
-				var dir = path.dirname(entry.uri.path);
+				var dir = visualText.analyzer.getInputDirectory().path;
+				if (entry) {
+					dir = path.dirname(entry.uri.path);
+				} else if (visualText.analyzer.getTextPath()) {
+					var textPath = visualText.analyzer.getTextPath().path;
+					if (textPath.length)
+						dir = path.dirname(textPath);
+				}
 				var newPath = path.join(dir,filename);
 				fs.copyFileSync(oldPath,newPath);		
 				this.refresh();

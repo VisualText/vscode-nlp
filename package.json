@@ -647,7 +647,7 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
                     "command": "nlp.generateRule",
                     "group": "nlp"
                 },

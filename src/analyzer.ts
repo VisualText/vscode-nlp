@@ -5,6 +5,8 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
+import { LogFile } from './logfile';
+import { nlpFileType } from './textFile';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -18,6 +20,7 @@ export class Analyzer {
     private logDir: vscode.Uri = vscode.Uri.file('');
     private currentTextFile: vscode.Uri = vscode.Uri.file('');
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
+    private passNum: number = 0;;
     private loaded: boolean = false;
 
 	constructor() {
@@ -69,6 +72,7 @@ export class Analyzer {
         this.inputDir = vscode.Uri.file('');
         this.outputDir = vscode.Uri.file('');
         this.currentTextFile = vscode.Uri.file('');
+        this.passNum = 0;
         this.loaded = false;
     }
 
@@ -150,8 +154,9 @@ export class Analyzer {
         this.saveStateFile();
     }
 
-    saveCurrentPass(passFile: vscode.Uri) {
+    saveCurrentPass(passFile: vscode.Uri, passNum: number) {
         this.currentPassFile = passFile;
+        this.passNum = passNum;
         this.saveStateFile();
     }
 
@@ -226,6 +231,11 @@ export class Analyzer {
 
     getPassPath(): vscode.Uri {
         return this.currentPassFile;
+    }
+
+    getAnaLogFile(): vscode.Uri {
+        var logFile = new LogFile();
+        return logFile.anaFile(this.passNum, nlpFileType.TREE);
     }
 
 	setWorkingDir(directory: vscode.Uri) {
