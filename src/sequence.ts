@@ -23,18 +23,18 @@ export class PassItem {
 	constructor() {
 	}
 
-	public isRuleFile() {
+	public isRuleFile(): boolean {
 		return this.typeStr.localeCompare('pat') == 0 || this.typeStr.localeCompare('rec') == 0;
 	}
 	
-	public isFolder() {
+	public isFolder(): boolean {
 		return this.typeStr.localeCompare('folder') == 0;
 	}
 		
-	public isStub() {
+	public isStub(): boolean {
 		return this.typeStr.localeCompare('stub') == 0;
 	}
-		
+	
 	public isEnd(name: string) {
 		return this.typeStr.localeCompare('end') == 0 && this.name.localeCompare(name) == 0;
 	}
@@ -104,6 +104,14 @@ export class SequenceFile extends TextFile {
 				}
 			}
 		}
+	}
+
+	isOrphan(nlpFileName: string): boolean {
+		for (let passItem of this.passItems) {
+			if (passItem.name.localeCompare(nlpFileName) == 0)
+				return false;
+		}
+		return true;
 	}
 
 	setPass(passStr: string, passNum: number): PassItem {
