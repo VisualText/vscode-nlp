@@ -520,8 +520,16 @@
                 }
             },
             {
+                "command": "outputView.orphanPasses",
+                "title": "Orphan Passes",
+                "icon": {
+                    "light": "fileicons/images/light/gear.svg",
+                    "dark": "fileicons/images/dark/gear.svg"
+                }
+            },
+            {
                 "command": "outputView.deleteOutput",
-                "title": "DeleteFile",
+                "title": "Delete File",
                 "icon": {
                     "light": "fileicons/images/light/close.svg",
                     "dark": "fileicons/images/dark/close.svg"
@@ -731,6 +739,11 @@
                 {
                     "command": "textView.refreshAll",
                     "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "outputView.orphanPasses",
+                    "when": "view == outputView",
                     "group": "navigation"
                 },
                 {

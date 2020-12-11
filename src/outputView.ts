@@ -4,8 +4,9 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { logView } from './logView';
 import { dirfuncs } from './dirfuncs';
+import { SequenceFile } from './sequence';
 
-export enum outputFileType { TXT, KB }
+export enum outputFileType { TXT, KB, NLP }
 
 interface OutputItem {
 	uri: vscode.Uri;
@@ -96,6 +97,8 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
+
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
@@ -123,6 +126,10 @@ export class OutputView {
 
 	private loadKB() {
 		this.clearOutput(outputFileType.KB);
+	}
+	
+	private loadOrphans() {
+		this.clearOutput(outputFileType.NLP);
 	}
 
 	public clearOutput(type: outputFileType) {
@@ -161,6 +168,15 @@ export class OutputView {
 				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb'],true);
 				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb'],true);
 				this.outputFiles = this.outputFiles.concat(kbFiles);
+
+			} else if (this.type == outputFileType.NLP) {
+				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+				for (let nlpFile of nlpFiles) {
+					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.path,'.pat')) == true) {
+						this.outputFiles.push(nlpFile);
+					}
+				}
+
 			} else {
 				var textPath = visualText.analyzer.getTextPath().path;
 				this.outputFiles = [];
