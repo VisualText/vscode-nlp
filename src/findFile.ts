@@ -32,24 +32,26 @@ export class FindFile {
 			this.finds = [];
 		const files = dirfuncs.getFiles(dir);
 		var context: number = 60;
+		var escaped = this.escapeRegExp(searchTerm);
 
 		for (let file of files) {
 			if (endswith.length && !file.path.endsWith(endswith))
 				continue;
 			this.textFile.setFile(file);
-			if (this.textFile.getText().search(searchTerm) >= 0) {
+
+			if (this.textFile.getText().search(escaped) >= 0) {
 				let num = 0;
 				for (let line of this.textFile.getLines()) {
-					var pos = line.search(searchTerm);
+					var pos = line.search(escaped);
 					if (pos >= 0) {
 						var filename = path.basename(file.path);
 						var uri = vscode.Uri.file(path.join(dir.path,filename));
-						if (line.length + searchTerm.length > context) {
+						if (line.length + escaped.length > context) {
 							let half = context / 2;
 							if (line.length - pos < half) {
 								line = line.substr(line.length-context-1,context);
 							} else if (pos > half) {
-								line = line.substr(pos-half,context+searchTerm.length);								
+								line = line.substr(pos-half,context+escaped.length);								
 							} else {
 								line = line.substr(0,context);
 							}
@@ -70,5 +72,9 @@ export class FindFile {
 		}
 
 		return this.finds.length ? true : false;
+	}
+
+	escapeRegExp(str: string): string {
+		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 }
