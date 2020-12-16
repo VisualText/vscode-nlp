@@ -81,14 +81,14 @@ export class LogView {
 
 	private loadCGLog() {
 		this.clearLogs();
-		var timingFile = vscode.Uri.file(path.join(visualText.analyzer.getLogDirectory().path,'cgerr.log'));
-		this.addLogFile(timingFile);
+		this.addLogFile(visualText.analyzer.logFile('cgerr'));
 	}
 	
 	public loadMakeAna() {
 		this.clearLogs();
-		var timingFile = vscode.Uri.file(path.join(visualText.analyzer.getLogDirectory().path,'make_ana.log'));
-		this.addLogFile(timingFile);
+		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,'err.log'));
+		this.addLogFile(errorLog);
+		this.addLogFile(visualText.analyzer.logFile('make_ana'));
 	}
 
 	public clearLogs() {

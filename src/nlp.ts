@@ -49,7 +49,7 @@ export class NLPFile extends TextFile {
 				return false;
 			} else {
 				logView.addMessage('Done',vscode.Uri.file(filestr));
-				logView.addLogFile(visualText.analyzer.logFile('make_ana'));
+				logView.loadMakeAna();
 				visualText.analyzer.saveCurrentFile(filepath);
 				vscode.commands.executeCommand('textView.refreshAll');
 				vscode.commands.executeCommand('outputView.refreshAll');
