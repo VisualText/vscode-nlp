@@ -86,6 +86,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			} else {
 				if (passItem.typeStr.localeCompare('tokenize') == 0)
 					label = '1 tokenize';
+				else if (passItem.typeStr.localeCompare('dicttokz') == 0)
+					label = '1 dicttokz';
 				else
 					label = passItem.name;
 				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'stub', inFolder: passItem.inFolder,
@@ -162,11 +164,11 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			var passItem = seqFile.findPass(seqItem.type,seqItem.name);
 			var order = passItem.order;
 
-			if (seqItem.type.localeCompare('tokenize') == 0) {
-				vscode.window.showWarningMessage('Cannot move tokenize');
+			if (seqItem.type.localeCompare('tokenize') == 0 || seqItem.type.localeCompare('dicttokz') == 0) {
+				vscode.window.showWarningMessage('Cannot move the tokenizer');
 
 			} else if (order == 1 && direction == moveDirection.UP) {
-				vscode.window.showWarningMessage('Tokenize must be first');
+				vscode.window.showWarningMessage('Tokenizer must be first');
 
 			} else if (order == 0 && direction == moveDirection.UP) {
 				vscode.window.showWarningMessage('Item cannot move up');

@@ -10,7 +10,7 @@
         },
         {
             "name": "keyword.other.seq",
-            "match": "\\b(?i:(pat|rec|tokenize|dictokz))\\b"
+            "match": "\\b(?i:(pat|rec|tokenize|dicttokz))\\b"
         }
     ],
     "repository": {

@@ -159,7 +159,7 @@ export class LogFile extends TextFile {
 		var filename: string = 'ana';
 		if (pass < 10)
 			filename = filename + '00';
-		else
+		else if (pass < 100)
 			filename = filename + '0';
 		filename = filename + pass.toString() + '.' + this.getExtension(type);
 		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,filename));
