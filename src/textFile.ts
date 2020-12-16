@@ -53,6 +53,22 @@ export class TextFile {
         return this.selLines;
     }
 
+    public cleanZeroZero(): boolean {
+        if (this.text.length) {
+            if (this.text.indexOf('\x00') >= 0) {
+                this.text = this.text.replace(/\x00/g, ''); 
+                try {
+                    fs.writeFileSync(this.uri.path,this.text,{flag:'w'});
+                    return true;
+                } catch (err) {
+                    console.log('Error writing file ' + this.uri.path+ ': ' + err.message);
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
     getExtension(type: nlpFileType): string {
         return this.nlpFileExts[type];
     }

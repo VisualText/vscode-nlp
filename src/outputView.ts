@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
 import { logView } from './logView';
+import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
-import { SequenceFile } from './sequence';
 
 export enum outputFileType { TXT, KB, NLP }
 
@@ -196,6 +196,8 @@ export class OutputView {
 	}
 	
 	private openFile(resource: vscode.Uri): void {
+		var textFile = new TextFile(resource.path);
+		textFile.cleanZeroZero();
         vscode.window.showTextDocument(resource);
 	}
 
