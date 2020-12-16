@@ -62,8 +62,8 @@ export class NLPStatusBar {
 
     chooseDev() {
         let items: vscode.QuickPickItem[] = [];
-        items.push({label: 'Log files', description: 'DO NOT generate log files when analyzing'});
-        items.push({label: 'No log files', description: 'DO generate log files when analyzing'});
+        items.push({label: 'Log files', description: 'DO generate log files when analyzing'});
+        items.push({label: 'No log files', description: 'DO NOT generate log files when analyzing'});
         vscode.window.showQuickPick(items).then(selection => {
             if (!selection) {
                 return;
