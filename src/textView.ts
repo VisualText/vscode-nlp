@@ -42,9 +42,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 			var isLogDir = outputView.fileHasLog(entry.uri.path);
 			treeItem.iconPath = {
 				light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
-									path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'file.svg'),
+									path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
 				dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
-									path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'file.svg'),
+									path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
 			}
 		}
 		return treeItem;

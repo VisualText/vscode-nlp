@@ -27,7 +27,7 @@
                 {
                     "id": "sequenceView",
                     "name": "Analyzer Sequence",
-                    "icon": "fileicons/images/dark/dna.svg"
+                    "icon": "resources/dark/dna.svg"
                 }
             ],
             "vtOutput": [
@@ -39,17 +39,17 @@
                 {
                     "id": "analyzerView",
                     "name": "Analyzers",
-                    "icon": "fileicons/images/dark/gear.svg"
+                    "icon": "resources/dark/gear.svg"
                 },
                 {
                     "id": "findView",
                     "name": "Find Results",
-                    "icon": "fileicons/images/dark/search.svg"
+                    "icon": "resources/dark/search.svg"
                 },
                 {
                     "id": "logView",
                     "name": "Logging",
-                    "icon": "fileicons/images/dark/error.svg"
+                    "icon": "resources/dark/error.svg"
                 }
             ]
         },
@@ -73,7 +73,7 @@
             {
                 "id": "nlp",
                 "label": "NLP Files",
-                "path": "./fileicons/vs_nlp-icon-theme.json"
+                "path": "./resources/vs_nlp-icon-theme.json"
             }
         ],
         "languages": [
@@ -207,16 +207,16 @@
                 "command": "textView.analyze",
                 "title": "Analyze file",
                 "icon": {
-                    "light": "fileicons/images/light/run.svg",
-                    "dark": "fileicons/images/dark/run.svg"
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
                 }
             },
             {
                 "command": "textView.analyzeLast",
                 "title": "Analyze Last file",
                 "icon": {
-                    "light": "fileicons/images/light/run.svg",
-                    "dark": "fileicons/images/dark/run.svg"
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
                 }
             },
             {
@@ -283,8 +283,8 @@
                 "command": "sequenceView.finalTree",
                 "title": "Display Final Tree",
                 "icon": {
-                    "light": "fileicons/images/light/list-tree.svg",
-                    "dark": "fileicons/images/dark/list-tree.svg"
+                    "light": "resources/light/list-tree.svg",
+                    "dark": "resources/dark/list-tree.svg"
                 }
             },
             {
@@ -315,8 +315,8 @@
                 "command": "sequenceView.newFolder",
                 "title": "New Folder",
                 "icon": {
-                    "light": "fileicons/images/light/new-folder.svg",
-                    "dark": "fileicons/images/dark/new-folder.svg"
+                    "light": "resources/light/new-folder.svg",
+                    "dark": "resources/dark/new-folder.svg"
                 }
             },
             {
@@ -339,136 +339,136 @@
                 "command": "sequenceView.openKB",
                 "title": "Open KB",
                 "icon": {
-                    "light": "fileicons/images/light/kb.svg",
-                    "dark": "fileicons/images/dark/kb.svg"
+                    "light": "resources/light/kb.svg",
+                    "dark": "resources/dark/kb.svg"
                 }
             },
             {
                 "command": "sequenceView.openHighlight",
                 "title": "Highlight Text",
                 "icon": {
-                    "light": "fileicons/images/light/symbol-keyword.svg",
-                    "dark": "fileicons/images/dark/symbol-keyword.svg"
+                    "light": "resources/light/symbol-keyword.svg",
+                    "dark": "resources/dark/symbol-keyword.svg"
                 }
             },
             {
                 "command": "sequenceView.openFile",
                 "title": "Open NLP file",
                 "icon": {
-                    "light": "fileicons/images/light/code.svg",
-                    "dark": "fileicons/images/dark/code.svg"
+                    "light": "resources/light/code.svg",
+                    "dark": "resources/dark/code.svg"
                 }
             },
             {
                 "command": "sequenceView.openTree",
                 "title": "Open Tree file",
                 "icon": {
-                    "light": "fileicons/images/light/list-tree.svg",
-                    "dark": "fileicons/images/dark/list-tree.svg"
+                    "light": "resources/light/list-tree.svg",
+                    "dark": "resources/dark/list-tree.svg"
                 }
             },
             {
                 "command": "sequenceView.rename",
                 "title": "Rename pass",
                 "icon": {
-                    "light": "fileicons/images/light/code.svg",
-                    "dark": "fileicons/images/dark/code.svg"
+                    "light": "resources/light/code.svg",
+                    "dark": "resources/dark/code.svg"
                 }
             },
             {
                 "command": "sequenceView.insertLibrary",
                 "title": "Insert Library pass",
                 "icon": {
-                    "light": "fileicons/images/light/new-file.svg",
-                    "dark": "fileicons/images/dark/new-file.svg"
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
                 }
             },
             {
                 "command": "sequenceView.insertNew",
                 "title": "Insert New pass",
                 "icon": {
-                    "light": "fileicons/images/light/new-file.svg",
-                    "dark": "fileicons/images/dark/new-file.svg"
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
                 }
             },
             {
                 "command": "sequenceView.insert",
                 "title": "Insert Existing pass",
                 "icon": {
-                    "light": "fileicons/images/light/file-code.svg",
-                    "dark": "fileicons/images/dark/file-code.svg"
+                    "light": "resources/light/file-code.svg",
+                    "dark": "resources/dark/file-code.svg"
                 }
             },
             {
                 "command": "sequenceView.delete",
                 "title": "Delete pass",
                 "icon": {
-                    "light": "fileicons/images/light/file-code.svg",
-                    "dark": "fileicons/images/dark/file-code.svg"
+                    "light": "resources/light/file-code.svg",
+                    "dark": "resources/dark/file-code.svg"
                 }
             },
             {
                 "command": "textView.newDir",
                 "title": "New Directory",
                 "icon": {
-                    "light": "fileicons/images/light/new-folder.svg",
-                    "dark": "fileicons/images/dark/new-folder.svg"
+                    "light": "resources/light/new-folder.svg",
+                    "dark": "resources/dark/new-folder.svg"
                 }
             },
             {
                 "command": "textView.newText",
                 "title": "New Text File",
                 "icon": {
-                    "light": "fileicons/images/light/new-file.svg",
-                    "dark": "fileicons/images/dark/new-file.svg"
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
                 }
             },
             {
                 "command": "textView.existingText",
                 "title": "Insert existing text",
                 "icon": {
-                    "light": "fileicons/images/light/new-file.svg",
-                    "dark": "fileicons/images/dark/new-file.svg"
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
                 }
             },
             {
                 "command": "textView.search",
                 "title": "Search",
                 "icon": {
-                    "light": "fileicons/images/light/search.svg",
-                    "dark": "fileicons/images/dark/search.svg"
+                    "light": "resources/light/search.svg",
+                    "dark": "resources/dark/search.svg"
                 }
             },
             {
                 "command": "textView.deleteText",
                 "title": "Delete File",
                 "icon": {
-                    "light": "fileicons/images/light/chrome-close.svg",
-                    "dark": "fileicons/images/dark/chrome-close.svg"
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
                 }
             },
             {
                 "command": "analyzerView.newAnalyzer",
                 "title": "New Analyzer",
                 "icon": {
-                    "light": "fileicons/images/light/new-folder.svg",
-                    "dark": "fileicons/images/dark/new-folder.svg"
+                    "light": "resources/light/new-folder.svg",
+                    "dark": "resources/dark/new-folder.svg"
                 }
             },
             {
                 "command": "analyzerView.deleteAnalyzer",
                 "title": "Delete Analyzer",
                 "icon": {
-                    "light": "fileicons/images/light/chrome-close.svg",
-                    "dark": "fileicons/images/dark/chrome-close.svg"
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
                 }
             },
             {
                 "command": "sequenceView.search",
                 "title": "search",
                 "icon": {
-                    "light": "fileicons/images/light/search.svg",
-                    "dark": "fileicons/images/dark/search.svg"
+                    "light": "resources/light/search.svg",
+                    "dark": "resources/dark/search.svg"
                 }
             },
             {
@@ -491,8 +491,8 @@
                 "command": "findView.clearAll",
                 "title": "Clear All",
                 "icon": {
-                    "light": "fileicons/images/light/close.svg",
-                    "dark": "fileicons/images/dark/close.svg"
+                    "light": "resources/light/close.svg",
+                    "dark": "resources/dark/close.svg"
                 }
             },
             {
@@ -523,16 +523,16 @@
                 "command": "outputView.orphanPasses",
                 "title": "Orphan Passes",
                 "icon": {
-                    "light": "fileicons/images/light/gear.svg",
-                    "dark": "fileicons/images/dark/gear.svg"
+                    "light": "resources/light/gear.svg",
+                    "dark": "resources/dark/gear.svg"
                 }
             },
             {
                 "command": "outputView.deleteOutput",
                 "title": "Delete File",
                 "icon": {
-                    "light": "fileicons/images/light/close.svg",
-                    "dark": "fileicons/images/dark/close.svg"
+                    "light": "resources/light/close.svg",
+                    "dark": "resources/dark/close.svg"
                 }
             },
             {
@@ -547,8 +547,8 @@
                 "command": "outputView.kb",
                 "title": "Display KB Files",
                 "icon": {
-                    "light": "fileicons/images/light/kb.svg",
-                    "dark": "fileicons/images/dark/kb.svg"
+                    "light": "resources/light/kb.svg",
+                    "dark": "resources/dark/kb.svg"
                 }
             },
             {
@@ -563,8 +563,8 @@
                 "command": "outputView.addKB",
                 "title": "Add KB File",
                 "icon": {
-                    "light": "fileicons/images/light/kb-new.svg",
-                    "dark": "fileicons/images/dark/kb-new.svg"
+                    "light": "resources/light/kb-new.svg",
+                    "dark": "resources/dark/kb-new.svg"
                 }
             },
             {
@@ -579,32 +579,32 @@
                 "command": "logView.conceptualGrammar",
                 "title": "Conceptual Grammar",
                 "icon": {
-                    "light": "fileicons/images/light/kb.svg",
-                    "dark": "fileicons/images/dark/kb.svg"
+                    "light": "resources/light/kb.svg",
+                    "dark": "resources/dark/kb.svg"
                 }
             },
             {
                 "command": "logView.timing",
                 "title": "Timings",
                 "icon": {
-                    "light": "fileicons/images/light/watch.svg",
-                    "dark": "fileicons/images/dark/watch.svg"
+                    "light": "resources/light/watch.svg",
+                    "dark": "resources/dark/watch.svg"
                 }
             },
             {
                 "command": "logView.clear",
                 "title": "Clear",
                 "icon": {
-                    "light": "fileicons/images/light/close.svg",
-                    "dark": "fileicons/images/dark/close.svg"
+                    "light": "resources/light/close.svg",
+                    "dark": "resources/dark/close.svg"
                 }
             },
             {
                 "command": "logView.makeAna",
                 "title": "Analyzer Log Output",
                 "icon": {
-                    "light": "fileicons/images/light/gear.svg",
-                    "dark": "fileicons/images/dark/gear.svg"
+                    "light": "resources/light/gear.svg",
+                    "dark": "resources/dark/gear.svg"
                 }
             }
         ],

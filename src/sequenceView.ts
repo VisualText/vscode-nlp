@@ -138,8 +138,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				contextValue: seqItem.contextValue,
 				collapsibleState: collapse,
 				iconPath: {
-					light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', icon),
-					dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', icon)
+					light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+					dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
 				},
 				command: {
 					command: 'sequenceView.openFile',
