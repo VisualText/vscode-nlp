@@ -23,8 +23,8 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			resourceUri: element.uri,
 			collapsibleState: void 0,
 			iconPath: {
-				light: path.join(__filename, '..', '..', 'fileicons', 'images', 'light', 'gear.svg'),
-				dark: path.join(__filename, '..', '..', 'fileicons', 'images', 'dark', 'gear.svg')
+				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
 			},
 			command: {
 				command: 'analyzerView.openAnalyzer',
