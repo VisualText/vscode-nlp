@@ -7,8 +7,8 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<FindItem> = new vscode.EventEmitter<FindItem>();
 	readonly onDidChangeTreeData: vscode.Event<FindItem> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(findItem: FindItem): void {
+		this._onDidChangeTreeData.fire(findItem);
 	}
 
 	constructor() { }
@@ -55,8 +55,8 @@ export class FindView {
 	constructor(context: vscode.ExtensionContext) {
 		const findViewProvider = new FindTreeDataProvider();
 		this.findView = vscode.window.createTreeView('findView', { treeDataProvider: findViewProvider });
-		vscode.commands.registerCommand('findView.refreshAll', () => findViewProvider.refresh());
-		vscode.commands.registerCommand('findView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('findView.refreshAll', (resource) => findViewProvider.refresh(resource));
+		vscode.commands.registerCommand('findView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('findView.updateTitle', () => this.updateTitle());
 		vscode.commands.registerCommand('findView.clearAll', () => this.clearAll());
     }
