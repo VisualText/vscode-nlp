@@ -3,6 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "version": "0.0.1",
+    "publisher": "dehilster",
     "enableProposedApi": true,
     "engines": {
         "vscode": "^1.50.0"
@@ -217,6 +218,22 @@
                 "icon": {
                     "light": "resources/light/run.svg",
                     "dark": "resources/dark/run.svg"
+                }
+            },
+            {
+                "command": "textView.rename",
+                "title": "Rename File",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
+                }
+            },
+            {
+                "command": "textView.renameDir",
+                "title": "Rename Directory",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
                 }
             },
             {
@@ -441,7 +458,7 @@
             },
             {
                 "command": "textView.deleteText",
-                "title": "Delete File",
+                "title": "Delete File/Dir",
                 "icon": {
                     "light": "resources/light/chrome-close.svg",
                     "dark": "resources/dark/chrome-close.svg"
@@ -904,6 +921,16 @@
                     "group": "attribute"
                 },
                 {
+                    "command": "textView.rename",
+                    "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.renameDir",
+                    "when": "view == textView && viewItem == dir",
+                    "group": "edit"
+                },
+                {
                     "command": "textView.newDir",
                     "when": "view == textView && viewItem == file",
                     "group": "edit"
@@ -920,7 +947,7 @@
                 },
                 {
                     "command": "textView.deleteText",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && (viewItem == file || viewItem == dir)",
                     "group": "edit"
                 },
                 {
@@ -961,6 +988,16 @@
                 {
                     "command": "sequenceView.moveDown",
                     "when": "view == sequenceView",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.rename",
+                    "when": "view == textView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.renameDir",
+                    "when": "view == textView && viewItem == dir",
                     "group": "inline"
                 },
                 {
@@ -1023,7 +1060,7 @@
     "devDependencies": {
         "@types/glob": "^7.1.1",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^12.12.62",
+        "@types/node": "^10.17.49",
         "@types/vscode": "^1.45.0",
         "glob": "^7.1.5",
         "mocha": "^6.2.2",

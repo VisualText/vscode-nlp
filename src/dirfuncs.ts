@@ -163,7 +163,7 @@ export namespace dirfuncs {
 
     export function delDir(dirPath: string): boolean {
         try {
-            fs.rmdirSync(dirPath,{recursive: true});
+            fs.rmdirSync(dirPath);
             return true;
         } catch (err) {
             vscode.window.showInformationMessage('Error deleting folder ' + dirPath + ': ' + err.message);
@@ -189,7 +189,7 @@ export namespace dirfuncs {
 
     export function emptyDir(dirPath: string): boolean {
         try {
-            fs.rmdirSync(dirPath,{recursive: true});
+            fs.rmdirSync(dirPath);
             fs.mkdirSync(dirPath);
             return true;
         } catch (err) {

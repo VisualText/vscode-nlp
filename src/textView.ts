@@ -18,8 +18,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 	private _onDidChangeTreeData: vscode.EventEmitter<Entry> = new vscode.EventEmitter<Entry>();
 	readonly onDidChangeTreeData: vscode.Event<Entry> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(entry: Entry): void {
+		this._onDidChangeTreeData.fire(entry);
 	}
 
 	constructor() {}
@@ -39,13 +39,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 		if (entry.type === vscode.FileType.File) {
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [entry], };
 			treeItem.contextValue = 'file';
-			var isLogDir = outputView.fileHasLog(entry.uri.path);
-			treeItem.iconPath = {
-				light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
-									path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
-				dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
-									path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
-			}
+		} else {
+			treeItem.contextValue = 'dir';
+		}
+		var isLogDir = outputView.fileHasLog(entry.uri.path);
+		treeItem.iconPath = {
+			light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
+								path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
+			dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
+								path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
 		}
 		return treeItem;
 	}
@@ -92,8 +94,36 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 				}
 				var newPath = path.join(dir,filename);
 				fs.copyFileSync(oldPath,newPath);		
-				this.refresh();
+				this.refresh(entry);
 			});	
+		}
+	}
+	
+	rename(entry: Entry): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(entry.uri.path), prompt: 'Enter new name for file' }).then(newname => {
+				if (newname) {
+					var original = entry.uri;
+					if (path.extname(newname).length == 0)
+						newname = newname+path.extname(entry.uri.path);
+					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.path),newname));
+					dirfuncs.renameFile(original.path,newfile.path);						
+					this.refresh(entry);
+				}
+			});
+		}
+	}
+		
+	renameDir(entry: Entry): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(entry.uri.path), prompt: 'Enter new name for directory' }).then(newname => {
+				if (newname) {
+					var original = entry.uri;
+					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.path),newname));
+					dirfuncs.renameFile(original.path,newfile.path);						
+					this.refresh(entry);
+				}
+			});
 		}
 	}
 }
@@ -107,8 +137,10 @@ export class TextView {
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
-		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('textView.refreshAll', (entry) => treeDataProvider.refresh(entry));
 		vscode.commands.registerCommand('textView.existingText', (entry) => treeDataProvider.existingText(entry));
+		vscode.commands.registerCommand('textView.rename', (entry) => treeDataProvider.rename(entry));
+		vscode.commands.registerCommand('textView.renameDir', (entry) => treeDataProvider.renameDir(entry));
 
 		vscode.commands.registerCommand('textView.openFile', (entry) => this.openFile(entry));
 		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());

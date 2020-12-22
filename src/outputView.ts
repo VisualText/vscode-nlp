@@ -17,8 +17,8 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	private _onDidChangeTreeData: vscode.EventEmitter<OutputItem> = new vscode.EventEmitter<OutputItem>();
 	readonly onDidChangeTreeData: vscode.Event<OutputItem> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(outputItem: OutputItem): void {
+		this._onDidChangeTreeData.fire(outputItem);
 	}
 
 	constructor() { }
@@ -46,8 +46,42 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 
 		return [];
 	}
+}
 
-	addKB() {
+export let outputView: OutputView;
+export class OutputView {
+
+	public outputView: vscode.TreeView<OutputItem>;
+	private outputFiles: vscode.Uri[];
+	private logDirectory: vscode.Uri;
+	private type: outputFileType;
+
+	constructor(context: vscode.ExtensionContext) {
+		const outputViewProvider = new OutputTreeDataProvider();
+		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
+		vscode.commands.registerCommand('outputView.refreshAll', (resource) => outputViewProvider.refresh(resource));
+
+		vscode.commands.registerCommand('outputView.addKB', (resource) => this.addKB(resource));
+		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
+		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
+		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
+
+
+		this.outputFiles = [];
+		this.logDirectory = vscode.Uri.file('');
+		this.type = outputFileType.TXT;
+    }
+    
+    static attach(ctx: vscode.ExtensionContext) {
+        if (!outputView) {
+            outputView = new OutputView(ctx);
+        }
+        return outputView;
+	}
+
+	addKB(resource: OutputItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
@@ -73,43 +107,9 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 				outputView.setType(outputFileType.KB);
 				logView.addMessage('KB File copied: '+filename,vscode.Uri.file(oldPath));
 				vscode.commands.executeCommand('logView.refreshAll');	
-				this.refresh();
+				vscode.commands.executeCommand('outputView.refreshAll');	
 			});	
 		}
-	}
-}
-
-export let outputView: OutputView;
-export class OutputView {
-
-	public outputView: vscode.TreeView<OutputItem>;
-	private outputFiles: vscode.Uri[];
-	private logDirectory: vscode.Uri;
-	private type: outputFileType;
-
-	constructor(context: vscode.ExtensionContext) {
-		const outputViewProvider = new OutputTreeDataProvider();
-		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
-		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
-		vscode.commands.registerCommand('outputView.addKB', () => outputViewProvider.addKB());
-
-		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
-		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
-		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
-		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
-
-
-		this.outputFiles = [];
-		this.logDirectory = vscode.Uri.file('');
-		this.type = outputFileType.TXT;
-    }
-    
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!outputView) {
-            outputView = new OutputView(ctx);
-        }
-        return outputView;
 	}
 
 	public setType(type: outputFileType) {
@@ -218,9 +218,5 @@ export class OutputView {
 					vscode.commands.executeCommand('outputView.refreshAll');
 			});
 		}
-	}
-	
-	private addKB(resource: OutputItem) {
-		console.log('New Output code to be implemented');
 	}
 }

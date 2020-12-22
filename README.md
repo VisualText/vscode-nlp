@@ -85,4 +85,4 @@ This extension has not yet been pushed to the official microsoft extensions repo
 
 ### Beta
 
-0.1
+0.9.0

@@ -17,8 +17,8 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 	private _onDidChangeTreeData: vscode.EventEmitter<LogItem> = new vscode.EventEmitter<LogItem>();
 	readonly onDidChangeTreeData: vscode.Event<LogItem> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(logItem: LogItem): void {
+		this._onDidChangeTreeData.fire(logItem);
 	}
 
 	constructor() { }
@@ -57,7 +57,7 @@ export class LogView {
 	constructor(context: vscode.ExtensionContext) {
 		const logViewProvider = new OutputTreeDataProvider();
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
-		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
+		vscode.commands.registerCommand('logView.refreshAll', (resource) => logViewProvider.refresh(resource));
 		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('logView.addMessage', (message,uri) => this.addMessage(message,uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());

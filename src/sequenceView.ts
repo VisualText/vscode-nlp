@@ -24,8 +24,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem> = new vscode.EventEmitter<SequenceItem>();
 	readonly onDidChangeTreeData: vscode.Event<SequenceItem> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(seqItem: SequenceItem): void {
+		this._onDidChangeTreeData.fire(seqItem);
 	}
 
 	constructor() {
@@ -182,7 +182,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			} else {
 				seqFile.movePass(seqItem,direction);
 				seqFile.saveFile();
-				this.refresh();	
+				this.refresh(seqItem);	
 			}
 		}
 	}
@@ -203,7 +203,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					if (!selection || selection.label == 'No')
 						return;
 					seqFile.deletePass(seqItem);
-					this.refresh();					
+					this.refresh(seqItem);					
 				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});
@@ -230,7 +230,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
 				seqFile.insertPass(seqItem,newfile);
-				this.refresh();
+				this.refresh(seqItem);
 			});			
 		}
 	}
@@ -253,7 +253,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
 				seqFile.insertPass(seqItem,newfile);
-				this.refresh();
+				this.refresh(seqItem);
 			});			
 		}
 	}
@@ -267,7 +267,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						seqFile.insertNewPass(seqItem,newname);
 					else
 						seqFile.insertNewPassEnd(newname);
-					this.refresh();
+					this.refresh(seqItem);
 				}
 			});
 		}
@@ -284,7 +284,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().path,newname.concat(path.extname(original.path))));
 						dirfuncs.renameFile(original.path,newfile.path);						
 					}
-					this.refresh();
+					this.refresh(seqItem);
 				}
 			});
 		}
@@ -299,7 +299,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						seqFile.insertNewFolder(seqItem,newname);
 					else
 						seqFile.insertNewFolderEnd(newname);
-					this.refresh();
+					this.refresh(seqItem);
 				}
 			});
 		}		
@@ -307,22 +307,22 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	typePat(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'pat');
-		this.refresh();
+		this.refresh(seqItem);
 	}
 	
 	typeRec(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
-		this.refresh();
+		this.refresh(seqItem);
 	}
 	
 	typeOn(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'');
-		this.refresh();
+		this.refresh(seqItem);
 	}
 	
 	typeOff(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'/');
-		this.refresh();
+		this.refresh(seqItem);
 	}
 }
 
@@ -355,7 +355,7 @@ export class SequenceView {
 
 		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
-		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
+		vscode.commands.registerCommand('sequenceView.refreshAll', (seqItem) => treeDataProvider.refresh(seqItem));
 		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));

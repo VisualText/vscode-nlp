@@ -12,8 +12,8 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	private _onDidChangeTreeData: vscode.EventEmitter<AnalyzerItem> = new vscode.EventEmitter<AnalyzerItem>();
 	readonly onDidChangeTreeData: vscode.Event<AnalyzerItem> = this._onDidChangeTreeData.event;
 
-	refresh(): void {
-		this._onDidChangeTreeData.fire();
+	refresh(analyzerItem: AnalyzerItem): void {
+		this._onDidChangeTreeData.fire(analyzerItem);
 	}
 
 	constructor() { }
@@ -55,7 +55,7 @@ export class AnalyzerView {
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
 		this.analyzerView = vscode.window.createTreeView('analyzerView', { treeDataProvider: analyzerViewProvider });
-		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
+		vscode.commands.registerCommand('analyzerView.refreshAll', resource => analyzerViewProvider.refresh(resource));
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
