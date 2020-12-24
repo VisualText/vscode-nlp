@@ -20,7 +20,20 @@ The NLP++ language extension allows for the fast development of NLP++ analyzers 
 
 ## Requirements
 
+In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE (Linux only for now, Windows and Mac versions coming soon). You can also download example analyzers to run.
+
+### NLP Engine
+
 The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe currently only compiles for Linux. Windows and Mac versions are expected in the near future. A sample analyzers folder can be found in the nlp-engine directory.
+
+### NLP++ Example Analyzers
+
+You can find a folder of sample analyzers including a full english parser in one of two locations:
+
+1. In the analyzer folder found in the [NLP-ENGINE](https://gihub.com/VisualText/nlp-engine)
+1. In the [NLP++ example analyzer repository](https://github.com/VisualText/analyzers)
+
+Simply download the folder to you local computer and open that folder using the VSCode NLP++ language extension.
 
 ## Extension Settings
 
