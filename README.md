@@ -1,6 +1,6 @@
 # NLP++ Language Extension README
 
-This is a language extension for VSCode for NLP++ to recreate the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammer". Information at [http://visualtext.org](http://visualtext.org).
+This is a language extension for VSCode for NLP++ to recreate the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below). Information at [http://visualtext.org](http://visualtext.org).
 
 ## Features
 
@@ -9,7 +9,7 @@ The NLP++ language extension allows for the fast development of NLP++ analyzers 
 * Quickly generate and edit NLP++ code
 * Display the syntax tree in insightful ways
 * Highlight text that has matched rules in each pass
-* Display the knowledge base at strategic places in the analayzer sequence
+* Display the knowledge base at strategic places in the analyzer sequence
 * Easily edit and modify the pass sequence and texts to be analyze
 * Display syntax errors to NLP++
 * Auto generate rules
@@ -20,20 +20,39 @@ The NLP++ language extension allows for the fast development of NLP++ analyzers 
 
 ## Requirements
 
-In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE (Linux only for now, Windows and Mac versions coming soon). You can also download example analyzers to run.
+In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE (Linux only for now, Windows and Mac versions coming soon). Example analyzers can be found in the NLP-ENGINE directory (see below).
 
 ### NLP Engine
 
-The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe currently only compiles for Linux. Windows and Mac versions are expected in the near future. A sample analyzers folder can be found in the nlp-engine directory.
+The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe currently only compiles for Linux but can be run on Windows using the Windows Subsystem for Linux (see below). Native NLP-ENGINES for Windows and Mac are expected in the near future.
+
+### Running on Windows
+
+To run the NLP++ Language Extension on windows, you need:
+
+1. Install VSCode onto windows
+1. Install the VSCode Extension [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) in VSCode
+1. Install [Windows Subsytem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) onto windows
+1. Install the [NLP-ENGINE](https://gihub.com/VisualText/nlp-engine) onto the Windows System for Linux
+1. Click on the green "greater/less-than" icon on the lower left side of the VSCode status bar and choose Analyzers folder located inside the NLP-ENGINE folder on the Windows Subsystem for Linux
+1. Run, edit, modify the example analyzers and create your own
 
 ### NLP++ Example Analyzers
 
-You can find a folder of sample analyzers including a full english parser in one of two locations:
+Example analyzers can be found in the "analyzers" folder in the NLP-ENGINE folder
 
-1. In the analyzer folder found in the [NLP-ENGINE](https://gihub.com/VisualText/nlp-engine)
-1. In the [NLP++ example analyzer repository](https://github.com/VisualText/analyzers)
+### Types of Analyzers Commonly Written Using NLP++
 
-Simply download the folder to you local computer and open that folder using the VSCode NLP++ language extension.
+There are many types of analyzers that are written by NLP++ programmers including:
+
+* Tagging of text
+* Extract emails, dates, addresses, etc from unstructured text
+* Entity Extraction
+* Full NLP Parsing
+* Sentiment analysis
+* OCR Cleanup
+* Extraction of data from messy text
+* Autogenerate snippets from documentation
 
 ## Extension Settings
 
