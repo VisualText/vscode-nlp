@@ -19,8 +19,8 @@ class OutputTreeDataProvider {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
     }
-    refresh() {
-        this._onDidChangeTreeData.fire();
+    refresh(outputItem) {
+        this._onDidChangeTreeData.fire(outputItem);
     }
     getTreeItem(element) {
         return {
@@ -43,7 +43,30 @@ class OutputTreeDataProvider {
         }
         return [];
     }
-    addKB() {
+}
+exports.OutputTreeDataProvider = OutputTreeDataProvider;
+class OutputView {
+    constructor(context) {
+        const outputViewProvider = new OutputTreeDataProvider();
+        this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
+        vscode.commands.registerCommand('outputView.refreshAll', (resource) => outputViewProvider.refresh(resource));
+        vscode.commands.registerCommand('outputView.addKB', (resource) => this.addKB(resource));
+        vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
+        vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
+        vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
+        vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+        vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
+        this.outputFiles = [];
+        this.logDirectory = vscode.Uri.file('');
+        this.type = outputFileType.TXT;
+    }
+    static attach(ctx) {
+        if (!exports.outputView) {
+            exports.outputView = new OutputView(ctx);
+        }
+        return exports.outputView;
+    }
+    addKB(resource) {
         if (visualText_1.visualText.hasWorkspaceFolder()) {
             var seqFile = visualText_1.visualText.analyzer.seqFile;
             const options = {
@@ -69,32 +92,9 @@ class OutputTreeDataProvider {
                 exports.outputView.setType(outputFileType.KB);
                 logView_1.logView.addMessage('KB File copied: ' + filename, vscode.Uri.file(oldPath));
                 vscode.commands.executeCommand('logView.refreshAll');
-                this.refresh();
+                vscode.commands.executeCommand('outputView.refreshAll');
             });
         }
-    }
-}
-exports.OutputTreeDataProvider = OutputTreeDataProvider;
-class OutputView {
-    constructor(context) {
-        const outputViewProvider = new OutputTreeDataProvider();
-        this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
-        vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
-        vscode.commands.registerCommand('outputView.addKB', () => outputViewProvider.addKB());
-        vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
-        vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
-        vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
-        vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
-        vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
-        this.outputFiles = [];
-        this.logDirectory = vscode.Uri.file('');
-        this.type = outputFileType.TXT;
-    }
-    static attach(ctx) {
-        if (!exports.outputView) {
-            exports.outputView = new OutputView(ctx);
-        }
-        return exports.outputView;
     }
     setType(type) {
         this.type = type;
@@ -193,9 +193,6 @@ class OutputView {
                     vscode.commands.executeCommand('outputView.refreshAll');
             });
         }
-    }
-    addKB(resource) {
-        console.log('New Output code to be implemented');
     }
 }
 exports.OutputView = OutputView;

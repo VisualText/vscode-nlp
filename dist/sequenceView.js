@@ -17,8 +17,8 @@ class PassTree {
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
     }
-    refresh() {
-        this._onDidChangeTreeData.fire();
+    refresh(seqItem) {
+        this._onDidChangeTreeData.fire(seqItem);
     }
     getChildren(seqItem) {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
@@ -160,7 +160,7 @@ class PassTree {
             else {
                 seqFile.movePass(seqItem, direction);
                 seqFile.saveFile();
-                this.refresh();
+                this.refresh(seqItem);
             }
         }
     }
@@ -180,7 +180,7 @@ class PassTree {
                     if (!selection || selection.label == 'No')
                         return;
                     seqFile.deletePass(seqItem);
-                    this.refresh();
+                    this.refresh(seqItem);
                 }
                 vscode.commands.executeCommand('sequenceView.refreshAll');
             });
@@ -206,7 +206,7 @@ class PassTree {
                 }
                 var newfile = vscode.Uri.file(selection[0].path);
                 seqFile.insertPass(seqItem, newfile);
-                this.refresh();
+                this.refresh(seqItem);
             });
         }
     }
@@ -228,7 +228,7 @@ class PassTree {
                 }
                 var newfile = vscode.Uri.file(selection[0].path);
                 seqFile.insertPass(seqItem, newfile);
-                this.refresh();
+                this.refresh(seqItem);
             });
         }
     }
@@ -241,7 +241,7 @@ class PassTree {
                         seqFile.insertNewPass(seqItem, newname);
                     else
                         seqFile.insertNewPassEnd(newname);
-                    this.refresh();
+                    this.refresh(seqItem);
                 }
             });
         }
@@ -257,7 +257,7 @@ class PassTree {
                         var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().path, newname.concat(path.extname(original.path))));
                         dirfuncs_1.dirfuncs.renameFile(original.path, newfile.path);
                     }
-                    this.refresh();
+                    this.refresh(seqItem);
                 }
             });
         }
@@ -271,26 +271,26 @@ class PassTree {
                         seqFile.insertNewFolder(seqItem, newname);
                     else
                         seqFile.insertNewFolderEnd(newname);
-                    this.refresh();
+                    this.refresh(seqItem);
                 }
             });
         }
     }
     typePat(seqItem) {
         visualText_1.visualText.analyzer.seqFile.saveType(seqItem.passNum, 'pat');
-        this.refresh();
+        this.refresh(seqItem);
     }
     typeRec(seqItem) {
         visualText_1.visualText.analyzer.seqFile.saveType(seqItem.passNum, 'rec');
-        this.refresh();
+        this.refresh(seqItem);
     }
     typeOn(seqItem) {
         visualText_1.visualText.analyzer.seqFile.saveActive(seqItem.passNum, '');
-        this.refresh();
+        this.refresh(seqItem);
     }
     typeOff(seqItem) {
         visualText_1.visualText.analyzer.seqFile.saveActive(seqItem.passNum, '/');
-        this.refresh();
+        this.refresh(seqItem);
     }
 }
 exports.PassTree = PassTree;
@@ -309,7 +309,7 @@ class SequenceView {
         vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree());
         vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
         vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
-        vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
+        vscode.commands.registerCommand('sequenceView.refreshAll', (seqItem) => treeDataProvider.refresh(seqItem));
         vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
         vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
         vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
