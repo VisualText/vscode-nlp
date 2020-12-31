@@ -2,52 +2,52 @@
 {
 	"iconDefinitions": {
 		"_file_dark": {
-			"iconPath": "./images/dark/file.svg"
+			"iconPath": "./dark/file.svg"
 		},
 		"_file_light": {
-			"iconPath": "./images/light/file.svg"
+			"iconPath": "./light/file.svg"
 		},
 		"_stub_dark": {
-			"iconPath": "./images/dark/triangle-right.svg"
+			"iconPath": "./dark/triangle-right.svg"
 		},
 		"_stub_light": {
-			"iconPath": "./images/light/triangle-right.svg"
+			"iconPath": "./light/triangle-right.svg"
 		},
 		"_nlp_dark": {
-			"iconPath": "./images/dark/nlp.svg"
+			"iconPath": "./dark/nlp.svg"
 		},
 		"_nlp_light": {
-			"iconPath": "./images/light/nlp.svg"
+			"iconPath": "./light/nlp.svg"
 		},
 		"_kb_dark": {
-			"iconPath": "./images/dark/kb.svg"
+			"iconPath": "./dark/kb.svg"
 		},
 		"_kb_light": {
-			"iconPath": "./images/light/kb.svg"
+			"iconPath": "./light/kb.svg"
 		},
 		"_seq_dark": {
-			"iconPath": "./images/dark/list-tree.svg"
+			"iconPath": "./dark/list-tree.svg"
 		},
 		"_seq_light": {
-			"iconPath": "./images/light/list-tree.svg"
+			"iconPath": "./light/list-tree.svg"
 		},
 		"_log_dark": {
-			"iconPath": "./images/dark/symbol-property.svg"
+			"iconPath": "./dark/symbol-property.svg"
 		},
 		"_log_light": {
-			"iconPath": "./images/light/symbol-property.svg"
+			"iconPath": "./light/symbol-property.svg"
 		},
 		"_markup_dark": {
-			"iconPath": "./images/dark/symbol-keyword.svg"
+			"iconPath": "./dark/symbol-keyword.svg"
 		},
 		"_markup_light": {
-			"iconPath": "./images/light/symbol-keyword.svg"
+			"iconPath": "./light/symbol-keyword.svg"
 		},
 		"_code_dark": {
-			"iconPath": "./images/dark/file-code.svg"
+			"iconPath": "./dark/file-code.svg"
 		},
 		"_code_light": {
-			"iconPath": "./images/light/file-code.svg"
+			"iconPath": "./light/file-code.svg"
 		}
 	},
 
