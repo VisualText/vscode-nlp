@@ -78,11 +78,13 @@ export class FindView {
 	}
 
 	private updateTitle(): void {
+				/* Currently not compiling
 		if (this.searchWord) {
 			let word = this.searchWord;
 			this.findView.title = `FIND RESULTS: (${word})`;				
 		}
 		this.findView.title = 'FIND RESULTS';
+		*/
 	}
 
 	public loadFinds(searchWord: string, findItems: FindItem[]) {

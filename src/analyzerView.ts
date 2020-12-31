@@ -70,11 +70,13 @@ export class AnalyzerView {
 	}
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
+		/* Currently not compiling
 		var analyzerName = path.basename(analyzerItem.uri.path);
 		if (analyzerName.length)
 			this.analyzerView.title = `ANALYZERS (${analyzerName})`;
 		else
 			this.analyzerView.title = 'ANALYZERS';
+		*/
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {

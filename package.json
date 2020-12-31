@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "icon": "resources/NLPppLogo.png",
-    "version": "0.9.7",
+    "version": "0.9.8",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -15,7 +15,8 @@
         "Linters"
     ],
     "activationEvents": [
-        "onLanguage:nlp"
+        "onLanguage:nlp",
+        "onView:sequenceView"
     ],
     "main": "./out/extension.js",
     "author": {

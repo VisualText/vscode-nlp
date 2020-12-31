@@ -200,6 +200,7 @@ export class TextView {
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
+		/* Currently not compiling
 		var filepath = resource.path;
 		if (resource && filepath.length) {
 			var filename = path.basename(resource.path);
@@ -209,6 +210,7 @@ export class TextView {
 			}
 		}
 		this.textView.title = 'TEXT';
+		*/
 	}
 
 	private openFile(entry: Entry): void {
