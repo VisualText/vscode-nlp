@@ -1,4 +1,4 @@
-# NLP++ Language Extension README
+# NLP++ Language Extension
 
 This is a language extension for VSCode for NLP++ to recreate the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below). Information at [http://visualtext.org](http://visualtext.org).
 
@@ -118,9 +118,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 This language extension is dependent on the [NLP-ENGINE](https://github.com/VisualText/nlp-engine). Currently, the NLP-ENGINE only runs on Linux but can be used on windows uing the Windows Linux Subsystem.
 
-### v0.9.0
+### v0.9.8
 
-First release
+First release with minor fixes ongoing.
 
 ## License
 
