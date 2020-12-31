@@ -1,4 +1,19 @@
-.vscode/**
-.vscode-test/**
-.gitignore
-vsc-extension-quickstart.md
+# Ignore everything
+*
+*/**
+
+# Whitelist required files
+!out/**/*
+!resources/**/*
+!snippets/**/*
+!syntaxes/**/*
+
+!.vscodeignore
+!CHANGELOG.md
+!nlp.configuration.json
+!tree.configuration.json
+!txxt.configuration.json
+!kb.configuration.json
+!LICENSE
+!package.json
+!README.md
