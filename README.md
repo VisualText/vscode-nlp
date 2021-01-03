@@ -1,10 +1,6 @@
 # NLP++ Language Extension
 
-This is a language extension for VSCode for NLP++ to recreate the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below). Information at [http://visualtext.org](http://visualtext.org).
-
-# ATTENTION:
-
-Currently this extension is not working when published. We are aware of this problem and are trying to remedy it as quickly as possible. As soon as it has been resolved, the "preivew" mode will be lifted. **You can still preview it fully functional** by running the source code from our [VisualText github repository](https://gihub.com/VisualText/vscode-nlp) in development mode. Instructions can be found in the [Development](#Development) section of this page.
+This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below). Information at [http://visualtext.org](http://visualtext.org).
 
 ## Features
 
@@ -122,9 +118,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 This language extension is dependent on the [NLP-ENGINE](https://github.com/VisualText/nlp-engine). Currently, the NLP-ENGINE only runs on Linux but can be used on windows uing the Windows Linux Subsystem.
 
-### v0.9.15
+### v0.9.16
 
-We are currently trying to fix the problem of this extension not working when published.
+Initial version with ongoing minor fixes
 
 ## License
 
