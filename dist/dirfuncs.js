@@ -4,6 +4,7 @@ exports.dirfuncs = void 0;
 const vscode = require("vscode");
 const path = require("path");
 const fs = require("fs");
+const rimraf = require("rimraf");
 var dirfuncs;
 (function (dirfuncs) {
     function copyDirectory(fromPath, toPath) {
@@ -167,8 +168,10 @@ var dirfuncs;
     }
     dirfuncs.delFile = delFile;
     function delDir(dirPath) {
+        if (!fs.existsSync(dirPath) || dirPath.length <= 2)
+            return false;
         try {
-            fs.rmdirSync(dirPath);
+            rimraf.sync(dirPath);
             return true;
         }
         catch (err) {
@@ -193,8 +196,10 @@ var dirfuncs;
     }
     dirfuncs.deleteFiles = deleteFiles;
     function emptyDir(dirPath) {
+        if (!fs.existsSync(dirPath) || dirPath.length <= 2)
+            return false;
         try {
-            fs.rmdirSync(dirPath);
+            rimraf.sync(dirPath);
             fs.mkdirSync(dirPath);
             return true;
         }

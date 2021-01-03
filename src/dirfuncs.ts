@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as rimraf from 'rimraf';
 
 export namespace dirfuncs {
 
@@ -162,8 +163,10 @@ export namespace dirfuncs {
     }
 
     export function delDir(dirPath: string): boolean {
+        if (!fs.existsSync(dirPath) || dirPath.length <= 2)
+            return false;
         try {
-            fs.rmdirSync(dirPath);
+            rimraf.sync(dirPath);
             return true;
         } catch (err) {
             vscode.window.showInformationMessage('Error deleting folder ' + dirPath + ': ' + err.message);
@@ -188,8 +191,10 @@ export namespace dirfuncs {
 
 
     export function emptyDir(dirPath: string): boolean {
+        if (!fs.existsSync(dirPath) || dirPath.length <= 2)
+            return false;
         try {
-            fs.rmdirSync(dirPath);
+            rimraf.sync(dirPath);
             fs.mkdirSync(dirPath);
             return true;
         } catch (err) {
