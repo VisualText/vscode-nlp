@@ -12,6 +12,7 @@
 !.vscodeignore
 !CHANGELOG.md
 !node_modules/tslib/**/*
+!node_modules/rimraf/**/*
 !nlp-configuration.json
 !tree-configuration.json
 !txxt-configuration.json
