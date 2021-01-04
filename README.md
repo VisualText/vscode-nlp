@@ -118,7 +118,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 This language extension is dependent on the [NLP-ENGINE](https://github.com/VisualText/nlp-engine). Currently, the NLP-ENGINE only runs on Linux but can be used on windows uing the Windows Linux Subsystem.
 
-### v0.9.19
+### v0.9.20
 
 Initial version with ongoing minor fixes
 
