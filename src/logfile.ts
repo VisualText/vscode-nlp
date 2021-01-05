@@ -8,6 +8,21 @@ import { nlpStatusBar, FiredMode } from './status';
 import { SequenceFile } from './sequence';
 import { dirfuncs } from './dirfuncs';
 
+export interface Highlight {
+	start: number;
+	end: number;
+	startb: number;
+	endb: number;
+}
+
+export interface Fired {
+	from: number;
+	to: number;
+	rulenum: number;
+	ruleline: number;
+	built: boolean;
+}
+
 export interface LogLine {
 	node: string
 	start: number;
@@ -23,8 +38,8 @@ export interface LogLine {
 export let logFile: LogFile;
 export class LogFile extends TextFile {
 	
-	private fireds = new Array();
-	private highlights = new Array();
+	private fireds: Fired[] = [];
+	private highlights: Highlight[] = [];
 	private selectedTreeStr = '';
 	private selStart = -1;
 	private selEnd = -1;
@@ -106,20 +121,35 @@ export class LogFile extends TextFile {
 					var firedNumber = this.findMatchByAbsolute(absolute);
 
 					if (firedNumber >= 0) {
-						var chosen = this.fireds[firedNumber];
-						var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rule);
+						var chosen = this.getFired(firedNumber);
+						if (chosen.rulenum > 0) {
+							var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rulenum);
 
-						vscode.window.showTextDocument(ruleFileUri).then(editor => 
-						{
-							var pos = new vscode.Position(chosen.ruleline-1,0);
-							editor.selections = [new vscode.Selection(pos,pos)]; 
-							var range = new vscode.Range(pos, pos);
-							editor.revealRange(range);
-						});
+							vscode.window.showTextDocument(ruleFileUri).then(editor => 
+							{
+								var pos = new vscode.Position(chosen.ruleline-1,0);
+								editor.selections = [new vscode.Selection(pos,pos)]; 
+								var range = new vscode.Range(pos, pos);
+								editor.revealRange(range);
+							});							
+						}
 					}		
 				}
 			}			
 		}
+	}
+
+	getFired(firedNumber: number): Fired {
+		var chosen = this.fireds[firedNumber];
+		while (chosen.rulenum == 0) {
+			firedNumber--;
+			if (firedNumber < 0)
+				break;
+			let parent: Fired = this.fireds[firedNumber];
+			if (parent.to < chosen.from)
+				break;
+		}
+		return chosen;
 	}
 
 	setFile(file: vscode.Uri, separateLines: boolean = true): boolean {
@@ -402,23 +432,24 @@ ${ruleStr}
 		var tokencount = 0;
 		var len = 0;
 		var lenBracket = 0;
-		var start = 0;
-		var end = 0;
-		var startBracket = 0;
-		var endBracket = 0;
 
 		for (let token of tokens) {
 			token = token.replace(/[\n\r]/g, '');
 			if (tokencount) {
+				let highlight: Highlight = {start: 0, end: 0, startb: 0, endb: 0};
 				var toks = token.split(endPattern);
-				start = len;
-				end = len + toks[0].length - 1;
-				startBracket = lenBracket;
-				endBracket = lenBracket + toks[0].length - 1;
-
-				this.highlights.push({start: start, end: end, startb: startBracket, endb: endBracket});
+				highlight.start = len;
+				highlight.end = len + toks[0].length - 1;
+				highlight.startb = lenBracket;
+				highlight.endb = lenBracket + toks[0].length - 1;
+				this.highlights.push(highlight);
 			}
-			len += token.length;
+
+			let tok = token.replace(/\[\[/g, '');
+			tok = tok.replace(/\]\]/g, '');
+			tok = tok.replace(/\{\{/g, '');
+			tok = tok.replace(/\}\}/g, '');
+			len += tok.length;
 			tokencount++;
 			lenBracket += token.length + 2;
 		}
@@ -430,23 +461,21 @@ ${ruleStr}
 		this.fireds = [];
 
 		var file = new TextFile(logfile);
-		var from = 0;
-		var to = 0;
-		var rulenum = 0;
-		var ruleline = 0;
+		var lastTo = 0;
 
 		for (let line of file.getLines()) {
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
+				let fired: Fired = {from: 0, to: 0, rulenum: 0, ruleline: 0, built: false};
 				var tts = line.split(refire);
-				var blt = (tts.length >= 7 && tts[7] === 'blt') ? true : false;
-				if (+tts[2] > to) {
-					from = +tts[1];
-					to = +tts[2];
-					rulenum = +tts[3];
-					ruleline = +tts[4];
-					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || blt)
-						this.fireds.push({from: from, to: to, rule: rulenum, ruleline: ruleline, built: blt});						
+				fired.built = (tts.length >= 7 && tts[7] === 'blt') ? true : false;
+				if (+tts[2] > lastTo) {
+					fired.from = +tts[1];
+					fired.to = lastTo = +tts[2];
+					fired.rulenum = +tts[3];
+					fired.ruleline = +tts[4];
+					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || fired.built)
+						this.fireds.push(fired);						
 				}
 			}
 		}
