@@ -389,6 +389,7 @@ ${ruleStr}
 		this.highlights = [];
 		var squares = this.parseBracketsRegex('[');
 		var curlies = this.parseBracketsRegex('{');
+		this.highlights.sort(function(a,b){return a.start - b.start});
 		return squares + curlies;
 	}
 
