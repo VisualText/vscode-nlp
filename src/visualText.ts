@@ -47,7 +47,7 @@ export class VisualText {
 
                 if (currAnalyzer.length == 0) {
                     var analyzers = dirfuncs.getDirectories(this.workspaceFold.uri);
-                    currAnalyzer = analyzers[0].path;
+                    currAnalyzer = analyzers[0].fsPath;
                     saveit = true;
                 }
 
@@ -55,7 +55,7 @@ export class VisualText {
                     if (fs.existsSync(currAnalyzer))
                         this.currentAnalyzer = vscode.Uri.file(currAnalyzer);
                     else
-                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.path,currAnalyzer));
+                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.fsPath,currAnalyzer));
 
                     if (parse.engineDir) {
                         if (parse.engineDir.length > 1) {
@@ -81,7 +81,7 @@ export class VisualText {
     initSettings(): boolean {
         var fromDir = this.getVisualTextDirectory('.vscode');
         if (fs.existsSync(fromDir)) {
-            var toDir = path.join(this.analyzerDir.path,'.vscode');
+            var toDir = path.join(this.analyzerDir.fsPath,'.vscode');
             if (!fs.existsSync(toDir)) {
                 if (!dirfuncs.copyDirectory(fromDir,toDir)) {
                     vscode.window.showWarningMessage('Copy settings file failed');
@@ -104,7 +104,7 @@ export class VisualText {
     }
 
     findEngine() {
-        if (this.getEngineDirectory().path.length < 2) {
+        if (this.getEngineDirectory().fsPath.length < 2) {
             this.engineDir = dirfuncs.findFolder(this.getWorkspaceFolder(),'nlp-engine');
         }
     }
@@ -116,12 +116,12 @@ export class VisualText {
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "engineDir": this.getEngineDirectory().path,
-                    "currentAnalyzer": currentAnalyzer.path   
+                    "engineDir": this.getEngineDirectory().fsPath,
+                    "currentAnalyzer": currentAnalyzer.fsPath   
                 }
             ]
         }
-        this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);
+        this.jsonState.saveFile(this.analyzerDir.fsPath, 'state', stateJsonDefault);
         this.setCurrentAnalyzer(currentAnalyzer);       
     }
 
@@ -136,7 +136,7 @@ export class VisualText {
     setCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
         if (this.jsonState.json) {
             var parse = this.jsonState.json.visualText[0];
-            parse.currentAnalyzer = currentAnalyzer.path;
+            parse.currentAnalyzer = currentAnalyzer.fsPath;
             this.jsonState.writeFile();
         }
     }
@@ -155,7 +155,7 @@ export class VisualText {
     }
 
     getAnalyzers(): vscode.Uri[] {
-        if (this.analyzerDir.path.length) {
+        if (this.analyzerDir.fsPath.length) {
             this.analyzers = [];
             this.analyzers = dirfuncs.getDirectories(this.analyzerDir);
         }
@@ -163,7 +163,7 @@ export class VisualText {
     }
 
 	hasWorkspaceFolder(): boolean {
-		return this.workspaceFold?.uri.path.length ? true : false;
+		return this.workspaceFold?.uri.fsPath.length ? true : false;
 	}
 
 	getWorkspaceFolder(): vscode.Uri {
@@ -179,8 +179,8 @@ export class VisualText {
 
     getVisualTextDirectory(dirName: string=''): string {
         if (dirName.length)
-            return path.join(this.getEngineDirectory().path,'visualtext',dirName);
+            return path.join(this.getEngineDirectory().fsPath,'visualtext',dirName);
         else
-            return path.join(this.getEngineDirectory().path,'visualtext');
+            return path.join(this.getEngineDirectory().fsPath,'visualtext');
     }
 }

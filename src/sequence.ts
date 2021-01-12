@@ -40,7 +40,7 @@ export class PassItem {
 	}
 
 	public fileExists(): boolean {
-		return fs.existsSync(this.uri.path) ? true : false;
+		return fs.existsSync(this.uri.fsPath) ? true : false;
 	}
 
 	public exists(): boolean {
@@ -78,7 +78,7 @@ export class SequenceFile extends TextFile {
 	init() {
 		if (visualText.analyzer.isLoaded()) {
 			this.specDir = visualText.analyzer.getSpecDirectory();
-			super.setFile(vscode.Uri.file(path.join(this.specDir.path,this.seqFileName)),true);
+			super.setFile(vscode.Uri.file(path.join(this.specDir.fsPath,this.seqFileName)),true);
 			let passNum = 1;
 			this.passItems = [];
 			var folder = '';
@@ -131,7 +131,7 @@ export class SequenceFile extends TextFile {
 				passItem.name = tokens[1];
 
 				if (tokens[0].localeCompare('pat') == 0 || tokens[0].localeCompare('rec') == 0) {			
-					passItem.uri = vscode.Uri.file(path.join(this.specDir.path,this.passFileName(passItem.name)));
+					passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,this.passFileName(passItem.name)));
 				}
 				passItem.comment = this.tokenStr(tokens,2);				
 			}
@@ -189,7 +189,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	insertFolder(passafter: vscode.Uri) {
-		if (passafter.path.length > 1) {
+		if (passafter.fsPath.length > 1) {
 			this.saveFile();
 		}
 	}
@@ -222,10 +222,10 @@ export class SequenceFile extends TextFile {
 				var passes = new Array();
 				passes.push(newpass);
 				var copy = false;
-				var specDir = visualText.analyzer.getSpecDirectory().path;
+				var specDir = visualText.analyzer.getSpecDirectory().fsPath;
 
-				if (specDir.localeCompare(path.dirname(newpass.path))) {
-					if (dirfuncs.isDir(newpass.path)) {
+				if (specDir.localeCompare(path.dirname(newpass.fsPath))) {
+					if (dirfuncs.isDir(newpass.fsPath)) {
 						passes = [];
 						passes = dirfuncs.getFiles(newpass);
 					}
@@ -233,10 +233,10 @@ export class SequenceFile extends TextFile {
 				}
 				for (let pass of passes) {
 					if (copy) {
-						var herepass = path.join(specDir,path.basename(pass.path));
-						fs.copyFileSync(pass.path,herepass);								
+						var herepass = path.join(specDir,path.basename(pass.pafsPathth));
+						fs.copyFileSync(pass.fsPath,herepass);								
 					}		
-					var passItem = this.createPassItemFromFile(pass.path);
+					var passItem = this.createPassItemFromFile(pass.fsPath);
 					this.passItems.splice(row,0,passItem);
 					row++;
 				}
@@ -319,7 +319,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	createNewPassFile(filename: string): string {
-		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().path,filename.concat('.pat'));
+		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().fsPath,filename.concat('.pat'));
 		fs.writeFileSync(newfilepath,this.newPassContent(filename),{flag:'w+'});
 		return newfilepath;
 	}
@@ -403,8 +403,8 @@ export class SequenceFile extends TextFile {
 
 	getSequenceFile(): vscode.Uri {
 		var uri = visualText.analyzer.getSpecDirectory();
-		if (uri.path.length)
-			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().path,this.seqFileName));
+		if (uri.fsPath.length)
+			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().fsPath,this.seqFileName));
 		return uri;
 	}
 
@@ -441,7 +441,7 @@ export class SequenceFile extends TextFile {
 			this.newcontent = this.newcontent.concat(this.passString(passItem));
 		}
 
-		fs.writeFileSync(path.join(this.specDir.path,this.seqFileName),this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(this.specDir.fsPath,this.seqFileName),this.newcontent,{flag:'w+'});
 	}
 
 	movePass(seqItem: SequenceItem, direction: moveDirection) {
@@ -553,9 +553,9 @@ export class SequenceFile extends TextFile {
 
 	swapAuxFiles(itemOne: PassItem, itemTwo: PassItem, type: nlpFileType) {
 		var logFile = new LogFile();
-		var oneFile = logFile.anaFile(itemOne.passNum,type).path;
+		var oneFile = logFile.anaFile(itemOne.passNum,type).fsPath;
 		var swapFile = oneFile + ".swap";
-		var twoFile = logFile.anaFile(itemTwo.passNum,type).path;
+		var twoFile = logFile.anaFile(itemTwo.passNum,type).fsPath;
 		var oneExists = fs.existsSync(oneFile);
 		var twoExists = fs.existsSync(twoFile);
 

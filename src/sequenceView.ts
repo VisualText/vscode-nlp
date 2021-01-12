@@ -59,7 +59,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			if (passItem.isFolder()) {
 				folder = passItem.name;
 				label = passItem.name;
-				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'folder', inFolder: passItem.inFolder,
+				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'folder', inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 			
 			} else if (folder.length) {
@@ -68,7 +68,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			
 			} else if (passItem.isRuleFile()) {
 				var logPath = logFile.anaFile(passItem.passNum,nlpFileType.TREE);
-				var hasLog = fs.existsSync(logPath.path) ? true : false;
+				var hasLog = fs.existsSync(logPath.fsPath) ? true : false;
 				var conVal = '';
 				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
 					conVal = 'hasLog';
@@ -77,7 +77,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (conVal.length == 0)
 					conVal = 'file';
 				if (passItem.fileExists())
-					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: conVal,
+					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal,
 						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse});
 				else
 					seqItems.push({label: label, name: passItem.name, tooltip: 'MISSING', contextValue: 'missing', inFolder: passItem.inFolder,
@@ -90,7 +90,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					label = '1 dicttokz';
 				else
 					label = passItem.name;
-				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.path, contextValue: 'stub', inFolder: passItem.inFolder,
+				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'stub', inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse});
 			}
 			order++;	
@@ -228,7 +228,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (!selection) {
 					return;
 				}
-				var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
+				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
 				seqFile.insertPass(seqItem,newfile);
 				this.refresh(seqItem);
 			});			
@@ -251,7 +251,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (!selection) {
 					return;
 				}
-				var newfile: vscode.Uri = vscode.Uri.file(selection[0].path);
+				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
 				seqFile.insertPass(seqItem,newfile);
 				this.refresh(seqItem);
 			});			
@@ -281,8 +281,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (newname) {
 					seqFile.renamePass(seqItem,newname);
 					if (seqItem.type.localeCompare('pat') == 0 || seqItem.type.localeCompare('rec') == 0) {
-						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().path,newname.concat(path.extname(original.path))));
-						dirfuncs.renameFile(original.path,newfile.path);						
+						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath,newname.concat(path.extname(original.fsPath))));
+						dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
 					}
 					this.refresh(seqItem);
 				}
@@ -370,7 +370,7 @@ export class SequenceView {
 
 	finalTree() {
 		var dir = visualText.analyzer.getOutputDirectory();
-		var finalLog = path.join(dir.path,'final.log');
+		var finalLog = path.join(dir.fsPath,'final.log');
 		if (fs.existsSync(finalLog)) {
 			vscode.window.showTextDocument(vscode.Uri.file(finalLog));	
 		} else {
@@ -427,12 +427,12 @@ export class SequenceView {
 				vscode.window.showWarningMessage('Not editable');
 				return;
 			}
-			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
 				var logfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.TREE);
-				if (fs.existsSync(logfile.path))
+				if (fs.existsSync(logfile.fsPath))
 					vscode.window.showTextDocument(logfile);
 				else
-					vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.path));
+					vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
 			}
 		}
 	}
@@ -444,9 +444,9 @@ export class SequenceView {
 				vscode.window.showWarningMessage('Not editable');
 				return;
 			}
-			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
 				var firefile = this.logFile.firedFile(seqItem.passNum);
-				if (fs.existsSync(firefile.path))
+				if (fs.existsSync(firefile.fsPath))
 					vscode.window.showTextDocument(firefile);
 				else
 					vscode.window.showWarningMessage('No highlight file with this pass');
@@ -461,9 +461,9 @@ export class SequenceView {
 				vscode.window.showWarningMessage('Not editable');
 				return;
 			}
-			if (fs.existsSync(visualText.analyzer.getOutputDirectory().path)) {
+			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
 				var kbfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.KBB);
-				if (fs.existsSync(kbfile.path))
+				if (fs.existsSync(kbfile.fsPath))
 					vscode.window.showTextDocument(kbfile);
 				else
 					vscode.window.showWarningMessage('No KB file for this pass');

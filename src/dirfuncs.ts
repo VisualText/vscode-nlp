@@ -21,7 +21,7 @@ export namespace dirfuncs {
     }
 
     export function sameParentDirectory(dir1: vscode.Uri, dir2: vscode.Uri): boolean {
-        return path.dirname(dir1.path).localeCompare(path.dirname(dir2.path)) == 0 ? true : false;
+        return path.dirname(dir1.fsPath).localeCompare(path.dirname(dir2.fsPath)) == 0 ? true : false;
     }
 
     export function isDir(path: string): boolean {
@@ -46,20 +46,20 @@ export namespace dirfuncs {
     }
 
     export function findFolder(dirPath: vscode.Uri, folderToFind: string): vscode.Uri {
-        var parentDir = path.dirname(dirPath.path);
+        var parentDir = path.dirname(dirPath.fsPath);
         if (path.basename(parentDir).localeCompare(folderToFind) == 0) {
             return vscode.Uri.file(parentDir);
         }
 
         if (parentDir && parentDir?.length > 1) {
             var found = findFolder(vscode.Uri.file(parentDir), folderToFind);
-            if (found.path.length > 2)
+            if (found.fsPath.length > 2)
                 return found;
         }
 
         var dirs = getDirectories(dirPath);
         for (let dir of dirs) {
-            if (path.basename(dir.path).localeCompare(folderToFind) == 0) {
+            if (path.basename(dir.fsPath).localeCompare(folderToFind) == 0) {
                 return dir;
             }
         }
@@ -69,10 +69,10 @@ export namespace dirfuncs {
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {
         const dirUris: vscode.Uri[] = new Array();
-        const filenames = fs.readdirSync(folder.path);
+        const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filepath = path.join(folder.path,filename);
+                var filepath = path.join(folder.fsPath,filename);
                 try {
                     const stats = fs.statSync(filepath);
                     if (stats.isDirectory())
@@ -87,10 +87,10 @@ export namespace dirfuncs {
 
     export function getDirectoryTypes(folder: vscode.Uri): {uri: vscode.Uri, type: vscode.FileType}[] {
         var dirsAndTypes = Array();
-        const filenames = fs.readdirSync(folder.path);
+        const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filepath = path.join(folder.path,filename);
+                var filepath = path.join(folder.fsPath,filename);
                 try {
                     const stats = fs.statSync(filepath);
                     var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
@@ -105,10 +105,10 @@ export namespace dirfuncs {
 
     export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
-        const filenames = fs.readdirSync(folder.path);
+        const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filePath = path.join(folder.path,filename);
+                var filePath = path.join(folder.fsPath,filename);
                 var ext = path.extname(filePath);
                 const stats = fs.statSync(filePath);
                 if (!(skipDirectories && stats.isDirectory()) && (filter.length == 0 || filter.includes(ext)))
@@ -176,10 +176,10 @@ export namespace dirfuncs {
     
     export function deleteFiles(folder: vscode.Uri, filter: string[]=[]): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
-        const filenames = fs.readdirSync(folder.path);
+        const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filePath = path.join(folder.path,filename);
+                var filePath = path.join(folder.fsPath,filename);
                 var ext = path.extname(filePath);
                 const stats = fs.statSync(filePath);
                 if (!stats.isDirectory() && (filter.length == 0 || filter.includes(ext)))

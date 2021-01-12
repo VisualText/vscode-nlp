@@ -20,10 +20,10 @@ export class NLPFile extends TextFile {
 		vscode.commands.executeCommand('workbench.action.files.saveAll');
 
 		// Delete files in output directory
-		dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().path);
-		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().path);
+		dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().fsPath);
+		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
 
-		const filestr = filepath.path;
+		const filestr = filepath.fsPath;
 		
 		logView.clearLogs();
 		logView.addMessage('Analyzing...',vscode.Uri.file(filestr));
@@ -31,9 +31,9 @@ export class NLPFile extends TextFile {
 		outputView.setType(outputFileType.TXT);
 
 
-		var pos = filestr.search('/input/');
+		var pos = filestr.search('input');
 		var anapath = filestr.substr(0,pos);
-		var engineDir = visualText.getEngineDirectory().path;
+		var engineDir = visualText.getEngineDirectory().fsPath;
 		var exe = path.join(engineDir,'nlp.exe');
 		var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
 		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
@@ -43,7 +43,7 @@ export class NLPFile extends TextFile {
 			console.log('stdout: ' + stdout);
 			console.log('stderr: ' + stderr);
 			if (err) {
-				logView.loadMakeAna();
+				logView.addMessage(err.message,vscode.Uri.file(filestr));
 				vscode.commands.executeCommand('outputView.refreshAll');
 				vscode.commands.executeCommand('logView.refreshAll');
 				return false;
