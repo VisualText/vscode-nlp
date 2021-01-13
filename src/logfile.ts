@@ -81,7 +81,7 @@ export class LogFile extends TextFile {
 			if (this.selStart >= 0) {
 				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
 					{
-						var txt = new TextFile(visualText.analyzer.getTextPath().path);
+						var txt = new TextFile(visualText.analyzer.getTextPath().fsPath);
 						var posStart = txt.positionAt(this.selStart-1);
 						var posEnd = txt.positionAt(this.selEnd);
 						var range = new vscode.Range(posStart,posEnd);
@@ -111,7 +111,7 @@ export class LogFile extends TextFile {
     findRule(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.TXXT) {
-			this.setFilesNames(this.getUri().path);
+			this.setFilesNames(this.getUri().fsPath);
 
 			if (this.parseBrackets()) {
 				this.parseFireds(this.logFile);
@@ -153,9 +153,9 @@ export class LogFile extends TextFile {
 	}
 
 	setFile(file: vscode.Uri, separateLines: boolean = true): boolean {
-		if (file.path.length) {
+		if (file.fsPath.length) {
 			super.setFile(file,separateLines);
-			this.setFilesNames(file.path);
+			this.setFilesNames(file.fsPath);
 			return true;	
 		}
 		return false;
@@ -168,9 +168,9 @@ export class LogFile extends TextFile {
 			this.basename = path.basename(this.basename,'.txt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
-			this.logFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.log');
-			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().path,this.basename+'.txxt');
-			this.inputFile = visualText.analyzer.getTextPath().path;
+			this.logFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.log');
+			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.txxt');
+			this.inputFile = visualText.analyzer.getTextPath().fsPath;
 		}
 	}
 
@@ -182,7 +182,7 @@ export class LogFile extends TextFile {
 				return true;
 			return false;
 		}
-		return fs.existsSync(anaFile.path);
+		return fs.existsSync(anaFile.fsPath);
 	}
 
 	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
@@ -192,7 +192,7 @@ export class LogFile extends TextFile {
 		else if (pass < 100)
 			filename = filename + '0';
 		filename = filename + pass.toString() + '.' + this.getExtension(type);
-		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,filename));
+		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
 	}
 	
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
@@ -201,10 +201,10 @@ export class LogFile extends TextFile {
 		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
 
 			if (this.getFileType() == nlpFileType.TXT) {
-				this.setFilesNames(visualText.analyzer.getAnaLogFile().path);
-				this.absoluteRangeFromSelection(this.getUri().path, editor.selection);	
+				this.setFilesNames(visualText.analyzer.getAnaLogFile().fsPath);
+				this.absoluteRangeFromSelection(this.getUri().fsPath, editor.selection);	
 			} else {
-				this.setFilesNames(this.getUri().path);
+				this.setFilesNames(this.getUri().fsPath);
 				this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
 			}
 			this.findLogfileLines();
@@ -215,9 +215,9 @@ export class LogFile extends TextFile {
 	generateRule(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
 			let passFilePath = visualText.analyzer.getPassPath();
-			let passName = visualText.analyzer.seqFile.base(passFilePath.path);
+			let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
 			let passItem = visualText.analyzer.seqFile.findPass('pat',passName);
-			this.logFile = this.anaFile(passItem.passNum).path;
+			this.logFile = this.anaFile(passItem.passNum).fsPath;
 
 			if (this.findSelectedTreeStr(editor)) {
 				let num = 1;
@@ -484,10 +484,10 @@ ${ruleStr}
 
 	firedFile(pass: number, rewrite: boolean=false): vscode.Uri {
 		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
-		if (!fs.existsSync(firefile.path) || rewrite) {
+		if (!fs.existsSync(firefile.fsPath) || rewrite) {
 			var logfile = this.anaFile(pass);
-			if (fs.existsSync(logfile.path)) {
-				this.parseFireds(logfile.path);
+			if (fs.existsSync(logfile.fsPath)) {
+				this.parseFireds(logfile.fsPath);
 				this.writeFiredText(logfile,rewrite);				
 			}
 		}
@@ -504,8 +504,8 @@ ${ruleStr}
 	}
 
 	writeFiredText(logfile: vscode.Uri, rewrite: boolean=false): vscode.Uri {
-		this.setFilesNames(logfile.path);
-		var logDate: Date = this.fileCreateTime(logfile.path);
+		this.setFilesNames(logfile.fsPath);
+		var logDate: Date = this.fileCreateTime(logfile.fsPath);
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
 		if (!rewrite && inputDate < logDate && fs.existsSync(this.highlightFile))
 			return vscode.Uri.file(this.highlightFile);
@@ -552,7 +552,7 @@ ${ruleStr}
 		var exts = new Array('.'+this.getExtension(fileType));
 		var files = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),exts);
 		for (let file of files) {
-			var numStr = path.basename(file.path).substr(3,3);
+			var numStr = path.basename(file.fsPath).substr(3,3);
 			var passNum = Number.parseInt(numStr);
 			this.firedFile(passNum,true);
 		}

@@ -99,9 +99,9 @@ export class OutputView {
 				if (!selection) {
 					return;
 				}
-				var oldPath = selection[0].path;
+				var oldPath = selection[0].fsPath;
 				var filename = path.basename(oldPath);
-				var dir = visualText.analyzer.getAnalyzerDirectory('kb').path;
+				var dir = visualText.analyzer.getAnalyzerDirectory('kb').fsPath;
 				var newPath = path.join(dir,filename);
 				fs.copyFileSync(oldPath,newPath);
 				outputView.setType(outputFileType.KB);
@@ -153,9 +153,9 @@ export class OutputView {
 		if (path.length == 0)
 			return false;
 		this.logDirectory = vscode.Uri.file(path + '_log');
-		if (!fs.existsSync(this.logDirectory.path))
+		if (!fs.existsSync(this.logDirectory.fsPath))
 			return false;
-		var stats = fs.lstatSync(this.logDirectory.path);
+		var stats = fs.lstatSync(this.logDirectory.fsPath);
 		if (!stats)
 			return false;
 		return stats.isDirectory();
@@ -172,23 +172,23 @@ export class OutputView {
 			} else if (this.type == outputFileType.NLP) {
 				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
 				for (let nlpFile of nlpFiles) {
-					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.path,'.pat')) == true) {
+					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
 						this.outputFiles.push(nlpFile);
 					}
 				}
 
 			} else {
-				var textPath = visualText.analyzer.getTextPath().path;
+				var textPath = visualText.analyzer.getTextPath().fsPath;
 				this.outputFiles = [];
 				if (textPath.length && this.fileHasLog(textPath)) {
 					var candidates = dirfuncs.getFiles(this.logDirectory,['.txt','.log']);
 					for (let cand of candidates) {
-						let base = path.basename(cand.path);
+						let base = path.basename(cand.fsPath);
 						if (!base.startsWith('ana'))
 							this.outputFiles.push(cand);
 					}
 				} else {
-					dirfuncs.delDir(visualText.analyzer.getOutputDirectory().path);
+					dirfuncs.delDir(visualText.analyzer.getOutputDirectory().fsPath);
 				}					
 			}
 		}
@@ -196,7 +196,7 @@ export class OutputView {
 	}
 	
 	private openFile(resource: vscode.Uri): void {
-		var textFile = new TextFile(resource.path);
+		var textFile = new TextFile(resource.fsPath);
 		textFile.cleanZeroZero();
         vscode.window.showTextDocument(resource);
 	}
@@ -205,15 +205,15 @@ export class OutputView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.path),'\' analzyer');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.fsPath),'\' analzyer');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				if (!dirfuncs.delFile(resource.uri.path)) {
-					vscode.window.showWarningMessage('Could not delete file: '+resource.uri.path);
+				if (!dirfuncs.delFile(resource.uri.fsPath)) {
+					vscode.window.showWarningMessage('Could not delete file: '+resource.uri.fsPath);
 				} else
 					vscode.commands.executeCommand('outputView.refreshAll');
 			});

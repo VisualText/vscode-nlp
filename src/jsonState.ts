@@ -34,7 +34,7 @@ export class JsonState {
     }
 
     jsonParse(dirPath: vscode.Uri, filename: string, label: string): boolean {
-        if (this.setFilePath(dirPath.path,filename)) {
+        if (this.setFilePath(dirPath.fsPath,filename)) {
             this.jsonStr = fs.readFileSync(this.filePath, 'utf8');
             if (this.jsonStr.length) {
                 this.json = JSON.parse(this.jsonStr);

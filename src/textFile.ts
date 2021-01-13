@@ -58,10 +58,10 @@ export class TextFile {
             if (this.text.indexOf('\x00') >= 0) {
                 this.text = this.text.replace(/\x00/g, ''); 
                 try {
-                    fs.writeFileSync(this.uri.path,this.text,{flag:'w'});
+                    fs.writeFileSync(this.uri.fsPath,this.text,{flag:'w'});
                     return true;
                 } catch (err) {
-                    console.log('Error writing file ' + this.uri.path+ ': ' + err.message);
+                    console.log('Error writing file ' + this.uri.fsPath+ ': ' + err.message);
                     return false;
                 }
             }
@@ -82,9 +82,9 @@ export class TextFile {
         this.exists = false;
         this.clear();
 
-        if (file.path.length && fs.existsSync(file.path)) {
+        if (file.fsPath.length && fs.existsSync(file.fsPath)) {
             this.uri = file;
-            this.filepath = file.path;
+            this.filepath = file.fsPath;
             this.text = fs.readFileSync(this.filepath, 'utf8');
             this.setFileType(this.filepath);
             if (this.text.length)
@@ -97,7 +97,7 @@ export class TextFile {
     setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {
         this.clear();
         this.uri = editor.document.uri;
-        this.filepath = editor.document.uri.path;
+        this.filepath = editor.document.uri.fsPath;
         var firstLine = editor.document.lineAt(0);
         var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
         var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);

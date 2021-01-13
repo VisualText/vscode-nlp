@@ -15,7 +15,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 
 	public getTreeItem(findItem: FindItem): vscode.TreeItem {
 		var icon = 'file.svg';
-		if (findItem.uri.path.endsWith('.pat')) {
+		if (findItem.uri.fsPath.endsWith('.pat')) {
 			icon = 'gear.svg';
 		}
 

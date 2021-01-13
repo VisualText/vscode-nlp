@@ -71,7 +71,7 @@ export class AnalyzerView {
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
 		/* Currently not compiling
-		var analyzerName = path.basename(analyzerItem.uri.path);
+		var analyzerName = path.basename(analyzerItem.uri.fsPath);
 		if (analyzerName.length)
 			this.analyzerView.title = `ANALYZERS (${analyzerName})`;
 		else
@@ -88,14 +88,14 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.path),'\' analzyer');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analzyer');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				dirfuncs.delDir(analyzerItem.uri.path);
+				dirfuncs.delDir(analyzerItem.uri.fsPath);
 				vscode.commands.executeCommand('analyzerView.refreshAll');
 			});
 		}

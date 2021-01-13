@@ -34,14 +34,14 @@ export class Analyzer {
                 if (fs.existsSync(currentFile))
                     this.currentTextFile = vscode.Uri.file(currentFile);
                 else
-                    this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));
+                    this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().fsPath,currentFile));
 
                 if (parse.currentPassFile) {
                     currentFile = parse.currentPassFile;
                     if (fs.existsSync(currentFile))
                         this.currentPassFile = vscode.Uri.file(currentFile);
                     else
-                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));                    
+                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().fsPath,currentFile));                    
                 }
 
                 vscode.commands.executeCommand('status.update');
@@ -51,7 +51,7 @@ export class Analyzer {
     }
 
     hasText(): boolean {
-        return this.currentTextFile.path.length ? true : false;
+        return this.currentTextFile.fsPath.length ? true : false;
     }
 
     newAnalyzer(): string {
@@ -78,8 +78,8 @@ export class Analyzer {
 
     createNewAnalyzer(analyzerName: string): boolean {
         visualText.readState();
-        this.analyzerDir = vscode.Uri.file(path.join(visualText.getWorkspaceFolder().path,analyzerName));
-        if (fs.existsSync(this.analyzerDir.path)) {
+        this.analyzerDir = vscode.Uri.file(path.join(visualText.getWorkspaceFolder().fsPath,analyzerName));
+        if (fs.existsSync(this.analyzerDir.fsPath)) {
             vscode.window.showWarningMessage('Analyzer folder already exists');
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
@@ -87,11 +87,11 @@ export class Analyzer {
             return false;
         } else {
             var fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
-            if (!dirfuncs.makeDir(this.analyzerDir.path)) {
+            if (!dirfuncs.makeDir(this.analyzerDir.fsPath)) {
                 vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
                 return false;
             }
-            if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.path)) {
+            if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.fsPath)) {
                 vscode.window.showWarningMessage('Copy directory for new analyzer failed');
                 return false;
             }
@@ -108,29 +108,29 @@ export class Analyzer {
     createAnaSequenceFile(content: string=''): boolean {
         var cont = content.length ? content : '#\ntokenize	nil	# Gen:   Convert input to token list.';
         if (this.getSpecDirectory()) {
-            var anaFile = path.join(this.getSpecDirectory().path,'analyzer.seq');
+            var anaFile = path.join(this.getSpecDirectory().fsPath,'analyzer.seq');
             return dirfuncs.writeFile(anaFile,cont);
         }
         return false;
     }
 
     saveStateFile() {
-        if (this.currentPassFile.path.length == 0 || this.currentTextFile.path.length == 0) {
+        if (this.currentPassFile.fsPath.length == 0 || this.currentTextFile.fsPath.length == 0) {
             if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
                 var parse = this.jsonState.json.visualText[0];
-                if (parse.currentTextFile && this.currentPassFile.path.length == 0) {
+                if (parse.currentTextFile && this.currentPassFile.fsPath.length == 0) {
                     var currentFile = parse.currentTextFile;
                     if (fs.existsSync(currentFile))
                         this.currentTextFile = vscode.Uri.file(currentFile);
                     else
-                        this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().path,currentFile));           
+                        this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().fsPath,currentFile));           
                 }
-                if (parse.currentPassFile && this.currentPassFile.path.length == 0) {
+                if (parse.currentPassFile && this.currentPassFile.fsPath.length == 0) {
                     var currentFile = parse.currentPassFile;
                     if (fs.existsSync(currentFile))
                         this.currentPassFile = vscode.Uri.file(currentFile);
                     else
-                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().path,currentFile));           
+                        this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().fsPath,currentFile));           
                 }
             }            
         }
@@ -140,12 +140,12 @@ export class Analyzer {
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "currentTextFile": this.currentTextFile.path,
-                    "currentPassFile": this.currentPassFile.path
+                    "currentTextFile": this.currentTextFile.fsPath,
+                    "currentPassFile": this.currentPassFile.fsPath
                 }
             ]
         }
-        this.jsonState.saveFile(this.analyzerDir.path, 'state', stateJsonDefault);  
+        this.jsonState.saveFile(this.analyzerDir.fsPath, 'state', stateJsonDefault);  
         this.outputDirectory();
     }
 
@@ -165,25 +165,25 @@ export class Analyzer {
         this.readState();
         this.seqFile.init();
         vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
-        if (this.currentTextFile.path.length)
-            vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.path));
+        if (this.currentTextFile.fsPath.length)
+            vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.fsPath));
     }
 
     outputDirectory() {
-        if (this.currentTextFile.path.length) {
-            this.outputDir = vscode.Uri.file(this.currentTextFile.path + '_log');
+        if (this.currentTextFile.fsPath.length) {
+            this.outputDir = vscode.Uri.file(this.currentTextFile.fsPath + '_log');
         } else {
-            this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.path,'output'));
+            this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.fsPath,'output'));
         }
     }
 
     clearOutputDirectory() {
-        if (fs.lstatSync(this.outputDir.path).isDirectory()) {
-            fs.readdir(this.outputDir.path, (err, files) => {
+        if (fs.lstatSync(this.outputDir.fsPath).isDirectory()) {
+            fs.readdir(this.outputDir.fsPath, (err, files) => {
                 if (err) throw err;
             
                 for (const file of files) {
-                    fs.unlink(path.join(this.outputDir.path, file), err => {
+                    fs.unlink(path.join(this.outputDir.fsPath, file), err => {
                         if (err) throw err;
                     });
                 }
@@ -192,8 +192,8 @@ export class Analyzer {
     }
 
     logFile(name: string): vscode.Uri {
-        if (this.logDir.path.length) {
-            var pather = path.join(this.logDir.path,name);
+        if (this.logDir.fsPath.length) {
+            var pather = path.join(this.logDir.fsPath,name);
             pather = pather.concat('.log');
             return vscode.Uri.file(pather);        
         }
@@ -206,7 +206,7 @@ export class Analyzer {
 
     getAnalyzerDirectory(subDir: string=''): vscode.Uri {
         
-        return vscode.Uri.file(path.join(this.analyzerDir.path,subDir));
+        return vscode.Uri.file(path.join(this.analyzerDir.fsPath,subDir));
     }
 
     getInputDirectory(): vscode.Uri {
@@ -240,10 +240,10 @@ export class Analyzer {
 
 	setWorkingDir(directory: vscode.Uri) {
         this.analyzerDir = directory;
-        if (fs.existsSync(directory.path)) {
-            this.specDir = vscode.Uri.file(path.join(directory.path,'spec'));
-            this.inputDir = vscode.Uri.file(path.join(directory.path,'input'));
-            this.logDir = vscode.Uri.file(path.join(directory.path,'logs'));
+        if (fs.existsSync(directory.fsPath)) {
+            this.specDir = vscode.Uri.file(path.join(directory.fsPath,'spec'));
+            this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'input'));
+            this.logDir = vscode.Uri.file(path.join(directory.fsPath,'logs'));
             this.loaded = true;          
         }
         else

@@ -75,7 +75,7 @@ export class LogView {
 
 	private loadTimingLog() {
 		this.clearLogs();
-		var cgFile = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,'dbg.log'));
+		var cgFile = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'dbg.log'));
 		this.addLogFile(cgFile);
 	}
 
@@ -86,7 +86,7 @@ export class LogView {
 	
 	public loadMakeAna() {
 		this.clearLogs();
-		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().path,'err.log'));
+		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
 		this.addLogFile(errorLog);
 		this.addLogFile(visualText.analyzer.logFile('make_ana'));
 	}
@@ -101,8 +101,8 @@ export class LogView {
 	}
 
 	public addLogFile(logFileName: vscode.Uri) {
-		if (fs.existsSync(logFileName.path)) {
-			const logFile = new TextFile(logFileName.path);
+		if (fs.existsSync(logFileName.fsPath)) {
+			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
 				line = line.substr(0,line.length-1);
 				if (line.length) {
@@ -155,7 +155,7 @@ export class LogView {
 					var range = new vscode.Range(pos, pos);
 					editor.revealRange(range);
 				});
-		} else if (logItem.uri.path.length) {
+		} else if (logItem.uri.fsPath.length) {
 			vscode.window.showTextDocument(logItem.uri);
 		}
 	}

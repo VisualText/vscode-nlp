@@ -35,7 +35,7 @@ export class FindFile {
 		var escaped = this.escapeRegExp(searchTerm);
 
 		for (let file of files) {
-			if (endswith.length && !file.path.endsWith(endswith))
+			if (endswith.length && !file.fsPath.endsWith(endswith))
 				continue;
 			this.textFile.setFile(file);
 
@@ -44,8 +44,8 @@ export class FindFile {
 				for (let line of this.textFile.getLines()) {
 					var pos = line.search(escaped);
 					if (pos >= 0) {
-						var filename = path.basename(file.path);
-						var uri = vscode.Uri.file(path.join(dir.path,filename));
+						var filename = path.basename(file.fsPath);
+						var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
 						if (line.length + escaped.length > context) {
 							let half = context / 2;
 							if (line.length - pos < half) {

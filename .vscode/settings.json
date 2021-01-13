@@ -39,5 +39,6 @@
             }
         ]
     },
-    "editor.suggest.snippetsPreventQuickSuggestions": false
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "git.ignoreLimitWarning": true
 }

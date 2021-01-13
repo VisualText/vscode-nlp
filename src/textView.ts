@@ -42,7 +42,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 		} else {
 			treeItem.contextValue = 'dir';
 		}
-		var isLogDir = outputView.fileHasLog(entry.uri.path);
+		var isLogDir = outputView.fileHasLog(entry.uri.fsPath);
 		treeItem.iconPath = {
 			light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
 								path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
@@ -57,7 +57,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
 		for (let entry of entries) {
-			if (!(entry.type == vscode.FileType.Directory && outputView.directoryIsLog(entry.uri.path))) {
+			if (!(entry.type == vscode.FileType.Directory && outputView.directoryIsLog(entry.uri.fsPath))) {
 				keepers.push(entry);
 			}
 		} 
@@ -82,13 +82,13 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 				if (!selection) {
 					return;
 				}
-				var oldPath = selection[0].path;
+				var oldPath = selection[0].fsPath;
 				var filename = path.basename(oldPath);
-				var dir = visualText.analyzer.getInputDirectory().path;
+				var dir = visualText.analyzer.getInputDirectory().fsPath;
 				if (entry) {
-					dir = path.dirname(entry.uri.path);
+					dir = path.dirname(entry.uri.fsPath);
 				} else if (visualText.analyzer.getTextPath()) {
-					var textPath = visualText.analyzer.getTextPath().path;
+					var textPath = visualText.analyzer.getTextPath().fsPath;
 					if (textPath.length)
 						dir = path.dirname(textPath);
 				}
@@ -101,13 +101,13 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 	
 	rename(entry: Entry): void {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: path.basename(entry.uri.path), prompt: 'Enter new name for file' }).then(newname => {
+			vscode.window.showInputBox({ value: path.basename(entry.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
 				if (newname) {
 					var original = entry.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(entry.uri.path);
-					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.path),newname));
-					dirfuncs.renameFile(original.path,newfile.path);						
+						newname = newname+path.extname(entry.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.fsPath),newname));
+					dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
 					this.refresh(entry);
 				}
 			});
@@ -116,11 +116,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 		
 	renameDir(entry: Entry): void {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: path.basename(entry.uri.path), prompt: 'Enter new name for directory' }).then(newname => {
+			vscode.window.showInputBox({ value: path.basename(entry.uri.fsPath), prompt: 'Enter new name for directory' }).then(newname => {
 				if (newname) {
 					var original = entry.uri;
-					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.path),newname));
-					dirfuncs.renameFile(original.path,newfile.path);						
+					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.fsPath),newname));
+					dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
 					this.refresh(entry);
 				}
 			});
@@ -170,7 +170,7 @@ export class TextView {
 	}
 
 	private analyze(entry: Entry) {
-        if (entry.uri.path.length) {
+        if (entry.uri.fsPath.length) {
 			this.openFile(entry);
             var nlp = new NLPFile();
 			nlp.analyze(entry.uri);
@@ -201,9 +201,9 @@ export class TextView {
 	
 	private updateTitle(resource: vscode.Uri): void {
 		/* Currently not compiling
-		var filepath = resource.path;
+		var filepath = resource.fsPath;
 		if (resource && filepath.length) {
-			var filename = path.basename(resource.path);
+			var filename = path.basename(resource.fsPath);
 			if (filename.length) {
 				this.textView.title = `TEXT (${filename})`;	
 				return;					
@@ -225,7 +225,7 @@ export class TextView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			var filename = path.basename(entry.uri.path);
+			var filename = path.basename(entry.uri.fsPath);
 			deleteDescr = deleteDescr.concat('Delete \'',filename,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete '+filename });
@@ -233,7 +233,7 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var path = entry.uri.path;
+				var path = entry.uri.fsPath;
 				if (dirfuncs.isDir(path))
 					dirfuncs.delDir(path);
 				else
@@ -247,9 +247,9 @@ export class TextView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter directory name' }).then(newdir => {
 				if (newdir) {
-					var dirPath = visualText.analyzer.getInputDirectory().path;
+					var dirPath = visualText.analyzer.getInputDirectory().fsPath;
 					if (entry)
-						dirPath = dirfuncs.getDirPath(entry.uri.path);
+						dirPath = dirfuncs.getDirPath(entry.uri.fsPath);
 					dirPath = path.join(dirPath,newdir);
 					dirfuncs.makeDir(dirPath);
 					vscode.commands.executeCommand('textView.refreshAll');
@@ -262,9 +262,9 @@ export class TextView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter text file name' }).then(newname => {
 				if (newname) {
-					var dirPath = visualText.analyzer.getInputDirectory().path;
+					var dirPath = visualText.analyzer.getInputDirectory().fsPath;
 					if (entry)
-						dirPath = dirfuncs.getDirPath(entry.uri.path);
+						dirPath = dirfuncs.getDirPath(entry.uri.fsPath);
 					var filepath = path.join(dirPath,newname+'.txt');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
