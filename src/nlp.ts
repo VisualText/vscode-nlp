@@ -30,9 +30,7 @@ export class NLPFile extends TextFile {
 		vscode.commands.executeCommand('logView.refreshAll');
 		outputView.setType(outputFileType.TXT);
 
-
-		var pos = filestr.search('input');
-		var anapath = filestr.substr(0,pos);
+		var anapath = path.basename(visualText.getAnalyzer().fsPath);
 		var engineDir = visualText.getEngineDirectory().fsPath;
 		var exe = path.join(engineDir,'nlp.exe');
 		var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
