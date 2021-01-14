@@ -182,7 +182,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			} else {
 				seqFile.movePass(seqItem,direction);
 				seqFile.saveFile();
-				this.refresh(seqItem);	
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			}
 		}
 	}
@@ -230,7 +230,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
 				seqFile.insertPass(seqItem,newfile);
-				this.refresh(seqItem);
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
 		}
 	}
@@ -253,7 +253,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
 				seqFile.insertPass(seqItem,newfile);
-				this.refresh(seqItem);
+				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
 		}
 	}
@@ -267,7 +267,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						seqFile.insertNewPass(seqItem,newname);
 					else
 						seqFile.insertNewPassEnd(newname);
-					this.refresh(seqItem);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
 		}
@@ -284,7 +284,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath,newname.concat(path.extname(original.fsPath))));
 						dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
 					}
-					this.refresh(seqItem);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
 		}
@@ -299,7 +299,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						seqFile.insertNewFolder(seqItem,newname);
 					else
 						seqFile.insertNewFolderEnd(newname);
-					this.refresh(seqItem);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
 		}		
@@ -307,22 +307,22 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	typePat(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'pat');
-		this.refresh(seqItem);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeRec(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
-		this.refresh(seqItem);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeOn(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'');
-		this.refresh(seqItem);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeOff(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'/');
-		this.refresh(seqItem);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 }
 

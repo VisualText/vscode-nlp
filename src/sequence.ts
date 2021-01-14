@@ -233,7 +233,7 @@ export class SequenceFile extends TextFile {
 				}
 				for (let pass of passes) {
 					if (copy) {
-						var herepass = path.join(specDir,path.basename(pass.pafsPathth));
+						var herepass = path.join(specDir,path.basename(pass.fsPath));
 						fs.copyFileSync(pass.fsPath,herepass);								
 					}		
 					var passItem = this.createPassItemFromFile(pass.fsPath);
