@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v0.9.29
+Crash in reading the text files into the text view
+
 ### v0.9.28
 Fixed sequence editor problems
 

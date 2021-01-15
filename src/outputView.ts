@@ -142,10 +142,14 @@ export class OutputView {
 		if (!path.endsWith('_log'))
 			return false;
 		const filepath = path.substr(0,path.length-4);
-		var stats = fs.lstatSync(filepath);
-		if (!stats)
-			return false;
-		return stats.isFile();
+		try {
+			let stats = fs.lstatSync(filepath);
+			return stats.isFile();
+		} catch (err) {
+			console.error(err);
+		}
+
+		return false;
 	}
 
 	public fileHasLog(path: string): boolean {
