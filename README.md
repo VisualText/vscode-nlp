@@ -2,6 +2,8 @@
 
 This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below).
 
+The language extension and the required NLP-ENGINE run on Linux, Windows, and MacOS.
+
 ## Features
 
 The NLP++ language extension allows for the fast development of NLP++ analyzers allowing users to:
@@ -24,22 +26,15 @@ Example analyzers can be found in the "analyzers" folder in the NLP-ENGINE folde
 
 ## Requirements
 
-In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE (Linux only for now, Windows and Mac versions coming soon). Example analyzers can be found in the NLP-ENGINE directory (see below).
+In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE which runs on Linux, Windows, and MacOS. Example analyzers can be found in the NLP-ENGINE directory (see below).
 
 ### NLP Engine
 
-The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe currently only compiles for Linux but can be run on Windows using the Windows Subsystem for Linux (see below). Native NLP-ENGINES for Windows and Mac are expected in the near future.
+The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe and runs on Linux, Windows, and MacOS.
 
-### Running on Windows
+### Compiling the NLP ENGINE
 
-To run the NLP++ Language Extension on windows, you need:
-
-1. Install VSCode onto windows
-1. Install the VSCode Extension [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) in VSCode
-1. Install [Windows Subsytem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) onto windows
-1. Install the [NLP-ENGINE](https://gihub.com/VisualText/nlp-engine) onto the Windows System for Linux
-1. Click on the green "greater/less-than" icon on the lower left side of the VSCode status bar and choose Analyzers folder located inside the NLP-ENGINE folder on the Windows Subsystem for Linux
-1. Run, edit, modify the example analyzers and create your own
+Currently, the NLP ENGINE must be downloaded and compiled separately. It will be bundled with the VSCODE-NLP language extension in the near future. The code and compiling instructions can be found in the [NLP-ENGINE Repository](https://github.com/VisualText/nlp-engine)
 
 ### Types of Analyzers Commonly Written Using NLP++
 
