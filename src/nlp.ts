@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
@@ -34,28 +35,34 @@ export class NLPFile extends TextFile {
 		var anapath = filestr.substr(0,pos);
 		var engineDir = visualText.getEngineDirectory().fsPath;
 		var exe = path.join(engineDir,'nlp.exe');
-		var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
-		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
-		const cp = require('child_process');
-		cp.exec(cmd, (err, stdout, stderr) => {
-			console.log('stdout: ' + stdout);
-			console.log('stderr: ' + stderr);
-			if (err) {
-				logView.addMessage(err.message,vscode.Uri.file(filestr));
-				vscode.commands.executeCommand('outputView.refreshAll');
-				vscode.commands.executeCommand('logView.refreshAll');
-				return false;
-			} else {
-				logView.addMessage('Done',vscode.Uri.file(filestr));
-				logView.loadMakeAna();
-				visualText.analyzer.saveCurrentFile(filepath);
-				vscode.commands.executeCommand('textView.refreshAll');
-				vscode.commands.executeCommand('outputView.refreshAll');
-				vscode.commands.executeCommand('logView.refreshAll');
-				vscode.commands.executeCommand('sequenceView.refreshAll');
-			}
-		});
+		if (fs.existsSync(exe)) {
+			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
+			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
+
+			const cp = require('child_process');
+			cp.exec(cmd, (err, stdout, stderr) => {
+				console.log('stdout: ' + stdout);
+				console.log('stderr: ' + stderr);
+				if (err) {
+					logView.addMessage(err.message,vscode.Uri.file(filestr));
+					vscode.commands.executeCommand('outputView.refreshAll');
+					vscode.commands.executeCommand('logView.refreshAll');
+					return false;
+				} else {
+					logView.addMessage('Done',vscode.Uri.file(filestr));
+					logView.loadMakeAna();
+					visualText.analyzer.saveCurrentFile(filepath);
+					vscode.commands.executeCommand('textView.refreshAll');
+					vscode.commands.executeCommand('outputView.refreshAll');
+					vscode.commands.executeCommand('logView.refreshAll');
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+				}
+			});			
+		}
+		else {
+			vscode.window.showWarningMessage('Cannot file the nlp-engine: ' + exe);
+		}
 
 		return true;
 	}

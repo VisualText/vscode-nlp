@@ -332,10 +332,14 @@ export class SequenceFile extends TextFile {
 	}
 
 	newPassContent(filename: string) {
+		const config = vscode.workspace.getConfiguration('user');
+        var username = config.get<string>('name');
+		if (username?.length == 0)
+			username = 'Your Name';
 		var newpass = '###############################################\n';
 		newpass = newpass.concat('# FILE: ',filename,'\n');
 		newpass = newpass.concat('# SUBJ: comment\n');
-		newpass = newpass.concat('# AUTH: Your Name\n');
+		newpass = newpass.concat(`# AUTH: ${username}\n`);
 		newpass = newpass.concat('# CREATED: ',this.todayDate(),'\n');
 		newpass = newpass.concat('# MODIFIED:\n');
 		newpass = newpass.concat('###############################################\n\n');
