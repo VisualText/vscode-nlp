@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
+import { visualText } from './visualText';
 
 export namespace dirfuncs {
 
@@ -20,6 +21,29 @@ export namespace dirfuncs {
         return true;
     }
 
+    export function copyFile(fromPath: string, toPath: string): boolean {
+        try {
+            const statsFrom = fs.statSync(fromPath);
+            if (statsFrom.isFile()) {
+                fs.copyFileSync(fromPath,toPath);
+                return true;
+            }
+        } catch (err) {
+            vscode.window.showInformationMessage('Could not copy file ' + fromPath + ' to ' + toPath + ' - ' + err.message);
+        }
+        return false;
+    }
+
+    export function changeMod(filePath: string, mod: number): boolean {
+        try {
+            fs.chmodSync(filePath,mod);
+            return true;
+        } catch (err) {
+            vscode.window.showInformationMessage('Could not chmod on ' + filePath + ' - ' + err.message);
+        }
+        return false;
+    }
+
     export function sameParentDirectory(dir1: vscode.Uri, dir2: vscode.Uri): boolean {
         return path.dirname(dir1.fsPath).localeCompare(path.dirname(dir2.fsPath)) == 0 ? true : false;
     }
@@ -30,7 +54,7 @@ export namespace dirfuncs {
             if (stats.isDirectory())
                 return true;
         } catch (err) {
-            vscode.window.showInformationMessage('Directory test failed on ' + path + ': ' + err.message);
+            visualText.debugMessage('Directory test failed on ' + path + ': ' + err.message);
         }
         return false;
     }
