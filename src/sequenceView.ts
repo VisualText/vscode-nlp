@@ -101,11 +101,11 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
-		var icon = 'dna.svg';
+		var icon = seqItem.active ? 'dna.svg' : 'dna-grayed.svg';
 		var collapse = vscode.TreeItemCollapsibleState.None;
 
 		if (seqItem.type.localeCompare('rec') == 0) {
-			icon = 'dnar.svg';
+			icon = seqItem.active ? 'dnar.svg' : 'dnar-grayed.svg';
 
 		} else if (seqItem.type.localeCompare('folder') == 0) {
 			icon = 'folder.svg';
@@ -115,38 +115,19 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			icon = 'seq-circle.svg';
 		}
 
-		if (!seqItem.active) {
-			return {
-				resourceUri: seqItem.uri,
-				label: seqItem.label,
-				contextValue: seqItem.contextValue,
-				collapsibleState: collapse,
-				iconPath: {
-					light: path.join(__filename, '..', '..', 'resources', 'light', 'dna-grayed.svg'),
-					dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dna-grayed.svg')
-				},
-				command: {
-					command: 'sequenceView.openFile',
-					arguments: [seqItem],
-					title: 'Open Pass'
-				}
-			}
-
-		} else {
-			return {
-				resourceUri: seqItem.uri,
-				label: seqItem.label,
-				contextValue: seqItem.contextValue,
-				collapsibleState: collapse,
-				iconPath: {
-					light: path.join(__filename, '..', '..', 'resources', 'light', icon),
-					dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
-				},
-				command: {
-					command: 'sequenceView.openFile',
-					arguments: [seqItem],
-					title: 'Open Pass'
-				}
+		return {
+			resourceUri: seqItem.uri,
+			label: seqItem.label,
+			contextValue: seqItem.contextValue,
+			collapsibleState: collapse,
+			iconPath: {
+				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+			},
+			command: {
+				command: 'sequenceView.openFile',
+				arguments: [seqItem],
+				title: 'Open Pass'
 			}
 		}
 	}
