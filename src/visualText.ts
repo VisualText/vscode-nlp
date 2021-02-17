@@ -15,14 +15,15 @@ export class VisualText {
     private platform: string = '';
     private homeDir: string = '';
     private version: string = '';
+    private username: string = '';
     private jsonState = new JsonState();
 
     private analyzers: vscode.Uri[] = new Array();
+    private extensionDir: vscode.Uri = vscode.Uri.file('');
     private engineDir: vscode.Uri = vscode.Uri.file('');
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
-    private workspaceFold: vscode.WorkspaceFolder | undefined = undefined;
-    private username: string = '';
+    private workspaceFold: vscode.Uri = vscode.Uri.file('');
 
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
@@ -37,15 +38,13 @@ export class VisualText {
 
         this.version = vscode.extensions.getExtension('dehilster.nlp')?.packageJSON.version;
         this.debugMessage('NLP++ Extension version: ' + this.version);
-
-        this.readConfig();
     }
     
     static attach(ctx: vscode.ExtensionContext): VisualText {
         if (!visualText) {
             visualText = new VisualText(ctx);
             if (vscode.workspace.workspaceFolders) {
-                visualText.workspaceFold = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+                visualText.workspaceFold = vscode.workspace.workspaceFolders[0].uri;
                 if (visualText.workspaceFold) {
                     visualText.readConfig();
                     visualText.readState();
@@ -63,14 +62,14 @@ export class VisualText {
 
 	readState(): boolean {
         if (this.workspaceFold) {
-            this.analyzerDir = this.workspaceFold.uri;
+            this.analyzerDir = this.workspaceFold;
             if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
                 var saveit = false;
                 var parse = this.jsonState.json.visualText[0];
                 var currAnalyzer = parse.currentAnalyzer;
 
                 if (currAnalyzer.length == 0) {
-                    var analyzers = dirfuncs.getDirectories(this.workspaceFold.uri);
+                    var analyzers = dirfuncs.getDirectories(this.workspaceFold);
                     currAnalyzer = analyzers[0].fsPath;
                     saveit = true;
                 }
@@ -148,12 +147,19 @@ export class VisualText {
 
     configAnalzyerDirectory() {
         const config = vscode.workspace.getConfiguration('analyzer');
-        var directory = config.get<string>('directory');
-        if (!directory) {
-            directory = path.join(this.engineDir.fsPath,'analyzers');
-            config.update('directory',directory,vscode.ConfigurationTarget.Global);
+
+        if (dirfuncs.analyzerFolderCount(this.workspaceFold)) {
+            directory = this.workspaceFold.fsPath;
+        } else {
+            var directory = config.get<string>('directory');
+            if (!directory) {
+                directory = path.join(this.engineDir.fsPath,'analyzers');
+            }
         }
-        this.analyzerDir = vscode.Uri.file(directory);
+
+        this.analyzerDir = vscode.Uri.file(directory);    
+        if (directory.length > 1)
+            config.update('directory',directory,vscode.ConfigurationTarget.Global);
     }
 
     configEngineExecutable() {
@@ -185,14 +191,25 @@ export class VisualText {
         if (this.platform == 'linux' || this.platform == 'darwin') {
             extDir = '.vscode-server';
         }
-        this.engineDir = vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version,'nlp-engine'));
+        this.extensionDir = vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
 
-        const config = vscode.workspace.getConfiguration('engine');
+        if (dirfuncs.isDir(this.extensionDir.fsPath)) {
+            this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
+            const config = vscode.workspace.getConfiguration('engine');
+            if (dirfuncs.isDir(this.engineDir.fsPath)) {
+                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
+            }
+        } else if (vscode.workspace.workspaceFolders) {
+            if (vscode.workspace.workspaceFolders.length === 1) {
+                let dir = vscode.workspace.workspaceFolders[0];
+                this.engineDir = dirfuncs.findFolder(dir.uri,'nlp-engine');                
+            }
+        }
+
         if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
             this.debugMessage('Engine directory: ' + this.engineDir.fsPath);
         } else {
-            this.debugMessage('CANNOT FIND Engine directory: ' + this.engineDir.fsPath);            
+            this.debugMessage('Could not find engine directory');
         }
     }
 
@@ -265,12 +282,12 @@ export class VisualText {
     }
 
 	hasWorkspaceFolder(): boolean {
-		return this.workspaceFold?.uri.fsPath.length ? true : false;
+		return this.workspaceFold?.fsPath.length ? true : false;
 	}
 
 	getWorkspaceFolder(): vscode.Uri {
         if (this.workspaceFold) {
-		    return this.workspaceFold.uri;            
+		    return this.workspaceFold;            
         }
         return vscode.Uri.file('');
     }

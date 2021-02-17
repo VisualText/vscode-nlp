@@ -54,7 +54,7 @@ export namespace dirfuncs {
             if (stats.isDirectory())
                 return true;
         } catch (err) {
-            visualText.debugMessage('Directory test failed on ' + path + ': ' + err.message);
+            vscode.window.showInformationMessage(err.message);
         }
         return false;
     }
@@ -89,6 +89,23 @@ export namespace dirfuncs {
         }
 
         return vscode.Uri.file('');
+    }
+
+    export function analyzerFolderCount(dirPath: vscode.Uri): number {
+        var specCount = 0;
+        var dirs = getDirectories(dirPath);
+        for (let dir of dirs) {
+            var subDirs = getDirectories(dir);
+            for (let subDir of subDirs) {
+                if (path.basename(subDir.fsPath).localeCompare('spec') == 0) {
+                    let specfile = path.join(subDir.fsPath,'analyzer.seq');
+                    if (fs.existsSync(specfile))
+                        specCount++;
+                }
+            }
+        }
+
+        return specCount;
     }
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {

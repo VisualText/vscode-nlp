@@ -16,6 +16,7 @@ export interface SequenceItem extends vscode.TreeItem {
 	passNum: number;
 	order: number;
 	type: string;
+	active: boolean;
 	inFolder: boolean;
 }
 
@@ -78,10 +79,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					conVal = 'file';
 				if (passItem.fileExists())
 					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal,
-						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse});
+						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 				else
 					seqItems.push({label: label, name: passItem.name, tooltip: 'MISSING', contextValue: 'missing', inFolder: passItem.inFolder,
-						type: 'missing', passNum: passItem.passNum, order: order, collapsibleState: collapse});
+						type: 'missing', passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			
 			} else {
 				if (passItem.typeStr.localeCompare('tokenize') == 0)
@@ -91,7 +92,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				else
 					label = passItem.name;
 				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'stub', inFolder: passItem.inFolder,
-					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse});
+					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
 			order++;	
 		}
@@ -101,13 +102,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	getTreeItem(seqItem: SequenceItem): vscode.TreeItem {
 		var icon = 'dna.svg';
-		var active = true;
 		var collapse = vscode.TreeItemCollapsibleState.None;
 
-		if (seqItem.type[0] == '/') {
-			active = false;
-
-		} else if (seqItem.type.localeCompare('rec') == 0) {
+		if (seqItem.type.localeCompare('rec') == 0) {
 			icon = 'dnar.svg';
 
 		} else if (seqItem.type.localeCompare('folder') == 0) {
@@ -118,12 +115,16 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			icon = 'seq-circle.svg';
 		}
 
-		if (!active) {
+		if (!seqItem.active) {
 			return {
 				resourceUri: seqItem.uri,
 				label: seqItem.label,
 				contextValue: seqItem.contextValue,
 				collapsibleState: collapse,
+				iconPath: {
+					light: path.join(__filename, '..', '..', 'resources', 'light', 'dna-grayed.svg'),
+					dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dna-grayed.svg')
+				},
 				command: {
 					command: 'sequenceView.openFile',
 					arguments: [seqItem],
@@ -316,12 +317,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 	
 	typeOn(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'');
+		visualText.analyzer.seqFile.saveActive(seqItem.passNum,true);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeOff(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveActive(seqItem.passNum,'/');
+		visualText.analyzer.seqFile.saveActive(seqItem.passNum,false);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 }

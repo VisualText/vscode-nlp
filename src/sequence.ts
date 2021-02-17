@@ -19,6 +19,7 @@ export class PassItem {
 	public typeStr: string = '';
 	public inFolder: boolean = false;
 	public empty: boolean = true;
+	public active: boolean = true;
 
 	constructor() {
 	}
@@ -61,6 +62,7 @@ export class PassItem {
 		this.typeStr = '';
 		this.inFolder = false;
 		this.empty = true;
+		this.active = true;
 	}
 }
 
@@ -127,10 +129,17 @@ export class SequenceFile extends TextFile {
 				passItem.typeStr = '#';
 
 			} else {
-				passItem.typeStr = tokens[0];
+				var clean = tokens[0].replace('/','');
+				if (clean.length < tokens[0].length) {
+					passItem.active = false;
+					passItem.typeStr = clean;
+				} else {
+					passItem.active = true;
+					passItem.typeStr = tokens[0];
+				}
 				passItem.name = tokens[1];
 
-				if (tokens[0].localeCompare('pat') == 0 || tokens[0].localeCompare('rec') == 0) {			
+				if (passItem.typeStr.localeCompare('pat') == 0 || passItem.typeStr.localeCompare('rec') == 0) {			
 					passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,this.passFileName(passItem.name)));
 				}
 				passItem.comment = this.tokenStr(tokens,2);				
@@ -155,7 +164,8 @@ export class SequenceFile extends TextFile {
 	}
 
 	passString(passItem: PassItem): string {
-		return passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
+		var activeStr = passItem.active ? '' : '/';
+		return activeStr + passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
 	}
 
 	base(passname: string): string {
@@ -428,11 +438,10 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	saveActive(passNum: number, active: string) {
+	saveActive(passNum: number, active: boolean) {
 		var passItem = this.getPassByNumber(passNum);
 		if (passItem.exists()) {
-			var type = passItem.typeStr.replace('/','');
-			passItem.typeStr = active + type;
+			passItem.active = active;
 			this.saveFile();			
 		}
 	}
