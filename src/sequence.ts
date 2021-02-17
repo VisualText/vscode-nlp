@@ -434,6 +434,7 @@ export class SequenceFile extends TextFile {
 		var passItem = this.getPassByNumber(passNum);
 		if (passItem.exists()) {
 			passItem.typeStr = type;
+			passItem.active = true;
 			this.saveFile();
 		}
 	}

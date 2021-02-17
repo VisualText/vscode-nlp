@@ -45,12 +45,10 @@ export class VisualText {
             visualText = new VisualText(ctx);
             if (vscode.workspace.workspaceFolders) {
                 visualText.workspaceFold = vscode.workspace.workspaceFolders[0].uri;
-                if (visualText.workspaceFold) {
-                    visualText.readConfig();
-                    visualText.readState();
-                    visualText.initSettings();
-                }
             }
+            visualText.readConfig();
+            visualText.readState();
+            visualText.initSettings();
         }
         return visualText;
     }
@@ -148,7 +146,7 @@ export class VisualText {
     configAnalzyerDirectory() {
         const config = vscode.workspace.getConfiguration('analyzer');
 
-        if (dirfuncs.analyzerFolderCount(this.workspaceFold)) {
+        if (this.workspaceFold.fsPath.length > 1 && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
             directory = this.workspaceFold.fsPath;
         } else {
             var directory = config.get<string>('directory');
