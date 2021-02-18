@@ -49,12 +49,14 @@ export namespace dirfuncs {
     }
 
     export function isDir(path: string): boolean {
+        if (path.length <= 1)
+            return false;
         try {
             const stats = fs.statSync(path);
             if (stats.isDirectory())
                 return true;
         } catch (err) {
-            vscode.window.showInformationMessage(err.message);
+            visualText.debugMessage(err.message);
         }
         return false;
     }
