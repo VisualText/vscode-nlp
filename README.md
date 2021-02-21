@@ -1,5 +1,10 @@
 # NLP++ Language Extension
 
+## Version One Released!
+Version one of the NLP langauge extension for VSCODE has been released. This version comes with the engine built in for all three platforms. It is no longer necessary to load the NLP engine separately from github.
+
+## Introduction
+
 This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below).
 
 The language extension and the required NLP-ENGINE run on Linux, Windows, and MacOS.
@@ -26,11 +31,11 @@ Example analyzers can be found in the "analyzers" folder in the NLP-ENGINE folde
 
 ## Requirements
 
-In order to use the VSCode NLP++ Language Extension, you need to install the NLP-ENGINE which runs on Linux, Windows, and MacOS. Example analyzers can be found in the NLP-ENGINE directory (see below).
+In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in the form of an executable and directory need to be present. Version one now includes this as part of the NLP language extension.
 
 ### NLP Engine
 
-The NLP++ Language extension depends on the NLP-ENGINE on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe and runs on Linux, Windows, and MacOS.
+The NLP-ENGINE is available separately on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe and runs on Linux, Windows, and MacOS and can be embedded into c++ code.
 
 ### Compiling the NLP ENGINE
 
@@ -51,25 +56,7 @@ There are many types of analyzers that are written by NLP++ programmers includin
 
 ## Extension Settings
 
-There are several json files that hold configuration and states for VisualText for VSCode:
-
-* state.json - in the analyzer folder holding information such as the path to nlp.exe and the last analyzer selected
-* state.json - in each analyzer directory holding the last text processed
-
-### General state.json
-
-This json file is located in the .vscode directory in a folder that holds analyzers for that workspace.
-
-    {
-        "visualText": [
-            {
-                "name": "Analyzer",
-                "type": "state",
-                "engineDir": "/YOUR-PATH-HERE/nlp-engine/",
-                "currentAnalyzer": "/YOUR-PATH-HERE/nlp-engine/analyzers/DOJ-Quick"
-            }
-        ]
-    }
+Version 1 of the NLP language extension now contains the path to the nlp-engine directory, the current analyzer to load, and the user name. These can be found in the general settings unders "Extensions" and "NLP".
 
 ### Analyzer state.json
 
@@ -111,7 +98,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-This language extension is dependent on the [NLP-ENGINE](https://github.com/VisualText/nlp-engine). Currently, the NLP-ENGINE only runs on Linux but can be used on windows uing the Windows Linux Subsystem.
+### v1.0.4
+
+The NLP engine executable and engine directory are now included in the NLP language extension for VSCode. The location of the engine is located in a subdirectory of the nlp extensions located in the extension directory located on the local computer. See documentation for VSCODE if you want to know the location of the directory which is different for different platforms.
 
 ### v0.9.29
 
