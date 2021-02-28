@@ -105,6 +105,21 @@ export class NLPFile extends TextFile {
 		}
 	}
 
+	duplicateLine(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			var rulestr = '';
+			var position = editor.selection.active;
+			var lines = this.getLines(true);
+			var line = lines[position.line];
+			var posEnd = new vscode.Position(position.line+1,0);
+			var rang = new vscode.Selection(posEnd,posEnd);
+			var snippet = new vscode.SnippetString(line);
+			editor.insertSnippet(snippet,rang);
+			editor.selection = rang;
+		}
+	}
+
 	findRuleText(editor: vscode.TextEditor): [string, vscode.Range] {
 		var rulestr = '';
 		var position = editor.selection.active;

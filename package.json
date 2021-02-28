@@ -287,6 +287,12 @@
                 "description": "Generate a rule from selected text"
             },
             {
+                "command": "nlp.duplicateLine",
+                "category": "NLP",
+                "title": "Duplicate Line",
+                "description": "Duplicates the current line"
+            },
+            {
                 "command": "log.foldAll",
                 "category": "Tree",
                 "title": "Fold All",
@@ -650,6 +656,12 @@
                 "command": "textView.analyzeLast",
                 "key": "f5",
                 "mac": "f5"
+            },
+            {
+                "command": "nlp.duplicateLine",
+                "key": "ctrl+shift+D",
+                "mac": "cmd+shift+D",
+                "when": "resourceLangId == nlp"
             }
         ],
         "menus": {
@@ -684,6 +696,11 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.duplicateLine",
                     "group": "nlp"
                 },
                 {
@@ -1083,7 +1100,6 @@
         }
     },
     "dependencies": {
-        "code": "^5.2.4",
         "copy-dir": "^1.3.0",
         "os": "^0.1.1",
         "rimraf": "^3.0.2",
