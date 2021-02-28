@@ -75,7 +75,7 @@ This file will automatically get generated when a new analyzer is created in Vis
     
 ## Development
 
-You must have installed the NLP-ENGINE in order to use this VSCode extension. You can find how to install this at: [https://github.com/VisualText/vscode-nlp](https://github.com/VisualText/vscode-nlp).
+### VSCode Language Extension
 
 Follow these instructions to install the development code for VSCode extension:
 
@@ -92,11 +92,18 @@ Next start the background build process by running the following command within 
     
 At which point you can edit the sources and launch debug sessions via F5 and included launch configurations.
 
+### NLP Engine
+
+The NLP Engine which is written in C++ is also open source and can be downloaded in development mode. You can find how to download and develop the NLP Engine code at: [https://github.com/VisualText/vscode-nlp](https://github.com/VisualText/vscode-nlp).
+
 ## Known Issues
 
 There are many details in the windows version of VisualText that are yet to be implemented in the VSCode version.
 
 ## Release Notes
+
+### v1.0.5
+Added duplicate line for rule editor
 
 ### v1.0.4
 
