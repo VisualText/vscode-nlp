@@ -102,6 +102,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.0.7
+Updated NLP Engine with empty tmp folders
+
 ### v1.0.5
 Added duplicate line for rule editor
 
