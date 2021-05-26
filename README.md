@@ -35,11 +35,7 @@ In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in 
 
 ### NLP Engine
 
-The NLP-ENGINE is available separately on the [VisualText github repository](https://gihub.com/VisualText/nlp-engine) which must be downloaded from github and compiled. The executable nlp.exe and runs on Linux, Windows, and MacOS and can be embedded into c++ code.
-
-### Compiling the NLP ENGINE
-
-Currently, the NLP ENGINE must be downloaded and compiled separately. It will be bundled with the VSCODE-NLP language extension in the near future. The code and compiling instructions can be found in the [NLP-ENGINE Repository](https://github.com/VisualText/nlp-engine)
+The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://gihub.com/VisualText/nlp-engine). The engine can run as a standalone executable (nlp.exe) that runs on Linux, Windows, and MacOS or it can be embedded into c++ code.
 
 ### Types of Analyzers Commonly Written Using NLP++
 
@@ -101,6 +97,9 @@ The NLP Engine which is written in C++ is also open source and can be downloaded
 There are many details in the windows version of VisualText that are yet to be implemented in the VSCode version.
 
 ## Release Notes
+
+### v1.0.9
+Fixed color highlights rule rewrite line
 
 ### v1.0.8
 Updated NLP Engine with empty tmp folders

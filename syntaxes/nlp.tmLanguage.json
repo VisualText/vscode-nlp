@@ -71,10 +71,10 @@
             ]
         },
         "rules-region": {
-            "begin": "([_a-zA-Z]+)\\s*([a-zA-Z\\[\\]]+)\\s*(<-)",
+            "begin": "([_a-zA-Z]+)\\s*([^<]+)\\s*(<-)",
             "beginCaptures": {
                 "1": {
-                    "name": "variable.parameter.nlp"
+                    "name": "variable.rewrite.nlp"
                 },
                 "2": {
                     "include": "#attributes"
