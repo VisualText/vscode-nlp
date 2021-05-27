@@ -98,7 +98,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.0.9
+### v1.0.11
 Fixed color highlights rule rewrite line
 
 ### v1.0.8
