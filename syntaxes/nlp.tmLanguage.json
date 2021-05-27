@@ -71,13 +71,17 @@
             ]
         },
         "rules-region": {
-            "begin": "([_a-zA-Z]+)\\s*([^<]+)\\s*(<-)",
+            "begin": "^([_a-zA-Z]+)\\s*([^<]+)\\s*(<-)",
             "beginCaptures": {
                 "1": {
                     "name": "variable.rewrite.nlp"
                 },
                 "2": {
-                    "include": "#attributes"
+                    "patterns": [
+                        {
+                        "include": "#tokens"
+                        }
+                    ]
                 },
                 "3": {
                     "name": "keyword.operator.nlp"
@@ -94,7 +98,7 @@
                     "include": "#rewrites"
                 },
                 {
-                    "include": "#attributes"
+                    "include": "#tokens"
                 },
                 {
                     "include": "#comment-line"
@@ -131,9 +135,9 @@
             "name": "keyword.other.nlp",
             "match": "\\b(?i:(fail|fails|group|match|matches|max|maximum|min|minimum|opt|optional|plus|s|single|star))\\b"
         },
-        "rewrites": {
+        "tokens": {
             "name": "variable.parameter.nlp",
-            "match": "\\b_[a-zA-Z]+\\b"
+            "match": "_[a-zA-Z]+\\b"
         },
         "comment": {
             "name": "comment.nlp",
