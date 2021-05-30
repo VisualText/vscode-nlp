@@ -7,6 +7,7 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
+import { logView } from './logView';
 
 interface Entry {
 	uri: vscode.Uri;
@@ -39,16 +40,21 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 		if (entry.type === vscode.FileType.File) {
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [entry], };
 			treeItem.contextValue = 'file';
+			var isLogDir = outputView.fileHasLog(entry.uri.fsPath);
+			treeItem.iconPath = {
+				light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
+									path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
+				dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
+									path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
+			}
 		} else {
 			treeItem.contextValue = 'dir';
+			treeItem.iconPath = {
+				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+			}
 		}
-		var isLogDir = outputView.fileHasLog(entry.uri.fsPath);
-		treeItem.iconPath = {
-			light: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
-								path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
-			dark: isLogDir ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
-								path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
-		}
+
 		return treeItem;
 	}
 
@@ -145,6 +151,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.openFile', (entry) => this.openFile(entry));
 		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());
 		vscode.commands.registerCommand('textView.analyze', (entry) => this.analyze(entry));
+		vscode.commands.registerCommand('textView.analyzeDir', (entry) => this.analyzeDir(entry));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
 		vscode.commands.registerCommand('textView.newText', (entry) => this.newText(entry));
@@ -175,7 +182,29 @@ export class TextView {
             var nlp = new NLPFile();
 			nlp.analyze(entry.uri);
 		}
+	}
 
+	private analyzeDir(entry: Entry) {
+        if (entry.uri.fsPath.length) {
+			let items: vscode.QuickPickItem[] = [];
+			var foldername = path.basename(entry.uri.fsPath);
+			var msg = '';
+			msg = msg.concat('Analyze all files in folder \'',foldername,'\'?');
+			items.push({label: 'Yes', description: msg});
+			items.push({label: 'No', description: 'Do not analyze folder \''+foldername+'\''});
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				var files = dirfuncs.getFiles(entry.uri,[],true);
+				//logView.setClearFlag(false);
+				var nlp = new NLPFile();
+				for (let file of files) {
+					this.openFile({uri: file, type: vscode.FileType.File});
+					nlp.analyze(file);
+				}
+			});
+		}
 	}
 
 	search() {

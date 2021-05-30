@@ -16,7 +16,7 @@ export class NLPFile extends TextFile {
         super();
 	}
 
-	analyze(filepath: vscode.Uri): boolean {
+	analyze(filepath: vscode.Uri) : boolean {
 		var engineDir = visualText.getEngineDirectory().fsPath;
 		var exe = path.join(engineDir,'nlp.exe');
 
@@ -33,9 +33,8 @@ export class NLPFile extends TextFile {
 		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
 
 		const filestr = filepath.fsPath;
-		
-		logView.clearLogs();
-		logView.addMessage('Analyzing...',vscode.Uri.file(filestr));
+		var filename = path.basename(filepath.fsPath);
+		logView.addMessage('Analyzing '+filename,filepath);
 		vscode.commands.executeCommand('logView.refreshAll');
 		outputView.setType(outputFileType.TXT);
 
@@ -46,7 +45,27 @@ export class NLPFile extends TextFile {
 		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
 		const cp = require('child_process');
-		cp.exec(cmd, (err, stdout, stderr) => {
+
+		try {
+			cp.execSync(cmd);
+			logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
+			vscode.commands.executeCommand('logView.refreshAll');
+			//logView.loadMakeAna();
+			visualText.analyzer.saveCurrentFile(filepath);
+			vscode.commands.executeCommand('textView.refreshAll');
+			vscode.commands.executeCommand('outputView.refreshAll');
+			vscode.commands.executeCommand('logView.refreshAll');
+			vscode.commands.executeCommand('sequenceView.refreshAll');
+			return true;
+		} catch (err) {
+			logView.addMessage(err.message,vscode.Uri.file(filestr));
+			vscode.commands.executeCommand('outputView.refreshAll');
+			vscode.commands.executeCommand('logView.refreshAll');
+			return false;
+		}
+
+		/*
+		cp.execSync(cmd, (err, stdout, stderr) => {
 			console.log('stdout: ' + stdout);
 			console.log('stderr: ' + stderr);
 			if (err) {
@@ -55,8 +74,9 @@ export class NLPFile extends TextFile {
 				vscode.commands.executeCommand('logView.refreshAll');
 				return false;
 			} else {
-				logView.addMessage('Done',vscode.Uri.file(filestr));
-				logView.loadMakeAna();
+				logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
+				vscode.commands.executeCommand('logView.refreshAll');
+				//logView.loadMakeAna();
 				visualText.analyzer.saveCurrentFile(filepath);
 				vscode.commands.executeCommand('textView.refreshAll');
 				vscode.commands.executeCommand('outputView.refreshAll');
@@ -64,10 +84,10 @@ export class NLPFile extends TextFile {
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			}
 		});			
+		*/
 
 		return true;
 	}
-
 
 	insertRule(ruleStr: string) {
 		vscode.window.showTextDocument(this.getUri()).then(editor => {

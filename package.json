@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.0.11",
+    "version": "1.1.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -249,6 +249,14 @@
                 }
             },
             {
+                "command": "textView.analyzeDir",
+                "title": "Analyze Directory",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
+            },
+            {
                 "command": "textView.renameDir",
                 "title": "Rename Directory",
                 "icon": {
@@ -260,7 +268,7 @@
                 "command": "nlp.analyze",
                 "category": "NLP",
                 "title": "Analyze Text",
-                "description": "Run the analyzer on text"
+                "description": "Run the analyzer on a folder or text"
             },
             {
                 "command": "nlp.ruleFired",
@@ -635,6 +643,10 @@
                 }
             },
             {
+                "command": "logView.setClearFlag",
+                "title": "Clear"
+            },
+            {
                 "command": "logView.clear",
                 "title": "Clear",
                 "icon": {
@@ -963,6 +975,11 @@
                     "group": "edit"
                 },
                 {
+                    "command": "textView.analyzeDir",
+                    "when": "view == textView && viewItem == dir",
+                    "group": "edit"
+                },
+                {
                     "command": "textView.renameDir",
                     "when": "view == textView && viewItem == dir",
                     "group": "edit"
@@ -1030,6 +1047,11 @@
                 {
                     "command": "textView.rename",
                     "when": "view == textView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.analyzeDir",
+                    "when": "view == textView && viewItem == dir",
                     "group": "inline"
                 },
                 {

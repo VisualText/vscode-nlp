@@ -9,6 +9,7 @@ export class NLPCommands {
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyzeDir', this.analyzeDir));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.searchWord', this.searchWord));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
@@ -76,6 +77,14 @@ export class NLPCommands {
     }
 
     analyze() {
+        if (vscode.window.activeTextEditor) {
+            var nlp = new NLPFile();
+            var uri = vscode.window.activeTextEditor.document.uri;
+            nlp.analyze(uri);
+        }
+    }
+
+    analyzeDir() {
         if (vscode.window.activeTextEditor) {
             var nlp = new NLPFile();
             var uri = vscode.window.activeTextEditor.document.uri;
