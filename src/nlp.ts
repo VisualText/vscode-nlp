@@ -16,13 +16,13 @@ export class NLPFile extends TextFile {
         super();
 	}
 
-	analyze(filepath: vscode.Uri) : boolean {
+	analyze(filepath: vscode.Uri) {
 		var engineDir = visualText.getEngineDirectory().fsPath;
 		var exe = path.join(engineDir,'nlp.exe');
 
 		if (!fs.existsSync(exe)) {
 			visualText.askEngine();
-			return false;
+			return;
 		}
 
 		visualText.readState();
@@ -46,47 +46,28 @@ export class NLPFile extends TextFile {
 
 		const cp = require('child_process');
 
-		try {
-			cp.execSync(cmd);
-			logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
-			vscode.commands.executeCommand('logView.refreshAll');
-			//logView.loadMakeAna();
-			visualText.analyzer.saveCurrentFile(filepath);
-			vscode.commands.executeCommand('textView.refreshAll');
-			vscode.commands.executeCommand('outputView.refreshAll');
-			vscode.commands.executeCommand('logView.refreshAll');
-			vscode.commands.executeCommand('sequenceView.refreshAll');
-			return true;
-		} catch (err) {
-			logView.addMessage(err.message,vscode.Uri.file(filestr));
-			vscode.commands.executeCommand('outputView.refreshAll');
-			vscode.commands.executeCommand('logView.refreshAll');
-			return false;
-		}
-
-		/*
-		cp.execSync(cmd, (err, stdout, stderr) => {
-			console.log('stdout: ' + stdout);
-			console.log('stderr: ' + stderr);
-			if (err) {
-				logView.addMessage(err.message,vscode.Uri.file(filestr));
-				vscode.commands.executeCommand('outputView.refreshAll');
-				vscode.commands.executeCommand('logView.refreshAll');
-				return false;
-			} else {
-				logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
-				vscode.commands.executeCommand('logView.refreshAll');
-				//logView.loadMakeAna();
-				visualText.analyzer.saveCurrentFile(filepath);
-				vscode.commands.executeCommand('textView.refreshAll');
-				vscode.commands.executeCommand('outputView.refreshAll');
-				vscode.commands.executeCommand('logView.refreshAll');
-				vscode.commands.executeCommand('sequenceView.refreshAll');
-			}
-		});			
-		*/
-
-		return true;
+		return new Promise(resolve => {
+			cp.exec(cmd, (err, stdout, stderr) => {
+				console.log('stdout: ' + stdout);
+				console.log('stderr: ' + stderr);
+				if (err) {
+					logView.addMessage(err.message,vscode.Uri.file(filestr));
+					vscode.commands.executeCommand('outputView.refreshAll');
+					vscode.commands.executeCommand('logView.refreshAll');
+					resolve('Failed');
+				} else {
+					logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
+					vscode.commands.executeCommand('logView.refreshAll');
+					//logView.loadMakeAna();
+					visualText.analyzer.saveCurrentFile(filepath);
+					vscode.commands.executeCommand('textView.refreshAll');
+					vscode.commands.executeCommand('outputView.refreshAll');
+					vscode.commands.executeCommand('logView.refreshAll');
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+					resolve('Processed');
+				}
+			});
+		});
 	}
 
 	insertRule(ruleStr: string) {
