@@ -176,15 +176,15 @@ export class TextView {
         }
 	}
 
-	private analyze(entry: Entry) {
+	async analyze(entry: Entry) {
         if (entry.uri.fsPath.length) {
 			this.openFile(entry);
             var nlp = new NLPFile();
-			nlp.analyze(entry.uri);
+			await nlp.analyze(entry.uri);
 		}
 	}
 
-	private analyzeDir(entry: Entry) {
+	analyzeDir(entry: Entry) {
         if (entry.uri.fsPath.length) {
 			let items: vscode.QuickPickItem[] = [];
 			var foldername = path.basename(entry.uri.fsPath);
@@ -196,14 +196,17 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var files = dirfuncs.getFiles(entry.uri,[],true);
-				//logView.setClearFlag(false);
-				var nlp = new NLPFile();
-				for (let file of files) {
-					this.openFile({uri: file, type: vscode.FileType.File});
-					nlp.analyze(file);
-				}
+				this.analyzeDirAsync(entry);
 			});
+		}
+	}
+
+	async analyzeDirAsync(entry: Entry) {
+		var files = dirfuncs.getFiles(entry.uri,[],true);
+		var nlp = new NLPFile();
+		for (let file of files) {
+			this.openFile({uri: file, type: vscode.FileType.File});
+			await nlp.analyze(file);
 		}
 	}
 

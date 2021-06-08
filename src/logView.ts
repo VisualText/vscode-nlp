@@ -53,7 +53,6 @@ export class LogView {
 
 	public logView: vscode.TreeView<LogItem>;
 	private logs: LogItem[] = new Array();
-	private clearFlag: boolean = true;
 
 	constructor(context: vscode.ExtensionContext) {
 		const logViewProvider = new OutputTreeDataProvider();
@@ -65,13 +64,8 @@ export class LogView {
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
-		vscode.commands.registerCommand('logView.setClearFlag', (flag) => this.setClearFlag(flag));
     }
 
-	public setClearFlag(flag: boolean) {
-		this.clearFlag = flag;
-	}
-    
     static attach(ctx: vscode.ExtensionContext) {
         if (!logView) {
             logView = new LogView(ctx);
@@ -98,10 +92,8 @@ export class LogView {
 	}
 
 	public clearLogs() {
-		if (this.clearFlag) {
-			this.logs = [];
-			vscode.commands.executeCommand('logView.refreshAll');			
-		}
+		this.logs = [];
+		vscode.commands.executeCommand('logView.refreshAll');			
 	}
 
 	public addMessage(message: string, uri: vscode.Uri) {
