@@ -460,7 +460,7 @@
             },
             {
                 "command": "textView.newDir",
-                "title": "New Directory",
+                "title": "New Folder",
                 "icon": {
                     "light": "resources/light/new-folder.svg",
                     "dark": "resources/dark/new-folder.svg"
@@ -491,8 +491,16 @@
                 }
             },
             {
-                "command": "textView.deleteText",
-                "title": "Delete File/Dir",
+                "command": "textView.deleteFile",
+                "title": "Delete File",
+                "icon": {
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "textView.deleteDir",
+                "title": "Delete Folder",
                 "icon": {
                     "light": "resources/light/chrome-close.svg",
                     "dark": "resources/dark/chrome-close.svg"
@@ -970,8 +978,18 @@
                     "group": "attribute"
                 },
                 {
+                    "command": "textView.deleteFile",
+                    "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
                     "command": "textView.rename",
                     "when": "view == textView && viewItem == file",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.deleteDir",
+                    "when": "view == textView && viewItem == dir",
                     "group": "edit"
                 },
                 {
@@ -981,6 +999,16 @@
                 },
                 {
                     "command": "textView.renameDir",
+                    "when": "view == textView && viewItem == dir",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.newText",
+                    "when": "view == textView && viewItem == dir",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.newDir",
                     "when": "view == textView && viewItem == dir",
                     "group": "edit"
                 },
@@ -1000,7 +1028,7 @@
                     "group": "edit"
                 },
                 {
-                    "command": "textView.deleteText",
+                    "command": "textView.deleteFile",
                     "when": "view == textView && (viewItem == file || viewItem == dir)",
                     "group": "edit"
                 },
@@ -1075,7 +1103,7 @@
                     "group": "inline"
                 },
                 {
-                    "command": "textView.deleteText",
+                    "command": "textView.deleteFile",
                     "when": "view == textView",
                     "group": "inline"
                 },

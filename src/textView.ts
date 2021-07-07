@@ -7,7 +7,6 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
-import { logView } from './logView';
 
 interface Entry {
 	uri: vscode.Uri;
@@ -100,7 +99,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 				}
 				var newPath = path.join(dir,filename);
 				fs.copyFileSync(oldPath,newPath);		
-				this.refresh(entry);
+				vscode.commands.executeCommand('textView.refreshAll');	
 			});	
 		}
 	}
@@ -113,8 +112,13 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 					if (path.extname(newname).length == 0)
 						newname = newname+path.extname(entry.uri.fsPath);
 					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.fsPath),newname));
-					dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
-					this.refresh(entry);
+					dirfuncs.rename(original.fsPath,newfile.fsPath);	
+					var logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
+					if (dirfuncs.isDir(logFolderOrig.fsPath)) {
+						var logFolderNew = vscode.Uri.file(path.join(path.dirname(entry.uri.fsPath),newname + visualText.LOG_SUFFIX));
+						dirfuncs.rename(logFolderOrig.fsPath,logFolderNew.fsPath);
+					}
+					vscode.commands.executeCommand('textView.refreshAll');	
 				}
 			});
 		}
@@ -126,8 +130,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<Entry> {
 				if (newname) {
 					var original = entry.uri;
 					var newfile = vscode.Uri.file(path.join(path.dirname(entry.uri.fsPath),newname));
-					dirfuncs.renameFile(original.fsPath,newfile.fsPath);						
-					this.refresh(entry);
+					dirfuncs.rename(original.fsPath,newfile.fsPath);						
+					vscode.commands.executeCommand('textView.refreshAll');	
 				}
 			});
 		}
@@ -156,7 +160,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.search', () => this.search());
 		vscode.commands.registerCommand('textView.newText', (entry) => this.newText(entry));
 		vscode.commands.registerCommand('textView.newDir', (entry) => this.newDir(entry));
-		vscode.commands.registerCommand('textView.deleteText', (entry) => this.deleteText(entry));
+		vscode.commands.registerCommand('textView.deleteFile', (entry) => this.deleteFile(entry));
+		vscode.commands.registerCommand('textView.deleteDir', (entry) => this.deleteFile(entry));
 		vscode.commands.registerCommand('textView.updateTitle', (entry) => this.updateTitle(entry));
     }
     
@@ -253,7 +258,7 @@ export class TextView {
 		vscode.commands.executeCommand('status.update');
 	}
 
-	private deleteText(entry: Entry): void {
+	private deleteFile(entry: Entry): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
@@ -265,11 +270,18 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var path = entry.uri.fsPath;
-				if (dirfuncs.isDir(path))
-					dirfuncs.delDir(path);
+				var filePath = entry.uri.fsPath;
+				if (dirfuncs.isDir(filePath))
+					dirfuncs.delDir(filePath);
 				else
-					dirfuncs.delFile(path);
+					dirfuncs.delFile(filePath);
+
+				// Delete log folder if exists
+				var logFolder = vscode.Uri.file(path.join(filePath + visualText.LOG_SUFFIX));
+				if (dirfuncs.isDir(logFolder.fsPath)) {
+					dirfuncs.delDir(logFolder.fsPath);
+				}
+
 				vscode.commands.executeCommand('textView.refreshAll');
 			});
 		}

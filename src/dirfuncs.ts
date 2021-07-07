@@ -61,7 +61,7 @@ export namespace dirfuncs {
         return false;
     }
 
-    export function renameFile(oldPath: string, newPath: string): boolean {
+    export function rename(oldPath: string, newPath: string): boolean {
         try {
             fs.renameSync(oldPath,newPath);
             return true;

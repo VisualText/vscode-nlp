@@ -5,11 +5,12 @@ import * as os from 'os';
 import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
-import { ENGINE_METHOD_PKEY_ASN1_METHS } from 'constants';
 
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
+    
+    public readonly LOG_SUFFIX = '_log';
 
     public analyzer = new Analyzer();
     public debugOut = vscode.window.createOutputChannel("VisualText");

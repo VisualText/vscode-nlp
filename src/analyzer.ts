@@ -171,7 +171,7 @@ export class Analyzer {
 
     outputDirectory() {
         if (this.currentTextFile.fsPath.length) {
-            this.outputDir = vscode.Uri.file(this.currentTextFile.fsPath + '_log');
+            this.outputDir = vscode.Uri.file(this.currentTextFile.fsPath + visualText.LOG_SUFFIX);
         } else {
             this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.fsPath,'output'));
         }
