@@ -85,13 +85,14 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						type: 'missing', passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			
 			} else {
-				if (passItem.typeStr.localeCompare('tokenize') == 0)
-					label = '1 tokenize';
-				else if (passItem.typeStr.localeCompare('dicttokz') == 0)
-					label = '1 dicttokz';
-				else
+				if (passItem.tokenizer) {
+					label = '1 ' + passItem.typeStr;
+					conVal = 'tokenize';
+				} else {
 					label = passItem.name;
-				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'stub', inFolder: passItem.inFolder,
+					conVal = 'stub';
+				}
+				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
 			order++;	
@@ -306,6 +307,27 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		visualText.analyzer.seqFile.saveActive(seqItem.passNum,false);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
+
+	tokenize(seqItem: SequenceItem) {
+		this.renameToken(seqItem,'tokenize');
+	}
+
+	dicttok(seqItem: SequenceItem) {
+		this.renameToken(seqItem,'dicttok');
+	}
+
+	dicttokz(seqItem: SequenceItem) {
+		this.renameToken(seqItem,'dicttokz');
+	}
+
+	cmltok(seqItem: SequenceItem) {
+		this.renameToken(seqItem,'cmltok');
+	}
+
+	renameToken(seqItem: SequenceItem, newname: string) {
+		visualText.analyzer.seqFile.saveType(seqItem.passNum,newname);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
+	}
 }
 
 export let sequenceView: SequenceView;
@@ -348,6 +370,10 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOn', (seqItem) => treeDataProvider.typeOn(seqItem));
 		vscode.commands.registerCommand('sequenceView.newFolder', (seqItem) => treeDataProvider.newFolder(seqItem));
+		vscode.commands.registerCommand('sequenceView.tokenize', (seqItem) => treeDataProvider.tokenize(seqItem));
+		vscode.commands.registerCommand('sequenceView.dicttok', (seqItem) => treeDataProvider.dicttok(seqItem));
+		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
+		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 	}
 
 	finalTree() {

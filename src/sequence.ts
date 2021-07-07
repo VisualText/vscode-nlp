@@ -16,12 +16,19 @@ export class PassItem {
 	public comment: string = '';
 	public passNum: number = 0;
 	public order: number = 0;
+	public tokenizer: boolean = false;
 	public typeStr: string = '';
 	public inFolder: boolean = false;
 	public empty: boolean = true;
 	public active: boolean = true;
 
+	public tokenizers: string[] = ['tokenize','tok','token','cmltokenize','cmltok','dicttok','dicttokz'];
+
 	constructor() {
+	}
+
+	public isTokenizer() {
+		return this.tokenizers.includes(this.typeStr.toLowerCase());
 	}
 
 	public isRuleFile(): boolean {
@@ -136,6 +143,9 @@ export class SequenceFile extends TextFile {
 				} else {
 					passItem.active = true;
 					passItem.typeStr = tokens[0];
+					if (passItem.isTokenizer()) {
+						passItem.tokenizer = true;
+					}
 				}
 				passItem.name = tokens[1];
 
@@ -559,6 +569,7 @@ export class SequenceFile extends TextFile {
 		toItem.name = fromItem.name;
 		toItem.passNum = fromItem.passNum;
 		toItem.order = fromItem.order;
+		toItem.tokenizer = fromItem.tokenizer;
 		toItem.typeStr = fromItem.typeStr;
 		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;

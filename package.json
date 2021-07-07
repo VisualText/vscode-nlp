@@ -331,6 +331,22 @@
                 "description": "View the tree for the selected text"
             },
             {
+                "command": "sequenceView.tokenize",
+                "title": "Tokenizer"
+            },
+            {
+                "command": "sequenceView.dicttok",
+                "title": "Dictionary Tokenizer"
+            },
+            {
+                "command": "sequenceView.dicttokz",
+                "title": "Dictionary No Whitespace Tokenizer"
+            },
+            {
+                "command": "sequenceView.cmltok",
+                "title": "CML Tokenizer"
+            },
+            {
                 "command": "sequenceView.finalTree",
                 "title": "Display Final Tree",
                 "icon": {
@@ -898,6 +914,26 @@
                     "group": "file"
                 },
                 {
+                    "command": "sequenceView.tokenize",
+                    "when": "view == sequenceView && viewItem == tokenize",
+                    "group": "tokenize"
+                },
+                {
+                    "command": "sequenceView.dicttok",
+                    "when": "view == sequenceView && viewItem == tokenize",
+                    "group": "tokenize"
+                },
+                {
+                    "command": "sequenceView.dicttokz",
+                    "when": "view == sequenceView && viewItem == tokenize",
+                    "group": "tokenize"
+                },
+                {
+                    "command": "sequenceView.cmltok",
+                    "when": "view == sequenceView && viewItem == tokenize",
+                    "group": "tokenize"
+                },
+                {
                     "command": "sequenceView.openFile",
                     "when": "view == sequenceView && viewItem == file",
                     "group": "display"
@@ -919,12 +955,12 @@
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView",
+                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView",
+                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)",
                     "group": "move"
                 },
                 {
@@ -954,7 +990,7 @@
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == sequenceView",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "edit"
                 },
                 {
