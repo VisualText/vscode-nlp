@@ -139,7 +139,7 @@ export class OutputView {
 	}
 
 	public directoryIsLog(path: string): boolean {
-		if (!path.endsWith('_log'))
+		if (!path.endsWith(visualText.LOG_SUFFIX))
 			return false;
 		const filepath = path.substr(0,path.length-4);
 		try {
@@ -156,7 +156,7 @@ export class OutputView {
 		this.logDirectory = vscode.Uri.file('');
 		if (path.length == 0)
 			return false;
-		this.logDirectory = vscode.Uri.file(path + '_log');
+		this.logDirectory = vscode.Uri.file(path + visualText.LOG_SUFFIX);
 		if (!fs.existsSync(this.logDirectory.fsPath))
 			return false;
 		var stats = fs.lstatSync(this.logDirectory.fsPath);

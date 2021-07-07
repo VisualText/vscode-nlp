@@ -579,9 +579,9 @@ export class SequenceFile extends TextFile {
 			fs.copyFileSync(swapFile,twoFile);
 			dirfuncs.delFile(swapFile);				
 		} else if (oneExists) {
-			dirfuncs.renameFile(oneFile,twoFile);
+			dirfuncs.rename(oneFile,twoFile);
 		} else if (twoExists) {
-			dirfuncs.renameFile(twoFile,oneFile);
+			dirfuncs.rename(twoFile,oneFile);
 		}
 	}
 
