@@ -197,11 +197,11 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
-				canSelectMany: false,
+				canSelectMany: true,
 				openLabel: 'Open',
 				defaultUri: seqFile.getLibraryDirectory(),
 				canSelectFiles: true,
-				canSelectFolders: true,
+				canSelectFolders: false,
 				filters: {
 					'Text files': ['pat','nlp'],
 					'All files': ['*']
@@ -211,8 +211,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (!selection) {
 					return;
 				}
-				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
-				seqFile.insertPass(seqItem,newfile);
+				for (let select of selection.reverse()) {
+					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
+					seqFile.insertPass(seqItem,newfile);
+				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
 		}
@@ -234,8 +236,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (!selection) {
 					return;
 				}
-				var newfile: vscode.Uri = vscode.Uri.file(selection[0].fsPath);
-				seqFile.insertPass(seqItem,newfile);
+				for (let select of selection.reverse()) {
+					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
+					seqFile.insertPass(seqItem,newfile);
+				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
 		}

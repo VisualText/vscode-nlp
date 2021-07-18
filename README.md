@@ -98,6 +98,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.2.0
+Fixed one line bug for the sequence file and allow for multiple pass selections for inserting.
+
 ### v1.1.2
 Allows for dicttok, dicttokz, and cmltok variations of the tokenizer. Also delete and remame files also changes the log files directory name correctly in the textView.
 

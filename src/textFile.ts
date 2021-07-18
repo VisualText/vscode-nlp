@@ -203,6 +203,8 @@ export class TextFile {
         this.lines = [];
         if (this.sepType != separatorType.SEP_UNKNOWN && this.text.length) {
             this.lines = this.text.split(this.sep)
+        } else if (this.text.length) {
+            this.lines.push(this.text);
         }
     }
 
