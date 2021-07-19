@@ -23,7 +23,7 @@ The NLP++ language extension allows for the fast development of NLP++ analyzers 
 * Extensive snippets
 * Help lookup
 
-### NLP++ Example Analyzers
+## NLP++ Example Analyzers
 
 Example analyzers can be found in the "analyzers" folder in the NLP-ENGINE folder.
 
@@ -33,7 +33,7 @@ Example analyzers can be found in the "analyzers" folder in the NLP-ENGINE folde
 
 In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in the form of an executable and directory need to be present. Version one now includes this as part of the NLP language extension.
 
-### NLP Engine
+## NLP Engine Overview
 
 The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://gihub.com/VisualText/nlp-engine). The engine can run as a standalone executable (nlp.exe) that runs on Linux, Windows, and MacOS or it can be embedded into c++ code.
 
@@ -50,10 +50,6 @@ There are many types of analyzers that are written by NLP++ programmers includin
 * Extraction of data from messy text
 * Autogenerate snippets from documentation
 
-## Extension Settings
-
-Version 1 of the NLP language extension now contains the path to the nlp-engine directory, the current analyzer to load, and the user name. These can be found in the general settings unders "Extensions" and "NLP".
-
 ### Analyzer state.json
 
 This file will automatically get generated when a new analyzer is created in VisualText VSCode. It is located in the .vscode directory under the folder for an individual analyzer.
@@ -68,29 +64,6 @@ This file will automatically get generated when a new analyzer is created in Vis
             }
         ]
     }
-    
-## Development
-
-### VSCode Language Extension
-
-Follow these instructions to install the development code for VSCode extension:
-
-    cd /Some/Dev/Folder/
-    git clone https://github.com/VisualText/vscode-nlp.git
-    cd vscode-nlp
-    npm install
-
-At which point you can open the `vscode-nlp` folder within VS Code.
-
-Next start the background build process by running the following command within a terminal session:
-
-    npm run watch
-    
-At which point you can edit the sources and launch debug sessions via F5 and included launch configurations.
-
-### NLP Engine
-
-The NLP Engine which is written in C++ is also open source and can be downloaded in development mode. You can find how to download and develop the NLP Engine code at: [https://github.com/VisualText/vscode-nlp](https://github.com/VisualText/vscode-nlp).
 
 ## Known Issues
 
@@ -98,45 +71,63 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.2.0
+## v1.2.0
 Fixed one line bug for the sequence file and allow for multiple pass selections for inserting.
 
-### v1.1.2
+## v1.1.2
 Allows for dicttok, dicttokz, and cmltok variations of the tokenizer. Also delete and remame files also changes the log files directory name correctly in the textView.
 
-### v1.1.1
+## v1.1.1
 Analyze a folder of texts
 
-### v1.0.11
+## v1.0.11
 Fixed color highlights rule rewrite line
 
-### v1.0.8
+## v1.0.8
 Updated NLP Engine with empty tmp folders
 
-### v1.0.5
+## v1.0.5
 Added duplicate line for rule editor
 
-### v1.0.4
+## v1.0.4
 
 The NLP engine executable and engine directory are now included in the NLP language extension for VSCode. The location of the engine is located in a subdirectory of the nlp extensions located in the extension directory located on the local computer. See documentation for VSCODE if you want to know the location of the directory which is different for different platforms.
 
-### v0.9.29
+## v0.9.29
 
 Fixing minor problems
 
-### v0.9.27
+## v0.9.27
 
 Fixing paths for calling nlp.exe and missing npm package
 
-### v0.9.24
+## v0.9.24
 
 Fixed file path problem across platforms
 
-### v0.9.23
+## v0.9.23
 
 Initial version with ongoing minor fixes
 
-## License
+# Development
+
+## VSCode Language Extension
+
+Follow these instructions to install the development code for VSCode extension:
+
+    cd /Some/Dev/Folder/
+    git clone https://github.com/VisualText/vscode-nlp.git
+    cd vscode-nlp
+    npm install
+    npm run watch
+    
+At which point you can edit the sources and launch debug sessions via F5 and included launch configurations.
+
+## NLP Engine
+
+The NLP Engine which is written in C++ is also open source and can be downloaded in development mode. You can find how to download and develop the NLP Engine code at: [https://github.com/VisualText/nlp-engine](https://github.com/VisualText/nlp-engine).
+
+# License
 
 [MIT](https://github.com/VisualText/vscode-nlp/blob/master/LICENSE)
 
