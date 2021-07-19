@@ -115,7 +115,6 @@ Initial version with ongoing minor fixes
 
 Follow these instructions to install the development code for VSCode extension:
 
-    cd /Some/Dev/Folder/
     git clone https://github.com/VisualText/vscode-nlp.git
     cd vscode-nlp
     npm install
