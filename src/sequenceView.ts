@@ -54,6 +54,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
 
+		var hasPat: Boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
+		vscode.commands.executeCommand('setContext', 'myExtension.hasPat', hasPat);
+
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
 
@@ -112,7 +115,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			icon = 'folder.svg';
 			collapse = vscode.TreeItemCollapsibleState.Collapsed;
 
-		} else if (seqItem.type.localeCompare('pat')) {
+		} else if (seqItem.type.localeCompare('nlp')) {
 			icon = 'seq-circle.svg';
 		}
 
@@ -267,7 +270,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				var original = seqItem.uri;
 				if (newname) {
 					seqFile.renamePass(seqItem,newname);
-					if (seqItem.type.localeCompare('pat') == 0 || seqItem.type.localeCompare('rec') == 0) {
+					if (seqItem.type.localeCompare('nlp') == 0 || seqItem.type.localeCompare('rec') == 0) {
 						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath,newname.concat(path.extname(original.fsPath))));
 						dirfuncs.rename(original.fsPath,newfile.fsPath);						
 					}
@@ -292,11 +295,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}		
 	}
 
-	typePat(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveType(seqItem.passNum,'pat');
-		vscode.commands.executeCommand('sequenceView.refreshAll');
-	}
-	
 	typeRec(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
 		vscode.commands.executeCommand('sequenceView.refreshAll');
@@ -360,6 +358,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
 		vscode.commands.registerCommand('sequenceView.search', () => this.search());
 		vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree());
+		vscode.commands.registerCommand('sequenceView.convert', () => this.convertPatToNLP());
 
 		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
@@ -369,7 +368,6 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
-		vscode.commands.registerCommand('sequenceView.typePat', (seqItem) => treeDataProvider.typePat(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeRec', (seqItem) => treeDataProvider.typeRec(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOn', (seqItem) => treeDataProvider.typeOn(seqItem));
@@ -378,6 +376,11 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.dicttok', (seqItem) => treeDataProvider.dicttok(seqItem));
 		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
+	}
+
+	convertPatToNLP() {
+		visualText.analyzer.seqFile.convertPatFiles();
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
 	finalTree() {

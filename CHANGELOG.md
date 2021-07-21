@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.3.0
+Changed all the pat files to nlp but still will process both extensions.
+
 ### v1.2.0
 Fixed one line bug for the sequence file and allow for multiple pass selections for inserting.
 
