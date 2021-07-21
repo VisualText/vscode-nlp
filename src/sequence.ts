@@ -32,7 +32,7 @@ export class PassItem {
 	}
 
 	public isRuleFile(): boolean {
-		return this.typeStr.localeCompare('pat') == 0 || this.typeStr.localeCompare('rec') == 0;
+		return this.typeStr.localeCompare('nlp') == 0 || this.typeStr.localeCompare('rec') == 0;
 	}
 	
 	public isFolder(): boolean {
@@ -148,9 +148,12 @@ export class SequenceFile extends TextFile {
 					}
 				}
 				passItem.name = tokens[1];
+				if (passItem.typeStr.localeCompare('pat') == 0) {
+					passItem.typeStr = 'nlp';
+				}
 
-				if (passItem.typeStr.localeCompare('pat') == 0 || passItem.typeStr.localeCompare('rec') == 0) {			
-					passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,this.passFileName(passItem.name)));
+				if (passItem.typeStr.localeCompare('nlp') == 0 || passItem.typeStr.localeCompare('rec') == 0) {
+					passItem.uri = this.passItemUri(passItem);
 				}
 				passItem.comment = this.tokenStr(tokens,2);				
 			}
@@ -158,6 +161,13 @@ export class SequenceFile extends TextFile {
 		}
 
 		return passItem;
+	}
+
+	passItemUri(passItem: PassItem): vscode.Uri {
+		passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,passItem.name + '.pat'));
+		if (!fs.existsSync(passItem.uri.fsPath))
+			passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,passItem.name + '.nlp'));
+		return passItem.uri;
 	}
 
 	tokenStr(tokens: string[], start: number): string {
@@ -224,7 +234,7 @@ export class SequenceFile extends TextFile {
 
 	renamePass(seqItem: SequenceItem, newPassName: string) {
 		if (this.passItems.length) {
-			var passItem = this.passItems[seqItem.passNum-1];
+			var passItem = this.findPass(seqItem.type,seqItem.name);
 			if (seqItem.type.localeCompare('folder') == 0) {
 				var passes = this.getFolderPasses(seqItem.type,seqItem.name,true);
 				passes[passes.length-1].name = newPassName;
@@ -252,11 +262,11 @@ export class SequenceFile extends TextFile {
 					copy = true;
 				}
 				for (let pass of passes) {
+					var passPath = path.join(specDir,path.basename(pass.fsPath));
 					if (copy) {
-						var herepass = path.join(specDir,path.basename(pass.fsPath));
-						fs.copyFileSync(pass.fsPath,herepass);								
+						fs.copyFileSync(pass.fsPath,passPath);								
 					}		
-					var passItem = this.createPassItemFromFile(pass.fsPath);
+					var passItem = this.createPassItemFromFile(passPath);
 					this.passItems.splice(row,0,passItem);
 					row++;
 				}
@@ -601,5 +611,26 @@ export class SequenceFile extends TextFile {
 			}
 		}
 		return new PassItem();
+	}
+
+	convertPatFiles() {
+		this.saveFile();
+		this.folderConvertPatExtensions(this.getSpecDirectory());
+	}
+
+	folderConvertPatExtensions(folder: vscode.Uri): Boolean {
+		let found: Boolean = false;
+		if (fs.existsSync(folder.fsPath)) {
+			let files = dirfuncs.getFiles(folder,['.pat']);
+			if (files.length == 0) {
+				found = false;
+			} else {
+				for (let file of files) {
+					let newPath = file.fsPath.replace('.pat','.nlp');
+					dirfuncs.rename(file.fsPath,newPath);
+				}
+			}
+		}
+		return found;
 	}
 }

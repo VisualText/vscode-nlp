@@ -216,7 +216,7 @@ export class LogFile extends TextFile {
 		if (visualText.analyzer.hasText()) {
 			let passFilePath = visualText.analyzer.getPassPath();
 			let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
-			let passItem = visualText.analyzer.seqFile.findPass('pat',passName);
+			let passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
 			this.logFile = this.anaFile(passItem.passNum).fsPath;
 
 			if (this.findSelectedTreeStr(editor)) {
