@@ -1211,7 +1211,8 @@
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile",
-        "test": "node ./dist/test/runTest.js"
+        "test": "node ./dist/test/runTest.js",
+        "vsce-package": "vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
