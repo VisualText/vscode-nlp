@@ -29,7 +29,6 @@
 
 !nlp-engine/analyzers/**/*
 !nlp-engine/data/**/*
-!nlp-engine/exe/**/*
 !nlp-engine/visualtext/**/*
 
 !nlp-configuration.json
