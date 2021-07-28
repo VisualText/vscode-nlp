@@ -15,21 +15,19 @@
 !node_modules/brace-expansion/**/*
 !node_modules/concat-map/**/*
 !node_modules/copy-dir/**/*
+!node_modules/extract-zip/**/*
 !node_modules/fs.realpath/**/*
 !node_modules/glob/**/*
 !node_modules/inflight/**/*
 !node_modules/inherits/**/*
 !node_modules/minimatch/**/*
+!node_modules/nodejs-file-downloader/**/*
 !node_modules/os/**/*
 !node_modules/once/**/*
 !node_modules/path-is-absolute/**/*
 !node_modules/rimraf/**/*
 !node_modules/tslib/**/*
 !node_modules/wrappy/**/*
-
-!nlp-engine/analyzers/**/*
-!nlp-engine/data/**/*
-!nlp-engine/visualtext/**/*
 
 !nlp-configuration.json
 !tree-configuration.json

@@ -5,15 +5,18 @@ import * as os from 'os';
 import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
+import stream = require('stream');
 
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
     
     public readonly LOG_SUFFIX = '_log';
+    public readonly NLP_EXE = 'nlp.exe';
+    public readonly GITHUB_LATEST_RELEASE = 'https://github.com/VisualText/nlp-engine/releases/latest/download/';
 
     public analyzer = new Analyzer();
-    public debugOut = vscode.window.createOutputChannel("VisualText");
+    public debugOut = vscode.window.createOutputChannel('VisualText');
     private platform: string = '';
     private homeDir: string = '';
     private version: string = '';
@@ -119,6 +122,7 @@ export class VisualText {
 
     readConfig() {
         this.configFindEngine();
+        this.configEngineDirectories();
         this.configEngineExecutable();
         this.configFindUsername();
         this.configAnalzyerDirectory();
@@ -162,10 +166,46 @@ export class VisualText {
             config.update('directory',directory,vscode.ConfigurationTarget.Global);
     }
 
+    configEngineDirectories() {
+        const config = vscode.workspace.getConfiguration('engine');
+        if (dirfuncs.isDir(this.engineDir.fsPath)) {
+            const zipFile = 'visualtext.zip';
+            const url = this.GITHUB_LATEST_RELEASE + zipFile;
+            const toPath = path.join(this.engineDir.fsPath,zipFile);
+
+            const Downloader = require('nodejs-file-downloader');
+
+            (async () => {
+            
+                const downloader = new Downloader({
+                    url: url,   
+                    directory: this.engineDir.fsPath        
+                })
+                try {
+                    await downloader.download();
+                    dirfuncs.changeMod(toPath,755);
+                    this.debugMessage('Downloaded: ' + url);
+
+                    const extract = require('extract-zip')
+                    try {
+                        await extract(toPath, { dir: this.engineDir.fsPath });
+                        this.debugMessage('Unzipped: ' + toPath);
+                        dirfuncs.delFile(toPath);
+                    } catch (err) {
+                        this.debugMessage('Could not unzip file: ' + toPath);
+                    }
+
+                } catch (error) {
+                    console.log('Download failed',error);
+                }
+            
+            })();
+        }
+    }
+
     configEngineExecutable() {
         const config = vscode.workspace.getConfiguration('engine');
-        const exePathFrom = path.join(this.engineDir.fsPath,'exe');
-        if (dirfuncs.isDir(exePathFrom)) {
+        if (this.engineDir.fsPath) {
             config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
             var exe = '';
             switch (this.platform) {
@@ -178,10 +218,27 @@ export class VisualText {
                 default:
                     exe = 'nlpl.exe';
             }
-            const fromPath = path.join(exePathFrom,exe);
-            const pathTo = path.join(this.engineDir.fsPath,'nlp.exe');
-            dirfuncs.copyFile(fromPath,pathTo);
-            dirfuncs.changeMod(pathTo,755);
+            const url = this.GITHUB_LATEST_RELEASE + exe;
+            const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
+
+            const Downloader = require('nodejs-file-downloader');
+            (async () => {
+            
+                const downloader = new Downloader({
+                    url: url,   
+                    directory: this.engineDir.fsPath,
+                    filename: this.NLP_EXE
+                })
+                try {
+                    await downloader.download();
+                    dirfuncs.changeMod(toPath,755);
+                    this.debugMessage('Downloaded: ' + url);
+                } catch (error) {
+                    this.debugMessage('FAILED download: ' + url);
+                }
+            
+            })(); 
+
         }
     }
 
@@ -202,15 +259,11 @@ export class VisualText {
 
             if (dirfuncs.isDir(this.extensionDir.fsPath)) {
                 this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
-                const config = vscode.workspace.getConfiguration('engine');
                 if (dirfuncs.isDir(this.engineDir.fsPath)) {
                     config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
                 }
-            } else if (vscode.workspace.workspaceFolders) {
-                if (vscode.workspace.workspaceFolders.length === 1) {
-                    let dir = vscode.workspace.workspaceFolders[0];
-                    this.engineDir = dirfuncs.findFolder(dir.uri,'nlp-engine');                
-                }
+            } else {
+                vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
             }
         }
 
