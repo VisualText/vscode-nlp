@@ -5,7 +5,6 @@ import * as os from 'os';
 import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
-import stream = require('stream');
 
 export let visualText: VisualText;
 export class VisualText {
@@ -172,6 +171,7 @@ export class VisualText {
             const zipFile = 'visualtext.zip';
             const url = this.GITHUB_LATEST_RELEASE + zipFile;
             const toPath = path.join(this.engineDir.fsPath,zipFile);
+            this.debugMessage('toPath: ' + toPath);
 
             const Downloader = require('nodejs-file-downloader');
 
@@ -196,6 +196,7 @@ export class VisualText {
                     }
 
                 } catch (error) {
+                    this.debugMessage('Error: ' + error);
                     console.log('Download failed',error);
                 }
             
@@ -259,9 +260,10 @@ export class VisualText {
 
             if (dirfuncs.isDir(this.extensionDir.fsPath)) {
                 this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
-                if (dirfuncs.isDir(this.engineDir.fsPath)) {
-                    config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
+                if (!dirfuncs.isDir(this.engineDir.fsPath)) {
+                    dirfuncs.makeDir(this.engineDir.fsPath);
                 }
+                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
             } else {
                 vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
             }
