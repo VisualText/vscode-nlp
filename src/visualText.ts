@@ -194,6 +194,8 @@ export class VisualText {
                             await extract(toPath, { dir: this.engineDir.fsPath });
                             this.debugMessage('Unzipped: ' + toPath);
                             dirfuncs.delFile(toPath);
+                            this.configAnalzyerDirectory();
+                            vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
                         } catch (err) {
                             this.debugMessage('Could not unzip file: ' + toPath);
                         }
@@ -266,9 +268,11 @@ export class VisualText {
 
             if (dirfuncs.isDir(this.extensionDir.fsPath)) {
                 this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
-                if (dirfuncs.isDir(this.engineDir.fsPath)) {
-                    config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
+                if (!dirfuncs.isDir(this.engineDir.fsPath)) {
+                    this.debugMessage('Creating directory: ' + this.extensionDir.fsPath);
+                    dirfuncs.makeDir(this.engineDir.fsPath);
                 }
+                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
             } else {
                 vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
             }
