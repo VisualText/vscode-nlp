@@ -72,7 +72,7 @@ There are many details in the windows version of VisualText that are yet to be i
 ## Release Notes
 
 ### v1.3.0
-Changed all the pat files to nlp but still will process both extensions.
+Changed all the pat files to nlp but still will process both extensions. Now downloads the latest version of nlp-engine at installation time, no longer included in the extension.
 
 ## v1.2.0
 Fixed one line bug for the sequence file and allow for multiple pass selections for inserting.
