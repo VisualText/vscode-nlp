@@ -7,7 +7,7 @@
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
-        "vscode": "^1.52.0"
+        "vscode": "^1.58.1"
     },
     "categories": [
         "Programming Languages",
@@ -1203,10 +1203,10 @@
         "download-file": "^0.1.5",
         "extract-zip": "^2.0.1",
         "nodejs-file-downloader": "^4.7.1",
-        "os": "^0.1.1",
+        "os": "^0.1.2",
         "rimraf": "^3.0.2",
-        "tslib": "^2.1.0",
-        "vsce": "^1.85.1"
+        "tslib": "^2.3.0",
+        "vsce": "^1.96.1"
     },
     "scripts": {
         "package": "vsce package",
@@ -1218,14 +1218,14 @@
         "vsce-package": "vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
-        "@types/glob": "^7.1.1",
+        "@types/glob": "^7.1.4",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^10.17.49",
-        "@types/vscode": "^1.52.0",
-        "glob": "^7.1.5",
+        "@types/node": "^10.17.60",
+        "@types/vscode": "^1.58.1",
+        "glob": "^7.1.7",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
-        "typescript": "^3.6.4",
-        "vscode-test": "^1.4.1"
+        "typescript": "^3.9.10",
+        "vscode-test": "^1.6.1"
     }
 }

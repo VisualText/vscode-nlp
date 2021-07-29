@@ -169,76 +169,83 @@ export class VisualText {
     configEngineDirectories() {
         const config = vscode.workspace.getConfiguration('engine');
         if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            const zipFile = 'visualtext.zip';
-            const url = this.GITHUB_LATEST_RELEASE + zipFile;
-            const toPath = path.join(this.engineDir.fsPath,zipFile);
+            var analyzerFolder = path.join(this.engineDir.fsPath,"analyzers");
 
-            const Downloader = require('nodejs-file-downloader');
+            if (!fs.existsSync(analyzerFolder)) {
+                const zipFile = 'visualtext.zip';
+                const url = this.GITHUB_LATEST_RELEASE + zipFile;
+                const toPath = path.join(this.engineDir.fsPath,zipFile);
 
-            (async () => {
-            
-                const downloader = new Downloader({
-                    url: url,   
-                    directory: this.engineDir.fsPath        
-                })
-                try {
-                    await downloader.download();
-                    dirfuncs.changeMod(toPath,755);
-                    this.debugMessage('Downloaded: ' + url);
+                const Downloader = require('nodejs-file-downloader');
 
-                    const extract = require('extract-zip')
+                (async () => {
+                
+                    const downloader = new Downloader({
+                        url: url,   
+                        directory: this.engineDir.fsPath        
+                    })
                     try {
-                        await extract(toPath, { dir: this.engineDir.fsPath });
-                        this.debugMessage('Unzipped: ' + toPath);
-                        dirfuncs.delFile(toPath);
-                    } catch (err) {
-                        this.debugMessage('Could not unzip file: ' + toPath);
+                        await downloader.download();
+                        dirfuncs.changeMod(toPath,755);
+                        this.debugMessage('Downloaded: ' + url);
+
+                        const extract = require('extract-zip')
+                        try {
+                            await extract(toPath, { dir: this.engineDir.fsPath });
+                            this.debugMessage('Unzipped: ' + toPath);
+                            dirfuncs.delFile(toPath);
+                        } catch (err) {
+                            this.debugMessage('Could not unzip file: ' + toPath);
+                        }
+
+                    } catch (error) {
+                        console.log('Download failed',error);
                     }
 
-                } catch (error) {
-                    console.log('Download failed',error);
-                }
-            
-            })();
+                })();
+
+            }
         }
     }
 
     configEngineExecutable() {
         const config = vscode.workspace.getConfiguration('engine');
         if (this.engineDir.fsPath) {
-            config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
-            var exe = '';
-            switch (this.platform) {
-                case 'win32':
-                    exe = 'nlpw.exe';
-                    break;
-                case 'darwin':
-                    exe = 'nlpm.exe';
-                    break;
-                default:
-                    exe = 'nlpl.exe';
-            }
-            const url = this.GITHUB_LATEST_RELEASE + exe;
             const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
-
-            const Downloader = require('nodejs-file-downloader');
-            (async () => {
-            
-                const downloader = new Downloader({
-                    url: url,   
-                    directory: this.engineDir.fsPath,
-                    filename: this.NLP_EXE
-                })
-                try {
-                    await downloader.download();
-                    dirfuncs.changeMod(toPath,755);
-                    this.debugMessage('Downloaded: ' + url);
-                } catch (error) {
-                    this.debugMessage('FAILED download: ' + url);
+            if (!fs.existsSync(toPath)) {
+                config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
+                var exe = '';
+                switch (this.platform) {
+                    case 'win32':
+                        exe = 'nlpw.exe';
+                        break;
+                    case 'darwin':
+                        exe = 'nlpm.exe';
+                        break;
+                    default:
+                        exe = 'nlpl.exe';
                 }
-            
-            })(); 
+                const url = this.GITHUB_LATEST_RELEASE + exe;
 
+                const Downloader = require('nodejs-file-downloader');
+
+                (async () => {
+                
+                    const downloader = new Downloader({
+                        url: url,   
+                        directory: this.engineDir.fsPath,
+                        filename: this.NLP_EXE
+                    })
+                    try {
+                        await downloader.download();
+                        dirfuncs.changeMod(toPath,755);
+                        this.debugMessage('Downloaded: ' + url);
+                    } catch (error) {
+                        this.debugMessage('FAILED download: ' + url);
+                    }
+
+                })();                 
+            }
         }
     }
 
