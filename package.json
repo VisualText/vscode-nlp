@@ -100,14 +100,17 @@
         "languages": [
             {
                 "id": "nlp",
-                "aliases": [
-                    "NLP++",
-                    "nlp"
-                ],
                 "extensions": [
                     ".nlp",
                     ".nlppp",
                     ".pat"
+                ],
+                "aliases": [
+                    "NLP++",
+                    ".NLP",
+                    "NLP",
+                    "nlp",
+                    ".nlp"
                 ],
                 "configuration": "./nlp-configuration.json"
             },
@@ -117,7 +120,9 @@
                     ".seq"
                 ],
                 "aliases": [
+                    "SEQ",
                     ".SEQ",
+                    "seq",
                     ".seq"
                 ],
                 "configuration": "./seq-configuration.json"
@@ -128,7 +133,9 @@
                     ".txxt"
                 ],
                 "aliases": [
+                    "TXXT",
                     ".TXXT",
+                    "txxt",
                     ".txxt"
                 ],
                 "configuration": "./txxt-configuration.json"
@@ -142,8 +149,10 @@
                 "aliases": [
                     "LOG",
                     "log",
+                    ".TREE",
                     "TREE",
-                    "tree"
+                    "tree",
+                    ".tree"
                 ],
                 "configuration": "./tree-configuration.json"
             },
@@ -154,8 +163,10 @@
                 ],
                 "aliases": [
                     "KB",
+                    ".KB",
                     "Kb",
-                    "kb"
+                    "kb",
+                    ".kb"
                 ],
                 "configuration": "./kb-configuration.json"
             },
@@ -166,8 +177,10 @@
                 ],
                 "aliases": [
                     "KBB",
+                    ".KBB",
                     "Kbb",
-                    "kbb"
+                    "kbb",
+                    ".kbb"
                 ],
                 "configuration": "./kbb-configuration.json"
             }
