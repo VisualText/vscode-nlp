@@ -89,6 +89,9 @@ export class FindView {
 
 	public loadFinds(searchWord: string, findItems: FindItem[]) {
 		this.findItems = findItems;
+		if (findItems.length == 0) {
+			findItems.push({uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: 0, pos: 0, text: ''});
+		}
 		this.searchWord = searchWord;
 	}
 
