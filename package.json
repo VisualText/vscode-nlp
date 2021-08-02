@@ -1207,6 +1207,12 @@
                     "scope": "application",
                     "default": "",
                     "description": "NLP Engine path (nlp.exe)"
+                },
+                "engine.version": {
+                    "type": "string",
+                    "scope": "application",
+                    "default": "",
+                    "description": "NLP Engine version"
                 }
             }
         }
@@ -1215,6 +1221,7 @@
         "copy-dir": "^1.3.0",
         "download-file": "^0.1.5",
         "extract-zip": "^2.0.1",
+        "follow-redirects": "^1.14.1",
         "nodejs-file-downloader": "^4.7.1",
         "os": "^0.1.2",
         "rimraf": "^3.0.2",

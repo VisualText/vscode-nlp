@@ -14,6 +14,8 @@ export class VisualText {
     public readonly LOG_SUFFIX = '_log';
     public readonly NLP_EXE = 'nlp.exe';
     public readonly GITHUB_LATEST_RELEASE = 'https://github.com/VisualText/nlp-engine/releases/latest/download/';
+    public readonly GITHUB_LATEST_VERSION = 'https://github.com/VisualText/nlp-engine/releases/latest/';
+    public readonly GITHUB_ENGINE_DIR_ZIP = 'visualtext.zip';
 
     public analyzer = new Analyzer();
     public debugOut = vscode.window.createOutputChannel('VisualText');
@@ -22,6 +24,7 @@ export class VisualText {
     private version: string = '';
     private username: string = '';
     private jsonState = new JsonState();
+    private newerVersion: boolean = false;
 
     private analyzers: vscode.Uri[] = new Array();
     private extensionDir: vscode.Uri = vscode.Uri.file('');
@@ -51,7 +54,7 @@ export class VisualText {
             if (vscode.workspace.workspaceFolders) {
                 visualText.workspaceFold = vscode.workspace.workspaceFolders[0].uri;
             }
-            visualText.readConfig();
+            visualText.configureEngine();
             visualText.readState();
             visualText.initSettings();
         }
@@ -120,10 +123,12 @@ export class VisualText {
         }   
     }
 
+    /*
     readConfig() {
+        this.checkEngineVersion();
         this.configFindEngine();
         this.configEngineDirectories();
-        this.configEngineExecutable();
+        this.configEngineExecutable(false);
         this.configFindUsername();
         this.configAnalzyerDirectory();
         this.getAnalyzers();
@@ -133,7 +138,72 @@ export class VisualText {
             vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
         }
     }
-    
+    */
+
+    async configureEngine() {
+        return vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: 'Configure Engine',
+            cancellable: false
+        }, (progress, token) => {
+            progress.report({ increment: 10, message: 'Check Version' });
+            return this.configFindEngine().then(engineDir => {
+                progress.report({ increment: 10, message: 'Find Engine' });
+                return this.checkEngineVersion();
+            }).then(newerVersion => {
+                progress.report({ increment: 10, message: 'Engine directories' });
+                return this.configEngineExecutable();
+            }).then(engineExeDir => {
+                progress.report({ increment: 10, message: 'Engine directories' });
+                return this.configEngineDirectories();
+            }).then(zipDir => {
+                progress.report({ increment: 10, message: 'Extract VisualText directories' });
+                return this.extractEngineDirZip();
+            }).then(zip => {
+                progress.report({ increment: 10, message: 'User name' });
+                return this.configFindUsername();
+            }).then(username => {
+                progress.report({ increment: 10, message: 'Analyzer Directory' });
+                return this.configAnalzyerDirectory();
+            }).then(analyzerDir => {
+                progress.report({ increment: 10, message: 'Analyzers' });
+                this.getAnalyzers();
+                this.configCurrentAnalzyer();
+            }).catch(e => {
+                this.debugMessage(`NLP Engine configuration failed - ${e.message}.${os.EOL}`);
+                throw e;
+            });
+        });
+    }
+
+    checkEngineVersion() {
+        return new Promise((resolve,reject) => {
+            const https = require('follow-redirects').https;
+
+            const request = https.get(this.GITHUB_LATEST_VERSION, function (res) {
+                res.on('data', function (chunk) {
+                    let url = res.responseUrl;
+                    let version: string = url.substring(url.lastIndexOf('/') + 1);
+                    const config = vscode.workspace.getConfiguration('engine');
+                    let currentVersion: string | undefined = config.get<string>('version');
+                    if (currentVersion == undefined && version.length) {
+                        visualText.newerVersion = true;
+                        config.update('version',version,vscode.ConfigurationTarget.Global);
+                    } else if (currentVersion != undefined && version.localeCompare(currentVersion) != 0) {
+                        visualText.newerVersion = true;
+                        config.update('version',version,vscode.ConfigurationTarget.Global);
+                    } else if (currentVersion != undefined && version.localeCompare(currentVersion) == 0) {
+                        visualText.newerVersion = false;
+                    }
+                    resolve(visualText.newerVersion);
+                });
+            }).on('error', function (err) {
+                reject(err);
+            });
+            request.end();
+        });
+    }
+
     configCurrentAnalzyer() {
         const config = vscode.workspace.getConfiguration('analyzer');
         var current = config.get<string>('current');
@@ -150,156 +220,191 @@ export class VisualText {
     }
 
     configAnalzyerDirectory() {
-        const config = vscode.workspace.getConfiguration('analyzer');
+        return new Promise((resolve,reject) => {
+            const config = vscode.workspace.getConfiguration('analyzer');
 
-        if (this.workspaceFold.fsPath.length > 1 && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
-            directory = this.workspaceFold.fsPath;
-        } else {
-            var directory = config.get<string>('directory');
-            if (!directory) {
-                directory = path.join(this.engineDir.fsPath,'analyzers');
+            if (this.workspaceFold.fsPath.length > 1 && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
+                directory = this.workspaceFold.fsPath;
+            } else {
+                var directory = config.get<string>('directory');
+                if (!directory) {
+                    directory = path.join(this.engineDir.fsPath,'analyzers');
+                }
             }
-        }
 
-        this.analyzerDir = vscode.Uri.file(directory);    
-        if (directory.length > 1)
-            config.update('directory',directory,vscode.ConfigurationTarget.Global);
+            this.analyzerDir = vscode.Uri.file(directory);    
+            if (directory.length > 1)
+                config.update('directory',directory,vscode.ConfigurationTarget.Global);
+
+            resolve(directory);
+        });
     }
 
     configEngineDirectories() {
-        const config = vscode.workspace.getConfiguration('engine');
-        if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            var analyzerFolder = path.join(this.engineDir.fsPath,"analyzers");
+        return new Promise((resolve,reject) => {
+            
+            const config = vscode.workspace.getConfiguration('engine');
+            if (dirfuncs.isDir(this.engineDir.fsPath)) {
+                var analyzerFolder = path.join(this.engineDir.fsPath,"analyzers");
 
-            if (!fs.existsSync(analyzerFolder)) {
-                const zipFile = 'visualtext.zip';
-                const url = this.GITHUB_LATEST_RELEASE + zipFile;
-                const toPath = path.join(this.engineDir.fsPath,zipFile);
+                if (!fs.existsSync(analyzerFolder)) {
+                    const url = this.GITHUB_LATEST_RELEASE + this.GITHUB_ENGINE_DIR_ZIP;
+                    const toPath = path.join(this.engineDir.fsPath,this.GITHUB_ENGINE_DIR_ZIP);
 
-                const Downloader = require('nodejs-file-downloader');
-
-                (async () => {
-                
+                    const Downloader = require('nodejs-file-downloader');
                     const downloader = new Downloader({
                         url: url,   
                         directory: this.engineDir.fsPath        
                     })
                     try {
-                        await downloader.download();
+                        downloader.download();
                         dirfuncs.changeMod(toPath,755);
                         this.debugMessage('Downloaded: ' + url);
-
-                        const extract = require('extract-zip')
-                        try {
-                            await extract(toPath, { dir: this.engineDir.fsPath });
-                            this.debugMessage('Unzipped: ' + toPath);
-                            dirfuncs.delFile(toPath);
-                            this.configAnalzyerDirectory();
-                            vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
-                        } catch (err) {
-                            this.debugMessage('Could not unzip file: ' + toPath);
-                        }
+                        resolve(toPath);
 
                     } catch (error) {
                         console.log('Download failed',error);
+                        reject(error);
                     }
-
-                })();
-
+                }
             }
-        }
+        });
+    }
+
+    extractEngineDirZip() {
+        return new Promise((resolve,reject) => {
+            let zipPath = path.join(this.engineDir.fsPath,this.GITHUB_ENGINE_DIR_ZIP);
+            const extract = require('extract-zip')
+            try {
+                extract(zipPath, { dir: this.engineDir.fsPath });
+                this.debugMessage('Unzipped: ' + zipPath);
+                dirfuncs.delFile(zipPath);
+                this.configAnalzyerDirectory();
+                vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
+                resolve(zipPath);
+
+            } catch (err) {
+                this.debugMessage('Could not unzip file: ' + zipPath);
+                reject(zipPath);
+            }
+        });
     }
 
     configEngineExecutable() {
-        const config = vscode.workspace.getConfiguration('engine');
-        if (this.engineDir.fsPath) {
-            const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
-            if (!fs.existsSync(toPath)) {
-                config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
-                var exe = '';
-                switch (this.platform) {
-                    case 'win32':
-                        exe = 'nlpw.exe';
-                        break;
-                    case 'darwin':
-                        exe = 'nlpm.exe';
-                        break;
-                    default:
-                        exe = 'nlpl.exe';
-                }
-                const url = this.GITHUB_LATEST_RELEASE + exe;
-
-                const Downloader = require('nodejs-file-downloader');
-
-                (async () => {
-                
-                    const downloader = new Downloader({
-                        url: url,   
-                        directory: this.engineDir.fsPath,
-                        filename: this.NLP_EXE
-                    })
-                    try {
-                        await downloader.download();
-                        dirfuncs.changeMod(toPath,755);
-                        this.debugMessage('Downloaded: ' + url);
-                    } catch (error) {
-                        this.debugMessage('FAILED download: ' + url);
+        return new Promise((resolve,reject) => {
+            const config = vscode.workspace.getConfiguration('engine');
+            if (this.engineDir.fsPath) {
+                const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
+                if (this.engineDir.fsPath.length > 2 && !fs.existsSync(toPath) || visualText.newerVersion) {
+                    if (visualText.newerVersion && fs.existsSync(toPath)) {
+                        dirfuncs.delFile(toPath);
                     }
+                    config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
+                    var exe = '';
+                    switch (this.platform) {
+                        case 'win32':
+                            exe = 'nlpw.exe';
+                            break;
+                        case 'darwin':
+                            exe = 'nlpm.exe';
+                            break;
+                        default:
+                            exe = 'nlpl.exe';
+                    }
+                    const url = this.GITHUB_LATEST_RELEASE + exe;
 
-                })();                 
+                    const https = require('follow-redirects').https;
+                    const file = fs.createWriteStream(toPath);
+                    let fileInfo;
+                
+                    const request = https.get(url, response => {
+                        if (response.statusCode !== 200) {
+                            reject(new Error(`Failed to get '${url}' (${response.statusCode})`));
+                            return;
+                        }
+
+                        fileInfo = {
+                            mime: response.headers['content-type'],
+                            size: parseInt(response.headers['content-length'], 10),
+                        };
+
+                        response.pipe(file);
+                    });
+                
+                    // The destination stream is ended by the time it's called
+                    file.on('finish', () => resolve(fileInfo));
+                
+                    request.on('error', err => {
+                        fs.unlink(toPath, () => reject(err));
+                    });
+                
+                    file.on('error', err => {
+                        fs.unlink(toPath, () => reject(err));
+                    });
+                
+                    request.end();             
+                }
             }
-        }
+        });
     }
 
-    configFindEngine() {    
-        const config = vscode.workspace.getConfiguration('engine');
-        var engineDir = config.get<string>('path');
+    configFindEngine() {
+        return new Promise((resolve,reject) => {
+            const config = vscode.workspace.getConfiguration('engine');
+            var engineDir = config.get<string>('path');
 
-        if (engineDir && dirfuncs.isDir(engineDir)) {
-            this.engineDir = vscode.Uri.file(engineDir);
+            if (engineDir && dirfuncs.isDir(engineDir)) {
+                this.engineDir = vscode.Uri.file(engineDir);
+                resolve(this.engineDir.fsPath);
 
-        } else {
-            // Check if the engine came with vscode-nlp
-            let extDir = '.vscode';
-            if (this.platform == 'linux' || this.platform == 'darwin') {
-                extDir = '.vscode-server';
-            }
-            this.extensionDir = vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
-
-            if (dirfuncs.isDir(this.extensionDir.fsPath)) {
-                this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
-                if (!dirfuncs.isDir(this.engineDir.fsPath)) {
-                    this.debugMessage('Creating directory: ' + this.extensionDir.fsPath);
-                    dirfuncs.makeDir(this.engineDir.fsPath);
-                }
-                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
             } else {
-                vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
-            }
-        }
+                // Check if the engine came with vscode-nlp
+                let extDir = '.vscode';
+                if (this.platform == 'linux' || this.platform == 'darwin') {
+                    extDir = '.vscode-server';
+                }
+                this.extensionDir = vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
 
-        if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            this.debugMessage('Engine directory: ' + this.engineDir.fsPath);
-        } else {
-            this.askEngine();
-        }
+                if (dirfuncs.isDir(this.extensionDir.fsPath)) {
+                    this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
+                    if (!dirfuncs.isDir(this.engineDir.fsPath)) {
+                        this.debugMessage('Creating directory: ' + this.extensionDir.fsPath);
+                        dirfuncs.makeDir(this.engineDir.fsPath);
+                    }
+                    config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
+                } else {
+                    vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
+                }
+            }
+
+            if (dirfuncs.isDir(this.engineDir.fsPath)) {
+                this.debugMessage('Engine directory: ' + this.engineDir.fsPath);
+                resolve(this.engineDir.fsPath);
+            } else {
+                reject();
+                //this.askEngine();
+            }
+        });
     }
 
     configFindUsername() {
-        const config = vscode.workspace.getConfiguration('user');
-        const username = config.get<string>('name');
-        if (!username) {
-            vscode.window.showErrorMessage("No user name for comments.", "Enter user name").then(response => {
-                vscode.window.showInputBox({ value: 'Your Name', prompt: 'Enter author name for comments' }).then(username => {
-                    if (username) {
-                        this.username = username;
-                        config.update("name",username,vscode.ConfigurationTarget.Global);
-                    }
+        return new Promise((resolve,reject) => {
+            const config = vscode.workspace.getConfiguration('user');
+            const username = config.get<string>('name');
+            if (!username) {
+                vscode.window.showErrorMessage("No user name for comments.", "Enter user name").then(response => {
+                    vscode.window.showInputBox({ value: 'Your Name', prompt: 'Enter author name for comments' }).then(username => {
+                        if (username) {
+                            this.username = username;
+                            config.update("name",username,vscode.ConfigurationTarget.Global);
+                        }
+                    });
                 });
-            });
-        } else {
-            this.username = username;
-        }
+            } else {
+                this.username = username;
+            }
+            resolve(username);
+        });
     }
 
 	askEngine() {

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { LogFile } from './logfile';
 import { NLPFile } from './nlp';
+import { visualText } from './visualText';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
