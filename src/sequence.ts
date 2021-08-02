@@ -349,7 +349,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	createNewPassFile(filename: string): string {
-		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().fsPath,filename.concat('.pat'));
+		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().fsPath,filename.concat('.nlp'));
 		fs.writeFileSync(newfilepath,this.newPassContent(filename),{flag:'w+'});
 		return newfilepath;
 	}

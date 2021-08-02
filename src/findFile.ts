@@ -27,7 +27,7 @@ export class FindFile {
 		return this.finds;
 	}
     
-	searchFiles(dir: vscode.Uri, searchTerm: string, endswith: string = '', level: number = 0): boolean {
+	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0): boolean {
 		if (level == 0)
 			this.finds = [];
 		const files = dirfuncs.getFiles(dir);
@@ -35,8 +35,16 @@ export class FindFile {
 		var escaped = this.escapeRegExp(searchTerm);
 
 		for (let file of files) {
-			if (endswith.length && !file.fsPath.endsWith(endswith))
-				continue;
+			if (extensions.length) {
+				let found: boolean = false;
+				for (let extension of extensions) {
+					if (file.fsPath.endsWith(extension))
+						found = true;
+				}
+				if (!found)
+					continue;
+			} 
+
 			this.textFile.setFile(file);
 
 			if (this.textFile.getText().search(escaped) >= 0) {
@@ -68,7 +76,7 @@ export class FindFile {
 		const dirs = dirfuncs.getDirectories(dir);
 
 		for (let dir of dirs) {
-			this.searchFiles(dir, searchTerm, endswith, level+1)
+			this.searchFiles(dir, searchTerm, extensions, level+1)
 		}
 
 		return this.finds.length ? true : false;
