@@ -220,7 +220,7 @@ export class TextView {
 			if (visualText.hasWorkspaceFolder()) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord) {
-						this.findFile.searchFiles(visualText.analyzer.getInputDirectory(),searchWord,'.txt');
+						this.findFile.searchFiles(visualText.analyzer.getInputDirectory(),searchWord,['.txt']);
 						findView.loadFinds(searchWord,this.findFile.getMatches());
 						vscode.commands.executeCommand('findView.refreshAll');
 						vscode.commands.executeCommand('findView.updateTitle');

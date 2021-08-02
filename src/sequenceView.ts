@@ -408,7 +408,7 @@ export class SequenceView {
 
 	private findWord(word: string) {
 		if (word.length) {
-			this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,'.pat');
+			this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,['.nlp','.pat']);
 			findView.loadFinds(word,this.findFile.getMatches());
 			vscode.commands.executeCommand('findView.refreshAll');
 			vscode.commands.executeCommand('findView.updateTitle');
