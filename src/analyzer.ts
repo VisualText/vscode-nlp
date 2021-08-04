@@ -86,23 +86,50 @@ export class Analyzer {
             vscode.window.showWarningMessage('NLP Engine not set. Set in state.json in main directory.');
             return false;
         } else {
-            var fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
-            if (!dirfuncs.makeDir(this.analyzerDir.fsPath)) {
-                vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
-                return false;
+            let items: vscode.QuickPickItem[] = [];
+            var fromDir = path.join(visualText.getVisualTextDirectory('analyzers'));
+            if (dirfuncs.isDir(fromDir)) {
+                let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
+                for (let file of files) {
+                    if (dirfuncs.isDir(file.fsPath)) {
+                        items.push({label: path.basename(file.fsPath), description: ' (analyzer template)'});
+                    }
+                }
+                vscode.window.showQuickPick(items).then(selection => {
+                    if (!selection) {
+                    return false;
+                    }
+                    this.makeNewAnalyzer(fromDir,selection.label);
+                    this.loaded = true;
+                    return true;
+                });
+
+            } else {
+                fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
+                this.makeNewAnalyzer(fromDir,'');
             }
-            if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.fsPath)) {
-                vscode.window.showWarningMessage('Copy directory for new analyzer failed');
-                return false;
-            }
-            this.load(this.analyzerDir);
-            vscode.commands.executeCommand('textView.refreshAll');
-            vscode.commands.executeCommand('outputView.refreshAll');
-            vscode.commands.executeCommand('sequenceView.refreshAll');
-            vscode.commands.executeCommand('analyzerView.refreshAll');
-            this.loaded = true;
-            return true; 
+
         }
+        return false;
+    }
+
+    makeNewAnalyzer(fromDir: string, analyzer: string) {
+        fromDir = path.join(fromDir,analyzer);
+
+        if (!dirfuncs.makeDir(this.analyzerDir.fsPath)) {
+            vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
+            return false;
+        }
+        if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.fsPath)) {
+            vscode.window.showWarningMessage('Copy directory for new analyzer failed');
+            return false;
+        }
+        this.load(this.analyzerDir);
+        vscode.commands.executeCommand('textView.refreshAll');
+        vscode.commands.executeCommand('outputView.refreshAll');
+        vscode.commands.executeCommand('sequenceView.refreshAll');
+        vscode.commands.executeCommand('analyzerView.refreshAll');
+        this.loaded = true;
     }
 
     createAnaSequenceFile(content: string=''): boolean {
