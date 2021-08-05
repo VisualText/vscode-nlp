@@ -8,6 +8,7 @@ let nlpStatusBarRun: vscode.StatusBarItem;
 let nlpStatusBarText: vscode.StatusBarItem;
 let nlpStatusBarDev: vscode.StatusBarItem;
 let nlpStatusBarFired: vscode.StatusBarItem;
+let nlpStatusBarVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV }
 export enum FiredMode { BUILT, FIRED }
@@ -45,12 +46,18 @@ export class NLPStatusBar {
         nlpStatusBarFired.tooltip = 'Fired settings';
         nlpStatusBarFired.command = "status.chooseFired";
         nlpStatusBarFired.show();
+                
+        nlpStatusBarVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
+        nlpStatusBarVersion.tooltip = 'NLP Engine Version';
+        nlpStatusBarVersion.command = "status.openVersionSettings";
+        nlpStatusBarVersion.show();
 
         this.update();
 
         vscode.commands.registerCommand('status.update', () => this.update());
         vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
         vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
+        vscode.commands.registerCommand('status.openVersionSettings', () => this.openVersionSettings());
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPStatusBar {
@@ -58,6 +65,32 @@ export class NLPStatusBar {
             nlpStatusBar = new NLPStatusBar(ctx);
         }
         return nlpStatusBar;
+    }
+
+    openVersionSettings() {
+        visualText.checkEngineVersion()
+        .then(value => {
+            if (visualText.existsNewerVersion()) {
+                let items: vscode.QuickPickItem[] = [];
+                items.push({label: 'Yes', description: 'Update NLP Engine to ' + visualText.version});
+                items.push({label: 'No', description: 'Cancel NLP Engine update'});
+    
+                vscode.window.showQuickPick(items).then(selection => {
+                    if (!selection || selection.label == 'No')
+                        return;
+                    const toPath = path.join(visualText.engineDir.fsPath,visualText.NLP_EXE);
+                    visualText.downloadExecutable(toPath);
+                    const config = vscode.workspace.getConfiguration('engine');
+                    config.update('version',visualText.version,vscode.ConfigurationTarget.Global);
+                    visualText.debugMessage('NLP Engine updated to version ' + visualText.version);
+                    nlpStatusBar.updateVersion(visualText.version);  
+                });
+            } else {
+                vscode.commands.executeCommand('workbench.action.openSettings');
+            }
+        }).catch(err => {
+            visualText.debugMessage(err);
+        });
     }
 
     chooseDev() {
@@ -97,9 +130,9 @@ export class NLPStatusBar {
 
     updateDevState() {
         if (this.devMode == DevMode.DEV) {
-            nlpStatusBarDev.text = "Log Files On";
+            nlpStatusBarDev.text = 'Log Files On';
         } else {
-            nlpStatusBarDev.text = "Log Files Off";
+            nlpStatusBarDev.text = 'Log Files Off';
         }
     }
 
@@ -117,9 +150,9 @@ export class NLPStatusBar {
 
     updateFiredState() {
         if (this.firedMode == FiredMode.BUILT) {
-            nlpStatusBarFired.text = "Display Built Only";
+            nlpStatusBarFired.text = 'Display Built Only';
         } else {
-            nlpStatusBarFired.text = "Display All Fired";
+            nlpStatusBarFired.text = 'Display All Fired';
         }
     }
 
@@ -133,6 +166,22 @@ export class NLPStatusBar {
             this.updateDevState();
             this.updateFiredState();
             nlpStatusBarDev.show();
+        }
+        this.updateVersion('');
+    }
+
+    updateVersion(version: string) {
+        if (version.length == 0) {
+            const config = vscode.workspace.getConfiguration('engine');
+            let currentVersion = config.get<string>('version');
+            if (currentVersion != undefined) {
+                version = currentVersion;
+            }       
+        }
+        if (version != undefined && version.length) {
+            nlpStatusBarVersion.text = version;
+        } else {
+            nlpStatusBarVersion.text = '';
         }
     }
 }
