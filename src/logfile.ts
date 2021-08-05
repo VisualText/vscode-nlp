@@ -227,7 +227,11 @@ export class LogFile extends TextFile {
 				for (let line of this.selectedLines) {
 					let node = line.node;
 					if (line.end > lastend) {
-						if (line.type.localeCompare('white') == 0)
+						if (line.type.localeCompare('alpha') == 0 && node.localeCompare(node.toUpperCase()) == 0)
+							node = '_xCAP';
+						else if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
+							node = '_xALPHA';
+						else if (line.type.localeCompare('white') == 0)
 							node = '_xWHITE';
 						else if (line.type.localeCompare('num') == 0)
 							node = '_xNUM';
