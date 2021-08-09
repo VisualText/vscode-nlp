@@ -71,8 +71,8 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.5.0
-Now checks nlp-engine version and updates if newer exists
+### v1.5.2
+Now checks nlp-engine version and updates if newer exists. v1.5.2 improved lexer.
 
 ### v1.4.1
 Allow for creating different type analyzers including basic and English

@@ -3,8 +3,8 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.5.0
-Now checks nlp-engine version and updates if newer exists
+### v1.5.2
+Now checks nlp-engine version and updates if newer exists. v1.5.2 improved lexer.
 
 ### v1.4.1
 Allow for creating different type analyzers including basic and English
