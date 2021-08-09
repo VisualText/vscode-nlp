@@ -11,7 +11,7 @@
         },
         {
             "name": "keyword.region.nlp",
-            "match": "(@(@)?)(CHECK|CODE|DECL|NODES|PATH|POST|PRE|RULES)\\b"
+            "match": "(@(@)?)(CHECK|CODE|DECL|NODES|PATH|POST|PRE)\\b"
         },
         {
             "name": "keyword.constants.nlp",
@@ -60,9 +60,6 @@
                     "include": "#comment"
                 },
                 {
-                    "include": "#rewrite"
-                },
-                {
                     "include": "#string"
                 },
                 {
@@ -71,20 +68,10 @@
             ]
         },
         "rules-region": {
-            "begin": "^([_a-zA-Z]+)\\s*([^<]+)\\s*(<-)",
+            "begin": "@RULES",
             "beginCaptures": {
-                "1": {
-                    "name": "variable.rewrite.nlp"
-                },
-                "2": {
-                    "patterns": [
-                        {
-                        "include": "#tokens"
-                        }
-                    ]
-                },
-                "3": {
-                    "name": "keyword.operator.nlp"
+                "0": {
+                    "name": "keyword.region.nlp"
                 }
             },
             "end": "@@",
@@ -95,10 +82,13 @@
             },
             "patterns": [
                 {
-                    "include": "#rewrites"
+                    "include": "#rewrite-symbol"
                 },
                 {
-                    "include": "#tokens"
+                    "include": "#token"
+                },
+                {
+                    "include": "#attributes"
                 },
                 {
                     "include": "#comment-line"
@@ -108,6 +98,10 @@
                 }
             ]
         },
+        "rewrite-symbol": {
+            "match": "<-",
+            "name": "variable.rewrite.nlp"  
+        },
         "attributes": {
             "begin": "\\[",
             "end": "\\]",
@@ -116,7 +110,7 @@
                     "include": "#constant-nodes"
                 },
                 {
-                    "include": "#rewrites"
+                    "include": "#token"
                 },
                 {
                     "include": "#attribute"
@@ -135,7 +129,7 @@
             "name": "keyword.other.nlp",
             "match": "\\b(?i:(fail|fails|group|match|matches|max|maximum|min|minimum|opt|optional|plus|s|single|star))\\b"
         },
-        "tokens": {
+        "token": {
             "name": "variable.parameter.nlp",
             "match": "_[a-zA-Z]+\\b"
         },
