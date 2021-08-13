@@ -9,6 +9,7 @@ let nlpStatusBarText: vscode.StatusBarItem;
 let nlpStatusBarDev: vscode.StatusBarItem;
 let nlpStatusBarFired: vscode.StatusBarItem;
 let nlpStatusBarVersion: vscode.StatusBarItem;
+let nlpStatusBarFilesVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV }
 export enum FiredMode { BUILT, FIRED }
@@ -29,28 +30,33 @@ export class NLPStatusBar {
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
         nlpStatusBarRun.text = `$(run)`;
         nlpStatusBarRun.tooltip = 'Analyze the text';
-        nlpStatusBarRun.command = "textView.analyzeLast";
+        nlpStatusBarRun.command = 'textView.analyzeLast';
         nlpStatusBarRun.show();
 
         nlpStatusBarText = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 19);
         nlpStatusBarText.tooltip = 'Current text to analyze';
-        nlpStatusBarText.command = "textView.openText";
+        nlpStatusBarText.command = 'textView.openText';
         nlpStatusBarText.show();
 
         nlpStatusBarDev = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 18);
         nlpStatusBarDev.tooltip = 'Development settings';
-        nlpStatusBarDev.command = "status.chooseDev";
+        nlpStatusBarDev.command = 'status.chooseDev';
         nlpStatusBarDev.show();
         
         nlpStatusBarFired = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 17);
         nlpStatusBarFired.tooltip = 'Fired settings';
-        nlpStatusBarFired.command = "status.chooseFired";
+        nlpStatusBarFired.command = 'status.chooseFired';
         nlpStatusBarFired.show();
                 
         nlpStatusBarVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
         nlpStatusBarVersion.tooltip = 'NLP Engine Version';
-        nlpStatusBarVersion.command = "status.openVersionSettings";
+        nlpStatusBarVersion.command = 'status.openVersionSettings';
         nlpStatusBarVersion.show();
+                        
+        nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
+        nlpStatusBarFilesVersion.tooltip = 'VisualText Files Version';
+        nlpStatusBarFilesVersion.command = 'status.openFilesVersionSettings';
+        nlpStatusBarFilesVersion.show();
 
         this.update();
 
@@ -58,6 +64,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
         vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
         vscode.commands.registerCommand('status.openVersionSettings', () => this.openVersionSettings());
+        vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPStatusBar {
@@ -67,12 +74,38 @@ export class NLPStatusBar {
         return nlpStatusBar;
     }
 
+    openFilesVersionSettings() {
+        visualText.checkVisualTextFilesVersion()
+        .then(value => {
+            if (visualText.existsNewerFileVersion()) {
+                let items: vscode.QuickPickItem[] = [];
+                items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.filesVersion});
+                items.push({label: 'No', description: 'Cancel VisualText files update'});
+    
+                vscode.window.showQuickPick(items).then(selection => {
+                    if (!selection || selection.label == 'No')
+                        return;
+                    const toPath = path.join(visualText.engineDir.fsPath,visualText.VISUALTEXT_FILES_DIR);
+                    visualText.downloadVisualTextFiles(toPath);
+                    const config = vscode.workspace.getConfiguration('engine');
+                    config.update('visualtext',visualText.filesVersion,vscode.ConfigurationTarget.Global);
+                    visualText.debugMessage('VisualText files updated to version ' + visualText.filesVersion);
+                    nlpStatusBar.updateFilesVersion(visualText.filesVersion);  
+                });
+            } else {
+                vscode.commands.executeCommand('workbench.action.openSettings');
+            }
+        }).catch(err => {
+            visualText.debugMessage(err);
+        });
+    }
+
     openVersionSettings() {
         visualText.checkEngineVersion()
         .then(value => {
             if (visualText.existsNewerVersion()) {
                 let items: vscode.QuickPickItem[] = [];
-                items.push({label: 'Yes', description: 'Update NLP Engine to ' + visualText.version});
+                items.push({label: 'Yes', description: 'Update NLP Engine to version ' + visualText.engineVersion});
                 items.push({label: 'No', description: 'Cancel NLP Engine update'});
     
                 vscode.window.showQuickPick(items).then(selection => {
@@ -81,9 +114,9 @@ export class NLPStatusBar {
                     const toPath = path.join(visualText.engineDir.fsPath,visualText.NLP_EXE);
                     visualText.downloadExecutable(toPath);
                     const config = vscode.workspace.getConfiguration('engine');
-                    config.update('version',visualText.version,vscode.ConfigurationTarget.Global);
-                    visualText.debugMessage('NLP Engine updated to version ' + visualText.version);
-                    nlpStatusBar.updateVersion(visualText.version);  
+                    config.update('version',visualText.engineVersion,vscode.ConfigurationTarget.Global);
+                    visualText.debugMessage('NLP Engine updated to version ' + visualText.engineVersion);
+                    nlpStatusBar.updateVersion(visualText.engineVersion);  
                 });
             } else {
                 vscode.commands.executeCommand('workbench.action.openSettings');
@@ -168,6 +201,7 @@ export class NLPStatusBar {
             nlpStatusBarDev.show();
         }
         this.updateVersion('');
+        this.updateFilesVersion('');
     }
 
     updateVersion(version: string) {
@@ -182,6 +216,21 @@ export class NLPStatusBar {
             nlpStatusBarVersion.text = version;
         } else {
             nlpStatusBarVersion.text = '';
+        }
+    }
+
+    updateFilesVersion(version: string) {
+        if (version.length == 0) {
+            const config = vscode.workspace.getConfiguration('engine');
+            let currentVersion = config.get<string>('visualtext');
+            if (currentVersion != undefined) {
+                version = currentVersion;
+            }       
+        }
+        if (version != undefined && version.length) {
+            nlpStatusBarFilesVersion.text = version;
+        } else {
+            nlpStatusBarFilesVersion.text = '';
         }
     }
 }
