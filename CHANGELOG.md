@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.6.0
+Added updating VisualText files version separately allowing for independently updating
+
 ### v1.5.2
 Now checks nlp-engine version and updates if newer exists. v1.5.2 improved lexer.
 
