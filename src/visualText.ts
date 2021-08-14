@@ -292,7 +292,9 @@ export class VisualText {
             const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
 
             if (!fs.existsSync(toPath)) {
+                visualText.newerEngineVersion = true;
                 this.downloadExecutable(toPath);
+                this.downloadEngineFiles();
                 return;
             }
 
