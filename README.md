@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.6.0
+### v1.6.1
 Added updating VisualText files version separately allowing for independently updating
 
 ### v1.5.2
