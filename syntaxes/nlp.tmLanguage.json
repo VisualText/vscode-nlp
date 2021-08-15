@@ -127,7 +127,7 @@
         },
         "attribute": {
             "name": "keyword.other.nlp",
-            "match": "\\b(?i:(fail|fails|group|match|matches|max|maximum|min|minimum|opt|optional|plus|s|single|star|trig))\\b"
+            "match": "\\b(?i:(attr|attrs|da|deacc|deaccent|except|excepts|fail|fails|gp|group|layer|layers|look|lookahead|match|matches|max|min|nest|o|one|opt|option|optional|pass|passes|plus|recurse|ren|rename|s|singlet|star|t|tree|trig|trigger))\\b"
         },
         "token": {
             "name": "variable.parameter.nlp",
