@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.7.0
+Analyzer log files now have the extension .tree
+
 ### v1.6.1
 Added updating VisualText files version separately allowing for independently updating
 

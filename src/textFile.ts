@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
-export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, KB, KBB }
+export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, LOG, KB, KBB }
 
 export class TextFile {
     private uri: vscode.Uri = vscode.Uri.file('');
@@ -18,7 +18,7 @@ export class TextFile {
     private filetype = nlpFileType.UNKNOWN;
     private tabsize = 4;
     public basename: string = '';
-    private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'log', 'kb', 'kbb');
+    private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb');
     private exists: boolean = false;
     private selLines: string[] = [];
 
@@ -120,8 +120,10 @@ export class TextFile {
             this.filetype = nlpFileType.KB;
         else if (path.extname(filename) == '.kbb')
 			this.filetype = nlpFileType.KBB;
-		else if (path.extname(filename) == '.log')
+		else if (path.extname(filename) == '.tree')
 			this.filetype = nlpFileType.TREE;
+		else if (path.extname(filename) == '.log')
+			this.filetype = nlpFileType.LOG;
     }
 
     fileExists(): boolean {

@@ -164,11 +164,12 @@ export class LogFile extends TextFile {
 	setFilesNames(filepath: string) {
 		if (filepath.length) {
 			this.basename = path.basename(filepath,'.log');
+			this.basename = path.basename(this.basename,'.tree');
 			this.basename = path.basename(this.basename,'.txxt');
 			this.basename = path.basename(this.basename,'.txt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
-			this.logFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.log');
+			this.logFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.tree');
 			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.txxt');
 			this.inputFile = visualText.analyzer.getTextPath().fsPath;
 		}
