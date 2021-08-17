@@ -385,11 +385,11 @@ export class SequenceView {
 
 	finalTree() {
 		var dir = visualText.analyzer.getOutputDirectory();
-		var finalLog = path.join(dir.fsPath,'final.log');
-		if (fs.existsSync(finalLog)) {
-			vscode.window.showTextDocument(vscode.Uri.file(finalLog));	
+		var finalTree = path.join(dir.fsPath,'final.tree');
+		if (fs.existsSync(finalTree)) {
+			vscode.window.showTextDocument(vscode.Uri.file(finalTree));	
 		} else {
-			vscode.window.showInformationMessage('No final tree foud');
+			vscode.window.showInformationMessage('No final tree found');
 		}
 	}
 

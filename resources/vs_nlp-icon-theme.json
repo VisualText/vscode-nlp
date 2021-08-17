@@ -25,10 +25,10 @@
 		"_kb_light": {
 			"iconPath": "./light/kb.svg"
 		},
-		"_seq_dark": {
+		"_tree_dark": {
 			"iconPath": "./dark/list-tree.svg"
 		},
-		"_seq_light": {
+		"_tree_light": {
 			"iconPath": "./light/list-tree.svg"
 		},
 		"_log_dark": {
@@ -58,9 +58,9 @@
 		"nlp": "_nlp_dark",
 		"kb": "_kb_dark",
 		"kbb": "_kb_dark",
-		"seq": "_seq_dark",
+		"seq": "_tree_dark",
 		"log": "_log_dark",
-		"tree": "_log_dark",
+		"tree": "_tree_dark",
 		"txxt": "_markup_dark",
 		"stub": "_stub_dark",
 		"cpp": "_code_dark",
@@ -74,9 +74,9 @@
 			"nlp": "_nlp_light",
 			"kb": "_kb_light",
 			"kbb": "_kb_light",
-			"seq": "_seq_light",
+			"seq": "_tree_light",
 			"log": "_log_light",
-			"tree": "_log_light",
+			"tree": "_tree_light",
 			"txxt": "_markup_light",
 			"stub": "_stub_light",
 			"cpp": "_code_light",

@@ -185,6 +185,10 @@ export class OutputView {
 				var textPath = visualText.analyzer.getTextPath().fsPath;
 				this.outputFiles = [];
 				if (textPath.length && this.fileHasLog(textPath)) {
+					var finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath,'final.tree'));
+					if (fs.existsSync(finalTree.fsPath)) {
+						this.outputFiles.push(finalTree);
+					}
 					var candidates = dirfuncs.getFiles(this.logDirectory,['.txt','.log']);
 					for (let cand of candidates) {
 						let base = path.basename(cand.fsPath);
