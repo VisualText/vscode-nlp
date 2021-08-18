@@ -371,8 +371,8 @@
                 "command": "sequenceView.finalTree",
                 "title": "Display Final Tree",
                 "icon": {
-                    "light": "resources/light/list-tree.svg",
-                    "dark": "resources/dark/list-tree.svg"
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
                 }
             },
             {
@@ -451,8 +451,8 @@
                 "command": "sequenceView.openTree",
                 "title": "Open Tree file",
                 "icon": {
-                    "light": "resources/light/list-tree.svg",
-                    "dark": "resources/dark/list-tree.svg"
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
                 }
             },
             {
