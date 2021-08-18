@@ -26,10 +26,10 @@
 			"iconPath": "./light/kb.svg"
 		},
 		"_tree_dark": {
-			"iconPath": "./dark/list-tree.svg"
+			"iconPath": "./dark/tree.svg"
 		},
 		"_tree_light": {
-			"iconPath": "./light/list-tree.svg"
+			"iconPath": "./light/tree.svg"
 		},
 		"_log_dark": {
 			"iconPath": "./dark/symbol-property.svg"
