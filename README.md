@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.7.0
+### v1.7.2
 Analyzer log files now have the extension .tree
 
 ### v1.6.1
