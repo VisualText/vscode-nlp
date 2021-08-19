@@ -18,7 +18,7 @@ export class NLPFile extends TextFile {
 
 	analyze(filepath: vscode.Uri) {
 		var engineDir = visualText.getEngineDirectory().fsPath;
-		var exe = path.join(engineDir,'nlp.exe');
+		var exe = path.join(engineDir,visualText.NLP_EXE);
 
 		if (!fs.existsSync(exe)) {
 			visualText.askEngine();

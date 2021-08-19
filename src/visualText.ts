@@ -507,7 +507,7 @@ export class VisualText {
                     return;
                 }
                 var newPath = engPath[0].fsPath;
-                var exe = path.join(newPath,'nlp.exe');
+                var exe = path.join(newPath,visualText.NLP_EXE);
                 if (!dirfuncs.isDir(newPath) || !fs.existsSync(exe)) {
                     this.debugMessage("Unknown nlp engine path.");
                 } else {
