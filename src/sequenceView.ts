@@ -280,6 +280,20 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	duplicatePass(seqItem: SequenceItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			var seedName = seqItem.name + '1';
+			vscode.window.showInputBox({ value: seedName, prompt: 'Enter new name for pass' }).then(newname => {
+				var original = seqItem.uri;
+				if (newname) {
+					seqFile.duplicatePass(seqItem,newname);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+				}
+			});
+		}
+	}
+
 	newFolder(seqItem: SequenceItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
@@ -367,6 +381,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.duplicate', (seqItem) => treeDataProvider.duplicatePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeRec', (seqItem) => treeDataProvider.typeRec(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));

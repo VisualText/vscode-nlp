@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.7.2",
+    "version": "1.7.4",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -494,6 +494,10 @@
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
                 }
+            },
+            {
+                "command": "sequenceView.duplicate",
+                "title": "Duplicate pass"
             },
             {
                 "command": "textView.newDir",
@@ -1016,6 +1020,11 @@
                 },
                 {
                     "command": "sequenceView.delete",
+                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "group": "edit"
+                },
+                {
+                    "command": "sequenceView.duplicate",
                     "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
                     "group": "edit"
                 },
