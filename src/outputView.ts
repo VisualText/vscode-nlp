@@ -176,7 +176,8 @@ export class OutputView {
 			} else if (this.type == outputFileType.NLP) {
 				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
 				for (let nlpFile of nlpFiles) {
-					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
+					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
+						visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
 						this.outputFiles.push(nlpFile);
 					}
 				}
