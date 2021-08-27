@@ -243,6 +243,17 @@ export class SequenceFile extends TextFile {
 			this.saveFile();
 		}
 	}
+
+	duplicatePass(seqItem: SequenceItem, newPassName: string) {
+		if (this.passItems.length) {
+			var passItem = this.findPass(seqItem.type,seqItem.name);
+			var dupePath = path.join(path.dirname(passItem.uri.fsPath),newPassName + '.nlp');
+			fs.copyFileSync(passItem.uri.fsPath,dupePath);									
+			var dupeItem = this.createPassItemFromFile(dupePath);
+			this.passItems.splice(passItem.passNum,0,dupeItem);
+			this.saveFile();
+		}
+	}
 	
 	insertPass(seqItem: SequenceItem, newpass: vscode.Uri) {
 		if (this.passItems.length) {
