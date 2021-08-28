@@ -17,9 +17,10 @@ export class VisualText {
     public readonly NLP_EXE = 'nlp.exe';
     public readonly VISUALTEXT_FILES_DIR = 'visualtext';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
+    public readonly NLPENGINE_FOLDER = 'nlp-engine';
     public readonly VISUALTEXT_FILES_ASSET = 'visualtext.zip';
-    public readonly GITHUB_ENGINE_LATEST_RELEASE = 'https://github.com/VisualText/nlp-engine/releases/latest/download/';
-    public readonly GITHUB_ENGINE_LATEST_VERSION = 'https://github.com/VisualText/nlp-engine/releases/latest/';
+    public readonly GITHUB_ENGINE_LATEST_RELEASE = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/download/';
+    public readonly GITHUB_ENGINE_LATEST_VERSION = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/';
     public readonly GITHUB_VISUALTEXT_FILES_LATEST_RELEASE = 'https://github.com/VisualText/visualtext-files/releases/latest/download/';
     public readonly GITHUB_VISUALTEXT_FILES_LATEST_VERSION = 'https://github.com/VisualText/visualtext-files/releases/latest/';
 
@@ -406,6 +407,7 @@ export class VisualText {
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + exe;
         const Downloader = require('nodejs-file-downloader');
+        this.engineDir = this.extensionDirectory();
         var localExePat = path.join(this.engineDir.fsPath,this.NLP_EXE);
         if (fs.existsSync(localExePat)) {
             dirfuncs.delFile(localExePat);
@@ -422,7 +424,8 @@ export class VisualText {
                 await downloader.download();
                 dirfuncs.changeMod(toPath,755);
                 this.debugMessage('Downloaded: ' + url);
-                this.checkEngineVersion();
+                const config = vscode.workspace.getConfiguration('engine');
+                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
                 
             } catch (error) {
                 this.debugMessage('FAILED download: ' + url);
@@ -440,14 +443,9 @@ export class VisualText {
 
         } else {
             // Check if the engine came with vscode-nlp
-            let extDir = '.vscode';
-            if (this.platform == 'linux' || this.platform == 'darwin') {
-                extDir = '.vscode-server';
-            }
-            this.extensionDir = vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
-
+            this.extensionDir = this.extensionDirectory();
             if (dirfuncs.isDir(this.extensionDir.fsPath)) {
-                this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,'nlp-engine'));
+                this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,this.NLPENGINE_FOLDER));
                 if (!dirfuncs.isDir(this.engineDir.fsPath)) {
                     this.debugMessage('Creating directory: ' + this.extensionDir.fsPath);
                     dirfuncs.makeDir(this.engineDir.fsPath);
@@ -463,6 +461,14 @@ export class VisualText {
         } else {
             this.askEngine();
         }
+    }
+
+    extensionDirectory() {
+        let extDir = '.vscode';
+        if (this.platform == 'linux' || this.platform == 'darwin') {
+            extDir = '.vscode-server';
+        }
+        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version,this.NLPENGINE_FOLDER));
     }
 
     configFindUsername() {
