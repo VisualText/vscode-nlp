@@ -284,7 +284,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			var seedName = seqItem.name + '1';
-			vscode.window.showInputBox({ value: seedName, prompt: 'Enter new name for pass' }).then(newname => {
+			vscode.window.showInputBox({ value: seedName, prompt: 'Enter name for duplicate pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
 					seqFile.duplicatePass(seqItem,newname);

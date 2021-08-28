@@ -112,9 +112,10 @@ export class NLPStatusBar {
                     if (!selection || selection.label == 'No')
                         return;
                     const toPath = path.join(visualText.engineDir.fsPath,visualText.NLP_EXE);
-                    visualText.downloadExecutable(toPath);
                     const config = vscode.workspace.getConfiguration('engine');
                     config.update('version',visualText.engineVersion,vscode.ConfigurationTarget.Global);
+                    config.update('path',visualText.extensionDirectory(),vscode.ConfigurationTarget.Global);
+                    visualText.downloadExecutable(toPath);
                     visualText.debugMessage('NLP Engine updated to version ' + visualText.engineVersion);
                     nlpStatusBar.updateVersion(visualText.engineVersion);  
                 });
