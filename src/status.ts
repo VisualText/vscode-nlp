@@ -9,6 +9,7 @@ let nlpStatusBarText: vscode.StatusBarItem;
 let nlpStatusBarDev: vscode.StatusBarItem;
 let nlpStatusBarFired: vscode.StatusBarItem;
 let nlpStatusBarVersion: vscode.StatusBarItem;
+let nlpStatusBarVisualTextVersion: vscode.StatusBarItem;
 let nlpStatusBarFilesVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV }
@@ -47,13 +48,18 @@ export class NLPStatusBar {
         nlpStatusBarFired.tooltip = 'Fired settings';
         nlpStatusBarFired.command = 'status.chooseFired';
         nlpStatusBarFired.show();
-                
+
         nlpStatusBarVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
         nlpStatusBarVersion.tooltip = 'NLP Engine Version';
         nlpStatusBarVersion.command = 'status.openVersionSettings';
         nlpStatusBarVersion.show();
+                                
+        nlpStatusBarVisualTextVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
+        nlpStatusBarVisualTextVersion.tooltip = 'VisualText Version';
+        nlpStatusBarVisualTextVersion.command = 'status.openVisualVersionSettings';
+        nlpStatusBarVisualTextVersion.show(); 
                         
-        nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
+        nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 3);
         nlpStatusBarFilesVersion.tooltip = 'VisualText Files Version';
         nlpStatusBarFilesVersion.command = 'status.openFilesVersionSettings';
         nlpStatusBarFilesVersion.show();
@@ -64,6 +70,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
         vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
         vscode.commands.registerCommand('status.openVersionSettings', () => this.openVersionSettings());
+        vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
         vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
     }
 
@@ -72,6 +79,10 @@ export class NLPStatusBar {
             nlpStatusBar = new NLPStatusBar(ctx);
         }
         return nlpStatusBar;
+    }
+    
+    openVisualTextVersionSettings() {
+        vscode.commands.executeCommand('workbench.action.openSettings');
     }
 
     openFilesVersionSettings() {
@@ -202,6 +213,7 @@ export class NLPStatusBar {
             nlpStatusBarDev.show();
         }
         this.updateVersion('');
+        this.updateVisualTextVersion('');
         this.updateFilesVersion('');
     }
 
@@ -217,6 +229,16 @@ export class NLPStatusBar {
             nlpStatusBarVersion.text = version;
         } else {
             nlpStatusBarVersion.text = '';
+        }
+    }
+
+    updateVisualTextVersion(version: string) {
+        if (version != undefined && version.length) {
+            nlpStatusBarVisualTextVersion.text = version;
+        } else if (visualText.version.length) {
+            nlpStatusBarVisualTextVersion.text = visualText.version;
+        } else {
+            nlpStatusBarVisualTextVersion.text = '';
         }
     }
 
