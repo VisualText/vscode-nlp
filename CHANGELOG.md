@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.7.6
+### v1.7.7
 Analyzer log files now have the extension .tree, added duplicate pass, update nlp-engine fix
 
 ### v1.6.1
