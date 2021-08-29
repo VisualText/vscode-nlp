@@ -190,10 +190,10 @@ export class OutputView {
 					if (fs.existsSync(finalTree.fsPath)) {
 						this.outputFiles.push(finalTree);
 					}
-					var candidates = dirfuncs.getFiles(this.logDirectory,['.txt','.log']);
+					var candidates = dirfuncs.getFiles(this.logDirectory);
 					for (let cand of candidates) {
-						let base = path.basename(cand.fsPath);
-						if (!base.startsWith('ana'))
+						let ext = path.parse(cand.fsPath).ext;
+						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.kbb') != 0)
 							this.outputFiles.push(cand);
 					}
 				} else {
