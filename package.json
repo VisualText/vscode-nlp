@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.7.8",
+    "version": "1.8.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -1236,11 +1236,11 @@
         "copy-dir": "^1.3.0",
         "download-file": "^0.1.5",
         "extract-zip": "^2.0.1",
-        "nodejs-file-downloader": "^4.7.2",
+        "nodejs-file-downloader": "^4.7.3",
         "os": "^0.1.2",
         "rimraf": "^3.0.2",
         "tslib": "^2.3.1",
-        "vsce": "^1.96.1"
+        "vsce": "^1.96.2"
     },
     "scripts": {
         "package": "vsce package",
@@ -1254,12 +1254,12 @@
     "devDependencies": {
         "@types/glob": "^7.1.4",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^10.17.60",
+        "@types/node": "^12.12.0",
         "@types/vscode": "^1.59.0",
         "glob": "^7.1.7",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
-        "typescript": "^3.9.10",
+        "typescript": "^4.3.5",
         "vscode-test": "^1.6.1"
     }
 }

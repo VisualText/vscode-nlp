@@ -56,14 +56,14 @@ export class JsonState {
         if (!fs.existsSync(this.dirPath)) {
             try {
                 fs.mkdirSync(this.dirPath);
-            } catch (err) {
+            } catch (err: any) {
                 console.log('Error creating .vscode folder: ' + err.message)
             }            
         }
 
         try {
             fs.writeFileSync(this.filePath,jsonStr,{flag:'w'});
-        } catch (err) {
+        } catch (err: any) {
             console.log('Error writing file ' + this.filePath + ': ' + err.message)
         }
     }

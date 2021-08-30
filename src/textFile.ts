@@ -60,7 +60,7 @@ export class TextFile {
                 try {
                     fs.writeFileSync(this.uri.fsPath,this.text,{flag:'w'});
                     return true;
-                } catch (err) {
+                } catch (err: any) {
                     console.log('Error writing file ' + this.uri.fsPath+ ': ' + err.message);
                     return false;
                 }

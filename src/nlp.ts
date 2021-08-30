@@ -17,55 +17,75 @@ export class NLPFile extends TextFile {
 	}
 
 	analyze(filepath: vscode.Uri) {
-		var engineDir = visualText.getEngineDirectory().fsPath;
-		var exe = path.join(engineDir,visualText.NLP_EXE);
 
-		if (!fs.existsSync(exe)) {
-			visualText.askEngine();
-			return;
-		}
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Analyzer text",
+			cancellable: false
+		}, (progress, token) => {
+            token.onCancellationRequested(() => {
+                console.log("User canceled the long running operation");
+            });
+			
+			progress.report({ increment: 10, message: "Clearing log directories" });
 
-		visualText.readState();
-		vscode.commands.executeCommand('workbench.action.files.saveAll');
+			var engineDir = visualText.getEngineDirectory().fsPath;
+			var exe = path.join(engineDir,visualText.NLP_EXE);
 
-		// Delete files in output directory
-		dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().fsPath);
-		dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
+			if (!fs.existsSync(exe)) {
+				visualText.askEngine();
+				const p = new Promise<void>((resolve,reject) => {
+					reject();
+				});
+			}
 
-		const filestr = filepath.fsPath;
-		var filename = path.basename(filepath.fsPath);
-		logView.addMessage('Analyzing '+filename,filepath);
-		vscode.commands.executeCommand('logView.refreshAll');
-		outputView.setType(outputFileType.TXT);
+			visualText.readState();
+			vscode.commands.executeCommand('workbench.action.files.saveAll');
 
-		var pos = filestr.search('input');
-		var anapath = filestr.substr(0,pos);
+			// Delete files in output directory
+			dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().fsPath);
+			dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
 
-		var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
-		var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
+			const filestr = filepath.fsPath;
 
-		const cp = require('child_process');
+			progress.report({ increment: 10, message: "Preparing command" });
 
-		return new Promise(resolve => {
-			cp.exec(cmd, (err, stdout, stderr) => {
-				console.log('stdout: ' + stdout);
-				console.log('stderr: ' + stderr);
-				if (err) {
-					logView.addMessage(err.message,vscode.Uri.file(filestr));
-					vscode.commands.executeCommand('outputView.refreshAll');
-					vscode.commands.executeCommand('logView.refreshAll');
-					resolve('Failed');
-				} else {
-					logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
-					vscode.commands.executeCommand('logView.refreshAll');
-					//logView.loadMakeAna();
-					visualText.analyzer.saveCurrentFile(filepath);
-					vscode.commands.executeCommand('textView.refreshAll');
-					vscode.commands.executeCommand('outputView.refreshAll');
-					vscode.commands.executeCommand('logView.refreshAll');
-					vscode.commands.executeCommand('sequenceView.refreshAll');
-					resolve('Processed');
-				}
+			var filename = path.basename(filepath.fsPath);
+			logView.addMessage('Analyzing '+filename,filepath);
+			vscode.commands.executeCommand('logView.refreshAll');
+			outputView.setType(outputFileType.TXT);
+	
+			var pos = filestr.search('input');
+			var anapath = filestr.substr(0,pos);
+	
+			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
+			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
+
+			progress.report({ increment: 50, message: "Loading KB & Analyzing..." });
+
+			const cp = require('child_process');
+
+			return new Promise(resolve => {
+				cp.exec(cmd, (err, stdout, stderr) => {
+					console.log('stdout: ' + stdout);
+					console.log('stderr: ' + stderr);
+					if (err) {
+						logView.addMessage(err.message,vscode.Uri.file(filestr));
+						vscode.commands.executeCommand('outputView.refreshAll');
+						vscode.commands.executeCommand('logView.refreshAll');
+						resolve('Failed');
+					} else {
+						logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
+						vscode.commands.executeCommand('logView.refreshAll');
+						//logView.loadMakeAna();
+						visualText.analyzer.saveCurrentFile(filepath);
+						vscode.commands.executeCommand('textView.refreshAll');
+						vscode.commands.executeCommand('outputView.refreshAll');
+						vscode.commands.executeCommand('logView.refreshAll');
+						vscode.commands.executeCommand('sequenceView.refreshAll');
+						resolve('Processed');
+					}
+				});
 			});
 		});
 	}
