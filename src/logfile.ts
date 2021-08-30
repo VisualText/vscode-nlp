@@ -33,6 +33,7 @@ export interface LogLine {
 	rest: string;
 	fired: boolean;
 	built: boolean;
+	indent: number;
 }
 
 export let logFile: LogFile;
@@ -224,10 +225,12 @@ export class LogFile extends TextFile {
 				let num = 1;
 				let ruleStr = '';
 				let lastend = 0;
+				let indent = -1;
 
 				for (let line of this.selectedLines) {
 					let node = line.node;
-					if (line.end > lastend) {
+					if (indent == -1 || line.indent < indent) indent = line.indent;
+					if (line.end > lastend && line.indent <= indent) {
 						if (line.type.localeCompare('alpha') == 0 && node.localeCompare(node.toUpperCase()) == 0)
 							node = '_xCAP';
 						else if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
@@ -263,10 +266,11 @@ ${ruleStr}
 	}
 
 	parseLogLine(line: string): LogLine {
-		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: ''};
+		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
 		var tokens = line.split('[');
 		if (tokens.length > 1) {
 			logLine.node = tokens[0].trim();
+			logLine.indent = tokens[0].search(/\S/) - 1;
 			var toks = tokens[1].split(/[,\]]/);
 			if (toks.length >= 4) {
 				logLine.start = +toks[0];

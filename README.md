@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.7.8
+Fixed autogenerate rule
+
 ### v1.7.7
 Analyzer log files now have the extension .tree, added duplicate pass, update nlp-engine fix
 
