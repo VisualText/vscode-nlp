@@ -1,9 +1,9 @@
 {
     "name": "nlp",
     "displayName": "NLP",
-    "description": "NLP++ support for Visual Studio Code",
+    "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.9.0",
+    "version": "1.9.1",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {

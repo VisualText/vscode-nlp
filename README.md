@@ -1,7 +1,7 @@
 # NLP++ Language Extension
 
-## Version One Released!
-Version one of the NLP langauge extension for VSCODE has been released. This version comes with the engine built in for all three platforms. It is no longer necessary to load the NLP engine separately from github.
+## Only Computer Language Dedicated to Natural Language Processing
+NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
 
 ## Introduction
 
