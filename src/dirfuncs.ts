@@ -28,7 +28,7 @@ export namespace dirfuncs {
                 fs.copyFileSync(fromPath,toPath);
                 return true;
             }
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Could not copy file ' + fromPath + ' to ' + toPath + ' - ' + err.message);
         }
         return false;
@@ -38,7 +38,7 @@ export namespace dirfuncs {
         try {
             fs.chmodSync(filePath,mod);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Could not chmod on ' + filePath + ' - ' + err.message);
         }
         return false;
@@ -55,7 +55,7 @@ export namespace dirfuncs {
             const stats = fs.statSync(path);
             if (stats.isDirectory())
                 return true;
-        } catch (err) {
+        } catch (err: any) {
             visualText.debugMessage(err.message);
         }
         return false;
@@ -65,7 +65,7 @@ export namespace dirfuncs {
         try {
             fs.renameSync(oldPath,newPath);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Could not rename file ' + oldPath + ' to ' + newPath + ' - ' + err.message);
         }
         return false;
@@ -120,7 +120,7 @@ export namespace dirfuncs {
                     const stats = fs.statSync(filepath);
                     if (stats.isDirectory())
                         dirUris.push(vscode.Uri.file(filepath));
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err)
                 }
             }
@@ -138,7 +138,7 @@ export namespace dirfuncs {
                     const stats = fs.statSync(filepath);
                     var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
                     dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type});
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err)
                 }
             }
@@ -165,7 +165,7 @@ export namespace dirfuncs {
         try {
             fs.mkdirSync(dirPath);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error creating folder ' + dirPath + ': ' + err.message);
         } 
         return false;
@@ -175,7 +175,7 @@ export namespace dirfuncs {
         try {
             fs.writeFileSync(filePath,content,{flag:'w'});
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error writing file ' + filePath + ': ' + err.message);
         }
         return false;    
@@ -189,7 +189,7 @@ export namespace dirfuncs {
             else if (stats.isFile()) {
                 return path.dirname(filePath);
             }
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error reading file stats on ' + filePath + ': ' + err.message);
         }
         return '';
@@ -199,7 +199,7 @@ export namespace dirfuncs {
         try {
             fs.unlinkSync(filePath);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error deleting file ' + filePath + ': ' + err.message);
         } 
         return false;
@@ -211,7 +211,7 @@ export namespace dirfuncs {
         try {
             rimraf.sync(dirPath);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error deleting folder ' + dirPath + ': ' + err.message);
         } 
         return false;
@@ -240,7 +240,7 @@ export namespace dirfuncs {
             rimraf.sync(dirPath);
             fs.mkdirSync(dirPath);
             return true;
-        } catch (err) {
+        } catch (err: any) {
             vscode.window.showInformationMessage('Error emptying folder ' + dirPath + ': ' + err.message);
         } 
         return false;

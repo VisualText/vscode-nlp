@@ -103,13 +103,59 @@ export class NLPFile extends TextFile {
     searchWord(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
-			var selection = editor.selection;
-            var text = editor.document.getText(selection);
-			sequenceView.search(text);
+			let cursorPosition = editor.selection.start;
+			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+			let highlight = editor.document.getText(wordRange);
+			sequenceView.search(highlight);
 		}
 	}
 
-    reformatRule(editor: vscode.TextEditor) {
+    commentLines(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			var start = editor.selection.start;
+			var end = editor.selection.end;
+			var startLine = start.line;
+			var endLine = end.line;
+			var newLineStr: string = '';
+			var lastLineLength = 0;
+
+			var lines = this.getSelectedLines(editor);
+			if (lines.length) {
+				var addingFlag: boolean = false;
+				for (let line of lines) {
+					// Use first line to determine adding or removing
+					if (startLine == start.line) {
+						addingFlag = line.charAt(0) == '#' ? false : true;
+					}
+					var commented: boolean = line.charAt(0) == '#' ? true : false;
+					if (addingFlag && !commented && line.length) {
+						line = '#' + line;
+					} if (!addingFlag && commented) {
+						line = line.substr(1);
+					}
+					if (newLineStr) {
+						newLineStr = newLineStr + this.getSeparator();
+					}
+					newLineStr = newLineStr + line;
+					lastLineLength = line.length;
+					startLine++;
+				}
+
+				if (newLineStr.length) {
+					var posStart = new vscode.Position(start.line,0);
+					var posEnd = new vscode.Position(end.line,lastLineLength+1);
+					var range = new vscode.Range(posStart, posEnd);
+	
+					var snippet = new vscode.SnippetString(newLineStr);
+					editor.insertSnippet(snippet,range);
+				}
+
+			}
+		}
+	}
+
+	reformatRule(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			var rulevars = this.findRuleText(editor);

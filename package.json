@@ -3,11 +3,11 @@
     "displayName": "NLP",
     "description": "NLP++ support for Visual Studio Code",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
-        "vscode": "^1.59.0"
+        "vscode": "^1.60.0"
     },
     "categories": [
         "Programming Languages",
@@ -308,10 +308,16 @@
                 "description": "Generate a rule from selected text"
             },
             {
-                "command": "nlp.duplicateLine",
+                "command": "nlp.duplicateLines",
                 "category": "NLP",
                 "title": "Duplicate Line",
                 "description": "Duplicates the current line"
+            },
+            {
+                "command": "nlp.commentLines",
+                "category": "NLP",
+                "title": "Comment Line",
+                "description": "Comments or uncomments selected line"
             },
             {
                 "command": "log.foldAll",
@@ -719,7 +725,7 @@
                 "mac": "f5"
             },
             {
-                "command": "nlp.duplicateLine",
+                "command": "nlp.duplicateLines",
                 "key": "ctrl+shift+D",
                 "mac": "cmd+shift+D",
                 "when": "resourceLangId == nlp"
@@ -761,7 +767,12 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.duplicateLine",
+                    "command": "nlp.duplicateLines",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.commentLines",
                     "group": "nlp"
                 },
                 {
