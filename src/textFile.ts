@@ -16,7 +16,6 @@ export class TextFile {
     private lines = new Array();
     private linesNormalized = new Array();
     private filetype = nlpFileType.UNKNOWN;
-    private tabsize = 4;
     public basename: string = '';
     private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb');
     private exists: boolean = false;

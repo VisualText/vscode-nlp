@@ -17,6 +17,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openLegacyHelp', this.openLegacyHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
@@ -28,6 +29,13 @@ export class NLPCommands {
             nlpCommands = new NLPCommands(ctx);
         }
         return nlpCommands;
+    }
+
+    commentLines() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.commentLines(vscode.window.activeTextEditor);
+        }
     }
     
     duplicateLine() {

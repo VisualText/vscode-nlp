@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.9.0
+Added comment / uncomment lines
+
 ### v1.8.0
 Added first version progress bar
 
