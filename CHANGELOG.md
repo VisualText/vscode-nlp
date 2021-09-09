@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.9.4
+### v1.9.5
 Added comment / uncomment lines
 
 ### v1.8.0
