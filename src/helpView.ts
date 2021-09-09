@@ -38,8 +38,10 @@ export class HelpView {
     lookup(resource: vscode.Uri) {
         let editor = vscode.window.activeTextEditor;
         if (editor) {
-            var selection = editor.selection;
-            var text = editor.document.getText(selection);
+            let cursorPosition = editor.selection.start;
+			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+			let text = editor.document.getText(wordRange);
+
             if (!this.exists) {
                 this.panel = this.createPanel();
                 this.panel.onDidDispose(
