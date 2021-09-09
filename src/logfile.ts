@@ -330,16 +330,13 @@ ${ruleStr}
 		var absStart = 0;
 		var absEnd = 0;
 		var file = new TextFile(textfile);
-		var sep = file.getSeparator();
-		var sepLength = file.getSeparatorLength();
-
 		var linecount = 0;
 		var multiline = false;
 
 		for (let line of file.getLines(true)) {
 			if (multiline) {
 				if (selection.end.line == linecount) {
-					absEnd += selection.end.character - this.bracketCount(line,selection.end.character);
+					absEnd += selection.end.character - this.bracketCount(line,selection.end.character) - 1;
 					break;
 				}
 				absEnd += line.length + this.bracketCount(line);
@@ -353,7 +350,7 @@ ${ruleStr}
 					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(selStr) - 1;
 					break;
 				}
-				absEnd = absStart + line.length - this.bracketCount(line);
+				absEnd = line.length - this.bracketCount(line);
 				multiline = true;
 			} else {
 				absStart += line.length - this.bracketCount(line);

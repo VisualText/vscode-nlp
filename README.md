@@ -11,7 +11,7 @@ The language extension and the required NLP-ENGINE run on Linux, Windows, and Ma
 
 ## Features
 
-The NLP++ language extension allows for the fast development of NLP++ analyzers allowing users to:
+The VSCode NLP++ Language Extension allows for the fast development of NLP++ analyzers allowing users to:
 
 * Quickly generate and edit NLP++ code
 * Display the syntax tree in insightful ways
@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.9.0
+### v1.9.2
 Added comment / uncomment lines
 
 ### v1.8.0
