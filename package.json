@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.9.2",
+    "version": "1.9.3",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -317,7 +317,7 @@
                 "command": "nlp.commentLines",
                 "category": "NLP",
                 "title": "Comment Line",
-                "description": "Comments or uncomments selected line"
+                "description": "Comments or uncomments selected lines"
             },
             {
                 "command": "log.foldAll",
