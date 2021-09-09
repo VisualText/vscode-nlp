@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.9.3",
+    "version": "1.9.4",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
