@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.9.4",
+    "version": "1.9.5",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -308,7 +308,7 @@
                 "description": "Generate a rule from selected text"
             },
             {
-                "command": "nlp.duplicateLines",
+                "command": "nlp.duplicateLine",
                 "category": "NLP",
                 "title": "Duplicate Line",
                 "description": "Duplicates the current line"
@@ -725,7 +725,7 @@
                 "mac": "f5"
             },
             {
-                "command": "nlp.duplicateLines",
+                "command": "nlp.duplicateLine",
                 "key": "ctrl+shift+D",
                 "mac": "cmd+shift+D",
                 "when": "resourceLangId == nlp"
@@ -767,7 +767,7 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.duplicateLines",
+                    "command": "nlp.duplicateLine",
                     "group": "nlp"
                 },
                 {
