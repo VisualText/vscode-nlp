@@ -293,7 +293,7 @@ ${ruleStr}
 
 	findSelectedTree(editor: vscode.TextEditor) {
 		if (this.findSelectedTreeStr(editor)) {
-			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.log';
+			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.tree';
 			this.openNewFile(filename,this.selectedTreeStr);
 		}
 	}
@@ -350,7 +350,7 @@ ${ruleStr}
 					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(selStr) - 1;
 					break;
 				}
-				absEnd = line.length - this.bracketCount(line);
+				absEnd = absStart + line.length - selection.start.character - this.bracketCount(line);
 				multiline = true;
 			} else {
 				absStart += line.length - this.bracketCount(line);
