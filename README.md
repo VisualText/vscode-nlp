@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.9.5
+### v1.9.6
 Added comment / uncomment lines
 
 ### v1.8.0
