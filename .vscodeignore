@@ -8,6 +8,7 @@
 !snippets/**/*
 !syntaxes/**/*
 !themes/**/*
+!.vscode/settings.json
 
 !.vscodeignore
 !CHANGELOG.md
