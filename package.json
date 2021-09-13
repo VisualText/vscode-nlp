@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.9.6",
+    "version": "1.10.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -554,6 +554,14 @@
                 }
             },
             {
+                "command": "analyzerView.colorizeAnalyzer",
+                "title": "Colorize Analyzer Folder",
+                "icon": {
+                    "light": "resources/light/color-mode.svg",
+                    "dark": "resources/dark/color-mode.svg"
+                }
+            },
+            {
                 "command": "analyzerView.newAnalyzer",
                 "title": "New Analyzer",
                 "icon": {
@@ -923,6 +931,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "analyzerView.colorizeAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
+                },
+                {
                     "command": "analyzerView.deleteAnalyzer",
                     "when": "view == analyzerView",
                     "group": "navigation"
@@ -1112,6 +1125,11 @@
                 {
                     "command": "textView.deleteFile",
                     "when": "view == textView && (viewItem == file || viewItem == dir)",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerView.colorizeAnalyzer",
+                    "when": "view == analyzerView",
                     "group": "edit"
                 },
                 {

@@ -407,7 +407,7 @@ export class VisualText {
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + exe;
         const Downloader = require('nodejs-file-downloader');
-        this.engineDir = this.extensionDirectory();
+        this.engineDir = this.engineDirectory();
         var localExePat = path.join(this.engineDir.fsPath,this.NLP_EXE);
         if (fs.existsSync(localExePat)) {
             dirfuncs.delFile(localExePat);
@@ -443,7 +443,7 @@ export class VisualText {
 
         } else {
             // Check if the engine came with vscode-nlp
-            this.extensionDir = this.extensionDirectory();
+            this.extensionDir = this.engineDirectory();
             if (dirfuncs.isDir(this.extensionDir.fsPath)) {
                 this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,this.NLPENGINE_FOLDER));
                 if (!dirfuncs.isDir(this.engineDir.fsPath)) {
@@ -463,12 +463,16 @@ export class VisualText {
         }
     }
 
-    extensionDirectory() {
+    engineDirectory() {
+        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_FOLDER));
+    }
+
+    public extensionDirectory() {
         let extDir = '.vscode';
         if (this.platform == 'linux' || this.platform == 'darwin') {
             extDir = '.vscode-server';
         }
-        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version,this.NLPENGINE_FOLDER));
+        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
     }
 
     configFindUsername() {

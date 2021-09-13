@@ -125,7 +125,7 @@ export class NLPStatusBar {
                     const toPath = path.join(visualText.engineDir.fsPath,visualText.NLP_EXE);
                     const config = vscode.workspace.getConfiguration('engine');
                     config.update('version',visualText.engineVersion,vscode.ConfigurationTarget.Global);
-                    config.update('path',visualText.extensionDirectory(),vscode.ConfigurationTarget.Global);
+                    config.update('path',visualText.engineDirectory(),vscode.ConfigurationTarget.Global);
                     visualText.downloadExecutable(toPath);
                     visualText.debugMessage('NLP Engine updated to version ' + visualText.engineVersion);
                     nlpStatusBar.updateVersion(visualText.engineVersion);  
