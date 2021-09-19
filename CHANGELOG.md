@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.11.0
+Add clearing log folders for all analyzers for archiving analyzers
+
 ### v1.10.0
 Copies settings.json file to the current work file for special NLP++ colorization
 

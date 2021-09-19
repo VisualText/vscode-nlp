@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
+import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
+import { Entry } from './textView';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -47,6 +49,15 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	}
 }
 
+const deleteLogDir = (dir: vscode.Uri) => {
+	return new Promise<void>((resolve,reject) => {
+		if (dirfuncs.delDir(dir.fsPath))
+			resolve();
+		else
+			reject();
+	});
+}
+
 export let analyzerView: AnalyzerView;
 export class AnalyzerView {
 
@@ -60,6 +71,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.colorizeAnalyzer', resource => this.colorizeAnalyzer());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.deleteLogFiles', resource => this.deleteLogFiles(resource));
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
     }
     
@@ -112,5 +124,51 @@ export class AnalyzerView {
 	
 	private newAnalyzer() {
 		visualText.analyzer.newAnalyzer();
+	}
+
+	public getLogDirs(dir: vscode.Uri, logDirs: Entry[]) {
+		var entries = dirfuncs.getDirectoryTypes(dir);
+
+		for (let entry of entries) {
+			if (entry.type == vscode.FileType.Directory) {
+				if (outputView.directoryIsLog(entry.uri.fsPath))
+					logDirs.push(entry);
+				else
+					this.getLogDirs(entry.uri,logDirs);
+			}
+		}
+	}
+
+	public deleteLogFiles(analyzerItem: AnalyzerItem) {
+		const logDirs: Entry[] = Array();
+		var inputDir = vscode.Uri.file(path.join(analyzerItem.uri.fsPath,'input'));
+		this.getLogDirs(inputDir,logDirs);
+		var count = logDirs.length;
+		const step = Math.round(100/count);
+		
+		if (count) {
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Notification,
+				title: "Removing log directies",
+				cancellable: false
+			}, (progress, token) => {
+				token.onCancellationRequested(() => {
+					console.log("User canceled the long running operation");
+				});
+				progress.report({ increment: step, message: `Removing log directories` });
+				return Promise.all(
+					logDirs.map(async (d) => {
+						progress.report({ increment: step, message: `Removing ${d.uri.fsPath}` });
+						await deleteLogDir(d.uri);
+					})
+				)
+				.then(() => {
+					console.log('Log directions deleted');
+					vscode.commands.executeCommand('textView.refreshAll');
+				})
+			});
+		} else {
+			vscode.window.showWarningMessage("No log files to delete");
+		}
 	}
 }

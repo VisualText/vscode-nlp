@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.10.0",
+    "version": "1.11.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -559,6 +559,14 @@
                 "icon": {
                     "light": "resources/light/color-mode.svg",
                     "dark": "resources/dark/color-mode.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteLogFiles",
+                "title": "Delete Log Files",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
                 }
             },
             {
@@ -1141,6 +1149,11 @@
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
+                },
+                                {
+                    "command": "analyzerView.deleteLogFiles",
+                    "when": "view == analyzerView",
+                    "group": "inline"
                 },
                 {
                     "command": "sequenceView.insertNew",

@@ -8,7 +8,7 @@ import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
 
-interface Entry {
+export interface Entry {
 	uri: vscode.Uri;
 	type: vscode.FileType;
 }
