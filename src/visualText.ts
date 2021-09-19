@@ -6,6 +6,7 @@ import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
+import { textView } from './textView';
 
 export enum vtStatus { UNKNOWN, VERSION, VERSION_DONE, DONE }
 

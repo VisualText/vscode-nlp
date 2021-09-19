@@ -71,7 +71,10 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.10.1
+### v1.11.0
+Add clearing log folders for all analyzers for archiving analyzers
+
+### v1.10.0
 Copies settings.json file to the current work file for special NLP++ colorization
 
 ### v1.9.6

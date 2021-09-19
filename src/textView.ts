@@ -8,7 +8,7 @@ import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
 
-interface Entry {
+export interface Entry {
 	uri: vscode.Uri;
 	type: vscode.FileType;
 }
@@ -181,11 +181,12 @@ export class TextView {
         }
 	}
 
-	async analyze(entry: Entry) {
+	analyze(entry: Entry) {
         if (entry.uri.fsPath.length) {
 			this.openFile(entry);
             var nlp = new NLPFile();
-			await nlp.analyze(entry.uri);
+			nlp.analyze(entry.uri);
+			vscode.commands.executeCommand('analyzerView.refreshAll');
 		}
 	}
 

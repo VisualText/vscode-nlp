@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.10.1",
+    "version": "1.11.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -562,6 +562,22 @@
                 }
             },
             {
+                "command": "analyzerView.deleteLogFiles",
+                "title": "Delete Log Files",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteAllLogFiles",
+                "title": "Delete Log Files",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
                 "command": "analyzerView.newAnalyzer",
                 "title": "New Analyzer",
                 "icon": {
@@ -941,6 +957,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "analyzerView.deleteAllLogFiles",
+                    "when": "view == analyzerView && analyzers.hasLogs",
+                    "group": "navigation"
+                },
+                {
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "navigation"
@@ -1141,6 +1162,11 @@
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
+                },
+                                {
+                    "command": "analyzerView.deleteLogFiles",
+                    "when": "view == analyzerView && viewItem == hasLogs",
+                    "group": "inline"
                 },
                 {
                     "command": "sequenceView.insertNew",
