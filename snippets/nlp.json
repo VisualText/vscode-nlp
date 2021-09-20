@@ -1286,6 +1286,28 @@
         ],
         "description": "Bold header"
     },
+    "subheader": {
+        "prefix": ["subheader comment"],
+        "body": [
+            "##  ${1:comment}  #################################"
+        ],
+        "description": "Bold header"
+    },
+    "wild fail": {
+        "prefix": ["wild fail"],
+        "body": [
+            "_xWILD [fail=(${1:_xEND})]",
+            "$1"
+        ],
+        "description": "match until fail"
+    },
+    "wild match": {
+        "prefix": ["wild fail"],
+        "body": [
+            "_xWILD [match=(${1:_xEND})]"
+        ],
+        "description": "wild match"
+    },
     "rule line only": {
         "prefix": ["rule line no @RULES"],
         "body": [
@@ -1325,6 +1347,13 @@
             "rmchildren(G(\"$1\"));"
         ],
         "description": "KB Global"
+    },
+    "Output concept": {
+        "prefix": ["output.txt"],
+        "body": [
+            "\"${1:output}.txt\" << \"${2:con}: \" << conceptpath(L(\"$2\")) << \"\\n\";"
+        ],
+        "description": "Output concept."
     },
     "While Loop Concept": {
         "prefix": ["while CON"],

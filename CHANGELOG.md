@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.10.0
+### v1.10.1
 Copies settings.json file to the current work file for special NLP++ colorization
 
 ### v1.9.6

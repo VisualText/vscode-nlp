@@ -1,7 +1,7 @@
 {
     "name": "nlp",
     "displayName": "NLP",
-    "description": "NLP++ is the only dedicated computer language for NLP - Anything Thinkable",
+    "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
     "version": "1.10.0",
     "publisher": "dehilster",
