@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.10.0
+### v1.10.1
 Copies settings.json file to the current work file for special NLP++ colorization
 
 ### v1.9.6
