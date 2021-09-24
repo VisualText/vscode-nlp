@@ -72,7 +72,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			
 			} else if (passItem.isRuleFile()) {
 				var logPath = logFile.anaFile(passItem.passNum,nlpFileType.TREE);
-				var hasLog = fs.existsSync(logPath.fsPath) ? true : false;
 				var conVal = '';
 				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
 					conVal = 'hasLog';

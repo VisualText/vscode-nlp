@@ -22,7 +22,7 @@ export class NLPFile extends TextFile {
 			location: vscode.ProgressLocation.Notification,
 			title: "Analyzer text",
 			cancellable: false
-		}, (progress, token) => {
+		}, async (progress, token) => {
             token.onCancellationRequested(() => {
                 console.log("User canceled the long running operation");
             });
@@ -82,6 +82,7 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('sequenceView.refreshAll');
+						vscode.commands.executeCommand('analyzerView.refreshAll');	
 						vscode.commands.executeCommand('logView.makeAna');
 						resolve('Processed');
 					}
