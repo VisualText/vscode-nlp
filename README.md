@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.11.0
+### v1.11.1
 Add clearing log folders for all analyzers for archiving analyzers
 
 ### v1.10.0

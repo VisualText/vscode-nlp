@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.11.0
+### v1.11.1
 Add clearing log folders for all analyzers for archiving analyzers
 
 ### v1.10.0
