@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.12.0
+Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
+
 ### v1.11.1
 Add clearing log folders for all analyzers for archiving analyzers
 

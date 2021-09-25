@@ -12,6 +12,7 @@ export class HelpView {
 
     constructor(private context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource));
+        vscode.commands.registerCommand('helpView.lookupBrowser', (resource) => this.lookupBrowser(resource));
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -33,6 +34,18 @@ export class HelpView {
                 preserveFocus: false
             }
         );
+    }
+
+    lookupBrowser(resource: vscode.Uri) {
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+            let cursorPosition = editor.selection.start;
+			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+			let text = editor.document.getText(wordRange);
+
+            var url = 'http://visualtext.org/help/' + text + '.htm';
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+        }
     }
     
     lookup(resource: vscode.Uri) {
