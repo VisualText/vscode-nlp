@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.11.0",
+    "version": "1.12.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -236,6 +236,12 @@
                 "category": "NLP",
                 "title": "Lookup Word",
                 "description": "Lookup a term in the help"
+            },
+            {
+                "command": "helpView.lookupBrowser",
+                "category": "NLP",
+                "title": "Lookup Word in Browser",
+                "description": "Lookup a term in the help in Browser"
             },
             {
                 "command": "textView.analyze",
@@ -782,6 +788,11 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "helpView.lookup",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.lookupBrowser",
                     "group": "nlp"
                 },
                 {
