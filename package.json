@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.12.0",
+    "version": "1.12.1",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -226,10 +226,10 @@
         ],
         "commands": [
             {
-                "command": "nlp.openLegacyHelp",
+                "command": "nlp.openOnlineFunctionHelp",
                 "category": "NLP",
-                "title": "Open legacy help",
-                "description": "Open the help on the textanalysis website"
+                "title": "Open online function help",
+                "description": "Open online function help"
             },
             {
                 "command": "helpView.lookup",
@@ -822,7 +822,7 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.openLegacyHelp",
+                    "command": "nlp.openOnlineFunctionHelp",
                     "group": "nlp"
                 },
                 {
