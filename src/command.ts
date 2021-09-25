@@ -15,7 +15,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openLegacyHelp', this.openLegacyHelp));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
@@ -45,8 +45,8 @@ export class NLPCommands {
         }
     }
 
-    openLegacyHelp() {
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://www.textanalysis.com/help/help.htm'));
+    openOnlineFunctionHelp() {
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Functions.htm'));
     }
 
     searchWord() {
