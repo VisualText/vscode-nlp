@@ -1174,7 +1174,7 @@
                     "when": "view == analyzerView",
                     "group": "edit"
                 },
-                                {
+                {
                     "command": "analyzerView.deleteLogFiles",
                     "when": "view == analyzerView && viewItem == hasLogs",
                     "group": "inline"

@@ -74,7 +74,7 @@ There are many details in the windows version of VisualText that are yet to be i
 ### v1.12.0
 Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
 
-### v1.11.0
+### v1.11.1
 Add clearing log folders for all analyzers for archiving analyzers
 
 ### v1.10.0

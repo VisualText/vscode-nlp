@@ -144,8 +144,10 @@ export class AnalyzerView {
 			if (entry.type == vscode.FileType.Directory) {
 				if (outputView.directoryIsLog(entry.uri.fsPath))
 					return true;
-				else
-					this.hasLogDirs(entry.uri,false);
+				else {
+					var has = this.hasLogDirs(entry.uri,false);
+					if (has) return true;
+				}
 			}
 		}
 		return false;
@@ -246,13 +248,15 @@ export class AnalyzerView {
 	}
 
 	deleteAnalyzerLogFiles(analyzerDir: vscode.Uri) {
+		var analyzerName = path.basename(analyzerDir.fsPath);
 		const logDirs: Entry[] = Array();
 		this.getLogDirs(analyzerDir,logDirs,true);
 		var count = logDirs.length;
 		
 		if (count) {
 			for (let dir of logDirs) {
-				logView.addMessage(`Removing ${dir.uri.fsPath}`,dir.uri);
+				var dirName = dir.uri.fsPath.substring(analyzerDir.fsPath.length);
+				logView.addMessage(`Removing ${analyzerName}: ${dirName}`,dir.uri);
 				vscode.commands.executeCommand('logView.refreshAll');	
 
 				fs.rmdir(dir.uri.fsPath, { recursive: true},
