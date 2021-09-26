@@ -7,6 +7,7 @@ import { NLPFile } from './nlp';
 import { nlpStatusBar, FiredMode } from './status';
 import { SequenceFile } from './sequence';
 import { dirfuncs } from './dirfuncs';
+import * as os from 'os';
 
 export interface Highlight {
 	start: number;
@@ -294,22 +295,20 @@ ${ruleStr}
 	findSelectedTree(editor: vscode.TextEditor) {
 		if (this.findSelectedTreeStr(editor)) {
 			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.tree';
-			this.openNewFile(filename,this.selectedTreeStr);
+			this.openTemporaryFile(filename,this.selectedTreeStr);
 		}
 	}
 
-	openNewFile(filepath: string, content: string) {
+	openTemporaryFile(filepath: string, content: string) {
 		const newFile = vscode.Uri.parse('untitled:' + filepath);
-		vscode.workspace.openTextDocument(newFile).then(document => {
-			const edit = new vscode.WorkspaceEdit();
-			edit.insert(newFile, new vscode.Position(0, 0), content);
-			return vscode.workspace.applyEdit(edit).then(success => {
-				if (success) {
-					vscode.window.showTextDocument(document);
-				} else {
-					vscode.window.showInformationMessage('Error!');
-				}
-			});
+		const tempDir = path.resolve(
+            vscode.workspace
+                .getConfiguration('createtmpfile')
+                .get('tmpDir') || os.tmpdir());
+		var filePath = vscode.Uri.file(path.join(tempDir,filepath));
+		fs.writeFileSync(filePath.fsPath, content);
+		vscode.workspace.openTextDocument(filePath).then(document => {
+			vscode.window.showTextDocument(document);
 		});
 	}
 
