@@ -101,13 +101,13 @@ export class NLPFile extends TextFile {
 		});
 	}
 	
-    searchWord(editor: vscode.TextEditor) {
+    searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			let cursorPosition = editor.selection.start;
 			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
 			let highlight = editor.document.getText(wordRange);
-			sequenceView.search(highlight);
+			sequenceView.search(highlight,functionFlag);
 		}
 	}
 

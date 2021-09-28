@@ -27,7 +27,7 @@ export class FindFile {
 		return this.finds;
 	}
     
-	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0): boolean {
+	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0, functionFlag: boolean = false): boolean {
 		if (level == 0)
 			this.finds = [];
 		const files = dirfuncs.getFiles(dir);
@@ -66,7 +66,10 @@ export class FindFile {
 						}
 						line = line.replace(searchTerm,` <<${searchTerm}>> `);
 						var label = `${filename} [${num} ${pos}] ${line}`;
-						this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
+						var trimmed = line.trim();
+						if (!functionFlag || (!trimmed.endsWith(';') && trimmed.startsWith('<<'))) {
+							this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
+						}
 					}
 					num++;
 				}				

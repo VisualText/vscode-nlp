@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.13.0
+Simple search for function. This is a workable hack.
+
 ### v1.12.2
 Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
 

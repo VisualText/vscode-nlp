@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.13.0
+Simple search for function. This is a workable hack.
+
 ### v1.12.2
 Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
 
