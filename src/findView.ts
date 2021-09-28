@@ -91,6 +91,8 @@ export class FindView {
 		this.findItems = findItems;
 		if (findItems.length == 0) {
 			findItems.push({uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: 0, pos: 0, text: ''});
+		} else if (findItems.length == 1) {
+			this.openFile(findItems[0]);
 		}
 		this.searchWord = searchWord;
 	}

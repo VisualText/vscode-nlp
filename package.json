@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.12.2",
+    "version": "1.13.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -308,6 +308,12 @@
                 "description": "Search for chosen word in passes"
             },
             {
+                "command": "nlp.searchFunction",
+                "category": "NLP",
+                "title": "Search Function",
+                "description": "Search for function"
+            },
+            {
                 "command": "nlp.generateRule",
                 "category": "NLP",
                 "title": "Generate Rule",
@@ -601,7 +607,7 @@
             },
             {
                 "command": "sequenceView.search",
-                "title": "search",
+                "title": "Search",
                 "icon": {
                     "light": "resources/light/search.svg",
                     "dark": "resources/dark/search.svg"
@@ -813,6 +819,11 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.searchWord",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.searchFunction",
                     "group": "nlp"
                 },
                 {
@@ -1321,9 +1332,9 @@
     "devDependencies": {
         "@types/glob": "^7.1.4",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^12.12.0",
+        "@types/node": "^12.20.27",
         "@types/vscode": "^1.59.0",
-        "glob": "^7.1.7",
+        "glob": "^7.2.0",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
         "typescript": "^4.3.5",
