@@ -51,6 +51,7 @@ export class FindFile {
 				let num = 0;
 				for (let line of this.textFile.getLines()) {
 					var pos = line.search(escaped);
+					var lineOrig = line;
 					if (pos >= 0) {
 						var filename = path.basename(file.fsPath);
 						var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
@@ -67,7 +68,7 @@ export class FindFile {
 						line = line.replace(searchTerm,` <<${searchTerm}>> `);
 						var label = `${filename} [${num} ${pos}] ${line}`;
 						var trimmed = line.trim();
-						if (!functionFlag || (!trimmed.endsWith(';') && trimmed.startsWith('<<'))) {
+						if (!functionFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
 							this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
 						}
 					}
