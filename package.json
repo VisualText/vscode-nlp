@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.13.1",
+    "version": "1.14.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -582,7 +582,31 @@
                 }
             },
             {
-                "command": "analyzerView.deleteAllLogFiles",
+                "command": "textView.deleteLogFiles",
+                "title": "Delete Log Files",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
+                "command": "textView.deleteAllLogs",
+                "title": "Delete All Log Files",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
+                "command": "textView.deleteAnalyzerLogs",
+                "title": "Delete Analyzer Logs",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteAllAnalyzerLogs",
                 "title": "Delete Log Files",
                 "icon": {
                     "light": "resources/light/x-box.svg",
@@ -603,6 +627,14 @@
                 "icon": {
                     "light": "resources/light/chrome-close.svg",
                     "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteAnalyzerLogs",
+                "title": "Delete Analyzer Logs",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
                 }
             },
             {
@@ -869,31 +901,6 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "sequenceView.convert",
-                    "when": "view == sequenceView && myExtension.hasPat",
-                    "group": "navigation"
-                },
-                {
-                    "command": "textView.openText",
-                    "when": "view == sequenceView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "sequenceView.finalTree",
-                    "when": "view == sequenceView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "sequenceView.search",
-                    "when": "view == sequenceView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "sequenceView.refreshAll",
-                    "when": "view == sequenceView",
-                    "group": "navigation"
-                },
-                {
                     "command": "textView.newDir",
                     "when": "view == textView",
                     "group": "navigation"
@@ -916,6 +923,36 @@
                 {
                     "command": "textView.refreshAll",
                     "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "textView.deleteAllLogs",
+                    "when": "view == textView && text.hasLogs",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.convert",
+                    "when": "view == sequenceView && sequence.hasPat",
+                    "group": "navigation"
+                },
+                {
+                    "command": "textView.openText",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.finalTree",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.search",
+                    "when": "view == sequenceView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "sequenceView.refreshAll",
+                    "when": "view == sequenceView",
                     "group": "navigation"
                 },
                 {
@@ -979,7 +1016,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "analyzerView.deleteAllLogFiles",
+                    "command": "analyzerView.deleteAllAnalyzerLogs",
                     "when": "view == analyzerView && analyzers.hasLogs",
                     "group": "navigation"
                 },
@@ -1152,17 +1189,17 @@
                 },
                 {
                     "command": "textView.newDir",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
                     "group": "edit"
                 },
                 {
                     "command": "textView.newText",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
                     "group": "edit"
                 },
                 {
                     "command": "textView.existingText",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
                     "group": "edit"
                 },
                 {
@@ -1186,7 +1223,7 @@
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerView.deleteLogFiles",
+                    "command": "analyzerView.deleteAnalyzerLogs",
                     "when": "view == analyzerView && viewItem == hasLogs",
                     "group": "inline"
                 },
@@ -1222,7 +1259,7 @@
                 },
                 {
                     "command": "textView.rename",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && viewItem =~ /(file|fileHasLogs)/",
                     "group": "inline"
                 },
                 {
@@ -1237,7 +1274,12 @@
                 },
                 {
                     "command": "textView.analyze",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && viewItem =~ /(file|fileHasLogs)/",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.deleteAnalyzerLogs",
+                    "when": "view == textView && viewItem == fileHasLogs",
                     "group": "inline"
                 },
                 {

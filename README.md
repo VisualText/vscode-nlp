@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.14.0
+Added delete logs to textvi
+
 ### v1.13.1
 Simple search for function. This is a workable hack.
 

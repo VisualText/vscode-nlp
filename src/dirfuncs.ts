@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import { visualText } from './visualText';
+import { outputView } from './outputView';
 
 export namespace dirfuncs {
 
@@ -56,7 +57,7 @@ export namespace dirfuncs {
             if (stats.isDirectory())
                 return true;
         } catch (err: any) {
-            visualText.debugMessage(err.message);
+            //visualText.debugMessage(err.message);
         }
         return false;
     }
@@ -137,7 +138,7 @@ export namespace dirfuncs {
                 try {
                     const stats = fs.statSync(filepath);
                     var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
-                    dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type});
+                    dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type, hasLogs: false});
                 } catch (err: any) {
                     console.error(err)
                 }
@@ -232,7 +233,6 @@ export namespace dirfuncs {
         return fileUris;
     }
 
-
     export function emptyDir(dirPath: string): boolean {
         if (!fs.existsSync(dirPath) || dirPath.length <= 2)
             return false;
@@ -245,4 +245,30 @@ export namespace dirfuncs {
         } 
         return false;
     }
+
+    export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
+		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
+		var entries = dirfuncs.getDirectoryTypes(inputDir);
+
+		for (let entry of entries) {
+			if (entry.type == vscode.FileType.Directory) {
+				if (dirfuncs.directoryIsLog(entry.uri.fsPath))
+					return true;
+				else {
+					var has = dirfuncs.hasLogDirs(entry.uri,false);
+					if (has) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+    export function directoryIsLog(dirPath: string): boolean {
+		return dirPath.endsWith(visualText.LOG_SUFFIX);
+	}
+
+    export function fileHasLog(filePath: string): boolean {
+        return dirfuncs.isDir(filePath + visualText.LOG_SUFFIX);
+    }
+
 }
