@@ -138,20 +138,6 @@ export class OutputView {
 		vscode.commands.executeCommand('outputView.refreshAll');
 	}
 
-	public directoryIsLog(path: string): boolean {
-		if (!path.endsWith(visualText.LOG_SUFFIX))
-			return false;
-		const filepath = path.substr(0,path.length-4);
-		try {
-			let stats = fs.lstatSync(filepath);
-			return stats.isFile();
-		} catch (err) {
-			console.error(err);
-		}
-
-		return false;
-	}
-
 	public fileHasLog(path: string): boolean {
 		this.logDirectory = vscode.Uri.file('');
 		if (path.length == 0)

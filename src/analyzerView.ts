@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
-import { outputView } from './outputView';
 import { logView } from './logView';
 import { dirfuncs } from './dirfuncs';
-import { Entry } from './textView';
+import { TextItem } from './textView';
+import { textView } from './textView';
 import * as fs from 'fs';
 
 interface AnalyzerItem {
@@ -47,7 +47,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
             const children: AnalyzerItem[] = new Array();
 			var hasAllLogs = false;
             for (let analyzer of analyzers) {
-				var hasLogs = analyzerView.hasLogDirs(analyzer,true);
+				var hasLogs = dirfuncs.hasLogDirs(analyzer,true);
 				if (hasLogs) hasAllLogs = true;
                 children.push({uri: analyzer, hasLogs: hasLogs});
             }
@@ -80,8 +80,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.colorizeAnalyzer', resource => this.colorizeAnalyzer());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
-		vscode.commands.registerCommand('analyzerView.deleteLogFiles', resource => this.deleteLogFiles(resource));
-		vscode.commands.registerCommand('analyzerView.deleteAllLogFiles', () => this.deleteAllLogFiles());
+		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
+		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
     }
     
@@ -135,39 +135,8 @@ export class AnalyzerView {
 	private newAnalyzer() {
 		visualText.analyzer.newAnalyzer();
 	}
-	
-	public hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
-		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
-		var entries = dirfuncs.getDirectoryTypes(inputDir);
 
-		for (let entry of entries) {
-			if (entry.type == vscode.FileType.Directory) {
-				if (outputView.directoryIsLog(entry.uri.fsPath))
-					return true;
-				else {
-					var has = this.hasLogDirs(entry.uri,false);
-					if (has) return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	public getLogDirs(dir: vscode.Uri, logDirs: Entry[],first: boolean) {
-		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
-		var entries = dirfuncs.getDirectoryTypes(inputDir);
-
-		for (let entry of entries) {
-			if (entry.type == vscode.FileType.Directory) {
-				if (outputView.directoryIsLog(entry.uri.fsPath))
-					logDirs.push(entry);
-				else
-					this.getLogDirs(entry.uri,logDirs,false);
-			}
-		}
-	}
-
-	public deleteAllLogFiles() {
+	public deleteAllAnalyzerLogs() {
 		if (visualText.hasWorkspaceFolder()) {
 
 			let items: vscode.QuickPickItem[] = [];
@@ -179,38 +148,12 @@ export class AnalyzerView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-
-				vscode.window.withProgress({
-					location: vscode.ProgressLocation.Notification,
-					title: "Deleting all log directories",
-					cancellable: true
-				}, async (progress, token) => {
-					token.onCancellationRequested(() => {
-						console.log("User canceled the long running operation");
-					});
-
-					if (vscode.workspace.workspaceFolders) {
-						var analyzers = dirfuncs.getDirectoryTypes(vscode.workspace.workspaceFolders[0].uri);
-						for (let analyzer of analyzers) {
-							var analyzerName = path.basename(analyzer.uri.fsPath);
-							progress.report({ increment: 10, message: analyzerName });
-							this.deleteAnalyzerLogFiles(analyzer.uri);
-						}
-
-						const p = new Promise<void>(resolve => {
-							vscode.commands.executeCommand('analyzerView.refreshAll');
-							vscode.commands.executeCommand('textView.refreshAll');	
-							vscode.commands.executeCommand('logView.refreshAll');	
-							resolve();
-						});
-						return p;
-					}
-				});
+				textView.deleteAllLogDirs();
 			});
 		}
 	}
 
-	public deleteLogFiles(analyzerItem: AnalyzerItem) {
+	public deleteAnalyzerLogs(analyzerItem: AnalyzerItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
@@ -234,7 +177,7 @@ export class AnalyzerView {
 
 					progress.report({ increment: 50, message: analyzerName });
 
-					this.deleteAnalyzerLogFiles(analyzerItem.uri);
+					textView.deleteAnalyzerLogDir(analyzerItem.uri.fsPath);
 					const p = new Promise<void>(resolve => {
 						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('textView.refreshAll');	
@@ -244,32 +187,6 @@ export class AnalyzerView {
 					return p;
 				});
 			});
-		}
-	}
-
-	deleteAnalyzerLogFiles(analyzerDir: vscode.Uri) {
-		var analyzerName = path.basename(analyzerDir.fsPath);
-		const logDirs: Entry[] = Array();
-		this.getLogDirs(analyzerDir,logDirs,true);
-		var count = logDirs.length;
-		
-		if (count) {
-			for (let dir of logDirs) {
-				var dirName = dir.uri.fsPath.substring(analyzerDir.fsPath.length);
-				logView.addMessage(`Removing ${analyzerName}: ${dirName}`,dir.uri);
-				vscode.commands.executeCommand('logView.refreshAll');	
-
-				fs.rmdir(dir.uri.fsPath, { recursive: true},
-					(error) => {
-						if (error) {
-							console.log(error);
-						}
-						else {
-							vscode.commands.executeCommand('analyzerView.refreshAll');
-							vscode.commands.executeCommand('textView.refreshAll');	
-						}
-				});
-			};
 		}
 	}
 }

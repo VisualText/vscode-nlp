@@ -55,7 +55,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var order = 0;
 
 		var hasPat: Boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
-		vscode.commands.executeCommand('setContext', 'myExtension.hasPat', hasPat);
+		vscode.commands.executeCommand('setContext', 'sequence.hasPat', hasPat);
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
