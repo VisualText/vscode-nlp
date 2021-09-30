@@ -71,8 +71,8 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.14.1
-Added delete logs to textvi
+### v1.14.2
+Added delete logs to textview. Initialization messages now to LOGGING tab.
 
 ### v1.13.1
 Simple search for function. This is a workable hack.
