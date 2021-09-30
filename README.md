@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.14.0
+### v1.14.1
 Added delete logs to textvi
 
 ### v1.13.1
