@@ -11,13 +11,13 @@ import { LogView } from './logView';
 import { NLPStatusBar } from './status';
 
 export function activate(ctx: vscode.ExtensionContext): void {
+    LogView.attach(ctx);
     VisualText.attach(ctx);
     AnalyzerView.attach(ctx);
     TextView.attach(ctx);
     OutputView.attach(ctx);
     SequenceView.attach(ctx);
     FindView.attach(ctx);
-    LogView.attach(ctx);
     HelpView.attach(ctx);
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);

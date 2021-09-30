@@ -6,6 +6,7 @@ import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
+import { logView } from './logView';
 
 export enum vtStatus { UNKNOWN, VERSION, VERSION_DONE, DONE }
 
@@ -30,7 +31,6 @@ export class VisualText {
     public filesVersion: string = '';
     public engineDir: vscode.Uri = vscode.Uri.file('');
 
-    public debugOut = vscode.window.createOutputChannel('VisualText');
     private platform: string = '';
     private homeDir: string = '';
     private username: string = '';
@@ -48,7 +48,6 @@ export class VisualText {
 
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
-        this.debugOut.show();
 
         this.platform = os.platform();
         let plat = this.platform == 'darwin' ? 'mac' : this.platform;
@@ -75,8 +74,8 @@ export class VisualText {
     }
 
     public debugMessage(msg: string) {
-        this.debugOut.show();
-        this.debugOut.appendLine(msg);
+        logView.addMessage(msg,vscode.Uri.file(''));
+        vscode.commands.executeCommand('logView.refreshAll');
     }
 
 	readState(): boolean {
