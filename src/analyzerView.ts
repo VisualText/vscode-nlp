@@ -1,11 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
-import { logView } from './logView';
 import { dirfuncs } from './dirfuncs';
-import { TextItem } from './textView';
 import { textView } from './textView';
-import * as fs from 'fs';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;

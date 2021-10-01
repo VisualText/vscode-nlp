@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.14.2
+### v1.14.3
 Added delete logs to textview. Initialization messages now to LOGGING tab.
 
 ### v1.13.1

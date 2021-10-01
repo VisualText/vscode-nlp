@@ -62,16 +62,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 	getKeepers(dir: vscode.Uri): TextItem[] {
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
-		var hasAllLogs = false;
 
 		for (let entry of entries) {
 			if (!(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
 				var hasLogs =  dirfuncs.fileHasLog(entry.uri.fsPath);
-				if (hasLogs) hasAllLogs = true;
 				keepers.push({uri: entry.uri, type: entry.type, hasLogs: hasLogs});
 			}
-		} 
+		}
 
+		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getCurrentAnalyzer(),true);
 		vscode.commands.executeCommand('setContext', 'text.hasLogs', hasAllLogs);
 		return keepers;
 	}
@@ -335,8 +334,12 @@ export class TextView {
 				if (!selection || selection.label == 'No')
 					return;
 
-				var dirPath = visualText.analyzer.getTextPath();
-				this.deleteAnalyzerLogDir(dirPath.fsPath);
+				var anaPath = visualText.getCurrentAnalyzer();
+				if (anaPath.fsPath.length) {
+					this.deleteAnalyzerLogFiles(anaPath);
+					vscode.commands.executeCommand('analyzerView.refreshAll');
+					vscode.commands.executeCommand('textView.refreshAll');
+				}
 			});
 		}
 	}
