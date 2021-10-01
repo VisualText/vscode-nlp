@@ -559,6 +559,10 @@ export class VisualText {
         }
     }
 
+    public getCurrentAnalyzer(): vscode.Uri {
+        return this.currentAnalyzer;
+    }
+
     setEngineDir(path: vscode.Uri) {
         this.engineDir = path;
     }

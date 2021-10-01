@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.14.2
+### v1.14.3
 Added delete logs to textview. Initialization messages now to LOGGING tab.
 
 ### v1.13.1
