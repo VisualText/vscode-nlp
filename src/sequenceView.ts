@@ -8,6 +8,7 @@ import { LogFile } from './logfile';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
+import { logView } from './logView';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -50,7 +51,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var folder = '';
 		const seqItems = new Array();
 		const logFile = new LogFile();
-		const textFile = new TextFile();
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
 
@@ -390,6 +390,25 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.dicttok', (seqItem) => treeDataProvider.dicttok(seqItem));
 		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
+	}
+
+	reveal(nlpFilePath: string) {
+		var seqFile = visualText.analyzer.seqFile;
+		var seqName = path.basename(nlpFilePath,'.pat');
+		var seqName = path.basename(seqName,'.nlp');
+		var passItem: PassItem = seqFile.findPass('nlp',seqName);
+		if (passItem.passNum) {
+			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),vscode.Uri.file(''));
+		} else {
+			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(''));
+		}
+		vscode.commands.executeCommand('logView.refreshAll');
+		/*  WAITING FOR REVEAL UPDATE - IT IS COMING!
+		var label = passItem.passNum.toString() + ' ' + passItem.text;
+		var seqItem: SequenceItem = {uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'missing', inFolder: passItem.inFolder,
+		type: 'nlp', passNum: passItem.passNum, order: passItem.order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active};
+		this.sequenceView.reveal(seqItem, {select: true, focus: true, expand: false});
+		*/
 	}
 
 	convertPatToNLP() {
