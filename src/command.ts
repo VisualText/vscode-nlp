@@ -19,6 +19,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.selectSequence', this.selectSequence));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
@@ -31,6 +32,13 @@ export class NLPCommands {
         }
         return nlpCommands;
     }
+    
+    selectSequence() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.selectSequence(vscode.window.activeTextEditor);
+        }
+    }
 
     commentLines() {
         if (vscode.window.activeTextEditor) {
@@ -38,7 +46,7 @@ export class NLPCommands {
             nlpFile.commentLines(vscode.window.activeTextEditor);
         }
     }
-    
+
     duplicateLine() {
         if (vscode.window.activeTextEditor) {
             var nlpFile = new NLPFile();

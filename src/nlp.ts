@@ -111,13 +111,19 @@ export class NLPFile extends TextFile {
 		}
 	}
 
+	selectSequence(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			sequenceView.reveal(editor.document.fileName);
+		}
+	}
+
     commentLines(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			var start = editor.selection.start;
 			var end = editor.selection.end;
 			var startLine = start.line;
-			var endLine = end.line;
 			var newLineStr: string = '';
 			var lastLineLength = 0;
 

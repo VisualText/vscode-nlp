@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.14.3",
+    "version": "1.15.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -230,6 +230,12 @@
                 "category": "NLP",
                 "title": "Open online function help",
                 "description": "Open online function help"
+            },
+            {
+                "command": "nlp.selectSequence",
+                "category": "NLP",
+                "title": "Reveal Sequence Number",
+                "description": "Reveals the sequence number for the NLP file"
             },
             {
                 "command": "helpView.lookup",
@@ -859,13 +865,18 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
-                    "command": "nlp.generateRule",
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.openOnlineFunctionHelp",
                     "group": "nlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.openOnlineFunctionHelp",
+                    "command": "nlp.selectSequence",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "command": "nlp.generateRule",
                     "group": "nlp"
                 },
                 {

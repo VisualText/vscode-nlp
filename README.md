@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.15.0
+Reveals sequence number for an nlp file. This will eventually select the sequence item once Microsoft fully implements the reveal function for tree items.
+
 ### v1.14.3
 Added delete logs to textview. Initialization messages now to LOGGING tab.
 
