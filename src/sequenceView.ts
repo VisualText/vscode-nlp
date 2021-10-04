@@ -398,9 +398,9 @@ export class SequenceView {
 		var seqName = path.basename(seqName,'.nlp');
 		var passItem: PassItem = seqFile.findPass('nlp',seqName);
 		if (passItem.passNum) {
-			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),vscode.Uri.file(''));
+			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),passItem.uri);
 		} else {
-			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(''));
+			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(nlpFilePath));
 		}
 		vscode.commands.executeCommand('logView.refreshAll');
 		/*  WAITING FOR REVEAL UPDATE - IT IS COMING!
