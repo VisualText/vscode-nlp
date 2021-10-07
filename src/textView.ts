@@ -209,17 +209,10 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				this.analyzeDirAsync(textItem);
+				var nlp = new NLPFile();
+				nlp.analyze(textItem.uri);
+				vscode.commands.executeCommand('analyzerView.refreshAll');
 			});
-		}
-	}
-
-	async analyzeDirAsync(textItem: TextItem) {
-		var files = dirfuncs.getFiles(textItem.uri,[],true);
-		var nlp = new NLPFile();
-		for (let file of files) {
-			this.openFile({uri: file, type: vscode.FileType.File, hasLogs: false});
-			await nlp.analyze(file);
 		}
 	}
 

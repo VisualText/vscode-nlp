@@ -248,18 +248,20 @@ export namespace dirfuncs {
 
     export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
 		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
-		var entries = dirfuncs.getDirectoryTypes(inputDir);
+        if (fs.existsSync(inputDir.fsPath)) {
+            var entries = dirfuncs.getDirectoryTypes(inputDir);
 
-		for (let entry of entries) {
-			if (entry.type == vscode.FileType.Directory) {
-				if (dirfuncs.directoryIsLog(entry.uri.fsPath))
-					return true;
-				else {
-					var has = dirfuncs.hasLogDirs(entry.uri,false);
-					if (has) return true;
-				}
-			}
-		}
+            for (let entry of entries) {
+                if (entry.type == vscode.FileType.Directory) {
+                    if (dirfuncs.directoryIsLog(entry.uri.fsPath))
+                        return true;
+                    else {
+                        var has = dirfuncs.hasLogDirs(entry.uri,false);
+                        if (has) return true;
+                    }
+                }
+            }            
+        }
 		return false;
 	}
 

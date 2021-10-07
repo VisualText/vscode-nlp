@@ -582,8 +582,13 @@ export class VisualText {
 
     getAnalyzers(): vscode.Uri[] {
         if (this.analyzerDir.fsPath.length) {
+            var anas: vscode.Uri[] = [];
+            anas = dirfuncs.getDirectories(this.analyzerDir);
             this.analyzers = [];
-            this.analyzers = dirfuncs.getDirectories(this.analyzerDir);
+            for (let ana of anas) {
+                if (visualText.isAnalyzerDirectory(ana))
+                    this.analyzers.push(ana);
+            }
         }
         return this.analyzers;
     }
@@ -646,5 +651,26 @@ export class VisualText {
         }
 
         return spec && analyzers && help;
+    }
+
+    isAnalyzerDirectory(dirPath: vscode.Uri): boolean {
+        var dirs = dirfuncs.getDirectories(dirPath);
+        var spec = false;
+        var kb = false;
+        var input = false;
+
+        for (let dir of dirs) {
+            if (path.basename(dir.fsPath).localeCompare('spec') == 0) {
+                spec = true;
+            }
+            else if (path.basename(dir.fsPath).localeCompare('kb') == 0) {
+                kb = true;
+            }
+            else if (path.basename(dir.fsPath).localeCompare('input') == 0) {
+                input = true;
+            }
+        }
+
+        return spec && kb && input;
     }
 }
