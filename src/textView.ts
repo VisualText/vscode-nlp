@@ -398,7 +398,8 @@ export class TextView {
 
 		for (let entry of entries) {
 			if (entry.type == vscode.FileType.Directory) {
-				if (dirfuncs.directoryIsLog(entry.uri.fsPath))
+				var name = path.basename(entry.uri.fsPath);
+				if (dirfuncs.directoryIsLog(entry.uri.fsPath) || name == 'logs' || name == 'output')
 					logDirs.push({uri: entry.uri, type: entry.type, hasLogs: false});
 				else
 					this.getLogDirs(entry.uri,logDirs,false);
