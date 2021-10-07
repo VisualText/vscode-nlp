@@ -11,7 +11,7 @@
         },
         {
             "name": "keyword.region.nlp",
-            "match": "(@(@)?)(CHECK|CODE|DECL|NODES|PATH|POST|PRE)\\b"
+            "match": "(@(@)?)(CHECK|CODE|DECL|NODES|PATH|POST|PRE|RULES)\\b"
         },
         {
             "name": "keyword.constants.nlp",
@@ -68,10 +68,16 @@
             ]
         },
         "rules-region": {
-            "begin": "@RULES",
+            "begin": "([_A-Za-z]+)\\s*([A-Za-z_\\[\\]]*)\\s*(<-)",
             "beginCaptures": {
-                "0": {
-                    "name": "keyword.region.nlp"
+                "1": {
+                    "name": "variable.rewrite.nlp"
+                },
+                "2": {
+                    "name": "variable.rewrite-attr.nlp"
+                },
+                "3": {
+                    "name": "variable.rewrite-symbol.nlp"
                 }
             },
             "end": "@@",
@@ -81,9 +87,6 @@
                 }
             },
             "patterns": [
-                {
-                    "include": "#rewrite-symbol"
-                },
                 {
                     "include": "#token"
                 },
@@ -97,10 +100,6 @@
                     "include": "#constant-nodes"
                 }
             ]
-        },
-        "rewrite-symbol": {
-            "match": "<-",
-            "name": "variable.rewrite.nlp"  
         },
         "attributes": {
             "begin": "\\[",
