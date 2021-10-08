@@ -97,6 +97,13 @@
         ],
         "description": "Does given str end with given suffix_str"
     },
+    "strstartswith": {
+        "prefix": ["strstartswith"],
+        "body": [
+            "strstartswith(${1:str},${2:suffix_str})"
+        ],
+        "description": "Does given str starts with given suffix_str"
+    },
     "strequal": {
         "prefix": ["strequal"],
         "body": [
@@ -1302,7 +1309,7 @@
         "description": "match until fail"
     },
     "wild match": {
-        "prefix": ["wild fail"],
+        "prefix": ["wild match"],
         "body": [
             "_xWILD [match=(${1:_xEND})]"
         ],
