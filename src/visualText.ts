@@ -584,6 +584,10 @@ export class VisualText {
         return this.analyzers.length ? true : false;
     }
 
+    getAnalyzerDir(): vscode.Uri {
+        return this.analyzerDir;
+    }
+
     getAnalyzers(): vscode.Uri[] {
         if (this.analyzerDir.fsPath.length) {
             var anas: vscode.Uri[] = [];
