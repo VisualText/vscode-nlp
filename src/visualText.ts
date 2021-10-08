@@ -137,6 +137,10 @@ export class VisualText {
 
     readConfig() {
         vscode.commands.executeCommand('workbench.action.openPanel');
+        const config = vscode.workspace.getConfiguration('analyzer');
+        var current = config.get<string>('current');
+        var firstTime: boolean = current?.length ? false : true;
+
         this.configFindEngine();
         this.configEngineExecutable();
         this.configureVisualTextFiles();
@@ -145,7 +149,7 @@ export class VisualText {
         this.getAnalyzers();
         this.configCurrentAnalzyer();
 
-        if (dirfuncs.isDir(this.analyzerDir.fsPath)) {
+        if (firstTime && dirfuncs.isDir(this.analyzerDir.fsPath)) {
             vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
         }
     }
