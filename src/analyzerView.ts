@@ -131,10 +131,9 @@ export class AnalyzerView {
 	}
 
 	private loadDefaultAnalyzers() {
-		if (vscode.workspace.workspaceFolders) {
-			var defaults = vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,'analyzers'));
-			vscode.commands.executeCommand("vscode.openFolder",defaults);
-		}
+		var defaults = vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,'analyzers'));
+		vscode.commands.executeCommand("vscode.openFolder",defaults);
+		vscode.commands.executeCommand('workbench.action.openPanel');
 	}
 	
 	private newAnalyzer() {
