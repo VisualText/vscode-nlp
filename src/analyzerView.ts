@@ -76,6 +76,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.colorizeAnalyzer', resource => this.colorizeAnalyzer());
+		vscode.commands.registerCommand('analyzerView.loadDefaultAnalyzers', resource => this.loadDefaultAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
@@ -126,6 +127,13 @@ export class AnalyzerView {
 			var fromFile = path.join(visualText.extensionDirectory().fsPath,'.vscode','settings.json');
 			var toFile = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath,'.vscode','settings.json');
 			dirfuncs.copyFile(fromFile,toFile);
+		}
+	}
+
+	private loadDefaultAnalyzers() {
+		if (vscode.workspace.workspaceFolders) {
+			var defaults = vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,'analyzers'));
+			vscode.commands.executeCommand("vscode.openFolder",defaults);
 		}
 	}
 	
