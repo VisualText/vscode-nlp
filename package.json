@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.15.10",
+    "version": "1.16.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -1357,6 +1357,7 @@
                     "type": "string",
                     "scope": "resource",
                     "default": "",
+
                     "description": "Current Analyzer"
                 },
                 "engine.path": {
@@ -1403,12 +1404,12 @@
     "devDependencies": {
         "@types/glob": "^7.1.4",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^12.20.27",
+        "@types/node": "^12.20.33",
         "@types/vscode": "^1.59.0",
         "glob": "^7.2.0",
         "mocha": "^6.2.2",
         "tslint": "^5.20.0",
-        "typescript": "^4.3.5",
+        "typescript": "^4.4.4",
         "vscode-test": "^1.6.1"
     }
 }

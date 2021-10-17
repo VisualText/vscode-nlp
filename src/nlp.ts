@@ -29,13 +29,19 @@ export class NLPFile extends TextFile {
 			
 			progress.report({ increment: 10, message: "Clearing log directories" });
 
-			var engineDir = visualText.getEngineDirectory().fsPath;
-			var exe = path.join(engineDir,visualText.NLP_EXE);
-
-			if (!fs.existsSync(exe)) {
-				visualText.askEngine();
-				const p = new Promise<void>((resolve,reject) => {
-					reject();
+			// Check to see if the engine executable is there
+			var engineDir = visualText.getEnginePath();
+			var exists = true;
+			var exe = '';
+			if (!engineDir)
+				exists = false;
+			else
+				exe = path.join(engineDir,visualText.NLP_EXE);
+			if (engineDir && !fs.existsSync(exe))
+				exists = false;
+			if (!exists) {
+				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(response => {
+					return;
 				});
 			}
 

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { visualText } from './visualText';
 import { LogFile } from './logfile';
 import { nlpFileType } from './textFile';
@@ -8,7 +9,7 @@ let nlpStatusBarRun: vscode.StatusBarItem;
 let nlpStatusBarText: vscode.StatusBarItem;
 let nlpStatusBarDev: vscode.StatusBarItem;
 let nlpStatusBarFired: vscode.StatusBarItem;
-let nlpStatusBarVersion: vscode.StatusBarItem;
+let nlpStatusBarEngineVersion: vscode.StatusBarItem;
 let nlpStatusBarVisualTextVersion: vscode.StatusBarItem;
 let nlpStatusBarFilesVersion: vscode.StatusBarItem;
 
@@ -49,14 +50,14 @@ export class NLPStatusBar {
         nlpStatusBarFired.command = 'status.chooseFired';
         nlpStatusBarFired.show();
 
-        nlpStatusBarVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
-        nlpStatusBarVersion.tooltip = 'NLP Engine Version';
-        nlpStatusBarVersion.command = 'status.openVersionSettings';
-        nlpStatusBarVersion.show();
+        nlpStatusBarEngineVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
+        nlpStatusBarEngineVersion.tooltip = 'NLP Engine Version';
+        nlpStatusBarEngineVersion.command = 'status.openEngineVersionSettings';
+        nlpStatusBarEngineVersion.show();
                                 
         nlpStatusBarVisualTextVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
         nlpStatusBarVisualTextVersion.tooltip = 'VisualText Version';
-        nlpStatusBarVisualTextVersion.command = 'status.openVisualVersionSettings';
+        nlpStatusBarVisualTextVersion.command = 'status.openVisualTextVersionSettings';
         nlpStatusBarVisualTextVersion.show(); 
                         
         nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 3);
@@ -69,7 +70,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.update', () => this.update());
         vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
         vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
-        vscode.commands.registerCommand('status.openVersionSettings', () => this.openVersionSettings());
+        vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings());
         vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
         vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
     }
@@ -82,59 +83,54 @@ export class NLPStatusBar {
     }
     
     openVisualTextVersionSettings() {
-        vscode.commands.executeCommand('workbench.action.openSettings');
+        visualText.runUpdater();
     }
 
     openFilesVersionSettings() {
-        visualText.checkVisualTextFilesVersion()
-        .then(value => {
-            if (visualText.existsNewerFileVersion()) {
+        visualText.checkVTFilesVersion()
+        .then(newer => {
+            if (newer) {
+                nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
                 let items: vscode.QuickPickItem[] = [];
-                items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.filesVersion});
+                items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.repoVTFilesVersion});
                 items.push({label: 'No', description: 'Cancel VisualText files update'});
-    
+
                 vscode.window.showQuickPick(items).then(selection => {
                     if (!selection || selection.label == 'No')
                         return;
-                    const toPath = path.join(visualText.engineDir.fsPath,visualText.VISUALTEXT_FILES_DIR);
-                    visualText.downloadVisualTextFiles(toPath);
-                    const config = vscode.workspace.getConfiguration('engine');
-                    config.update('visualtext',visualText.filesVersion,vscode.ConfigurationTarget.Global);
-                    visualText.debugMessage('VisualText files updated to version ' + visualText.filesVersion);
-                    nlpStatusBar.updateFilesVersion(visualText.filesVersion);  
+                    visualText.updateVTFiles();     
                 });
-            } else {
-                vscode.commands.executeCommand('workbench.action.openSettings');
             }
-        }).catch(err => {
-            visualText.debugMessage(err);
+            else {
+                vscode.window.showWarningMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
+            }   
         });
     }
 
-    openVersionSettings() {
-        visualText.checkEngineVersion()
-        .then(value => {
-            if (visualText.existsNewerVersion()) {
-                let items: vscode.QuickPickItem[] = [];
-                items.push({label: 'Yes', description: 'Update NLP Engine to version ' + visualText.engineVersion});
-                items.push({label: 'No', description: 'Cancel NLP Engine update'});
-    
-                vscode.window.showQuickPick(items).then(selection => {
-                    if (!selection || selection.label == 'No')
-                        return;
-                    const toPath = path.join(visualText.engineDir.fsPath,visualText.NLP_EXE);
-                    const config = vscode.workspace.getConfiguration('engine');
-                    config.update('version',visualText.engineVersion,vscode.ConfigurationTarget.Global);
-                    config.update('path',visualText.engineDirectory(),vscode.ConfigurationTarget.Global);
-                    visualText.downloadExecutable(toPath);
-                    visualText.debugMessage('NLP Engine updated to version ' + visualText.engineVersion);
-                    nlpStatusBar.updateVersion(visualText.engineVersion);  
+    openEngineVersionSettings() {
+        // Need to check the engine cmd version and repo version to compare
+
+        var ext = visualText.getExtension();
+        visualText.fetchExeVersion(ext.uri.fsPath)?.then(notUsed => {
+            if (visualText.cmdEngineVersion.length) {
+                visualText.checkEngineVersion().then(newVersion => {
+                    if (visualText.versionCompare(visualText.repoEngineVersion,visualText.cmdEngineVersion)) {
+                        nlpStatusBar.updateEngineVersion(visualText.engineVersion);
+                        let items: vscode.QuickPickItem[] = [];
+                        items.push({label: 'Yes', description: 'Update NLP Engine to version ' + visualText.cmdEngineVersion});
+                        items.push({label: 'No', description: 'Cancel NLP Engine update'});
+
+                        vscode.window.showQuickPick(items).then(selection => {
+                            if (!selection || selection.label == 'No')
+                                return;
+                            visualText.updateEngine();
+                        });                    
+                    }
+                    else {
+                        vscode.window.showWarningMessage('NLP Engine verion ' + visualText.cmdEngineVersion + ' is the latest');
+                    }  
                 });
-            } else {
-                vscode.commands.executeCommand('workbench.action.openSettings');
             }
-        }).catch(err => {
-            visualText.debugMessage(err);
         });
     }
 
@@ -212,12 +208,13 @@ export class NLPStatusBar {
             this.updateFiredState();
             nlpStatusBarDev.show();
         }
-        this.updateVersion('');
+        this.updateEngineVersion('');
         this.updateVisualTextVersion('');
         this.updateFilesVersion('');
     }
 
-    updateVersion(version: string) {
+    updateEngineVersion(version: string) {
+        var cmdVersion = visualText.cmdEngineVersion;
         if (version.length == 0) {
             const config = vscode.workspace.getConfiguration('engine');
             let currentVersion = config.get<string>('version');
@@ -226,9 +223,11 @@ export class NLPStatusBar {
             }       
         }
         if (version != undefined && version.length) {
-            nlpStatusBarVersion.text = version;
+            if (visualText.versionCompare(cmdVersion,version) > 0)
+                version = version + '*';
+            nlpStatusBarEngineVersion.text = version;
         } else {
-            nlpStatusBarVersion.text = '';
+            nlpStatusBarEngineVersion.text = '';
         }
     }
 
@@ -243,6 +242,7 @@ export class NLPStatusBar {
     }
 
     updateFilesVersion(version: string) {
+        var repoVersion = visualText.repoVTFilesVersion;
         if (version.length == 0) {
             const config = vscode.workspace.getConfiguration('engine');
             let currentVersion = config.get<string>('visualtext');
@@ -251,6 +251,8 @@ export class NLPStatusBar {
             }       
         }
         if (version != undefined && version.length) {
+            if (visualText.versionCompare(repoVersion,version) > 0)
+                version = version + '*';
             nlpStatusBarFilesVersion.text = version;
         } else {
             nlpStatusBarFilesVersion.text = '';
