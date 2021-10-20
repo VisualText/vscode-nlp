@@ -78,32 +78,36 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 	existingText(textItem: TextItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
-				canSelectMany: false,
-				openLabel: 'Add Existing File',
+				canSelectMany: true,
+				openLabel: 'Add Existing File(s)',
 				defaultUri: visualText.getWorkspaceFolder(),
 				canSelectFiles: true,
-				canSelectFolders: true,
+				canSelectFolders: false,
 				filters: {
 					'Text files': ['txt','xml','html','cvs'],
 					'All files': ['*']
 				}
 			};
-			vscode.window.showOpenDialog(options).then(selection => {
-				if (!selection) {
+			
+			vscode.window.showOpenDialog(options).then(selections => {
+				if (!selections) {
 					return;
 				}
-				var oldPath = selection[0].fsPath;
-				var filename = path.basename(oldPath);
-				var dir = visualText.analyzer.getInputDirectory().fsPath;
-				if (textItem) {
-					dir = path.dirname(textItem.uri.fsPath);
-				} else if (visualText.analyzer.getTextPath()) {
-					var textPath = visualText.analyzer.getTextPath().fsPath;
-					if (textPath.length)
-						dir = path.dirname(textPath);
+				for (let sel of selections) {
+					var oldPath = sel.fsPath;
+					var filename = path.basename(oldPath);
+					var dir = visualText.analyzer.getInputDirectory().fsPath;
+					if (textItem) {
+						dir = path.dirname(textItem.uri.fsPath);
+					} else if (visualText.analyzer.getTextPath()) {
+						var textPath = visualText.analyzer.getTextPath().fsPath;
+						if (textPath.length)
+							dir = path.dirname(textPath);
+					}
+					var newPath = path.join(dir,filename);
+					fs.copyFileSync(oldPath,newPath);	
 				}
-				var newPath = path.join(dir,filename);
-				fs.copyFileSync(oldPath,newPath);		
+	
 				vscode.commands.executeCommand('textView.refreshAll');	
 			});	
 		}
