@@ -8,43 +8,76 @@ import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
 import { logView } from './logView';
 
-export enum vtStatus { UNKNOWN, VERSION, VERSION_DONE, DONE }
+export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE }
+export enum versionStatus { UNKNOWN, VERSIONING, DONE }
+export enum downloadStatus { UNKNOWN, UPDATE, DELETE, DOWNLOADING, DONE }
+export enum zippingStatus { UNKNOWN, UNZIPPING, DONE }
+
+interface ExtensionItem {
+    uri: vscode.Uri;
+    hasEngine: boolean;
+    hasEngineFiles: boolean;
+    hasVTFiles: boolean;
+    vtVersion: string;
+    isLatest: boolean;
+    isLatestEngine: boolean;
+    engineVersion: string;
+    engineDownloadStatus: downloadStatus;
+    engineVersionStatus: versionStatus;
+    engineFilesDownloadStatus: downloadStatus;
+    engineFilesZipStatus: zippingStatus;
+    vtFilesVersion: string;
+    vtFilesDownloadStatus: downloadStatus;
+    vtFilesZipStatus: zippingStatus;
+    vtFilesVersionStatus: versionStatus;
+}
 
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
     
     public readonly LOG_SUFFIX = '_log';
+    public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
-    public readonly VISUALTEXT_FILES_DIR = 'visualtext';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_FOLDER = 'nlp-engine';
+    public readonly VISUALTEXT_FILES_FOLDER = 'visualtext';
     public readonly VISUALTEXT_FILES_ASSET = 'visualtext.zip';
     public readonly GITHUB_ENGINE_LATEST_RELEASE = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/download/';
     public readonly GITHUB_ENGINE_LATEST_VERSION = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/';
     public readonly GITHUB_VISUALTEXT_FILES_LATEST_RELEASE = 'https://github.com/VisualText/visualtext-files/releases/latest/download/';
     public readonly GITHUB_VISUALTEXT_FILES_LATEST_VERSION = 'https://github.com/VisualText/visualtext-files/releases/latest/';
 
+    public updaterStatusStrs = [ 'UNKNOWN', 'GATHER_EXTENSIONS', 'VERSION_ENGINES', 'CHOOSE_LATEST', 'REPAIR', 'CHECK_ENGINE', 'CHECKING_ENGINE', 'CHECK_FILES', 'CHECKING_FILES', 'VERSION_FILES', 'DONE' ];
+    public versionStatusStrs = [ 'UNKNOWN', 'VERSIONING', 'DONE' ];
+    public downloadStatusStrs = [ 'UNKNOWN', 'UPDATE', 'DELETE', 'DOWNLOADING', 'DONE' ];
+    public zippingStatusStrs = [ 'UNKNOWN', 'UNZIPPING', 'DONE' ];
+
     public analyzer = new Analyzer();
     public version: string = '';
     public engineVersion: string = '';
-    public filesVersion: string = '';
+    public cmdEngineVersion: string = '';
+    public repoEngineVersion: string = '';
+    public vtFilesVersion: string = '';
+    public repoVTFilesVersion: string = '';
     public engineDir: vscode.Uri = vscode.Uri.file('');
+    public askModify: boolean = false;
 
     private platform: string = '';
     private homeDir: string = '';
     private username: string = '';
     private jsonState = new JsonState();
-    private newerEngineVersion: boolean = false;
-    private newerFileVersion: boolean = false;
-    private statusEngine: vtStatus = vtStatus.UNKNOWN;
-    private statusFiles: vtStatus = vtStatus.UNKNOWN;
     private analyzers: vscode.Uri[] = new Array();
     private extensionDir: vscode.Uri = vscode.Uri.file('');
 
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
     private workspaceFold: vscode.Uri = vscode.Uri.file('');
+
+    private extensionItems: ExtensionItem[] = new Array();
+    private lastestEngineIndex: number = 0;
+    private updaterID: number = 0;
+    public updaterGlobalStatus: updaterStatus = updaterStatus.GATHER_EXTENSIONS;
 
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
@@ -56,8 +89,15 @@ export class VisualText {
         this.homeDir = os.homedir();
         this.debugMessage('User profile path: ' + this.homeDir);
 
-        this.version = vscode.extensions.getExtension('dehilster.nlp')?.packageJSON.version;
+        var rootPath = vscode.extensions.getExtension(this.EXTENSION_NAME)?.extensionPath;
+        if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
+
+        this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
+        this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
         this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
+
+        this.startUpdater();
+
     }
     
     static attach(ctx: vscode.ExtensionContext): VisualText {
@@ -73,13 +113,18 @@ export class VisualText {
         return visualText;
     }
 
+    startUpdater() {
+        this.debugMessage('Checking for updates or repairs...');
+        this.updaterID = +setInterval(this.updaterTimer,1000);
+    }
+
     public debugMessage(msg: string) {
         logView.addMessage(msg,vscode.Uri.file(''));
         vscode.commands.executeCommand('logView.refreshAll');
     }
 
 	readState(): boolean {
-        if (this.workspaceFold) {
+        if (vscode.workspace.workspaceFolders) {
             this.analyzerDir = this.workspaceFold;
             if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
                 var saveit = false;
@@ -136,43 +181,32 @@ export class VisualText {
     }
 
     readConfig() {
-        vscode.commands.executeCommand('workbench.action.openPanel');
-        const config = vscode.workspace.getConfiguration('analyzer');
-        var current = config.get<string>('current');
-        var firstTime: boolean = current?.length ? false : true;
-
-        this.configFindEngine();
-        this.configEngineExecutable();
-        this.configureVisualTextFiles();
         this.configFindUsername();
         this.configAnalzyerDirectory();
         this.getAnalyzers();
         this.configCurrentAnalzyer();
-
-        if (firstTime && dirfuncs.isDir(this.analyzerDir.fsPath)) {
-            vscode.commands.executeCommand("vscode.openFolder",this.analyzerDir);
-        }
     }
 
     configCurrentAnalzyer() {
-        const config = vscode.workspace.getConfiguration('analyzer');
-        var current = config.get<string>('current');
-        if (!current) {
-            if (this.analyzers.length) {
-                this.currentAnalyzer = this.analyzers[0];
-                config.update('current',this.currentAnalyzer.fsPath,vscode.ConfigurationTarget.WorkspaceFolder);
-                config.update('current',this.currentAnalyzer.fsPath,vscode.ConfigurationTarget.Global);
-                this.debugMessage('Current analyzer: '+this.currentAnalyzer.fsPath);
-            }
-        } else {
-            this.currentAnalyzer = vscode.Uri.file(current);
+        if (vscode.workspace.workspaceFolders) {
+            const config = vscode.workspace.getConfiguration('analyzer',this.workspaceFold);
+            var current = config.get<string>('current');
+            if (!current) {
+                if (this.analyzers.length) {
+                    this.currentAnalyzer = this.analyzers[0];
+                    config.update('current',this.currentAnalyzer.fsPath,vscode.ConfigurationTarget.WorkspaceFolder);
+                    this.debugMessage('Current analyzer: '+this.currentAnalyzer.fsPath);
+                }
+            } else {
+                this.currentAnalyzer = vscode.Uri.file(current);
+            }            
         }
     }
 
     configAnalzyerDirectory() {
         const config = vscode.workspace.getConfiguration('analyzer');
 
-        if (this.workspaceFold.fsPath.length > 1 && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
+        if (vscode.workspace.workspaceFolders && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
             directory = this.workspaceFold.fsPath;
         } else {
             var directory = config.get<string>('directory');
@@ -186,95 +220,96 @@ export class VisualText {
             config.update('directory',directory,vscode.ConfigurationTarget.Global);
     }
 
-    configureVisualTextFiles() {
-        if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            var visualTextDir = path.join(this.engineDir.fsPath,this.VISUALTEXT_FILES_DIR);
-            if (!fs.existsSync(visualTextDir)) {
-                dirfuncs.makeDir(visualTextDir);
-            }
-
-            this.checkVisualTextFilesVersion()
-            .then(value => {
-                if (visualText.newerFileVersion) {
-                    const toPath = path.join(this.engineDir.fsPath,this.VISUALTEXT_FILES_DIR);
-                    this.downloadVisualTextFiles(toPath);
-                    const config = vscode.workspace.getConfiguration('engine');
-                    config.update('visualtext',visualText.filesVersion,vscode.ConfigurationTarget.Global);
-                    visualText.debugMessage('VisualText files updated to version ' + visualText.filesVersion);
-                    nlpStatusBar.updateFilesVersion(visualText.filesVersion);                  
-                } else {
-                    visualText.debugMessage('VisualText files version ' + visualText.filesVersion);
+    checkForVisualTextFilesUpdate() {
+        if (vscode.workspace.workspaceFolders && visualText.updaterGlobalStatus == updaterStatus.CHECK_FILES) {
+            visualText.updaterGlobalStatus = updaterStatus.CHECKING_FILES;
+            this.checkVTFilesVersion()
+            .then(newVersion => {
+                if (newVersion) {
+                    visualText.setUpdateVTFiles();      
                 }
-
+                else {
+                    visualText.debugMessage('VisualText files version ' + visualText.repoVTFilesVersion);
+                    visualText.updaterGlobalStatus = updaterStatus.DONE;
+                }
             }).catch(err => {
                 this.debugMessage(err);
             });
         }
     }
 
-    checkVisualTextFilesVersion() {
+    checkVTFilesVersion(updateVersionFlag: boolean = false) {
         return new Promise((resolve,reject) => {
             const https = require('follow-redirects').https;
-            this.statusFiles = vtStatus.VERSION;
 
             const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
-                    if (visualText.statusFiles == vtStatus.VERSION) {
-                        let url = res.responseUrl;
-                        visualText.filesVersion = url.substring(url.lastIndexOf('/') + 1);
-                        const config = vscode.workspace.getConfiguration('engine');
-                        let currentVersion: string | undefined = config.get<string>('visualtext');
-
-                        if (((currentVersion == undefined || currentVersion.length == 0) && visualText.filesVersion.length) ||
-                            (currentVersion != undefined && visualText.filesVersion.localeCompare(currentVersion) != 0)) {
-
-                            visualText.newerFileVersion = true;
-
-                        } else if (currentVersion != undefined && visualText.filesVersion.localeCompare(currentVersion) == 0) {
-                            var visualTextDir = path.join(visualText.engineDir.fsPath,visualText.VISUALTEXT_FILES_DIR);
-                            if (visualText.isVisualTextDirectory(vscode.Uri.file(visualTextDir)))
-                                visualText.newerFileVersion = false;
-                            else
-                                visualText.newerFileVersion = true;
-                        }  
-                        visualText.statusFiles = vtStatus.VERSION_DONE;                     
+                    let url = res.responseUrl;
+                    visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
+                    let currentVersion = visualText.getVTFilesVersion();
+                    let newer = false;
+                    if (currentVersion) {
+                        visualText.vtFilesVersion = currentVersion;
+                        if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
+                            newer = true;
+                        }                       
                     }
-                    resolve(visualText.newerFileVersion);
+                    else {
+                        newer = true;
+                    }
+                    if (updateVersionFlag) {
+                        visualText.setLatestVTVersionStatus(versionStatus.DONE);
+                        visualText.setVTFilesVersion(visualText.repoVTFilesVersion);
+                        visualText.updaterGlobalStatus = updaterStatus.DONE;                        
+                    }
+                    resolve(newer);
                 });
             }).on('error', function (err) {
                 reject(err);
             });
             request.end();
         });
+    }
+
+    checkForEngineUpdate() {
+        if (vscode.workspace.workspaceFolders && visualText.updaterGlobalStatus == updaterStatus.CHECK_ENGINE) {
+            this.updaterGlobalStatus = updaterStatus.CHECKING_ENGINE;
+            this.checkEngineVersion()
+            .then(newerVersion => {
+                if (newerVersion) {
+                    visualText.setUpdateEngine();
+                } else {
+                    visualText.setEngineVersion(visualText.repoEngineVersion);
+                    visualText.debugMessage('NLP Engine version ' + visualText.repoEngineVersion);
+                    visualText.updaterGlobalStatus = updaterStatus.CHECK_FILES;
+                }
+                nlpStatusBar.updateEngineVersion(visualText.engineVersion);                 
+            }).catch(err => {
+                this.debugMessage(err);
+            });
+        }
     }
 
     checkEngineVersion() {
         return new Promise((resolve,reject) => {
+
             const https = require('follow-redirects').https;
-            this.statusEngine = vtStatus.VERSION;
 
             const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
-                    if (visualText.statusEngine == vtStatus.VERSION) {
-                        let url = res.responseUrl;
-                        visualText.engineVersion = url.substring(url.lastIndexOf('/') + 1);
-                        const config = vscode.workspace.getConfiguration('engine');
-                        let currentVersion: string | undefined = config.get<string>('version');
-
-                        if (((currentVersion == undefined || currentVersion.length == 0) && visualText.engineVersion.length) ||
-                            (currentVersion != undefined && visualText.engineVersion.localeCompare(currentVersion) != 0)) {
-
-                            visualText.newerEngineVersion = true;
-
-                        } else if (currentVersion != undefined && visualText.engineVersion.localeCompare(currentVersion) == 0) {
-                            if (visualText.hasEngineDirectories(visualText.engineDir))
-                                visualText.newerEngineVersion = false;
-                            else
-                                visualText.newerEngineVersion = true;
-                            }  
-                        visualText.statusEngine = vtStatus.VERSION_DONE;                     
-                    }
-                    resolve(visualText.newerEngineVersion);
+                    let url = res.responseUrl;
+                    visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
+                    let currentVersion = visualText.engineVersion;
+                    var newer = false;
+                    if (currentVersion) {
+                        visualText.engineVersion = currentVersion;
+                        if (visualText.versionCompare(visualText.repoEngineVersion,currentVersion) > 0) {
+                            newer = true;
+                        }
+                    } else {
+                        newer = true;
+                    }            
+                    resolve(newer);
                 });
             }).on('error', function (err) {
                 reject(err);
@@ -283,118 +318,105 @@ export class VisualText {
         });
     }
 
-    public existsNewerVersion(): boolean {
-        return this.newerEngineVersion ? true : false;
+    downloadVisualTextFiles(extension: ExtensionItem) {
+        const url = this.GITHUB_VISUALTEXT_FILES_LATEST_RELEASE + this.VISUALTEXT_FILES_ASSET;
+        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
+
+        const Downloader = require('nodejs-file-downloader');
+
+        (async () => {
+        
+            const downloader = new Downloader({
+                url: url,   
+                directory: engineDir        
+            })
+            try {
+                var zipFile = path.join(engineDir,this.VISUALTEXT_FILES_ASSET);
+                if (fs.existsSync(zipFile))
+                    dirfuncs.delFile(zipFile);
+                this.debugMessage('Downloading: ' + url);
+                await downloader.download();
+                this.debugMessage('DONE DOWNLOAD: ' + url);
+                visualText.setLatestVTFilesDownload(downloadStatus.DONE);
+
+            } catch (error) {
+                console.log('Download failed',error);
+            }
+        })();
     }
 
-    public existsNewerFileVersion(): boolean {
-        return this.newerFileVersion ? true : false;
+    unzipVTFiles(extension: ExtensionItem) {
+        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.VISUALTEXT_FILES_ASSET;
+        const vtFileDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
+
+        (async () => {
+            const toPath = path.join(vtFileDir,this.VISUALTEXT_FILES_ASSET);
+
+            const extract = require('extract-zip')
+            try {
+                this.debugMessage('Unzipping: ' + vtFileDir);
+                await extract(toPath, { dir: vtFileDir });
+                this.debugMessage('UNZIPPED: ' + toPath);
+                visualText.finalizeVTFilesVersion(zippingStatus.DONE);
+                dirfuncs.delFile(toPath);
+            }
+            catch (err) {
+                this.debugMessage('Could not unzip file: ' + toPath);
+            }
+        })();
     }
 
-    configEngineExecutable() {
-        if (this.engineDir.fsPath) {
-            const toPath = path.join(this.engineDir.fsPath,this.NLP_EXE);
+    downloadEngineFiles(extension: ExtensionItem) {
+        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.NLPENGINE_FILES_ASSET;
+        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
 
-            if (!fs.existsSync(toPath)) {
-                visualText.newerEngineVersion = true;
-                this.downloadExecutable(toPath);
-                this.downloadEngineFiles();
-                return;
+        const Downloader = require('nodejs-file-downloader');
+
+        (async () => {
+        
+            const downloader = new Downloader({
+                url: url,   
+                directory: engineDir     
+            })
+            try {
+                var zipFile = path.join(engineDir,this.NLPENGINE_FILES_ASSET);
+                if (fs.existsSync(zipFile))
+                    dirfuncs.delFile(zipFile);
+                this.debugMessage('Downloading: ' + url);
+                await downloader.download();
+                this.debugMessage('DONE DOWNLOAD: ' + url);
+                visualText.setLatestEngineFilesDownload(downloadStatus.DONE);
+            }
+            catch (error) {
+                console.log('Download failed',error);
             }
 
-            this.checkEngineVersion()
-            .then(value => {
-                if (visualText.newerEngineVersion) {
-                    this.downloadExecutable(toPath);
-                    this.downloadEngineFiles();
-                    const config = vscode.workspace.getConfiguration('engine');
-                    config.update('version',visualText.engineVersion,vscode.ConfigurationTarget.Global);
-                    visualText.debugMessage('NLP Engine updated to version ' + visualText.engineVersion);
-                } else {
-                    visualText.debugMessage('NLP Engine version ' + visualText.engineVersion);
-                }
-                nlpStatusBar.updateVersion(visualText.engineVersion);      
-
-            }).catch(err => {
-                this.debugMessage(err);
-            });
-        }
-    }
-    
-    downloadVisualTextFiles(toPath: string) {
-         if (this.newerFileVersion) {
-            const url = this.GITHUB_VISUALTEXT_FILES_LATEST_RELEASE + this.VISUALTEXT_FILES_ASSET;
-
-            const Downloader = require('nodejs-file-downloader');
-
-            (async () => {
-            
-                const downloader = new Downloader({
-                    url: url,   
-                    directory: this.engineDir.fsPath        
-                })
-                try {
-                    await downloader.download();
-                    const toPath = path.join(this.engineDir.fsPath,this.VISUALTEXT_FILES_ASSET);
-                    dirfuncs.changeMod(toPath,755);
-                    this.debugMessage('Downloaded: ' + url);
-
-                    const extract = require('extract-zip')
-                    try {
-                        var visualTextDir = path.join(this.engineDir.fsPath,this.VISUALTEXT_FILES_DIR);
-                        dirfuncs.delDir(visualTextDir);
-                        dirfuncs.makeDir(visualTextDir);
-                        await extract(toPath, { dir: visualTextDir });
-                        this.debugMessage('Unzipped: ' + toPath);
-                        dirfuncs.delFile(toPath);
-                    } catch (err) {
-                        this.debugMessage('Could not unzip file: ' + toPath);
-                    }
-
-                } catch (error) {
-                    console.log('Download failed',error);
-                }
-
-            })();
-        }
+        })();
     }
 
-    downloadEngineFiles() {
-        if (this.newerEngineVersion) {
-           const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.NLPENGINE_FILES_ASSET;
+    unzipEngineFiles(extension: ExtensionItem) {
+        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.NLPENGINE_FILES_ASSET;
+        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
 
-           const Downloader = require('nodejs-file-downloader');
+        (async () => {
+            const toPath = path.join(engineDir,this.NLPENGINE_FILES_ASSET);
 
-           (async () => {
-           
-               const downloader = new Downloader({
-                   url: url,   
-                   directory: this.engineDir.fsPath        
-               })
-               try {
-                   await downloader.download();
-                   const toPath = path.join(this.engineDir.fsPath,this.NLPENGINE_FILES_ASSET);
-                   dirfuncs.changeMod(toPath,755);
-                   this.debugMessage('Downloaded: ' + url);
+            const extract = require('extract-zip')
+            try {
+                this.debugMessage('Unzipping: ' + engineDir);
+                await extract(toPath, { dir: engineDir });
+                this.debugMessage('UNZIPPED: ' + toPath);
+                dirfuncs.delFile(toPath);
+                extension.engineFilesZipStatus = zippingStatus.DONE;
+                extension.hasEngineFiles = true;
+            }
+            catch (err) {
+                this.debugMessage('Could not unzip file: ' + toPath);
+            }
+        })();
+    }
 
-                   const extract = require('extract-zip')
-                   try {
-                       await extract(toPath, { dir: this.engineDir.fsPath });
-                       this.debugMessage('Unzipped: ' + toPath);
-                       dirfuncs.delFile(toPath);
-                   } catch (err) {
-                       this.debugMessage('Could not unzip file: ' + toPath);
-                   }
-
-               } catch (error) {
-                   console.log('Download failed',error);
-               }
-
-           })();
-       }
-   }
-
-    downloadExecutable(toPath: string) {
+    downloadExecutable(extension: ExtensionItem) {
         const config = vscode.workspace.getConfiguration('engine');
         config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
         var exe = '';
@@ -409,73 +431,468 @@ export class VisualText {
                 exe = 'nlpl.exe';
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + exe;
-        const Downloader = require('nodejs-file-downloader');
-        this.engineDir = this.engineDirectory();
-        var localExePat = path.join(this.engineDir.fsPath,this.NLP_EXE);
+        const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
+        if (!fs.existsSync(engDir)) {
+            dirfuncs.makeDir(engDir);
+        }
+        var localExePat = path.join(engDir,this.NLP_EXE);
         if (fs.existsSync(localExePat)) {
             dirfuncs.delFile(localExePat);
         }
+        const Downloader = require('nodejs-file-downloader');
 
         (async () => {
         
             const downloader = new Downloader({
                 url: url,   
-                directory: this.engineDir.fsPath,
+                directory: engDir,
                 filename: this.NLP_EXE
             })
             try {
+                this.debugMessage('Downloading: ' + url);
                 await downloader.download();
-                dirfuncs.changeMod(toPath,755);
-                this.debugMessage('Downloaded: ' + url);
-                const config = vscode.workspace.getConfiguration('engine');
-                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
-                
-            } catch (error) {
+                this.debugMessage('DONE DOWNLOAD: ' + url);
+                visualText.setLatestEngineDownload(engDir);
+            }
+            catch (error) {
                 this.debugMessage('FAILED download: ' + url);
             }
 
         })();     
     }
 
-    configFindEngine() {    
-        const config = vscode.workspace.getConfiguration('engine');
-        var engineDir = config.get<string>('path');
+    getVersions() {
+        let engVersion = visualText.getEngineVersion();
+        if (engVersion)
+            visualText.engineVersion = engVersion;
+        else
+            visualText.engineVersion = '';
 
-        if (engineDir && dirfuncs.isDir(engineDir)) {
-            this.engineDir = vscode.Uri.file(engineDir);
+        let vtVersion = visualText.getVTFilesVersion();
+        if (vtVersion)
+            visualText.vtFilesVersion = vtVersion;
+        else
+            visualText.vtFilesVersion = '';
+    }
 
-        } else {
-            // Check if the engine came with vscode-nlp
-            this.extensionDir = this.engineDirectory();
-            if (dirfuncs.isDir(this.extensionDir.fsPath)) {
-                this.engineDir = vscode.Uri.file(path.join(this.extensionDir.fsPath,this.NLPENGINE_FOLDER));
-                if (!dirfuncs.isDir(this.engineDir.fsPath)) {
-                    this.debugMessage('Creating directory: ' + this.extensionDir.fsPath);
-                    dirfuncs.makeDir(this.engineDir.fsPath);
+    updaterTimer() {
+        let debug = false;
+        if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus]);
+
+        switch (visualText.updaterGlobalStatus) {
+            case updaterStatus.GATHER_EXTENSIONS: {
+                visualText.getVersions();
+                if (!visualText.extensionItems.length)
+                    visualText.getExtensionDirs();
+                visualText.updaterGlobalStatus = updaterStatus.VERSION_ENGINES;
+                break;
+            }
+            case updaterStatus.VERSION_ENGINES: {
+                var versionsDone = true;
+                for (let ext of visualText.extensionItems) {
+                    if (ext.hasEngine) {
+                        if (ext.engineVersion.length == 0 && ext.engineVersionStatus == versionStatus.UNKNOWN) {
+                            ext.engineVersionStatus = versionStatus.VERSIONING;
+                            visualText.fetchExeVersion(ext.uri.fsPath)?.then(notUsed => {
+                                visualText.setExtEngineVersion(ext.uri.fsPath,visualText.cmdEngineVersion);
+                            });
+                            versionsDone = false;
+                        }
+                        else if (ext.engineVersionStatus == versionStatus.VERSIONING)
+                            versionsDone = false;
+                    }       
                 }
-                config.update('path',this.engineDir.fsPath,vscode.ConfigurationTarget.Global);
-            } else {
-                vscode.window.showWarningMessage('NLP Engine not set. Set in the NLP extension settings.');
+                if (versionsDone) {
+                    visualText.updaterGlobalStatus = updaterStatus.CHOOSE_LATEST;
+                }
+                break;
+            }
+            case updaterStatus.CHOOSE_LATEST: {
+                var latestVersion = '';
+                var latestEngineVersion = '';
+                var latestIndex = 0;
+                var index = 0;
+                for (let ext of visualText.extensionItems) {
+                    if (ext.hasEngine && ext.engineVersion.length) {
+                        if (latestEngineVersion.length == 0) {
+                            latestVersion = ext.vtVersion
+                            latestEngineVersion = ext.engineVersion;
+                            latestIndex = index;
+                        } else if (visualText.versionCompare(ext.vtVersion,latestVersion) > 0 && visualText.versionCompare(ext.engineVersion,latestEngineVersion) >= 0) {
+                            latestVersion = ext.vtVersion
+                            latestEngineVersion = ext.engineVersion;
+                            latestIndex = index;
+                        }
+                    }
+                    index++;
+                }
+                // Mark for deletion
+                index = 0;
+                for (let ext of visualText.extensionItems) {
+                    if (ext.hasEngine) {
+                        if (index != latestIndex)
+                            ext.engineDownloadStatus = downloadStatus.DELETE;
+                        else
+                            ext.isLatestEngine = true;
+                    }
+                    index++;
+                }
+                visualText.lastestEngineIndex = latestIndex;
+                visualText.updaterGlobalStatus = updaterStatus.REPAIR;
+                break;
+            }
+            case updaterStatus.REPAIR: {
+                for (let ext of visualText.extensionItems) {
+                    if (ext.engineDownloadStatus == downloadStatus.DELETE) {
+                        var engFolder = path.join(ext.uri.fsPath,visualText.NLPENGINE_FOLDER);
+                        visualText.debugMessage('Removing NLP Engine: ' + engFolder);
+                        dirfuncs.delDir(engFolder);
+                        visualText.debugMessage('REMOVE DONE: ' + engFolder);
+                        ext.hasEngine = false;
+                        ext.engineDownloadStatus = downloadStatus.DONE;
+                        continue;
+                    }
+                    if (ext.isLatestEngine ||
+                        (!ext.isLatestEngine && ext.hasEngineFiles && ext.hasVTFiles) ||
+                        ext.engineDownloadStatus == downloadStatus.UPDATE ||
+                        ext.vtFilesDownloadStatus == downloadStatus.UPDATE) {
+
+                        if (ext.engineDownloadStatus == downloadStatus.UPDATE || (visualText.engineDir.fsPath.length <= 1 && ext.engineDownloadStatus == downloadStatus.UNKNOWN)) {
+                            if (debug) visualText.debugMessage('   engineDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineDownloadStatus]);
+                            ext.engineDownloadStatus = downloadStatus.DOWNLOADING;
+                            visualText.downloadExecutable(ext);
+                        }
+                        else if (visualText.engineDir.fsPath.length > 1 && ext.engineFilesDownloadStatus == downloadStatus.UPDATE) {
+                            if (debug) visualText.debugMessage('   engineFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineFilesDownloadStatus]);
+                            ext.engineFilesDownloadStatus = downloadStatus.DOWNLOADING;
+                            ext.hasVTFiles = false;
+                        }
+
+                        if (ext.hasEngine && (ext.engineVersion.length == 0 || !ext.hasEngineFiles)) {
+                            if (debug) visualText.debugMessage('   engineFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineFilesDownloadStatus]);
+                            if (debug) visualText.debugMessage('   engineFilesZipStatus: ' + visualText.zippingStatusStrs[ext.engineFilesZipStatus]);
+                            if (!ext.hasEngineFiles && ext.engineVersion.length && ext.engineFilesDownloadStatus == downloadStatus.UNKNOWN) {
+                                ext.engineFilesDownloadStatus = downloadStatus.DOWNLOADING;
+                                visualText.downloadEngineFiles(ext);
+                            }
+                            else if (!ext.hasEngineFiles && ext.engineVersion.length && ext.engineFilesDownloadStatus == downloadStatus.DONE && ext.engineFilesZipStatus == zippingStatus.UNKNOWN) {
+                                ext.engineFilesZipStatus = zippingStatus.UNZIPPING;
+                                visualText.unzipEngineFiles(ext);
+                            }
+                        }
+
+                        if (ext.hasEngine && ext.hasEngineFiles && (!ext.hasVTFiles || !visualText.vtFilesVersion.length)) {
+                            if (debug) visualText.debugMessage('   vtFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.vtFilesDownloadStatus]);
+                            if (debug) visualText.debugMessage('   vtFilesZipStatus: ' + visualText.zippingStatusStrs[ext.vtFilesZipStatus]);
+                            if (debug) visualText.debugMessage('   vtFilesVersionStatus: ' + visualText.versionStatusStrs[ext.vtFilesVersionStatus]);
+                            if (ext.vtFilesDownloadStatus == downloadStatus.UNKNOWN || ext.vtFilesDownloadStatus == downloadStatus.UPDATE) {
+                                ext.vtFilesDownloadStatus = downloadStatus.DOWNLOADING;
+                                visualText.downloadVisualTextFiles(ext);
+                            }
+                            else if (ext.engineVersion.length && ext.vtFilesDownloadStatus == downloadStatus.DONE && ext.vtFilesZipStatus == zippingStatus.UNKNOWN) {
+                                ext.vtFilesZipStatus = zippingStatus.UNZIPPING;
+                                visualText.unzipVTFiles(ext);
+                            }
+                            else if (ext.engineVersion.length && ext.vtFilesZipStatus == zippingStatus.DONE && ext.vtFilesVersionStatus == versionStatus.UNKNOWN) {
+                                ext.vtFilesVersionStatus = versionStatus.VERSIONING;
+                                visualText.checkVTFilesVersion(true);
+                            }
+                        }
+                        if (ext.hasEngine && ext.hasEngineFiles && ext.hasVTFiles &&
+                            visualText.engineVersion.length && visualText.engineVersion.length && visualText.vtFilesVersion.length)
+                            visualText.updaterGlobalStatus = updaterStatus.CHECK_ENGINE; 
+                    }
+                }
+                break;
+            }
+            case updaterStatus.CHECK_ENGINE: {
+                visualText.checkForEngineUpdate();
+                break;
+            }
+            case updaterStatus.CHECK_FILES: {
+                visualText.checkForVisualTextFilesUpdate();
+                break;
+            }
+            case updaterStatus.DONE: {
+                clearInterval(visualText.updaterID);
+                visualText.debugMessage('UPDATE CHECK COMPLETE');
+                break;
+            }
+        }
+    }
+
+    getExtensionDirs() {
+        var parentDir = this.extensionParentDirectory();
+        var dirs: vscode.Uri[] = new Array();
+        this.extensionItems = [];
+        dirs = dirfuncs.getDirectories(parentDir);
+        var latestVersion = '';
+        var latestEngineVersion = '';
+        var extLatest = 0;
+        var engineLatest = 0;
+        var counter = 0;
+        var hasAll = -1;
+
+        for (let dir of dirs) {
+            var name = path.basename(dir.fsPath);
+            if (name.startsWith(this.EXTENSION_NAME)) {
+                this.extensionItems.push({
+                    uri: dir,
+                    hasEngine: this.hasEngine(dir),
+                    hasEngineFiles: this.isEngineDirectory(dir),
+                    hasVTFiles: this.isVisualTextDirectory(dir),
+                    vtVersion: this.versionFromPath(dir),
+                    isLatest: false,
+                    isLatestEngine: false,
+                    engineVersion: '',
+                    engineDownloadStatus: downloadStatus.UNKNOWN,
+                    engineVersionStatus: versionStatus.UNKNOWN,
+                    engineFilesDownloadStatus: downloadStatus.UNKNOWN,
+                    engineFilesZipStatus: zippingStatus.UNKNOWN,
+                    vtFilesVersion: '',
+                    vtFilesDownloadStatus: downloadStatus.UNKNOWN,
+                    vtFilesZipStatus: zippingStatus.UNKNOWN,
+                    vtFilesVersionStatus: versionStatus.UNKNOWN
+                });
+                var ext = this.extensionItems[this.extensionItems.length - 1];
+                if (ext.hasVTFiles && ext.hasEngine && ext.hasEngineFiles)
+                    hasAll = counter;
+                if (ext.vtVersion.length && (!latestVersion.length || this.versionCompare(ext.vtVersion,latestVersion) > 0)) {
+                    latestVersion = ext.vtVersion;
+                    if (counter) {
+                        this.extensionItems[extLatest].isLatest = false;
+                    }
+                    extLatest = counter;
+                    ext.isLatest = true;
+                }
+                if (ext.engineVersion.length && (!latestEngineVersion.length || this.versionCompare(ext.vtVersion,latestEngineVersion))) {
+                    latestEngineVersion = ext.engineVersion;
+                    if (counter) {
+                        this.extensionItems[engineLatest].isLatestEngine = false;
+                    }
+                    engineLatest = counter;
+                    ext.isLatestEngine = true;
+                }
+                counter++;
             }
         }
 
-        if (dirfuncs.isDir(this.engineDir.fsPath)) {
-            this.debugMessage('Engine directory: ' + this.engineDir.fsPath);
-        } else {
-            this.askEngine();
+        // Look for incomplete
+        if (hasAll < 0) {
+            var hasSomething = false;
+            for (let ext of visualText.extensionItems) {
+                if (ext.hasEngine || ext.hasEngineFiles || ext.hasVTFiles) {
+                    hasSomething = true;
+                }
+            }
+            if (!hasSomething) {
+                var ext = this.extensionItems[extLatest];
+                ext.engineDownloadStatus = downloadStatus.UPDATE;
+                ext.isLatestEngine = true;
+            }
         }
+    }
+
+    getExtension(): ExtensionItem {
+        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
+        return ext; 
+    }
+
+    setLatestVTVersionStatus(status: versionStatus) {
+        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
+        if (ext) {
+            ext.vtFilesVersionStatus = status;
+        }
+    }
+
+    setLatestEngineDownload(engDir: string) {
+        var engDirIndex = this.findExtensionIndex(engDir);
+        engDirIndex = engDirIndex != this.lastestEngineIndex ? engDirIndex : this.lastestEngineIndex;
+        var ext = visualText.extensionItems[engDirIndex];
+        if (ext) {
+            this.setEnginePath(path.join(engDir,this.NLP_EXE));
+            this.updaterGlobalStatus = updaterStatus.VERSION_ENGINES;
+            ext.hasEngine = true;
+            ext.hasEngineFiles = false;
+            ext.engineDownloadStatus = downloadStatus.DONE;
+            this.engineVersion = this.repoEngineVersion;
+            nlpStatusBar.updateEngineVersion(this.engineVersion);    
+        }
+    }
+
+    findExtensionIndex(engDir: string): number {
+        var index = 0;
+        for (let ext of this.extensionItems) {
+            if (engDir.startsWith(ext.uri.fsPath))
+                break;
+            index++;
+        }
+        return index;
+    }
+
+    setLatestEngineFilesDownload(status: downloadStatus) {
+        var ext = this.extensionItems[this.lastestEngineIndex];
+        if (ext) {
+            ext.engineFilesDownloadStatus = status;
+        }
+    }
+
+    setLatestVTFilesDownload(status: downloadStatus) {
+        var ext = this.extensionItems[this.lastestEngineIndex];
+        if (ext) {
+            ext.vtFilesDownloadStatus = status;
+        }
+    }
+    
+    finalizeVTFilesVersion(status: zippingStatus) {
+        var ext = this.extensionItems[this.lastestEngineIndex];
+        if (ext) {
+            ext.hasVTFiles = true;
+            ext.vtFilesZipStatus = status;
+            this.vtFilesVersion = this.repoVTFilesVersion;
+            this.setVTFilesVersion(this.repoVTFilesVersion);
+            nlpStatusBar.updateFilesVersion(this.repoVTFilesVersion);
+        }
+    }
+
+    versionFromPath(extDir: vscode.Uri): string {
+        var dir = extDir.fsPath;
+        var version = dir.substring(dir.lastIndexOf(this.EXTENSION_NAME) + 1 + this.EXTENSION_NAME.length);
+        return version;
+    }
+
+    versionCompare(version1: string, version2: string): number {
+        if (!version1.length || !version2.length)
+            return 0;
+
+        var toks1 = version1.split('.');
+        var toks2 = version2.split('.');
+        var num = toks1.length > toks2.length ? toks1.length : toks2.length;
+        for (let i = 0; i < num; i++) {
+            let v1 = parseInt(this.trimV(toks1[i]));
+            let v2 = parseInt(this.trimV(toks2[i]));
+            if (v1 > v2) return 1;
+            if (v2 > v1) return -1;
+        }
+        return 0;
+    }
+
+    trimV(version: string): string {
+        var ret = version;
+        if (version.substr(0,1) == 'v') {
+            ret = version.substr(1,version.length-1);
+        }
+        return ret;
     }
 
     engineDirectory() {
         return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_FOLDER));
     }
 
-    public extensionDirectory() {
+    extensionDirectory() {
+        return vscode.Uri.file(path.join(this.extensionParentDirectory().fsPath,this.EXTENSION_NAME+'-'+this.version));
+    }
+
+    extensionParentDirectory() {
         let extDir = '.vscode';
         if (this.platform == 'linux' || this.platform == 'darwin') {
             extDir = '.vscode-server';
         }
-        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions','dehilster.nlp-'+this.version));
+        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions'));
+    }
+
+    visualTextFilesDirectory() {
+        return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_FOLDER));
+    }
+  
+    fetchExeVersion(extentionDir: string = '') {
+        visualText.cmdEngineVersion = '';
+		const cp = require('child_process');
+		var exe = path.join(extentionDir,this.NLPENGINE_FOLDER,this.NLP_EXE);
+        if (fs.existsSync(exe)) {
+            return new Promise((resolve) => {
+                const child = cp.spawn(exe, ['--version']);
+                let stdOut = "";
+                let stdErr = "";
+                child.stdout.on("data", (data) => {
+                    let versionStr = data.toString();
+                    let tokens = versionStr.split('\r\n');
+                    if (tokens.length) {
+                        visualText.cmdEngineVersion = tokens[tokens.length - 2];
+                    }
+                    resolve(visualText.cmdEngineVersion);
+                });
+            }).catch(err => {
+                this.debugMessage(err);
+            });      
+        }
+	}
+
+    setExtEngineVersion(extentionDir: string, version: string): boolean {
+        if (version.length) {
+            var missingEngineVersion: boolean = false;
+            var currentVersion = '';
+            var latestVersion = '';
+            let latestPath = '';
+            for (let ext of this.extensionItems) {
+                if (ext.uri.fsPath == extentionDir) {
+                    ext.engineVersion = version;
+                    ext.engineVersionStatus = versionStatus.DONE;
+                    currentVersion = version;
+                    latestPath = ext.uri.fsPath;
+                } else if (ext.hasEngine == true) {
+                    if (ext.engineVersion.length == 0) {
+                        missingEngineVersion = true;
+                    } else {
+                        currentVersion = ext.engineVersion;
+                        latestPath = ext.uri.fsPath;
+                    }
+                }
+                if (latestVersion.length == 0 || this.versionCompare(currentVersion,latestVersion)) {
+                    latestVersion = currentVersion;
+                }
+            }
+
+            // If all versions are filled, set the global version
+            if (!missingEngineVersion) {
+                this.setEngineVersion(latestVersion);
+                this.setEnginePath(path.join(latestPath,this.NLPENGINE_FOLDER,this.NLP_EXE));
+            }         
+        }
+        return false;
+    }
+
+    setEngineVersion(version: string) {
+        this.engineVersion = version;
+        const config = vscode.workspace.getConfiguration('engine');
+        config.update('version',version,vscode.ConfigurationTarget.Global);
+    }
+
+    getEngineVersion(): string | undefined {
+        const config = vscode.workspace.getConfiguration('engine');
+        return config.get<string>('version');
+    }
+    
+    setEnginePath(path: string) {
+        this.engineDir = vscode.Uri.file(path);
+        const config = vscode.workspace.getConfiguration('engine');
+        config.update('path',path,vscode.ConfigurationTarget.Global);
+    }
+
+    getEnginePath(): string | undefined {
+        const config = vscode.workspace.getConfiguration('engine');
+        return config.get<string>('path');
+    }
+
+    setVTFilesVersion(version: string) {
+        this.vtFilesVersion = version;
+        const config = vscode.workspace.getConfiguration('engine');
+        config.update('visualtext',version,vscode.ConfigurationTarget.Global);
+    }
+
+    getVTFilesVersion(): string | undefined {
+        const config = vscode.workspace.getConfiguration('engine');
+        return config.get<string>('visualtext');
     }
 
     configFindUsername() {
@@ -493,44 +910,6 @@ export class VisualText {
         } else {
             this.username = username;
         }
-    }
-
-	askEngine() {
-        var enginePath = '';
-        var startingPath = vscode.Uri.file('');
-        
-        if (vscode.workspace.workspaceFolders) {
-            if (vscode.workspace.workspaceFolders.length === 1) {
-                startingPath = vscode.workspace.workspaceFolders[0].uri;
-            }
-        }
-
-        vscode.window.showErrorMessage("Unknown nlp engine path.", "Enter path manually").then(response => {
-
-            const options: vscode.OpenDialogOptions = {
-                canSelectMany: false,
-                openLabel: 'Open',
-                defaultUri: startingPath,
-                canSelectFiles: false,
-                canSelectFolders: true
-            };
-            
-            vscode.window.showOpenDialog(options).then(engPath => {
-                if (!engPath) {
-                    return;
-                }
-                var newPath = engPath[0].fsPath;
-                var exe = path.join(newPath,visualText.NLP_EXE);
-                if (!dirfuncs.isDir(newPath) || !fs.existsSync(exe)) {
-                    this.debugMessage("Unknown nlp engine path.");
-                } else {
-                    enginePath = newPath;
-					visualText.setEngineDir(engPath[0]);
-                    const config = vscode.workspace.getConfiguration('engine');
-                    config.update('path',enginePath,vscode.ConfigurationTarget.Global);								
-                }
-            });
-        });
     }
 
     saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
@@ -563,20 +942,12 @@ export class VisualText {
         }
     }
 
-    public getCurrentAnalyzer(): vscode.Uri {
+    getCurrentAnalyzer(): vscode.Uri {
         return this.currentAnalyzer;
-    }
-
-    setEngineDir(path: vscode.Uri) {
-        this.engineDir = path;
     }
 
     getAnalyzer(): vscode.Uri {
         return this.currentAnalyzer;
-    }
-    
-    getEngineDirectory() {
-        return this.engineDir;
     }
 
     hasAnalyzers(): boolean {
@@ -617,48 +988,64 @@ export class VisualText {
     }
 
     getVisualTextDirectory(dirName: string=''): string {
-        if (dirName.length)
-            return path.join(this.getEngineDirectory().fsPath,'visualtext',dirName);
-        else
-            return path.join(this.getEngineDirectory().fsPath,'visualtext');
+        var engPath = this.getEnginePath();
+        if (engPath) {
+            if (dirName.length)
+                return path.join(engPath,this.VISUALTEXT_FILES_FOLDER,dirName);
+            else
+                return path.join(engPath,this.VISUALTEXT_FILES_FOLDER);
+        }
+        return '';
     }
 
-    hasEngineDirectories(dirPath: vscode.Uri): boolean {
-        var dirs = dirfuncs.getDirectories(dirPath);
-        var data = false;
-        var analyzers = false;
+    hasEngine(extDir: vscode.Uri): boolean {
+        return fs.existsSync(path.join(extDir.fsPath,this.NLPENGINE_FOLDER,this.NLP_EXE));
+    }
 
-        for (let dir of dirs) {
-            if (path.basename(dir.fsPath).localeCompare('data') == 0) {
-                data = true;
+    isEngineDirectory(dirPath: vscode.Uri): boolean {
+        var engDir = path.join(dirPath.fsPath,this.NLPENGINE_FOLDER);
+        if (engDir.length > 1 && fs.existsSync(engDir)) {
+            var dirs = dirfuncs.getDirectories(vscode.Uri.file(engDir));
+            var data = false;
+            var analyzers = false;
+    
+            for (let dir of dirs) {
+                if (path.basename(dir.fsPath).localeCompare('data') == 0) {
+                    data = true;
+                }
+                else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
+                    analyzers = true;
+                }
             }
-            else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
-                analyzers = true;
-            }
+    
+            return data && analyzers;
         }
-
-        return data && analyzers;
+        return false;
     }
 
     isVisualTextDirectory(dirPath: vscode.Uri): boolean {
-        var dirs = dirfuncs.getDirectories(dirPath);
-        var spec = false;
-        var analyzers = false;
-        var help = false;
+        var engDir = path.join(dirPath.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
+        if (engDir.length > 1 && fs.existsSync(engDir)) {
+            var dirs = dirfuncs.getDirectories(vscode.Uri.file(engDir));
+            var spec = false;
+            var analyzers = false;
+            var help = false;
 
-        for (let dir of dirs) {
-            if (path.basename(dir.fsPath).localeCompare('spec') == 0) {
-                spec = true;
+            for (let dir of dirs) {
+                if (path.basename(dir.fsPath).localeCompare('spec') == 0) {
+                    spec = true;
+                }
+                else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
+                    analyzers = true;
+                }
+                else if (path.basename(dir.fsPath).localeCompare('Help') == 0) {
+                    help = true;
+                }
             }
-            else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
-                analyzers = true;
-            }
-            else if (path.basename(dir.fsPath).localeCompare('Help') == 0) {
-                help = true;
-            }
+
+            return spec && analyzers && help;            
         }
-
-        return spec && analyzers && help;
+        return false;
     }
 
     isAnalyzerDirectory(dirPath: vscode.Uri): boolean {
@@ -680,5 +1067,55 @@ export class VisualText {
         }
 
         return spec && kb && input;
+    }
+
+    setUpdateEngine(): boolean {
+        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
+        if (ext) {
+            ext.engineDownloadStatus = downloadStatus.UPDATE;
+            ext.hasEngine = false;
+            this.updaterGlobalStatus = updaterStatus.REPAIR;
+            this.debugMessage('NLP Engine updating version');
+            return true;   
+        }
+        return false;
+    }
+    
+    updateEngine() {
+        if (this.setUpdateEngine())
+            this.startUpdater();          
+    }
+
+    runUpdater() {
+        if (this.setRerunUpdater())
+            this.startUpdater();    
+    }
+
+    setRerunUpdater(): boolean {
+        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
+        if (ext) {
+            visualText.extensionItems = [];
+            this.updaterGlobalStatus = updaterStatus.GATHER_EXTENSIONS;
+            this.debugMessage('Update NLP Engine'); 
+            return true;        
+        }
+        return false;      
+    }
+
+    setUpdateVTFiles(): boolean {
+        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
+        if (ext) {
+            ext.vtFilesDownloadStatus = downloadStatus.UPDATE  
+            ext.hasVTFiles = false;
+            this.updaterGlobalStatus = updaterStatus.REPAIR;
+            this.debugMessage('VisualText files updating to version ' + visualText.vtFilesVersion); 
+            return true;        
+        }
+        return false;      
+    }
+
+    updateVTFiles() {
+        if (this.setUpdateVTFiles())
+            this.startUpdater(); 
     }
 }
