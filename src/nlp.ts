@@ -30,18 +30,18 @@ export class NLPFile extends TextFile {
 			progress.report({ increment: 10, message: "Clearing log directories" });
 
 			// Check to see if the engine executable is there
-			var engineDir = visualText.getEnginePath();
-			var exists = true;
-			var exe = '';
-			if (!engineDir)
-				exists = false;
-			else
-				exe = path.join(engineDir,visualText.NLP_EXE);
-			if (engineDir && !fs.existsSync(exe))
-				exists = false;
+			var exe = visualText.getEnginePath();
+			var engineDir = '';
+			var exists = false;
+			if (exe) {
+				engineDir = path.dirname(exe);
+				if (exe.length && fs.existsSync(exe))
+					exists = true;
+			}
+
 			if (!exists) {
 				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(response => {
-					return;
+					visualText.startUpdater();
 				});
 			}
 
