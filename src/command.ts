@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { LogFile } from './logfile';
 import { NLPFile } from './nlp';
+import { TextFile } from './textFile';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
@@ -20,6 +21,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.selectSequence', this.selectSequence));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
@@ -33,6 +35,25 @@ export class NLPCommands {
         return nlpCommands;
     }
     
+    sortText() {
+        if (vscode.window.activeTextEditor) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                let textFile = new TextFile(editor.document.uri.fsPath);
+                textFile.sortLines();
+                textFile.rollupLines();
+                textFile.linesToText();
+
+                var firstLine = editor.document.lineAt(0);
+                var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+                var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+                editor.edit(function (editBuilder) {
+                    editBuilder.replace(textRange, textFile.getText());
+                });
+            }
+        }
+    }
+
     selectSequence() {
         if (vscode.window.activeTextEditor) {
             var nlpFile = new NLPFile();
