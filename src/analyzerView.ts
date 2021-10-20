@@ -183,9 +183,9 @@ export class AnalyzerView {
 
 					textView.deleteAnalyzerLogDir(analyzerItem.uri.fsPath);
 					const p = new Promise<void>(resolve => {
-						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('textView.refreshAll');	
 						vscode.commands.executeCommand('logView.refreshAll');	
+						vscode.commands.executeCommand('analyzerView.refreshAll');
 						resolve();
 					});
 					return p;

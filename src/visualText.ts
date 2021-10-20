@@ -996,12 +996,13 @@ export class VisualText {
     }
 
     getVisualTextDirectory(dirName: string=''): string {
-        var engPath = this.getEnginePath();
-        if (engPath) {
+        var exePath = this.getEnginePath();
+        if (exePath) {
+            var engineDir = path.dirname(exePath);
             if (dirName.length)
-                return path.join(engPath,this.VISUALTEXT_FILES_FOLDER,dirName);
+                return path.join(engineDir,this.VISUALTEXT_FILES_FOLDER,dirName);
             else
-                return path.join(engPath,this.VISUALTEXT_FILES_FOLDER);
+                return path.join(engineDir,this.VISUALTEXT_FILES_FOLDER);
         }
         return '';
     }

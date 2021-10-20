@@ -83,7 +83,7 @@ export class Analyzer {
             vscode.window.showWarningMessage('Analyzer folder already exists');
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
-            vscode.window.showWarningMessage('NLP Engine not set. Set in state.json in main directory.');
+            vscode.window.showWarningMessage('NLP Engine not found');
             return false;
         } else {
             let items: vscode.QuickPickItem[] = [];
