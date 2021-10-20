@@ -26,6 +26,40 @@ export class TextFile {
             this.setFile(vscode.Uri.file(filepath),separateLines);
     }
 
+    saveFile() {
+        fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
+    }
+
+    linesToText() {
+        if (this.lines.length) {
+            this.text = '';
+            for (let line of this.lines) {
+                this.text += line + this.sep;
+            }
+        }
+    }
+
+    sortLines() {
+        this.lines.sort();
+    }
+
+    rollupLines() {
+        let lastLine = '';
+        let deletes: number[] = new Array();
+        let index: number = 0;
+
+        for (let line of this.lines) {
+            if (line == lastLine || line.length == 0)
+                deletes.push(index);
+            lastLine = line;
+            index++;
+        }
+
+        for (let del of deletes.reverse()) {
+            this.lines.splice(del,1);
+        }
+    }
+
     positionAt(offset: number): vscode.Position {
         let lineNum = 0;
         let character = 0;
