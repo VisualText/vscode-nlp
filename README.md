@@ -71,8 +71,8 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.16.0
-Cleaner first-time loading of extension
+### v1.16.1
+Major overhaul on updater
 
 ### v1.15.10
 Reveals sequence number for an nlp file. This will eventually select the sequence item once Microsoft fully implements the reveal function for tree items.

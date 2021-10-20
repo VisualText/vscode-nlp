@@ -77,6 +77,7 @@ export class VisualText {
     private extensionItems: ExtensionItem[] = new Array();
     private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
+    private updaterCounter: number = 0;
     public updaterGlobalStatus: updaterStatus = updaterStatus.GATHER_EXTENSIONS;
 
 	constructor(ctx: vscode.ExtensionContext) {
@@ -115,6 +116,7 @@ export class VisualText {
 
     startUpdater() {
         this.debugMessage('Checking for updates or repairs...');
+        this.updaterCounter = 0;
         this.updaterID = +setInterval(this.updaterTimer,1000);
     }
 
@@ -477,7 +479,13 @@ export class VisualText {
 
     updaterTimer() {
         let debug = false;
-        if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus]);
+
+        if (visualText.updaterCounter++ >= 45) {
+            visualText.debugMessage('Updated timed out');
+            visualText.updaterGlobalStatus = updaterStatus.DONE;
+        }
+
+        if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus] + ' ' + visualText.updaterCounter.toString());
 
         switch (visualText.updaterGlobalStatus) {
             case updaterStatus.GATHER_EXTENSIONS: {
