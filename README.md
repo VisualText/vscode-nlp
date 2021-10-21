@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.18.1
+### v1.18.2
 Added analyzer operation queue
 
 ### v1.17.1
