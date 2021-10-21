@@ -5,7 +5,7 @@ import { visualText } from './visualText';
 import { TextFile } from './textFile';
 
 interface LogItem {
-	uri: vscode.Uri;
+	uri?: vscode.Uri | undefined;
 	passNum: number;
 	line: number;
 	label: string;
@@ -96,7 +96,7 @@ export class LogView {
 		vscode.commands.executeCommand('logView.refreshAll');			
 	}
 
-	public addMessage(message: string, uri: vscode.Uri) {
+	public addMessage(message: string, uri: vscode.Uri | undefined) {
 		this.logs.push(this.messageLine(message, uri));
 	}
 
@@ -117,7 +117,7 @@ export class LogView {
 		return this.logs;
 	}
 
-	private messageLine(label: string, uri: vscode.Uri): LogItem {
+	private messageLine(label: string, uri: vscode.Uri | undefined): LogItem {
 		return ({label: label, uri: uri, passNum: 0, line: 0, icon: 'arrow-small-right.svg'});	
 	}
 
@@ -144,9 +144,8 @@ export class LogView {
 	}
 
 	private openFile(logItem: LogItem): void {
-		if (logItem.passNum) {
+		if (logItem.passNum && logItem.uri) {
 			var seqFile = visualText.analyzer.seqFile;
-			var passFile = seqFile.getUriByPassNumber(logItem.passNum);
 
 			vscode.window.showTextDocument(logItem.uri).then(editor => 
 				{
@@ -155,7 +154,7 @@ export class LogView {
 					var range = new vscode.Range(pos, pos);
 					editor.revealRange(range);
 				});
-		} else if (logItem.uri.fsPath.length) {
+		} else if (logItem.uri) {
 			vscode.window.showTextDocument(logItem.uri);
 		}
 	}
