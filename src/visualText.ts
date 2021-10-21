@@ -98,7 +98,6 @@ export class VisualText {
         this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
 
         this.startUpdater();
-
     }
     
     static attach(ctx: vscode.ExtensionContext): VisualText {
@@ -481,7 +480,7 @@ export class VisualText {
         let debug = false;
 
         if (visualText.updaterCounter++ >= 45) {
-            visualText.debugMessage('Updated timed out');
+            visualText.debugMessage('Updater timed out');
             visualText.updaterGlobalStatus = updaterStatus.DONE;
         }
 

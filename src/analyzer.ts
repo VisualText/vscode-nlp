@@ -8,6 +8,17 @@ import { dirfuncs } from './dirfuncs';
 import { LogFile } from './logfile';
 import { nlpFileType } from './textFile';
 
+export enum analyzerStatus { UNKNOWN, RUNNING, DONE }
+export enum analyzerOperation { UNKNOWN, COPY, DELETE, DONE }
+export enum analyzerOperationStatus { UNKNOWN, RUNNING, FAILED, DONE }
+
+interface analyzerOperations {
+    uriAnalyzer: vscode.Uri;
+    uriAnalyzer2: vscode.Uri;
+    operation: analyzerOperation;
+    status: analyzerOperationStatus;
+}
+
 export let analyzer: Analyzer;
 export class Analyzer {
 
@@ -22,6 +33,12 @@ export class Analyzer {
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
     private passNum: number = 0;;
     private loaded: boolean = false;
+
+    public timerStatus: analyzerStatus = analyzerStatus.UNKNOWN;
+    public analyzerQueue: analyzerOperations[] = new Array();
+    public timerCounter: number = 0;
+    public timerID: number = 0;
+    public analyzerCopyUri: vscode.Uri = vscode.Uri.file('');
 
 	constructor() {
     }
@@ -50,13 +67,110 @@ export class Analyzer {
         }
     }
 
+    startOperations() {
+        this.timerCounter = 0;
+        if (this.timerID == 0) {
+            visualText.debugMessage('Starting analyzer operations...');
+            this.timerID = +setInterval(this.analyzerTimer,1000);
+        }
+    }
+
+    addAnalyzerOperation(analyzerUri: vscode.Uri, analyzerUri2: vscode.Uri, operation: analyzerOperation) {
+        this.analyzerQueue.push({uriAnalyzer: analyzerUri, uriAnalyzer2: analyzerUri2, operation: operation, status: analyzerOperationStatus.UNKNOWN})
+    }
+
+    analyzerDelete(uri: vscode.Uri) {
+        this.addAnalyzerOperation(uri,vscode.Uri.file(''),analyzerOperation.DELETE);
+    }
+
+    analyzerTimer() {
+        let debug = false;
+
+        if (visualText.analyzer.timerCounter++ >= 45) {
+            visualText.debugMessage('Analyzer processing timed out');
+            visualText.analyzer.timerStatus = analyzerStatus.DONE;
+        }
+
+        //if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus] + ' ' + visualText.updaterCounter.toString());
+
+        // Cycle through operations and find the one to work on
+        if (visualText.analyzer.analyzerQueue.length == 0) {
+            visualText.analyzer.timerStatus = analyzerStatus.DONE;
+        }
+        let ana = visualText.analyzer.analyzerQueue[0];
+        let alldone = true;
+        for (let a of visualText.analyzer.analyzerQueue) {
+            if (a.status == analyzerOperationStatus.RUNNING) {
+                ana = a;
+                alldone = false;
+                break;
+            }
+            else if (a.status != analyzerOperationStatus.FAILED && a.status != analyzerOperationStatus.DONE) {
+                alldone = false;
+            }
+        }
+        if (alldone)
+            visualText.analyzer.timerStatus = analyzerStatus.DONE;
+        else
+            visualText.analyzer.timerStatus = analyzerStatus.RUNNING;
+
+        switch (visualText.analyzer.timerStatus) {
+            case analyzerStatus.RUNNING: {
+
+                switch (ana.operation) {
+                    case analyzerOperation.COPY: {
+                        if (ana.status == analyzerOperationStatus.UNKNOWN) {
+                            var copydir = require('copy-dir');
+                            if (!fs.existsSync(ana.uriAnalyzer.fsPath)) {
+                                if (!dirfuncs.makeDir(ana.uriAnalyzer.fsPath))
+                                    visualText.analyzer.timerStatus = analyzerStatus.DONE;
+                            }
+                            copydir(ana.uriAnalyzer.fsPath,ana.uriAnalyzer2.fsPath, function(err) {
+                                if (err) {
+                                    visualText.debugMessage('Analyzer copy failed');
+                                    ana.status = analyzerOperationStatus.FAILED;
+                                }
+                                visualText.analyzer.load(ana.uriAnalyzer2);
+                                visualText.analyzer.loaded = true;
+                                visualText.debugMessage('ANALYZER COPIED: ' + ana.uriAnalyzer2.fsPath);
+                                ana.status = analyzerOperationStatus.DONE;
+                            });
+                            ana.status = analyzerOperationStatus.RUNNING;
+                        }
+                    }
+                    case analyzerOperation.DELETE: {
+                        if (ana.status == analyzerOperationStatus.UNKNOWN) {
+                            if (dirfuncs.delDir(ana.uriAnalyzer.fsPath)) {
+                                ana.status = analyzerOperationStatus.DONE;
+                                visualText.debugMessage('ANALYZER DELETED: ' + ana.uriAnalyzer.fsPath);
+                            }
+                            else {
+                                ana.status = analyzerOperationStatus.FAILED;
+                                visualText.debugMessage('ANALYZER DELETE FAILED: ' + ana.uriAnalyzer2.fsPath);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case analyzerStatus.DONE: {
+                clearInterval(visualText.analyzer.timerID);
+                visualText.analyzer.timerID = 0;
+                visualText.analyzer.analyzerQueue = [];
+                vscode.commands.executeCommand('analyzerView.refreshAll');
+                visualText.debugMessage('ANALYZER PROCESSING COMPLETE');
+                break;
+            }
+        }
+    }
+
     hasText(): boolean {
         return this.currentTextFile.fsPath.length ? true : false;
     }
 
     newAnalyzer(): string {
         if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
+			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new visualText.analyzer name' }).then(newname => {
 				if (newname) {
                     this.createNewAnalyzer(newname);
                     return newname;
@@ -92,7 +206,7 @@ export class Analyzer {
                 let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
                 for (let file of files) {
                     if (dirfuncs.isDir(file.fsPath)) {
-                        items.push({label: path.basename(file.fsPath), description: ' (analyzer template)'});
+                        items.push({label: path.basename(file.fsPath), description: ' (visualText.analyzer template)'});
                     }
                 }
                 vscode.window.showQuickPick(items).then(selection => {
@@ -105,7 +219,7 @@ export class Analyzer {
                 });
 
             } else {
-                fromDir = path.join(visualText.getVisualTextDirectory('analyzer'));
+                fromDir = path.join(visualText.getVisualTextDirectory('visualText'));
                 this.makeNewAnalyzer(fromDir,'');
             }
 
@@ -115,27 +229,18 @@ export class Analyzer {
 
     makeNewAnalyzer(fromDir: string, analyzer: string) {
         fromDir = path.join(fromDir,analyzer);
-
         if (!dirfuncs.makeDir(this.analyzerDir.fsPath)) {
             vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
             return false;
         }
-        if (!dirfuncs.copyDirectory(fromDir,this.analyzerDir.fsPath)) {
-            vscode.window.showWarningMessage('Copy directory for new analyzer failed');
-            return false;
-        }
-        this.load(this.analyzerDir);
-        vscode.commands.executeCommand('textView.refreshAll');
-        vscode.commands.executeCommand('outputView.refreshAll');
-        vscode.commands.executeCommand('sequenceView.refreshAll');
-        vscode.commands.executeCommand('analyzerView.refreshAll');
-        this.loaded = true;
+        this.addAnalyzerOperation(vscode.Uri.file(fromDir),this.analyzerDir,analyzerOperation.COPY);
+        this.startOperations();
     }
 
     createAnaSequenceFile(content: string=''): boolean {
         var cont = content.length ? content : '#\ntokenize	nil	# Gen:   Convert input to token list.';
         if (this.getSpecDirectory()) {
-            var anaFile = path.join(this.getSpecDirectory().fsPath,'analyzer.seq');
+            var anaFile = path.join(this.getSpecDirectory().fsPath,'visualText.analyzer.seq');
             return dirfuncs.writeFile(anaFile,cont);
         }
         return false;
@@ -232,7 +337,6 @@ export class Analyzer {
     }
 
     getAnalyzerDirectory(subDir: string=''): vscode.Uri {
-        
         return vscode.Uri.file(path.join(this.analyzerDir.fsPath,subDir));
     }
 
