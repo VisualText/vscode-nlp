@@ -71,8 +71,11 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.20.0
+Added stable file and directory deletes and copies
+
 ### v1.19.0
-Added single analyzer or all analyzers to another folder
+Added copy single analyzer or all analyzers to chosen folder
 
 ### v1.18.2
 Added analyzer operation queue

@@ -3,8 +3,11 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.20.0
+Added stable file and directory deletes and copies
+
 ### v1.19.0
-Added single analyzer or all analyzers to another folder
+Added copy single analyzer or all analyzers to chosen folder
 
 ### v1.18.2
 Added analyzer operation queue
