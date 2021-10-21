@@ -120,7 +120,7 @@ export class VisualText {
     }
 
     public debugMessage(msg: string) {
-        logView.addMessage(msg,vscode.Uri.file(''));
+        logView.addMessage(msg,undefined);
         vscode.commands.executeCommand('logView.refreshAll');
     }
 
