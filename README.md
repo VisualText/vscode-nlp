@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.18.0
+Added analyzer operation queue
+
 ### v1.17.1
 Added sort & unique to text files
 

@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import { visualText } from './visualText';
-import { outputView } from './outputView';
 
 export namespace dirfuncs {
 

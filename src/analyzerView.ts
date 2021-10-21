@@ -3,6 +3,7 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView } from './textView';
+import { Analyzer } from './analyzer';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -53,15 +54,6 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
         }
 		return [];
 	}
-}
-
-const deleteLogDir = (dir: vscode.Uri) => {
-	return new Promise<void>((resolve,reject) => {
-		if (dirfuncs.delDir(dir.fsPath))
-			resolve();
-		else
-			reject();
-	});
 }
 
 export let analyzerView: AnalyzerView;
@@ -116,8 +108,8 @@ export class AnalyzerView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				dirfuncs.delDir(analyzerItem.uri.fsPath);
-				vscode.commands.executeCommand('analyzerView.refreshAll');
+				visualText.analyzer.analyzerDelete(analyzerItem.uri);
+				visualText.analyzer.startOperations();
 			});
 		}
 	}
