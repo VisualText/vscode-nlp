@@ -73,6 +73,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
+		vscode.commands.registerCommand('analyzerView.copyAnalyzer', resource => this.copyAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -80,6 +82,50 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	copyAll() {
+		if (visualText.hasWorkspaceFolder()) {
+			const options: vscode.OpenDialogOptions = {
+				canSelectMany: false,
+				openLabel: 'Folder to copy all Analyzers to',
+				defaultUri: visualText.getWorkspaceFolder(),
+				canSelectFiles: false,
+				canSelectFolders: true
+			};
+			vscode.window.showOpenDialog(options).then(selection => {
+				if (!selection) {
+					return;
+				}
+				const analyzers = visualText.getAnalyzers();
+				var toFolder = vscode.Uri.file(selection[0].fsPath);
+				for (let analyzer of analyzers) {
+					var folder = path.basename(analyzer.fsPath);
+					visualText.analyzer.copyAnalyzer(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)));
+				}
+				visualText.analyzer.startOperations();	
+			});	
+		}		
+	}
+
+	copyAnalyzer(analyzerItem: AnalyzerItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			const options: vscode.OpenDialogOptions = {
+				canSelectMany: false,
+				openLabel: 'Folder to copy to',
+				defaultUri: visualText.getWorkspaceFolder(),
+				canSelectFiles: false,
+				canSelectFolders: true
+			};
+			vscode.window.showOpenDialog(options).then(selection => {
+				if (!selection) {
+					return;
+				}
+				var folder = path.basename(analyzerItem.uri.fsPath);
+				visualText.analyzer.copyAnalyzer(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)))
+				visualText.analyzer.startOperations();	
+			});	
+		}
 	}
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {

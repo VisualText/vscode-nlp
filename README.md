@@ -71,6 +71,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.19.0
+Added single analyzer or all analyzers to another folder
+
 ### v1.18.2
 Added analyzer operation queue
 
