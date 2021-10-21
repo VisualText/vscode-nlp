@@ -83,6 +83,10 @@ export class Analyzer {
         this.addAnalyzerOperation(uri,vscode.Uri.file(''),analyzerOperation.DELETE);
     }
 
+    copyAnalyzer(fromUri: vscode.Uri, toUri: vscode.Uri) {
+        this.addAnalyzerOperation(fromUri,toUri,analyzerOperation.COPY);
+    }
+
     analyzerTimer() {
         let debug = false;
 
@@ -100,7 +104,7 @@ export class Analyzer {
         let ana = visualText.analyzer.analyzerQueue[0];
         let alldone = true;
         for (let a of visualText.analyzer.analyzerQueue) {
-            if (a.status == analyzerOperationStatus.RUNNING) {
+            if (a.status == analyzerOperationStatus.UNKNOWN || a.status == analyzerOperationStatus.RUNNING) {
                 ana = a;
                 alldone = false;
                 break;
@@ -125,6 +129,7 @@ export class Analyzer {
                                 if (!dirfuncs.makeDir(ana.uriAnalyzer.fsPath))
                                     visualText.analyzer.timerStatus = analyzerStatus.DONE;
                             }
+                            visualText.debugMessage('Copying analyzer: ' + ana.uriAnalyzer.fsPath);
                             copydir(ana.uriAnalyzer.fsPath,ana.uriAnalyzer2.fsPath, function(err) {
                                 if (err) {
                                     visualText.debugMessage('Analyzer copy failed');
@@ -132,7 +137,7 @@ export class Analyzer {
                                 }
                                 visualText.analyzer.load(ana.uriAnalyzer2);
                                 visualText.analyzer.loaded = true;
-                                visualText.debugMessage('ANALYZER COPIED: ' + ana.uriAnalyzer2.fsPath);
+                                visualText.debugMessage('ANALYZER COPIED TO: ' + ana.uriAnalyzer2.fsPath);
                                 ana.status = analyzerOperationStatus.DONE;
                             });
                             ana.status = analyzerOperationStatus.RUNNING;
@@ -140,6 +145,7 @@ export class Analyzer {
                     }
                     case analyzerOperation.DELETE: {
                         if (ana.status == analyzerOperationStatus.UNKNOWN) {
+                            visualText.debugMessage('Deleting analzyer: ' + ana.uriAnalyzer.fsPath);
                             if (dirfuncs.delDir(ana.uriAnalyzer.fsPath)) {
                                 ana.status = analyzerOperationStatus.DONE;
                                 visualText.debugMessage('ANALYZER DELETED: ' + ana.uriAnalyzer.fsPath);

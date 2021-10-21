@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.18.2",
+    "version": "1.19.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -601,6 +601,22 @@
                 }
             },
             {
+                "command": "analyzerView.copyAnalyzer",
+                "title": "Copy analyzer",
+                "icon": {
+                    "light": "resources/light/anacopy.svg",
+                    "dark": "resources/dark/anacopy.svg"
+                }
+            },
+            {
+                "command": "analyzerView.copyAll",
+                "title": "Copy All Analyzers",
+                "icon": {
+                    "light": "resources/light/anacopy.svg",
+                    "dark": "resources/dark/anacopy.svg"
+                }
+            },
+            {
                 "command": "textView.deleteLogFiles",
                 "title": "Delete Log Files",
                 "icon": {
@@ -1065,6 +1081,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "analyzerView.copyAll",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
+                },
+                {
                     "command": "findView.clearAll",
                     "when": "view == findView",
                     "group": "navigation"
@@ -1260,6 +1281,11 @@
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
+                },
+                {
+                    "command": "analyzerView.copyAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "inline"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzerLogs",
