@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.19.0",
+    "version": "1.20.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -553,6 +553,14 @@
                 }
             },
             {
+                "command": "textView.existingFolder",
+                "title": "Insert existing folder",
+                "icon": {
+                    "light": "resources/light/new-folder.svg",
+                    "dark": "resources/dark/new-folder.svg"
+                }
+            },
+            {
                 "command": "textView.search",
                 "title": "Search",
                 "icon": {
@@ -961,6 +969,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "textView.existingFolder",
+                    "when": "view == textView",
+                    "group": "navigation"
+                },
+                {
                     "command": "textView.openText",
                     "when": "view == textView",
                     "group": "navigation"
@@ -1258,6 +1271,11 @@
                     "group": "edit"
                 },
                 {
+                    "command": "textView.existingFolder",
+                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
+                    "group": "edit"
+                },
+                {
                     "command": "textView.deleteFile",
                     "when": "view == textView && (viewItem == file || viewItem == dir)",
                     "group": "edit"
@@ -1437,7 +1455,7 @@
         "vsce-package": "vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
-        "@types/glob": "^7.1.4",
+        "@types/glob": "^7.2.0",
         "@types/mocha": "^5.2.7",
         "@types/node": "^12.20.33",
         "@types/vscode": "^1.59.0",

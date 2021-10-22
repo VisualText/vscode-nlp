@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { Analyzer } from './analyzer';
+import { FileOps } from './fileOps';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
@@ -54,6 +55,7 @@ export class VisualText {
     public zippingStatusStrs = [ 'UNKNOWN', 'UNZIPPING', 'DONE' ];
 
     public analyzer = new Analyzer();
+    public fileOps = new FileOps();
     public version: string = '';
     public engineVersion: string = '';
     public cmdEngineVersion: string = '';
@@ -114,9 +116,11 @@ export class VisualText {
     }
 
     startUpdater() {
-        this.debugMessage('Checking for updates or repairs...');
-        this.updaterCounter = 0;
-        this.updaterID = +setInterval(this.updaterTimer,1000);
+        if (this.updaterID == 0) {
+            this.updaterCounter = 0;
+            this.debugMessage('Checking for updates or repairs...');
+            this.updaterID = +setInterval(this.updaterTimer,1000);
+        }
     }
 
     public debugMessage(msg: string) {
