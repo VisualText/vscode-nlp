@@ -132,7 +132,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 						dir = path.dirname(textItem.uri.fsPath);
 					} else if (visualText.analyzer.getTextPath()) {
 						var textPath = visualText.analyzer.getTextPath().fsPath;
-						if (textPath.length)
+						if (textPath.length > 1)
 							dir = path.dirname(textPath);
 					}
 					var newPath = vscode.Uri.file(path.join(dir,dirname));
