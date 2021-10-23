@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { visualText } from './visualText';
 import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { logView } from './logView';
 import { fileOps, fileOperation } from './fileOps';
 
 export interface TextItem {
