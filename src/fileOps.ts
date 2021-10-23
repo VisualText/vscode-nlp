@@ -144,7 +144,7 @@ export class FileOps {
                 visualText.fileOps.opsQueue = [];
                 visualText.debugMessage('FILE PROCESSING COMPLETE');
                 vscode.commands.executeCommand('textView.refreshAll');
-                vscode.commands.executeCommand('analyzer.refreshAll');
+                vscode.commands.executeCommand('analyzerView.refreshAll');
                 break;
             }
         }

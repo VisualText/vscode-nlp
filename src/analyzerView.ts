@@ -3,7 +3,7 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView } from './textView';
-import { Analyzer } from './analyzer';
+import { fileOperation } from './fileOps';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -101,9 +101,9 @@ export class AnalyzerView {
 				var toFolder = vscode.Uri.file(selection[0].fsPath);
 				for (let analyzer of analyzers) {
 					var folder = path.basename(analyzer.fsPath);
-					visualText.analyzer.copyAnalyzer(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)));
+					visualText.fileOps.addFileOperation(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)),fileOperation.COPY);
 				}
-				visualText.analyzer.startOperations();	
+				visualText.fileOps.startFileOps();	
 			});	
 		}		
 	}
@@ -122,8 +122,8 @@ export class AnalyzerView {
 					return;
 				}
 				var folder = path.basename(analyzerItem.uri.fsPath);
-				visualText.analyzer.copyAnalyzer(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)))
-				visualText.analyzer.startOperations();	
+				visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)),fileOperation.COPY);
+				visualText.fileOps.startFileOps();	
 			});	
 		}
 	}
@@ -154,8 +154,8 @@ export class AnalyzerView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.analyzer.analyzerDelete(analyzerItem.uri);
-				visualText.analyzer.startOperations();
+				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,fileOperation.DELETE);
+				visualText.fileOps.startFileOps();
 			});
 		}
 	}
@@ -211,26 +211,7 @@ export class AnalyzerView {
 				if (!selection || selection.label == 'No')
 					return;
 
-				vscode.window.withProgress({
-					location: vscode.ProgressLocation.Notification,
-					title: 'Deleting log directories',
-					cancellable: true
-				}, async (progress, token) => {
-					token.onCancellationRequested(() => {
-						console.log("User canceled the long running operation");
-					});
-
-					progress.report({ increment: 50, message: analyzerName });
-
-					textView.deleteAnalyzerLogDir(analyzerItem.uri.fsPath);
-					const p = new Promise<void>(resolve => {
-						vscode.commands.executeCommand('textView.refreshAll');	
-						vscode.commands.executeCommand('logView.refreshAll');	
-						vscode.commands.executeCommand('analyzerView.refreshAll');
-						resolve();
-					});
-					return p;
-				});
+				textView.deleteAnalyzerLogDir(analyzerItem.uri.fsPath);
 			});
 		}
 	}

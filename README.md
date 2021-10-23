@@ -71,7 +71,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.20.0
+### v1.20.1
 Added stable file and directory deletes and copies
 
 ### v1.19.0
