@@ -44,6 +44,7 @@ export class VisualText {
     public readonly NLPENGINE_FOLDER = 'nlp-engine';
     public readonly VISUALTEXT_FILES_FOLDER = 'visualtext';
     public readonly VISUALTEXT_FILES_ASSET = 'visualtext.zip';
+    public readonly ANALYZER_SEQUENCE_FILE = 'analyzer.seq';
     public readonly GITHUB_ENGINE_LATEST_RELEASE = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/download/';
     public readonly GITHUB_ENGINE_LATEST_VERSION = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/';
     public readonly GITHUB_VISUALTEXT_FILES_LATEST_RELEASE = 'https://github.com/VisualText/visualtext-files/releases/latest/download/';

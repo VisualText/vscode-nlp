@@ -76,7 +76,6 @@ export class PassItem {
 
 export class SequenceFile extends TextFile {
 	private specDir = vscode.Uri.file('');
-	private seqFileName = 'analyzer.seq';
 	private passItems = new Array();
 	private cleanpasses = new Array();
 	private newcontent: string = '';
@@ -88,7 +87,7 @@ export class SequenceFile extends TextFile {
 	init() {
 		if (visualText.analyzer.isLoaded()) {
 			this.specDir = visualText.analyzer.getSpecDirectory();
-			super.setFile(vscode.Uri.file(path.join(this.specDir.fsPath,this.seqFileName)),true);
+			super.setFile(vscode.Uri.file(path.join(this.specDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE)),true);
 			let passNum = 1;
 			this.passItems = [];
 			var folder = '';
@@ -446,7 +445,7 @@ export class SequenceFile extends TextFile {
 	getSequenceFile(): vscode.Uri {
 		var uri = visualText.analyzer.getSpecDirectory();
 		if (uri.fsPath.length)
-			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().fsPath,this.seqFileName));
+			uri = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().fsPath,visualText.ANALYZER_SEQUENCE_FILE));
 		return uri;
 	}
 
@@ -483,7 +482,7 @@ export class SequenceFile extends TextFile {
 			this.newcontent = this.newcontent.concat(this.passString(passItem));
 		}
 
-		fs.writeFileSync(path.join(this.specDir.fsPath,this.seqFileName),this.newcontent,{flag:'w+'});
+		fs.writeFileSync(path.join(this.specDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE),this.newcontent,{flag:'w+'});
 	}
 
 	movePass(seqItem: SequenceItem, direction: moveDirection) {
