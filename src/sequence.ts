@@ -6,6 +6,7 @@ import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { LogFile } from './logfile';
+import { fileOps, fileOperation } from './fileOps';
 
 export enum moveDirection { UP, DOWN }
 
@@ -626,22 +627,7 @@ export class SequenceFile extends TextFile {
 
 	convertPatFiles() {
 		this.saveFile();
-		this.folderConvertPatExtensions(this.getSpecDirectory());
-	}
-
-	folderConvertPatExtensions(folder: vscode.Uri): Boolean {
-		let found: Boolean = false;
-		if (fs.existsSync(folder.fsPath)) {
-			let files = dirfuncs.getFiles(folder,['.pat']);
-			if (files.length == 0) {
-				found = false;
-			} else {
-				for (let file of files) {
-					let newPath = file.fsPath.replace('.pat','.nlp');
-					dirfuncs.rename(file.fsPath,newPath);
-				}
-			}
-		}
-		return found;
+		visualText.fileOps.addFileOperation(this.getSpecDirectory(),this.getSpecDirectory(),fileOperation.RENAME,'pat','nlp');
+		visualText.fileOps.startFileOps(100);
 	}
 }

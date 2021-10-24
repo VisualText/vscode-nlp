@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.20.2",
+    "version": "1.20.3",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -284,6 +284,14 @@
                 "icon": {
                     "light": "resources/light/run.svg",
                     "dark": "resources/dark/run.svg"
+                }
+            },
+            {
+                "command": "textView.convert",
+                "title": "Convert files to *.txt",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
                 }
             },
             {
@@ -1221,38 +1229,38 @@
                     "group": "attribute"
                 },
                 {
-                    "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem == file",
-                    "group": "edit"
-                },
-                {
                     "command": "textView.rename",
                     "when": "view == textView && viewItem == file",
                     "group": "edit"
                 },
                 {
                     "command": "textView.deleteDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "edit"
                 },
                 {
                     "command": "textView.analyzeDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "edit"
                 },
                 {
                     "command": "textView.renameDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/)",
                     "group": "edit"
                 },
                 {
                     "command": "textView.newText",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "edit"
                 },
                 {
                     "command": "textView.newDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
+                    "group": "edit"
+                },
+                {
+                    "command": "textView.convert",
+                    "when": "view == textView && viewItem == dirHasNonText",
                     "group": "edit"
                 },
                 {
@@ -1277,7 +1285,7 @@
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView && (viewItem == file || viewItem == dir)",
+                    "when": "view == textView && viewItem == file",
                     "group": "edit"
                 },
                 {
@@ -1297,6 +1305,11 @@
                 },
                 {
                     "command": "analyzerView.newAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerView.copyAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
                 },
@@ -1347,12 +1360,12 @@
                 },
                 {
                     "command": "textView.analyzeDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
                 },
                 {
                     "command": "textView.renameDir",
-                    "when": "view == textView && viewItem == dir",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
                 },
                 {
@@ -1377,7 +1390,12 @@
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView",
+                    "when": "view == textView && viewItem == file",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.deleteDir",
+                    "when": "view == textView && viewItem == dir",
                     "group": "inline"
                 },
                 {
