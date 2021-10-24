@@ -67,9 +67,13 @@ export class TextFile {
 
     sortLines(selFlag: boolean=false) {
         if (selFlag)
-            this.selLines.sort();
+            this.selLines.sort(function (a, b) {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
         else
-            this.lines.sort();
+            this.lines.sort(function (a, b) {
+                return a.toLowerCase().localeCompare(b.toLowerCase());
+            });
     }
 
     rollupLines(selFlag: boolean=false) {
