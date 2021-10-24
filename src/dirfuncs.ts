@@ -271,5 +271,4 @@ export namespace dirfuncs {
     export function fileHasLog(filePath: string): boolean {
         return dirfuncs.isDir(filePath + visualText.LOG_SUFFIX);
     }
-
 }

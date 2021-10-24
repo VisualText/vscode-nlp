@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
-export enum fileOperation { UNKNOWN, COPY, DELETE, DONE }
+export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 
@@ -14,6 +15,8 @@ interface fileOperations {
     operation: fileOperation;
     status: fileOpStatus;
     type: fileOpType;
+    extension1: string;
+    extension2: string;
 }
 
 export let fileOps: FileOps;
@@ -28,21 +31,21 @@ export class FileOps {
 	constructor() {
     }
 
-    public startFileOps() {
+    public startFileOps(mils: number=1000) {
         if (this.timerID == 0) {
             this.timerCounter = 0;
             visualText.debugMessage('Starting file operations...');
-            this.timerID = +setInterval(this.fileTimer,1000);
+            this.timerID = +setInterval(this.fileTimer,mils);
         }
     }
 
-    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, operation: fileOperation) {
+    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, operation: fileOperation, extension1: string='', extension2: string='') {
         var type: fileOpType = fileOpType.UNKNOWN
         if (dirfuncs.isDir(uri1.fsPath))
             type = fileOpType.DIRECTORY;
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
-        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type})
+        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2})
     }
 
     fileTimer() {
@@ -132,6 +135,28 @@ export class FileOps {
                                     op.status = fileOpStatus.FAILED;
                                     visualText.debugMessage('FILE DELETE FAILED: ' + op.uriFile2.fsPath);
                                 }
+                            }
+                        }
+                    }
+                    case fileOperation.RENAME: {
+                        if (op.status == fileOpStatus.UNKNOWN) {
+                            if (op.type == fileOpType.DIRECTORY) {
+                                visualText.debugMessage('Renameing extensions in directory: ' + op.uriFile1.fsPath);
+                                let files = dirfuncs.getFiles(op.uriFile1);
+                                let ext1 = '.' + op.extension1;
+                                let ext2 = '.' + op.extension2;
+                                for (let file of files) {
+                                    if (!file.fsPath.endsWith(ext2) && (op.extension1.length == 0 || file.fsPath.endsWith(ext1))) {
+                                        let newFile = file.fsPath.replace(/\.[^.]+$/, ext2);
+                                        visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),fileOperation.RENAME,'','');
+                                    }
+                                }
+                                op.status = fileOpStatus.DONE;
+                            }
+                            else {
+                                fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
+                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath);
+                                op.status = fileOpStatus.DONE;
                             }
                         }
                     }
