@@ -61,7 +61,7 @@ export class Analyzer {
 
     newAnalyzer(): string {
         if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new visualText.analyzer name' }).then(newname => {
+			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
 				if (newname) {
                     this.createNewAnalyzer(newname);
                     return newname;
@@ -97,7 +97,7 @@ export class Analyzer {
                 let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
                 for (let file of files) {
                     if (dirfuncs.isDir(file.fsPath)) {
-                        items.push({label: path.basename(file.fsPath), description: ' (visualText.analyzer template)'});
+                        items.push({label: path.basename(file.fsPath), description: ' (analyzer template)'});
                     }
                 }
                 vscode.window.showQuickPick(items).then(selection => {
@@ -131,7 +131,7 @@ export class Analyzer {
     createAnaSequenceFile(content: string=''): boolean {
         var cont = content.length ? content : '#\ntokenize	nil	# Gen:   Convert input to token list.';
         if (this.getSpecDirectory()) {
-            var anaFile = path.join(this.getSpecDirectory().fsPath,'visualText.analyzer.seq');
+            var anaFile = path.join(this.getSpecDirectory().fsPath,visualText.ANALYZER_SEQUENCE_FILE);
             return dirfuncs.writeFile(anaFile,cont);
         }
         return false;

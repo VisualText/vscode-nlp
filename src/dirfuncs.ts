@@ -100,7 +100,7 @@ export namespace dirfuncs {
             var subDirs = getDirectories(dir);
             for (let subDir of subDirs) {
                 if (path.basename(subDir.fsPath).localeCompare('spec') == 0) {
-                    let specfile = path.join(subDir.fsPath,'analyzer.seq');
+                    let specfile = path.join(subDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE);
                     if (fs.existsSync(specfile))
                         specCount++;
                 }
