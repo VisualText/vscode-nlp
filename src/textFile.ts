@@ -20,9 +20,13 @@ export class TextFile {
     private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb');
     private exists: boolean = false;
     private selLines: string[] = [];
+    private selStartLine: number = 0;
+    private selEndLine: number = 0;
 
-    constructor(filepath: string = '', separateLines: boolean = true) {
-        if (filepath.length)
+    constructor(filepath: string = '', separateLines: boolean = true, text: string = '') {
+        if (text.length)
+            this.setText(text, separateLines);
+        else if (filepath.length)
             this.setFile(vscode.Uri.file(filepath),separateLines);
     }
 
@@ -30,33 +34,72 @@ export class TextFile {
         fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
     }
 
-    linesToText() {
-        if (this.lines.length) {
-            this.text = '';
-            for (let line of this.lines) {
-                this.text += line + this.sep;
+    linesToText(editor: vscode.TextEditor, selFlag: boolean=false) {
+        if (selFlag) {
+            if (this.selLines.length) {
+                let text = '';
+                for (let line of this.selLines) {
+                    if (text.length)
+                        text += this.sep;
+                    text += line;
+                }
+                var posStart = editor.selection.active;
+                var posEnd = editor.selection.end;
+                var rang = new vscode.Selection(posStart,posEnd);
+                var snippet = new vscode.SnippetString(text);
+                editor.insertSnippet(snippet,rang);
+
+                // select new lines
+                var endLine = new vscode.Position(this.selStartLine + this.selLines.length-1,this.selLines[this.selLines.length-1].length);
+                var newRang = new vscode.Selection(posStart,endLine);
+                editor.selection = newRang;
+            }
+        }
+        else {
+            if (this.lines.length) {
+                this.text = '';
+                for (let line of this.lines) {
+                    this.text += line + this.sep;
+                }
             }
         }
     }
 
-    sortLines() {
-        this.lines.sort();
+    sortLines(selFlag: boolean=false) {
+        if (selFlag)
+            this.selLines.sort();
+        else
+            this.lines.sort();
     }
 
-    rollupLines() {
+    rollupLines(selFlag: boolean=false) {
         let lastLine = '';
         let deletes: number[] = new Array();
         let index: number = 0;
 
-        for (let line of this.lines) {
-            if (line == lastLine || line.length == 0)
-                deletes.push(index);
-            lastLine = line;
-            index++;
+        if (selFlag) {
+            for (let line of this.selLines) {
+                if (line == lastLine || line.length == 0)
+                    deletes.push(index);
+                lastLine = line;
+                index++;
+            }
+    
+            for (let del of deletes.reverse()) {
+                this.selLines.splice(del,1);
+            }
         }
-
-        for (let del of deletes.reverse()) {
-            this.lines.splice(del,1);
+        else {
+            for (let line of this.lines) {
+                if (line == lastLine || line.length == 0)
+                    deletes.push(index);
+                lastLine = line;
+                index++;
+            }
+    
+            for (let del of deletes.reverse()) {
+                this.lines.splice(del,1);
+            }
         }
     }
 
@@ -78,7 +121,9 @@ export class TextFile {
     getSelectedLines(editor: vscode.TextEditor): string[] {
         this.selLines = [];
         let start = editor.selection.start;
+        this.selStartLine = start.line;
         let end = editor.selection.end;
+        this.selEndLine = end.line;
         var i = 0;
         for (i=start.line; i<=end.line; i++) {
             this.selLines.push(this.lines[i]);
@@ -125,6 +170,14 @@ export class TextFile {
             this.exists = true;
         }
         return this.exists;
+    }
+
+    setText(text: string, separateLines: boolean = true) {
+        if (text.length) {
+            this.text = text;
+            this.separation(separateLines);
+            this.exists = true;
+        }
     }
     
     setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {

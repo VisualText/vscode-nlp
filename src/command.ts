@@ -39,10 +39,13 @@ export class NLPCommands {
         if (vscode.window.activeTextEditor) {
             let editor = vscode.window.activeTextEditor;
             if (editor) {
-                let textFile = new TextFile(editor.document.uri.fsPath);
-                textFile.sortLines();
-                textFile.rollupLines();
-                textFile.linesToText();
+                let textFile = new TextFile(editor.document.uri.fsPath,true,editor.document.getText());
+                let selFlag = editor.selection.isEmpty ? false : true;
+                if (selFlag)
+                    textFile.getSelectedLines(editor);
+                textFile.sortLines(selFlag);
+                textFile.rollupLines(selFlag);
+                textFile.linesToText(editor,selFlag);
 
                 var firstLine = editor.document.lineAt(0);
                 var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
