@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.20.6",
+    "version": "1.20.7",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -235,6 +235,12 @@
                 "category": "NLP",
                 "title": "Open online function help",
                 "description": "Open online function help"
+            },
+            {
+                "command": "nlp.openOnlineVariableHelp",
+                "category": "NLP",
+                "title": "Open online variable help",
+                "description": "Open online variable help"
             },
             {
                 "command": "nlp.selectSequence",
@@ -886,16 +892,6 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.lookup",
-                    "group": "nlp"
-                },
-                {
-                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.lookupBrowser",
-                    "group": "nlp"
-                },
-                {
-                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
                     "group": "nlp"
                 },
@@ -922,7 +918,22 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.openOnlineFunctionHelp",
-                    "group": "nlp"
+                    "group": "help"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.openOnlineVariableHelp",
+                    "group": "help"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.lookup",
+                    "group": "help"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.lookupBrowser",
+                    "group": "help"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
