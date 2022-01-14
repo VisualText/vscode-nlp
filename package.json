@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.20.7",
+    "version": "1.21.0",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
@@ -341,8 +341,14 @@
             {
                 "command": "nlp.generateRule",
                 "category": "NLP",
-                "title": "Generate Rule",
-                "description": "Generate a rule from selected text"
+                "title": "Generate Rule General",
+                "description": "Generate a generalized rule from selected text"
+            },
+            {
+                "command": "nlp.generateExactRule",
+                "category": "NLP",
+                "title": "Generate Rule Exact",
+                "description": "Generate an exact rule from selected text"
             },
             {
                 "command": "nlp.duplicateLine",
@@ -888,6 +894,11 @@
                 {
                     "when": "resourceExtname == .txxt || resourceExtname == .txt",
                     "command": "nlp.generateRule",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "command": "nlp.generateExactRule",
                     "group": "nlp"
                 },
                 {

@@ -1393,5 +1393,22 @@
             "\t@@"
         ],
         "description": "While loop."
+    },
+    "@PRE": {
+        "prefix": ["@PRE"],
+        "body": [
+            "@PRE",
+            "<1,1> var(\"$0\");"
+        ],
+        "description": "Pre match rule area"
+    },
+    "@POST": {
+        "prefix": ["@POST"],
+        "body": [
+            "@POST",
+            "$0",
+            "single();"
+        ],
+        "description": "Post match area"
     }
 }

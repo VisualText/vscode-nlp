@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { LogFile } from './logfile';
+import { LogFile, generateType } from './logfile';
 import { NLPFile } from './nlp';
 import { TextFile } from './textFile';
 
@@ -17,6 +17,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateExactRule', this.generateExactRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineVariableHelp', this.openOnlineVariableHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
@@ -125,7 +126,14 @@ export class NLPCommands {
     generateRule() {
         if (vscode.window.activeTextEditor) {
             var logFile = new LogFile();
-            logFile.generateRule(vscode.window.activeTextEditor);
+            logFile.generateRule(vscode.window.activeTextEditor,generateType.GENERAL);
+        }
+    }
+
+    generateExactRule() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.generateRule(vscode.window.activeTextEditor,generateType.EXACT);
         }
     }
 
