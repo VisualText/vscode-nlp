@@ -9,6 +9,8 @@ import { SequenceFile } from './sequence';
 import { dirfuncs } from './dirfuncs';
 import * as os from 'os';
 
+export enum generateType { GENERAL, EXACT }
+
 export interface Highlight {
 	start: number;
 	end: number;
@@ -137,7 +139,10 @@ export class LogFile extends TextFile {
 						}
 					}		
 				}
-			}			
+			}
+			else {
+				vscode.window.showInformationMessage('No fired rule found');
+			}		
 		}
 	}
 
@@ -215,7 +220,7 @@ export class LogFile extends TextFile {
 		return this.selectedTreeStr.length ? true : false;
 	}
 
-	generateRule(editor: vscode.TextEditor) {
+	generateRule(editor: vscode.TextEditor, genType: generateType) {
 		if (visualText.analyzer.hasText()) {
 			let passFilePath = visualText.analyzer.getPassPath();
 			let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
@@ -229,19 +234,23 @@ export class LogFile extends TextFile {
 				let indent = -1;
 
 				for (let line of this.selectedLines) {
+					if (line.node.localeCompare('_ROOT') == 0)
+						continue;
 					let node = line.node;
 					if (indent == -1 || line.indent < indent) indent = line.indent;
 					if (line.end > lastend && line.indent <= indent) {
-						if (line.type.localeCompare('alpha') == 0 && node.localeCompare(node.toUpperCase()) == 0)
-							node = '_xCAP';
-						else if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
-							node = '_xALPHA';
-						else if (line.type.localeCompare('white') == 0)
-							node = '_xWHITE';
-						else if (line.type.localeCompare('num') == 0)
-							node = '_xNUM';
-						else if (line.type.localeCompare('punct') == 0)
-							node = `\\${node}`;
+						if (genType == generateType.GENERAL) {
+							if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
+								node = '_xCAP';
+							else if (line.type.localeCompare('alpha') == 0)
+								node = '_xALPHA';
+							else if (line.type.localeCompare('white') == 0)
+								node = '_xWHITE';
+							else if (line.type.localeCompare('num') == 0)
+								node = '_xNUM';
+							else if (line.type.localeCompare('punct') == 0)
+								node = `\\${node}`;
+						}
 						let newRuleStr = `\t${node}\t### (${num})`;
 						ruleStr = ruleStr + '\n' + newRuleStr;
 						num++;						
@@ -262,6 +271,9 @@ ${ruleStr}
 `;
 				nlp.setFile(passFilePath);
 				nlp.insertRule(ruleStrFinal);
+			}
+			else {
+				vscode.window.showInformationMessage('No text selected');
 			}
 		}
 	}
@@ -296,6 +308,9 @@ ${ruleStr}
 		if (this.findSelectedTreeStr(editor)) {
 			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.tree';
 			this.openTemporaryFile(filename,this.selectedTreeStr);
+		}
+		else {
+			vscode.window.showInformationMessage('No text selected');
 		}
 	}
 
