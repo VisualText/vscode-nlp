@@ -4,7 +4,7 @@
 NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
 
 ## Quick Video Guides
-Find quick video guides on how to install and use VisualText including a "hello world" video as well as an in-depth tour of VisualText.
+Find [quick video guides](http://tutorials.visualtext.org/) on how to install and use VisualText including a "hello world" video as well as an in-depth tour of VisualText.
 
 ## Introduction
 
