@@ -74,7 +74,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.21.0
+### v1.21.3
 Various minor issues fixed
 
 ### v1.20.7
