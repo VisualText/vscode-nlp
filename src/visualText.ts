@@ -289,7 +289,9 @@ export class VisualText {
                     visualText.debugMessage('NLP Engine version ' + visualText.repoEngineVersion);
                     visualText.updaterGlobalStatus = updaterStatus.CHECK_FILES;
                 }
-                nlpStatusBar.updateEngineVersion(visualText.engineVersion);                 
+                if (nlpStatusBar !== undefined) {
+                    nlpStatusBar.updateEngineVersion(visualText.engineVersion);     
+                }
             }).catch(err => {
                 this.debugMessage(err);
             });
@@ -367,7 +369,7 @@ export class VisualText {
                 dirfuncs.delFile(toPath);
             }
             catch (err) {
-                this.debugMessage('Could not unzip file: ' + toPath);
+                this.debugMessage('Could not unzip file: ' + toPath + '\n' + err);
             }
         })();
     }
@@ -461,7 +463,7 @@ export class VisualText {
                 visualText.setLatestEngineDownload(engDir);
             }
             catch (error) {
-                this.debugMessage('FAILED download: ' + url);
+                this.debugMessage('FAILED download: ' + url + '\n' + error);
             }
 
         })();     
@@ -728,7 +730,9 @@ export class VisualText {
             ext.hasEngineFiles = false;
             ext.engineDownloadStatus = downloadStatus.DONE;
             this.engineVersion = this.repoEngineVersion;
-            nlpStatusBar.updateEngineVersion(this.engineVersion);    
+            if (nlpStatusBar !== undefined) {
+                nlpStatusBar.updateEngineVersion(this.engineVersion);    
+            }
         }
     }
 
@@ -763,7 +767,9 @@ export class VisualText {
             ext.vtFilesZipStatus = status;
             this.vtFilesVersion = this.repoVTFilesVersion;
             this.setVTFilesVersion(this.repoVTFilesVersion);
-            nlpStatusBar.updateFilesVersion(this.repoVTFilesVersion);
+            if (nlpStatusBar !== undefined) {
+                nlpStatusBar.updateFilesVersion(this.repoVTFilesVersion);
+            }
         }
     }
 
@@ -1012,7 +1018,8 @@ export class VisualText {
     }
 
     hasEngine(extDir: vscode.Uri): boolean {
-        return fs.existsSync(path.join(extDir.fsPath,this.NLPENGINE_FOLDER,this.NLP_EXE));
+        var engPath = path.join(extDir.fsPath,this.NLPENGINE_FOLDER,this.NLP_EXE);
+        return fs.existsSync(engPath);
     }
 
     isEngineDirectory(dirPath: vscode.Uri): boolean {
