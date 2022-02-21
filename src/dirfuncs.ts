@@ -112,18 +112,20 @@ export namespace dirfuncs {
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {
         const dirUris: vscode.Uri[] = new Array();
-        const filenames = fs.readdirSync(folder.fsPath);
-        for (let filename of filenames) {
-            if (!filename.startsWith('.')) {
-                var filepath = path.join(folder.fsPath,filename);
-                try {
-                    const stats = fs.statSync(filepath);
-                    if (stats.isDirectory())
-                        dirUris.push(vscode.Uri.file(filepath));
-                } catch (err: any) {
-                    console.error(err)
+        if (fs.existsSync(folder.fsPath)) {
+            const filenames = fs.readdirSync(folder.fsPath);
+            for (let filename of filenames) {
+                if (!filename.startsWith('.')) {
+                    var filepath = path.join(folder.fsPath,filename);
+                    try {
+                        const stats = fs.statSync(filepath);
+                        if (stats.isDirectory())
+                            dirUris.push(vscode.Uri.file(filepath));
+                    } catch (err: any) {
+                        console.error(err)
+                    }
                 }
-            }
+            }            
         }
         return dirUris;
     }
