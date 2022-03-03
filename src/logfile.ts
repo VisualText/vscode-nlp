@@ -348,27 +348,32 @@ ${ruleStr}
 		var multiline = false;
 
 		for (let line of file.getLines(true)) {
+			var ln = new TextEncoder().encode(line);
+			var len = ln.length;
 			if (multiline) {
 				if (selection.end.line == linecount) {
 					absEnd += selection.end.character - this.bracketCount(line,selection.end.character) - 1;
 					break;
 				}
-				absEnd += line.length + this.bracketCount(line);
-				if (line.length == 0)
+				absEnd += len + this.bracketCount(line);
+				if (len == 0)
 					absEnd += 1;
 			}
 			else if (selection.start.line == linecount) {
-				absStart += selection.start.character - this.bracketCount(line,selection.start.character);
+				var beforeStr = line.substr(0,selection.start.character);
+				var bStr = new TextEncoder().encode(beforeStr);
+				absStart += bStr.length - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
 					var selStr = line.substr(selection.start.character,selection.end.character-selection.start.character);
-					absEnd = absStart + selection.end.character - selection.start.character - this.bracketCount(selStr) - 1;
+					var slStr = new TextEncoder().encode(selStr);
+					absEnd = absStart + slStr.length - this.bracketCount(selStr) - 1;
 					break;
 				}
-				absEnd = absStart + line.length - selection.start.character - this.bracketCount(line);
+				absEnd = absStart + len - selection.start.character - this.bracketCount(line);
 				multiline = true;
 			} else {
-				absStart += line.length - this.bracketCount(line);
-				if (line.length == 0)
+				absStart += len - this.bracketCount(line);
+				if (len == 0)
 					absStart += 1;
 			}
 			linecount++;
@@ -541,14 +546,20 @@ ${ruleStr}
 		var from = 0;
 		var to = 0;
 		var built = false;
+		var byteText = new TextEncoder().encode(file.getText(true));
 
 		if (this.fireds.length) {
 			for (var i = 0; i < this.fireds.length; i++) {
 				from = this.fireds[i].from;
 				to = this.fireds[i].to;
 				built = this.fireds[i].built;
-				between = file.getText(true).substring(lastTo,from);
-				highlight = file.getText(true).substring(from,to+1);
+
+				var hl = byteText.slice(from,to+1);
+				var highlight = new TextDecoder().decode(hl);
+
+				var bt = byteText.slice(lastTo,from);
+				var between = new TextDecoder().decode(bt);
+
 				if (built)
 					textfire = textfire.concat(between,'[[',highlight,']]');
 				else if (nlpStatusBar.getFiredMode() == FiredMode.FIRED)
@@ -558,7 +569,9 @@ ${ruleStr}
 
 				lastTo = to + 1;
 			}
-			textfire = textfire.concat(file.getText(true).substring(lastTo,file.getText(true).length));
+			var tx = byteText.slice(lastTo,byteText.length);
+			var rest = new TextDecoder().decode(tx);
+			textfire = textfire.concat(rest);
 		} else {
 			textfire = file.getText(true);
 		}

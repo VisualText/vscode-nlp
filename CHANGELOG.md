@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.30.0
+Now handles utf8 files and characters (unicode)
+
 ### v1.21.4
 Various minor issues fixed
 
