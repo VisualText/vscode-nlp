@@ -74,6 +74,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.30.1
+Now uses the unicode version of the nlp-engine
+
 ### v1.30.0
 Now handles utf8 files and characters (unicode)
 
