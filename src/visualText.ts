@@ -550,7 +550,7 @@ export class VisualText {
     }
 
     updaterTimer() {
-        let debug = true;
+        let debug = false;
 
         if (visualText.updaterCounter++ >= 60) {
             visualText.debugMessage('Updater timed out');
