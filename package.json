@@ -3,11 +3,11 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.30.1",
+    "version": "1.30.2",
     "publisher": "dehilster",
     "enableProposedApi": false,
     "engines": {
-        "vscode": "^1.31.1"
+        "vscode": "^1.65.0"
     },
     "categories": [
         "Programming Languages",
@@ -1497,7 +1497,7 @@
     "devDependencies": {
         "@types/glob": "^7.2.0",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^12.20.33",
+        "@types/node": "^12.20.47",
         "@types/vscode": "^1.65.0",
         "glob": "^7.2.0",
         "mocha": "^6.2.2",
