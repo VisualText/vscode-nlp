@@ -3,6 +3,12 @@
 ## Only Computer Language Dedicated to Natural Language Processing
 NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
 
+## NLP++ and VisualText Now Unicode
+
+The NLP-Engine for NLP++ now works with Unicode (UTF8 via the ICU C++ Package) including the ability to work with emojis.
+
+![NLP++ Now works with Unicode in the form of UTF8](resources/UnicodeExample.gif)
+
 ## Quick Video Guides
 Find [quick video guides](http://tutorials.visualtext.org/) on how to install and use VisualText including a "hello world" video as well as an in-depth tour of VisualText.
 
@@ -11,12 +17,6 @@ Find [quick video guides](http://tutorials.visualtext.org/) on how to install an
 This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below).
 
 The language extension and the required NLP-ENGINE run on Linux, Windows, and MacOS.
-
-## NLP++ and VisualText Now Unicode
-
-The NLP-Engine for NLP++ now works with Unicode (UTF8 via the ICU C++ Package) including the ability to work with emojis.
-
-![NLP++ Now works with Unicode in the form of UTF8](resources/UnicodeExample.gif)
 
 ## Features
 
@@ -80,7 +80,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.30.4
+### v1.30.5
 Now uses the unicode version of the nlp-engine
 
 ### v1.30.0
