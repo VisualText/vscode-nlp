@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.30.2
+### v1.30.4
 Now uses the unicode version of the nlp-engine
 
 ### v1.30.0
