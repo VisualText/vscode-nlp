@@ -12,6 +12,12 @@ This is a VSCode Language Extension for NLP++ that recreates the functionality o
 
 The language extension and the required NLP-ENGINE run on Linux, Windows, and MacOS.
 
+## NLP++ and VisualText Now Unicode
+
+The NLP-Engine for NLP++ now works with Unicode (UTF8 via the ICU C++ Package) including the ability to work with emojis.
+
+![NLP++ Now works with Unicode in the form of UTF8](resources/UnicodeExample.gif)
+
 ## Features
 
 The VSCode NLP++ Language Extension allows for the fast development of NLP++ analyzers allowing users to:
@@ -74,7 +80,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.30.1
+### v1.30.4
 Now uses the unicode version of the nlp-engine
 
 ### v1.30.0
