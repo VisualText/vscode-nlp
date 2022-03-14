@@ -1335,7 +1335,7 @@
     "rule": {
         "prefix": ["rule 3 POST"],
         "body": [
-            "POST",
+            "@POST",
             "single();",
             "@RULES",
             "_xNIL <-\t",
