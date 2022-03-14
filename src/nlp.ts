@@ -176,8 +176,11 @@ export class NLPFile extends TextFile {
 			if (rulevars[0].length) {
 				var formattedRule = this.formatRule(rulevars[0]);
 				var rang = new vscode.Selection(rulevars[1].start,rulevars[1].end);
-				if (rulevars[1].start.line == rulevars[1].end.line) {
-					formattedRule = this.getSeparator() + formattedRule + this.getSeparator() + '\t';
+				if (!rulevars[2]) {
+					formattedRule = this.getSeparator() + formattedRule;
+				}
+				if (!rulevars[3]) {
+					formattedRule = formattedRule + this.getSeparator() + '\t';
 				}
 				var snippet = new vscode.SnippetString(formattedRule);
 				editor.insertSnippet(snippet,rang);
@@ -200,7 +203,7 @@ export class NLPFile extends TextFile {
 		}
 	}
 
-	findRuleText(editor: vscode.TextEditor): [string, vscode.Range] {
+	findRuleText(editor: vscode.TextEditor): [string, vscode.Range, boolean, boolean] {
 		var rulestr = '';
 		var position = editor.selection.active;
 		var lineStart = position.line;
@@ -212,6 +215,8 @@ export class NLPFile extends TextFile {
 		var line = lines[lineStart];
 		var lastline = line;
 		var multilined = false;
+		var arrowFlag = false;
+		var atSignFlag = false;
 		var pos = 0;
 
 		while ((pos = line.search('<-')) < 0) {
@@ -219,6 +224,7 @@ export class NLPFile extends TextFile {
 			lastline = line;
 			line = lines[--lineStart];
 			multilined = true;
+			arrowFlag = true;
 		}
 		if (lineStart < position.line)
 			charStart = 0;
@@ -236,6 +242,7 @@ export class NLPFile extends TextFile {
 			lastline = line;
 			line = lines[++lineEnd];
 			firsttime = false;
+			atSignFlag = true;
 		}
 		if (!firsttime)	{
 			lineEnd--;
@@ -252,7 +259,7 @@ export class NLPFile extends TextFile {
 			rulestr = lastline.substr(charStart,charEnd-charStart);
 		}
 
-		return [rulestr,range];
+		return [rulestr,range, arrowFlag, atSignFlag];
 	}
 
 	formatRule(ruleStr: string): string {
