@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.30.8
+Security updates
+
 ### v1.30.7
 Now uses the unicode version of the nlp-engine
 
