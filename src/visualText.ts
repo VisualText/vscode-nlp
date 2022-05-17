@@ -470,6 +470,7 @@ export class VisualText {
             try {
                 this.debugMessage('Downloading: ' + url);
                 await downloader.download();
+                dirfuncs.changeMod(localExePat,0o755);
                 this.debugMessage('DONE DOWNLOAD: ' + url);
                 visualText.setLatestEngineDownload(engDir);
             }
@@ -491,12 +492,12 @@ export class VisualText {
                 lib = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN ;
                 break;
             case 'darwin':
-                libRelease = icuFileNum == 1 ? this.ICU1_MAC : this.ICU1_MAC;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU1_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
                 break;
             default:
-                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU1_LINUX;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU1_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
@@ -784,7 +785,7 @@ export class VisualText {
                     hasSomething = true;
                 }
             }
-            if (!hasSomething) {
+            if (!hasSomething && this.extensionItems[extLatest]) {
                 var ext = this.extensionItems[extLatest];
                 ext.engineDownloadStatus = downloadStatus.UPDATE;
                 ext.isLatestEngine = true;
@@ -898,7 +899,7 @@ export class VisualText {
 
     extensionParentDirectory() {
         let extDir = '.vscode';
-        if (this.platform == 'linux' || this.platform == 'darwin') {
+        if (this.platform == 'linux') {
             extDir = '.vscode-server';
         }
         return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions'));
