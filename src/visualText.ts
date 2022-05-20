@@ -647,9 +647,9 @@ export class VisualText {
                         }
 
                         if (ext.hasICU1File && (ext.engineVersion.length == 0 || !ext.hasICU2File)) {
-                            if (debug) visualText.debugMessage('   engineDownloadICU1Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU1Status]);
+                            if (debug) visualText.debugMessage('   engineDownloadICU2Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU1Status]);
                             if (ext.engineDownloadICU2Status == downloadStatus.UNKNOWN) {
-                                ext.engineDownloadICU1Status = downloadStatus.DOWNLOADING;
+                                ext.engineDownloadICU2Status = downloadStatus.DOWNLOADING;
                                 visualText.downloadExecutableICU(ext,2);
                             }
                         }
