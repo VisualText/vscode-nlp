@@ -80,7 +80,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.30.12
+### v1.30.14
 Mac and Linux fixes
 
 ### v1.30.8

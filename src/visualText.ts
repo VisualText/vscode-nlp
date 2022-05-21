@@ -20,7 +20,6 @@ interface ExtensionItem {
     hasEngine: boolean;
     hasICU1File: boolean;
     hasICU2File: boolean;
-    hasICU3File: boolean;
     hasEngineFiles: boolean;
     hasVTFiles: boolean;
     vtVersion: string;
@@ -30,7 +29,6 @@ interface ExtensionItem {
     engineDownloadStatus: downloadStatus;
     engineDownloadICU1Status: downloadStatus;
     engineDownloadICU2Status: downloadStatus;
-    engineDownloadICU3Status: downloadStatus;
     engineVersionStatus: versionStatus;
     engineFilesDownloadStatus: downloadStatus;
     engineFilesZipStatus: zippingStatus;
@@ -48,14 +46,11 @@ export class VisualText {
     public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt69.dll';
-    public readonly ICU2_WIN = 'icuin69.dll';
-    public readonly ICU3_WIN = 'icuuc69.dll';
+    public readonly ICU2_WIN = 'icuuc69.dll';
     public readonly ICU1_LINUX = 'libicutu.a';
-    public readonly ICU2_LINUX = 'libicui18n.a';
-    public readonly ICU3_LINUX = 'libicuuc.a';
+    public readonly ICU2_LINUX = 'libicuuc.a';
     public readonly ICU1_MAC = 'libicutum.a';
-    public readonly ICU2_MAC = 'libicui18nm.a';
-    public readonly ICU3_MAC = 'libicuucm.a';
+    public readonly ICU2_MAC = 'libicuucm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_FOLDER = 'nlp-engine';
     public readonly VISUALTEXT_FILES_FOLDER = 'visualtext';
@@ -493,16 +488,16 @@ export class VisualText {
         var lib = '';
         switch (this.platform) {
             case 'win32':
-                libRelease = icuFileNum == 1 ? this.ICU1_WIN : icuFileNum == 2 ? this.ICU2_WIN : this.ICU3_WIN;
-                lib = icuFileNum == 1 ? this.ICU1_WIN : icuFileNum == 2 ? this.ICU2_WIN : this.ICU3_WIN ;
+                libRelease = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
+                lib = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
                 break;
             case 'darwin':
-                libRelease = icuFileNum == 1 ? this.ICU1_MAC : icuFileNum == 2 ? this.ICU2_MAC : this.ICU3_MAC;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
                 break;
             default:
-                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
@@ -533,10 +528,6 @@ export class VisualText {
                 else if (icuFileNum == 2) {
                     extension.engineDownloadICU2Status = downloadStatus.DONE;
                     extension.hasICU2File = true;
-                }
-                else if (icuFileNum == 3) {
-                    extension.engineDownloadICU3Status = downloadStatus.DONE;
-                    extension.hasICU3File = true;
                 }
             }
             catch (error) {
@@ -663,15 +654,7 @@ export class VisualText {
                             }
                         }
 
-                        if (ext.hasICU1File && ext.hasICU2File && (ext.engineVersion.length == 0 || !ext.hasICU3File)) {
-                            if (debug) visualText.debugMessage('   engineDownloadICU3Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU3Status]);
-                            if (ext.engineDownloadICU3Status == downloadStatus.UNKNOWN) {
-                                ext.engineDownloadICU3Status = downloadStatus.DOWNLOADING;
-                                visualText.downloadExecutableICU(ext,3);
-                            }
-                        }
-    
-                        if (ext.hasICU1File && ext.hasICU2File && ext.hasICU3File && ext.engineDownloadStatus == downloadStatus.UPDATE || (visualText.engineDir.fsPath.length <= 1 && ext.engineDownloadStatus == downloadStatus.UNKNOWN)) {
+                        if (ext.hasICU1File && ext.hasICU2File && ext.engineDownloadStatus == downloadStatus.UPDATE || (visualText.engineDir.fsPath.length <= 1 && ext.engineDownloadStatus == downloadStatus.UNKNOWN)) {
                             if (debug) visualText.debugMessage('   engineDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineDownloadStatus]);
                             ext.engineDownloadStatus = downloadStatus.DOWNLOADING;
                             visualText.downloadExecutable(ext);
@@ -681,7 +664,7 @@ export class VisualText {
                             ext.engineFilesDownloadStatus = downloadStatus.DOWNLOADING;
                         }
 
-                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasICU3File && (ext.engineVersion.length == 0 || !ext.hasEngineFiles)) {
+                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && (ext.engineVersion.length == 0 || !ext.hasEngineFiles)) {
                             if (debug) visualText.debugMessage('   engineFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineFilesDownloadStatus]);
                             if (debug) visualText.debugMessage('   engineFilesZipStatus: ' + visualText.zippingStatusStrs[ext.engineFilesZipStatus]);
                             if (!ext.hasEngineFiles && ext.engineVersion.length && ext.engineFilesDownloadStatus == downloadStatus.UNKNOWN) {
@@ -694,7 +677,7 @@ export class VisualText {
                             }
                         }
 
-                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasICU3File && ext.hasEngineFiles && (!ext.hasVTFiles || !visualText.vtFilesVersion.length)) {
+                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasEngineFiles && (!ext.hasVTFiles || !visualText.vtFilesVersion.length)) {
                             if (debug) visualText.debugMessage('   vtFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.vtFilesDownloadStatus]);
                             if (debug) visualText.debugMessage('   vtFilesZipStatus: ' + visualText.zippingStatusStrs[ext.vtFilesZipStatus]);
                             if (debug) visualText.debugMessage('   vtFilesVersionStatus: ' + visualText.versionStatusStrs[ext.vtFilesVersionStatus]);
@@ -754,7 +737,6 @@ export class VisualText {
                     hasEngine: this.hasEngine(dir),
                     hasICU1File: this.hasICUFiles(dir, 1),
                     hasICU2File: this.hasICUFiles(dir, 2),
-                    hasICU3File: this.hasICUFiles(dir, 3),
                     hasEngineFiles: this.isEngineDirectory(dir),
                     hasVTFiles: this.isVisualTextDirectory(dir),
                     vtVersion: this.versionFromPath(dir),
@@ -764,7 +746,6 @@ export class VisualText {
                     engineDownloadStatus: downloadStatus.UNKNOWN,
                     engineDownloadICU1Status: downloadStatus.UNKNOWN,
                     engineDownloadICU2Status: downloadStatus.UNKNOWN,
-                    engineDownloadICU3Status: downloadStatus.UNKNOWN,
                     engineVersionStatus: versionStatus.UNKNOWN,
                     engineFilesDownloadStatus: downloadStatus.UNKNOWN,
                     engineFilesZipStatus: zippingStatus.UNKNOWN,
@@ -774,7 +755,7 @@ export class VisualText {
                     vtFilesVersionStatus: versionStatus.UNKNOWN
                 });
                 var ext = this.extensionItems[this.extensionItems.length - 1];
-                if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasICU3File && ext.hasVTFiles && ext.hasEngineFiles)
+                if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasVTFiles && ext.hasEngineFiles)
                     hasAll = counter;
                 if (ext.vtVersion.length && (!latestVersion.length || this.versionCompare(ext.vtVersion,latestVersion) > 0)) {
                     latestVersion = ext.vtVersion;
@@ -800,7 +781,7 @@ export class VisualText {
         if (hasAll < 0) {
             var hasSomething = false;
             for (let ext of visualText.extensionItems) {
-                if (ext.hasEngine || ext.hasICU1File || ext.hasICU2File || ext.hasICU3File || ext.hasEngineFiles || ext.hasVTFiles) {
+                if (ext.hasEngine || ext.hasICU1File || ext.hasICU2File || ext.hasEngineFiles || ext.hasVTFiles) {
                     hasSomething = true;
                 }
             }
@@ -1131,15 +1112,15 @@ export class VisualText {
         var icu = '';
         switch (this.platform) {
             case 'win32':
-                icu = icuFileNum == 1 ? this.ICU1_WIN : icuFileNum == 2 ? this.ICU2_WIN : this.ICU3_WIN;
+                icu = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
                 break;
 
             case 'darwin':
-                icu = icuFileNum == 1 ? this.ICU1_MAC : icuFileNum == 2 ? this.ICU2_MAC : this.ICU3_MAC;
+                icu = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
                 break;
 
             default:
-                icu = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
+                icu = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
         }
         var icuPath = path.join(extDir.fsPath,this.NLPENGINE_FOLDER,icu);
         return fs.existsSync(icuPath);
