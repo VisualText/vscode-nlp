@@ -54,7 +54,7 @@ export class VisualText {
     public readonly ICU2_LINUX = 'libicui18n.a';
     public readonly ICU3_LINUX = 'libicuuc.a';
     public readonly ICU1_MAC = 'libicutum.a';
-    public readonly ICU2_MAC = 'libicui18n.a';
+    public readonly ICU2_MAC = 'libicui18nm.a';
     public readonly ICU3_MAC = 'libicuucm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_FOLDER = 'nlp-engine';
@@ -493,16 +493,16 @@ export class VisualText {
         var lib = '';
         switch (this.platform) {
             case 'win32':
-                libRelease = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
-                lib = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN ;
+                libRelease = icuFileNum == 1 ? this.ICU1_WIN : icuFileNum == 2 ? this.ICU2_WIN : this.ICU3_WIN;
+                lib = icuFileNum == 1 ? this.ICU1_WIN : icuFileNum == 2 ? this.ICU2_WIN : this.ICU3_WIN ;
                 break;
             case 'darwin':
-                libRelease = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_MAC : icuFileNum == 2 ? this.ICU2_MAC : this.ICU3_MAC;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
                 break;
             default:
-                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
+                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
+                lib = icuFileNum == 1 ? this.ICU1_LINUX : icuFileNum == 2 ? this.ICU2_LINUX : this.ICU3_LINUX;
         }
         const url = this.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
@@ -533,6 +533,10 @@ export class VisualText {
                 else if (icuFileNum == 2) {
                     extension.engineDownloadICU2Status = downloadStatus.DONE;
                     extension.hasICU2File = true;
+                }
+                else if (icuFileNum == 3) {
+                    extension.engineDownloadICU3Status = downloadStatus.DONE;
+                    extension.hasICU3File = true;
                 }
             }
             catch (error) {
