@@ -10,8 +10,8 @@ import { nlpStatusBar } from './status';
 import { logView } from './logView';
 import { exec } from 'child_process';
 
-export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE }
-export enum versionStatus { UNKNOWN, VERSIONING, DONE }
+export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE, FAILED }
+export enum versionStatus { UNKNOWN, VERSIONING, DONE, FAILED }
 export enum downloadStatus { UNKNOWN, UPDATE, DELETE, DOWNLOADING, DONE, FAILED }
 export enum zippingStatus { UNKNOWN, UNZIPPING, DONE, FAILED }
 
@@ -26,6 +26,7 @@ interface ExtensionItem {
     isLatest: boolean;
     isLatestEngine: boolean;
     engineVersion: string;
+    timerCount: number;
     engineDownloadStatus: downloadStatus;
     engineDownloadICU1Status: downloadStatus;
     engineDownloadICU2Status: downloadStatus;
@@ -475,6 +476,7 @@ export class VisualText {
                 visualText.setLatestEngineDownload(engDir);
             }
             catch (error) {
+                extension.engineDownloadStatus = downloadStatus.FAILED;
                 this.debugMessage('FAILED download: ' + url + '\n' + error);
             }
 
@@ -531,6 +533,14 @@ export class VisualText {
                 }
             }
             catch (error) {
+                if (icuFileNum == 1) {
+                    extension.engineDownloadICU1Status = downloadStatus.FAILED;
+                    extension.hasICU1File = false;
+                }
+                else if (icuFileNum == 2) {
+                    extension.engineDownloadICU2Status = downloadStatus.FAILED;
+                    extension.hasICU2File = false;
+                }
                 this.debugMessage('FAILED download: ' + url + '\n' + error);
             }
         })();     
@@ -538,6 +548,8 @@ export class VisualText {
 
     getVersions() {
         let engVersion = visualText.getEngineVersion();
+        if (engVersion?.startsWith('[command arg:'))
+            engVersion = '';
         if (engVersion)
             visualText.engineVersion = engVersion;
         else
@@ -561,6 +573,11 @@ export class VisualText {
         if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus] + ' ' + visualText.updaterCounter.toString());
 
         switch (visualText.updaterGlobalStatus) {
+            case updaterStatus.FAILED: {
+                clearInterval(visualText.updaterID);
+                visualText.debugMessage('UPDATE FAILED');
+                break;
+            }
             case updaterStatus.GATHER_EXTENSIONS: {
                 visualText.getVersions();
                 if (!visualText.extensionItems.length)
@@ -574,16 +591,26 @@ export class VisualText {
                     if (ext.hasEngine) {
                         if (ext.engineVersion.length == 0 && ext.engineVersionStatus == versionStatus.UNKNOWN) {
                             ext.engineVersionStatus = versionStatus.VERSIONING;
+                            visualText.debugMessage('Versioning engine: ' + ext.uri.fsPath.toString());
+                            ext.timerCount++;
                             visualText.fetchExeVersion(ext.uri.fsPath)?.then(notUsed => {
                                 visualText.setExtEngineVersion(ext.uri.fsPath,visualText.cmdEngineVersion);
                             });
                             versionsDone = false;
                         }
-                        else if (ext.engineVersionStatus == versionStatus.VERSIONING)
-                            versionsDone = false;
+                        else if (ext.engineVersionStatus == versionStatus.VERSIONING) {
+                            if (ext.timerCount++ < 4)
+                                versionsDone = false;
+                            else {
+                                visualText.debugMessage('Versioning FAILED: ' + ext.uri.fsPath.toString());
+                                ext.timerCount = 0;
+                                ext.engineVersionStatus = versionStatus.FAILED;
+                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
+                            }
+                        }
                     }       
                 }
-                if (versionsDone) {
+                if (versionsDone && visualText.updaterGlobalStatus != updaterStatus.FAILED) {
                     visualText.updaterGlobalStatus = updaterStatus.CHOOSE_LATEST;
                 }
                 break;
@@ -610,7 +637,7 @@ export class VisualText {
                 // Mark for deletion
                 index = 0;
                 for (let ext of visualText.extensionItems) {
-                    if (ext.hasEngine) {
+                    if (ext.hasEngine && ext.engineVersionStatus != versionStatus.FAILED) {
                         if (index != latestIndex)
                             ext.engineDownloadStatus = downloadStatus.DELETE;
                         else
@@ -640,7 +667,10 @@ export class VisualText {
 
                         if (ext.engineVersion.length == 0 || !ext.hasICU1File) {
                             if (debug) visualText.debugMessage('   engineDownloadICU1Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU1Status]);
-                            if (ext.engineDownloadICU1Status == downloadStatus.UNKNOWN) {
+                            if (ext.engineDownloadICU1Status == downloadStatus.FAILED) {
+                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
+                            }
+                            else if (ext.engineDownloadICU1Status == downloadStatus.UNKNOWN) {
                                 ext.engineDownloadICU1Status = downloadStatus.DOWNLOADING;
                                 visualText.downloadExecutableICU(ext,1);
                             }
@@ -648,7 +678,10 @@ export class VisualText {
 
                         if (ext.hasICU1File && (ext.engineVersion.length == 0 || !ext.hasICU2File)) {
                             if (debug) visualText.debugMessage('   engineDownloadICU2Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU2Status]);
-                            if (ext.engineDownloadICU2Status == downloadStatus.UNKNOWN) {
+                            if (ext.engineDownloadICU2Status == downloadStatus.FAILED) {
+                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
+                            }
+                            else if (ext.engineDownloadICU2Status == downloadStatus.UNKNOWN) {
                                 ext.engineDownloadICU2Status = downloadStatus.DOWNLOADING;
                                 visualText.downloadExecutableICU(ext,2);
                             }
@@ -743,6 +776,7 @@ export class VisualText {
                     isLatest: false,
                     isLatestEngine: false,
                     engineVersion: '',
+                    timerCount: 0,
                     engineDownloadStatus: downloadStatus.UNKNOWN,
                     engineDownloadICU1Status: downloadStatus.UNKNOWN,
                     engineDownloadICU2Status: downloadStatus.UNKNOWN,
@@ -788,7 +822,8 @@ export class VisualText {
             if (!hasSomething && this.extensionItems[extLatest]) {
                 var ext = this.extensionItems[extLatest];
                 ext.engineDownloadStatus = downloadStatus.UPDATE;
-                ext.isLatestEngine = true;
+                if (ext.engineVersion.length)
+                    ext.isLatestEngine = true;
             }
         }
     }

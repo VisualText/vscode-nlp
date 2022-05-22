@@ -3,9 +3,9 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.30.14",
+    "version": "1.30.15",
     "publisher": "dehilster",
-    "enableProposedApi": false,
+    "enableApiProposals": false,
     "engines": {
         "vscode": "^1.65.0"
     },
