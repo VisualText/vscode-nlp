@@ -36,6 +36,12 @@
                 "settings": {
                     "foreground": "#4e8e3c",
                 }
+            },
+            {
+                "scope": "variable.parameter.txxt",
+                "settings": {
+                    "foreground": "#f8fa87",
+                }
             }
         ]
     },

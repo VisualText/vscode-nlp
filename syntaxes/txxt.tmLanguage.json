@@ -11,16 +11,16 @@
             "name": "meta.expression.tree",
             "patterns": [
                 {
-                    "include": "#bracket-highlight"
+                    "include": "#angle-highlight"
                 },
                 {
-                    "include": "#curly-highlight"
+                    "include": "#paren-highlight"
                 }               
             ]
         },
-        "bracket-highlight": {
-            "begin": "\\[\\[",
-            "end": "\\]\\]",
+        "angle-highlight": {
+            "begin": "\\<\\<",
+            "end": "\\>\\>",
             "beginCaptures": {
                 "0": { "name": "variable.parameter.txxt" }
             },
@@ -29,9 +29,9 @@
             },
             "name": "keyword.other.txxt"
         },
-        "curly-highlight": {
-            "begin": "\\{\\{",
-            "end": "\\}\\}",
+        "paren-highlight": {
+            "begin": "\\(\\(",
+            "end": "\\)\\)",
             "beginCaptures": {
                 "0": { "name": "variable.parameter.txxt" }
             },
