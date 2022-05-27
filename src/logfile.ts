@@ -331,10 +331,10 @@ ${ruleStr}
 		if (end) {
 			text = text.substr(0,end);
 		}
-		var brackets = text.split(/\[\[/);
-		var brackets2 = text.split(/\]\]/);
-		var curly = text.split(/\{\{/);
-		var curly2 = text.split(/\}\}/);
+		var brackets = text.split(/\=\</);
+		var brackets2 = text.split(/\>\=/);
+		var curly = text.split(/\-\</);
+		var curly2 = text.split(/\>\-/);
 		var bracketCount = ((brackets.length + brackets2.length - 2))*2;
 		var curlyCount = ((curly.length + curly2.length - 2))*2;
 		return bracketCount + curlyCount;
@@ -442,15 +442,15 @@ ${ruleStr}
 
 	parseBrackets(): number {
 		this.highlights = [];
-		var squares = this.parseBracketsRegex('[');
-		var curlies = this.parseBracketsRegex('{');
+		var squares = this.parseBracketsRegex('(');
+		var curlies = this.parseBracketsRegex('<');
 		this.highlights.sort(function(a,b){return a.start - b.start});
 		return squares + curlies;
 	}
 
 	parseBracketsRegex(bracket: string): number {
-		var startPattern = bracket === '[' ? '\[\[' : '\{\{';
-		var endPattern = bracket === '[' ? '\]\]' : '\}\}';
+		var startPattern = bracket === '(' ? '\<\<' : '\(\(';
+		var endPattern = bracket === '<' ? '\>\>' : '\(\(';
 
 		var file = new TextFile(this.highlightFile,false);
 		var tokens = file.getText(true).split(startPattern);
@@ -470,10 +470,10 @@ ${ruleStr}
 				this.highlights.push(highlight);
 			}
 
-			let tok = token.replace(/\[\[/g, '');
-			tok = tok.replace(/\]\]/g, '');
-			tok = tok.replace(/\{\{/g, '');
-			tok = tok.replace(/\}\}/g, '');
+			let tok = token.replace(/\<\</g, '');
+			tok = tok.replace(/\>\>/g, '');
+			tok = tok.replace(/\(\(/g, '');
+			tok = tok.replace(/\)\)/g, '');
 			len += tok.length;
 			tokencount++;
 			lenBracket += token.length + 2;
@@ -561,9 +561,9 @@ ${ruleStr}
 				var between = new TextDecoder().decode(bt);
 
 				if (built)
-					textfire = textfire.concat(between,'[[',highlight,']]');
+					textfire = textfire.concat(between,'<<',highlight,'>>');
 				else if (nlpStatusBar.getFiredMode() == FiredMode.FIRED)
-					textfire = textfire.concat(between,'{{',highlight,'}}');
+					textfire = textfire.concat(between,'((',highlight,'))');
 				else
 					textfire = textfire.concat(between,highlight);
 
