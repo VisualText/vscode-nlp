@@ -21,6 +21,8 @@ export interface Highlight {
 export interface Fired {
 	from: number;
 	to: number;
+	ufrom: number;
+	uto: number;
 	rulenum: number;
 	ruleline: number;
 	built: boolean;
@@ -30,6 +32,8 @@ export interface LogLine {
 	node: string
 	start: number;
 	end: number;
+	ustart: number;
+	uend: number;
 	passNum: number;
 	ruleLine: number;
 	type: string;
@@ -104,10 +108,10 @@ export class LogFile extends TextFile {
 
 		for (let line of lines) {
 			let logLine = this.parseLogLine(line);
-			if (this.selStart < 0 || logLine.start < this.selStart)
-				this.selStart = logLine.start;
-			if (this.selEnd < 0 || logLine.end > this.selEnd)
-				this.selEnd = logLine.end;
+			if (this.selStart < 0 || logLine.ustart < this.selStart)
+				this.selStart = logLine.ustart;
+			if (this.selEnd < 0 || logLine.uend > this.selEnd)
+				this.selEnd = logLine.uend;
 			this.selectedLines.push(logLine);
 		}
 	}
@@ -195,11 +199,15 @@ export class LogFile extends TextFile {
 
 	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
 		var filename: string = 'ana';
-		if (pass < 10)
-			filename = filename + '00';
-		else if (pass < 100)
-			filename = filename + '0';
-		filename = filename + pass.toString() + '.' + this.getExtension(type);
+		if (pass > 0) {
+			if (pass < 10)
+				filename = filename + '00';
+			else if (pass < 100)
+				filename = filename + '0';
+			filename = filename + pass.toString() + '.' + this.getExtension(type);
+		} else {
+			filename = 'final.tree';
+		}
 		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
 	}
 	
@@ -279,7 +287,7 @@ ${ruleStr}
 	}
 
 	parseLogLine(line: string): LogLine {
-		let logLine: LogLine = {node: '', start: 0, end: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
+		let logLine: LogLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
 		var tokens = line.split('[');
 		if (tokens.length > 1) {
 			logLine.node = tokens[0].trim();
@@ -288,15 +296,17 @@ ${ruleStr}
 			if (toks.length >= 4) {
 				logLine.start = +toks[0];
 				logLine.end = +toks[1];
-				logLine.passNum = +toks[2];
-				logLine.ruleLine = +toks[3];	
-				logLine.type = toks[4];
-				if (toks.length > 5 ) {
-					if (toks[5].length)
+				logLine.ustart = +toks[2];
+				logLine.uend = +toks[3];	
+				logLine.passNum = +toks[4];
+				logLine.ruleLine = +toks[5];	
+				logLine.type = toks[6];
+				if (toks.length > 7 ) {
+					if (toks[7].length)
 						logLine.fired = true;
 				}
-				if (toks.length > 6) {
-					if (toks[6].length > 0)
+				if (toks.length > 8) {
+					if (toks[8].length > 0)
 						logLine.built = true;
 				}
 			}
@@ -331,13 +341,17 @@ ${ruleStr}
 		if (end) {
 			text = text.substr(0,end);
 		}
-		var brackets = text.split(/\=\</);
-		var brackets2 = text.split(/\>\=/);
-		var curly = text.split(/\-\</);
-		var curly2 = text.split(/\>\-/);
-		var bracketCount = ((brackets.length + brackets2.length - 2))*2;
-		var curlyCount = ((curly.length + curly2.length - 2))*2;
-		return bracketCount + curlyCount;
+		var parens = text.split(/\(\(/);
+		var parens2 = text.split(/\)\)/);
+		var angle = text.split(/\<\</);
+		var angle2 = text.split(/\>\>/);
+		var parenCount = ((parens.length + parens2.length - 2))*2;
+		var angleCount = ((angle.length + angle2.length - 2))*2;
+		return parenCount + angleCount;
+	}
+
+	getCharacterLength(str: string) {
+		return [...str].length;
 	}
 
 	absoluteRangeFromSelection(textfile: string, selection: vscode.Selection) {
@@ -350,6 +364,7 @@ ${ruleStr}
 		for (let line of file.getLines(true)) {
 			var ln = new TextEncoder().encode(line);
 			var len = ln.length;
+			len = this.getCharacterLength(line);
 			if (multiline) {
 				if (selection.end.line == linecount) {
 					absEnd += selection.end.character - this.bracketCount(line,selection.end.character) - 1;
@@ -365,8 +380,7 @@ ${ruleStr}
 				absStart += bStr.length - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
 					var selStr = line.substr(selection.start.character,selection.end.character-selection.start.character);
-					var slStr = new TextEncoder().encode(selStr);
-					absEnd = absStart + slStr.length - this.bracketCount(selStr) - 1;
+					absEnd = absStart + selStr.length - this.bracketCount(selStr) - 1;
 					break;
 				}
 				absEnd = absStart + len - selection.start.character - this.bracketCount(line);
@@ -400,9 +414,9 @@ ${ruleStr}
 			var tokens = line.split('[');
 			if (tokens.length > 1) {
 				var toks = tokens[1].split(/[,\]]/);
-				if (toks.length > 2) {
-					from = +toks[0];
-					to = +toks[1];
+				if (toks.length > 4) {
+					from = +toks[2];
+					to = +toks[3];
 					if (from >= this.selStart && to <= this.selEnd) {
 						this.selectedLines.push(this.parseLogLine(line));
 						this.selectedTreeStr = this.selectedTreeStr.concat(line,sep);
@@ -491,14 +505,16 @@ ${ruleStr}
 		for (let line of file.getLines()) {
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
-				let fired: Fired = {from: 0, to: 0, rulenum: 0, ruleline: 0, built: false};
+				let fired: Fired = {from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
 				var tts = line.split(refire);
-				fired.built = (tts.length >= 7 && tts[7] === 'blt') ? true : false;
+				fired.built = (tts.length >= 9 && tts[9] === 'blt') ? true : false;
 				if (+tts[2] > lastTo) {
 					fired.from = +tts[1];
 					fired.to = lastTo = +tts[2];
-					fired.rulenum = +tts[3];
-					fired.ruleline = +tts[4];
+					fired.ufrom = +tts[3];
+					fired.uto = lastTo = +tts[4];
+					fired.rulenum = +tts[5];
+					fired.ruleline = +tts[6];
 					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || fired.built)
 						this.fireds.push(fired);						
 				}
@@ -513,7 +529,7 @@ ${ruleStr}
 			var logfile = this.anaFile(pass);
 			if (fs.existsSync(logfile.fsPath)) {
 				this.parseFireds(logfile.fsPath);
-				this.writeFiredText(logfile,rewrite);				
+				this.writeFiredText(logfile,rewrite);
 			}
 		}
 		return firefile;
