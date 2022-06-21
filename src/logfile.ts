@@ -362,9 +362,7 @@ ${ruleStr}
 		var multiline = false;
 
 		for (let line of file.getLines(true)) {
-			var ln = new TextEncoder().encode(line);
-			var len = ln.length;
-			len = this.getCharacterLength(line);
+			var len = this.getCharacterLength(line);
 			if (multiline) {
 				if (selection.end.line == linecount) {
 					absEnd += selection.end.character - this.bracketCount(line,selection.end.character) - 1;
@@ -376,8 +374,8 @@ ${ruleStr}
 			}
 			else if (selection.start.line == linecount) {
 				var beforeStr = line.substr(0,selection.start.character);
-				var bStr = new TextEncoder().encode(beforeStr);
-				absStart += bStr.length - this.bracketCount(line,selection.start.character);
+				var bLen = this.getCharacterLength(beforeStr);
+				absStart += bLen - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
 					var selStr = line.substr(selection.start.character,selection.end.character-selection.start.character);
 					absEnd = absStart + selStr.length - this.bracketCount(selStr) - 1;

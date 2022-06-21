@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.31.0
+### v1.31.1
 Added unicode character offsets to trees
 
 ### v1.30.16
