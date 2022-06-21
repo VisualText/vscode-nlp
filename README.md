@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.31.0
+Added unicode character offsets to trees
+
 ### v1.30.16
 Mac and Linux fixes
 
