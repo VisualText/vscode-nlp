@@ -308,6 +308,11 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}		
 	}
 
+	typePat(seqItem: SequenceItem) {
+		visualText.analyzer.seqFile.saveType(seqItem.passNum,'nlp');
+		vscode.commands.executeCommand('sequenceView.refreshAll');
+	}
+
 	typeRec(seqItem: SequenceItem) {
 		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
 		vscode.commands.executeCommand('sequenceView.refreshAll');
@@ -382,6 +387,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.duplicate', (seqItem) => treeDataProvider.duplicatePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.typePat', (seqItem) => treeDataProvider.typePat(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeRec', (seqItem) => treeDataProvider.typeRec(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOn', (seqItem) => treeDataProvider.typeOn(seqItem));
