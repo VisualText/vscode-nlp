@@ -593,13 +593,13 @@ export class VisualText {
                             ext.engineVersionStatus = versionStatus.VERSIONING;
                             visualText.debugMessage('Versioning engine: ' + ext.uri.fsPath.toString());
                             ext.timerCount++;
-                            visualText.fetchExeVersion(ext.uri.fsPath)?.then(notUsed => {
+                            visualText.fetchExeVersion(ext.uri.fsPath,debug)?.then(notUsed => {
                                 visualText.setExtEngineVersion(ext.uri.fsPath,visualText.cmdEngineVersion);
                             });
                             versionsDone = false;
                         }
                         else if (ext.engineVersionStatus == versionStatus.VERSIONING) {
-                            if (ext.timerCount++ < 4)
+                            if (ext.timerCount++ < 10)
                                 versionsDone = false;
                             else {
                                 visualText.debugMessage('Versioning FAILED: ' + ext.uri.fsPath.toString());
@@ -944,10 +944,11 @@ export class VisualText {
         return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_FOLDER));
     }
   
-    fetchExeVersion(extentionDir: string = '') {
+    fetchExeVersion(extentionDir: string = '', debug: boolean=false) {
         visualText.cmdEngineVersion = '';
 		const cp = require('child_process');
 		var exe = path.join(extentionDir,this.NLPENGINE_FOLDER,this.NLP_EXE);
+        if (debug) visualText.debugMessage('version exe: ' + exe);
         if (fs.existsSync(exe)) {
             return new Promise((resolve) => {
                 const child = cp.spawn(exe, ['--version']);
@@ -955,9 +956,14 @@ export class VisualText {
                 let stdErr = "";
                 child.stdout.on("data", (data) => {
                     let versionStr = data.toString();
+                    if (debug) visualText.debugMessage('version str: ' + versionStr);
                     let tokens = versionStr.split('\r\n');
                     if (tokens.length) {
-                        visualText.cmdEngineVersion = tokens[tokens.length - 2];
+                        if (tokens.length == 1)
+                            visualText.cmdEngineVersion = versionStr;
+                        else
+                            visualText.cmdEngineVersion = tokens[tokens.length - 2];
+                        if (debug) visualText.debugMessage('version found: ' + visualText.cmdEngineVersion);
                     }
                     resolve(visualText.cmdEngineVersion);
                 });
