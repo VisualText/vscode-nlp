@@ -106,6 +106,18 @@ export class NLPFile extends TextFile {
 			});
 		});
 	}
+
+	replaceContext(newContextStr: string) {
+		vscode.window.showTextDocument(this.getUri()).then(editor => {
+			let contextSel = this.findLineStartsWith('@NODES');
+			if (contextSel.isEmpty)
+				contextSel = this.findLineStartsWith('@PATH');
+			if (!contextSel.isEmpty) {
+				var snippet = new vscode.SnippetString(newContextStr);
+				editor.insertSnippet(snippet,contextSel);
+			}
+		});
+	}
 	
     searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
 		this.setDocument(editor);

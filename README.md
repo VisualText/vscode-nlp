@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.33.0
+Added "Generate @PATH" from tree
+
 ### v1.32.0
 Added icons to output view
 

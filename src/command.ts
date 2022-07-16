@@ -28,6 +28,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.ruleFired', this.ruleFiredLog));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.generatePath', this.generatePath));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -176,6 +177,13 @@ export class NLPCommands {
         if (vscode.window.activeTextEditor) {
             var logFile = new LogFile();
             logFile.ruleFired(vscode.window.activeTextEditor);
+        }
+    }
+
+    generatePath() {
+        if (vscode.window.activeTextEditor) {
+            var logFile = new LogFile();
+            logFile.generatePath(vscode.window.activeTextEditor);
         }
     }
 }

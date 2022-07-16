@@ -96,8 +96,55 @@ export class LogFile extends TextFile {
 						edit.selections = [new vscode.Selection(posStart,posEnd)]; 
 						edit.revealRange(range);
 					});
-				}				
+			}				
+		}
+	}
+
+	generatePath(editor: vscode.TextEditor) {
+		if (visualText.analyzer.hasText()) {
+			let passFileUri = this.getPassFromPath(editor);
+			if (passFileUri.fsPath.length > 2) {
+				this.setFile(editor.document.uri);
+				this.parseLogLines(editor);
+	
+				if (this.selStart >= 0) {
+					let pathStr = '';
+					let logLine = this.selectedLines[0];
+	
+					if (logLine) {
+						let start = this.getStartLine();
+						let lastIndent = logLine.indent + 1;
+						while ( logLine.indent > 0) {
+							let line = this.getLines()[start--];
+							logLine = this.parseLogLine(line);
+							if (logLine.indent < lastIndent) {
+								pathStr = logLine.node + ' ' + pathStr;
+								lastIndent = logLine.indent;
+							}
+						}
+					}
+					pathStr = '@PATH ' + pathStr;
+					pathStr = pathStr.trim();
+	
+					let nlp = new NLPFile();
+					nlp.setFile(passFileUri);
+					nlp.replaceContext(pathStr);
+				}
+				else {
+					vscode.window.showInformationMessage('No text selected');
+				}
+			} else {
+				vscode.window.showInformationMessage('Must not be the final tree');
 			}
+		}
+	}
+
+	getPassFromPath(editor: vscode.TextEditor): vscode.Uri {
+		let filePath = editor.document.uri.fsPath;
+		let passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
+		var seqFile = new SequenceFile();
+		seqFile.init();
+		return seqFile.getUriByPassNumber(passNum);
 	}
 
 	parseLogLines(editor: vscode.TextEditor) {
