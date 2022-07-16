@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.32.0
+Added icons to output view
+
 ### v1.31.3
 Fixed version number bug in linux and mac
 

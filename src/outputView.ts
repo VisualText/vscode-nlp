@@ -24,6 +24,16 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	constructor() { }
 
 	public getTreeItem(element: OutputItem): vscode.TreeItem {
+		var icon = 'file.svg';
+		if (element.uri.fsPath.endsWith('.tree')) {
+			icon = 'tree.svg';
+		} else if (element.uri.fsPath.endsWith('.log')) {
+			icon = 'log.svg';
+		} else if (element.uri.fsPath.endsWith('.nlp') || element.uri.fsPath.endsWith('.pat')) {
+			icon = 'nlp.svg';
+		} else if (element.uri.fsPath.endsWith('.kb') || element.uri.fsPath.endsWith('.kbb')) {
+			icon = 'kb.svg';
+		}
 		return {
 			resourceUri: element.uri,
 			collapsibleState: void 0,
@@ -31,7 +41,12 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 				command: 'outputView.openFile',
 				arguments: [element.uri],
 				title: 'Open Output File'
-			}
+			},
+			
+			iconPath: {
+				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+			},
 		};
 	}
 

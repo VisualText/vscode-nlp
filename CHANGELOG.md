@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.32.0
+Added icons to output view
+
 ### v1.31.3
 Fixed version number bug in linux and mac
 
