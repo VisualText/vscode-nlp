@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.32.0",
+    "version": "1.33.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -385,6 +385,12 @@
                 "category": "Tree",
                 "title": "Display Rule",
                 "description": "Display the rule fired"
+            },
+            {
+                "command": "log.generatePath",
+                "category": "Tree",
+                "title": "Generate @PATH",
+                "description": "Generate context @PATH for rule file"
             },
             {
                 "command": "nlp.openSelTree",
@@ -969,6 +975,11 @@
                 {
                     "when": "resourceExtname == .log || resourceExtname == .tree",
                     "command": "log.ruleFired",
+                    "group": "display"
+                },
+                {
+                    "when": "resourceExtname == .log || resourceExtname == .tree",
+                    "command": "log.generatePath",
                     "group": "display"
                 }
             ],

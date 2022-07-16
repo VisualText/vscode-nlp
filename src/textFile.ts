@@ -327,6 +327,22 @@ export class TextFile {
         return this.lines;
     }
 
+    findLineStartsWith(startsWithStr: string) {
+        let lines = this.getLines();
+        let lineCount = 0;
+        for (let line of lines) {
+            if (line.startsWith(startsWithStr)) {
+                var posStart = new vscode.Position(lineCount,0);
+                var posEnd = new vscode.Position(lineCount,line.length);
+                var rang = new vscode.Selection(posStart,posEnd);
+                return rang;
+            }
+            lineCount++;
+        }
+        var pos = new vscode.Position(0,0);
+        return new vscode.Selection(pos,pos);
+    }
+
     getSeparatorLength(): number {
         return this.sep.length;
     }
@@ -337,5 +353,9 @@ export class TextFile {
     
     getSeparatorNormalized(): string {
         return this.sep;
+    }
+
+    getStartLine(): number {
+        return this.selStartLine;
     }
 }
