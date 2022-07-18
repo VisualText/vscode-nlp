@@ -61,6 +61,7 @@ export class FileOps {
             visualText.fileOps.timerStatus = fileQueueStatus.DONE;
         }
         let op = visualText.fileOps.opsQueue[0];
+        let len = visualText.fileOps.opsQueue.length;
         let alldone = true;
         for (let o of visualText.fileOps.opsQueue) {
             if (o.status == fileOpStatus.UNKNOWN || o.status == fileOpStatus.RUNNING) {
@@ -84,6 +85,7 @@ export class FileOps {
                 switch (op.operation) {
                     case fileOperation.COPY: {
                         if (op.status == fileOpStatus.UNKNOWN) {
+                            op.status = fileOpStatus.RUNNING;
                             if (!fs.existsSync(op.uriFile1.fsPath)) {
                                 if (!dirfuncs.makeDir(op.uriFile1.fsPath))
                                     visualText.fileOps.timerStatus = fileQueueStatus.DONE;
@@ -93,23 +95,24 @@ export class FileOps {
                                 var copydir = require('copy-dir');
                                 copydir(op.uriFile1.fsPath,op.uriFile2.fsPath, function(err) {
                                     if (err) {
-                                        visualText.debugMessage('Directory copy failed: ' + op.uriFile2.fsPath);
                                         op.status = fileOpStatus.FAILED;
+                                        visualText.debugMessage('DIRECTORY COPY FAILED: ' + op.uriFile2.fsPath);
                                     }
-                                    visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath);
                                     op.status = fileOpStatus.DONE;
+                                    visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath);
                                 });
                             }
                             else {
                                 visualText.debugMessage('Copying file: ' + op.uriFile1.fsPath);
                                 if (dirfuncs.copyFile(op.uriFile1.fsPath,op.uriFile2.fsPath)) {
+                                    op.status = fileOpStatus.DONE;
                                     visualText.debugMessage('FILE COPIED TO: ' + op.uriFile2.fsPath);
                                 }
                                 else {
-                                    visualText.debugMessage('Filec copy failed: ' + op.uriFile2.fsPath);
+                                    op.status = fileOpStatus.FAILED;
+                                    visualText.debugMessage('FILE COPY FAILED: ' + op.uriFile2.fsPath);
                                 }
                             }
-                            op.status = fileOpStatus.RUNNING;
                         }
                     }
                     case fileOperation.DELETE: {
@@ -155,8 +158,8 @@ export class FileOps {
                             }
                             else {
                                 fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
-                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath);
                                 op.status = fileOpStatus.DONE;
+                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath);
                             }
                         }
                     }

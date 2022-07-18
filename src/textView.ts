@@ -6,6 +6,7 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 import { fileOps, fileOperation } from './fileOps';
+import * as fs from 'fs';
 
 export interface TextItem {
 	uri: vscode.Uri;
@@ -86,7 +87,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		return false;
 	}
 
-	existingText(textItem: TextItem) {
+	existingFile(textItem: TextItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: true,
@@ -111,15 +112,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 						dir = path.dirname(textItem.uri.fsPath);
 					} else if (visualText.analyzer.getTextPath()) {
 						var textPath = visualText.analyzer.getTextPath().fsPath;
-						if (textPath.length)
+						if (fs.existsSync(textPath))
 							dir = path.dirname(textPath);
+						else
+							dir = visualText.analyzer.getInputDirectory().fsPath;
 					}
 					var newPath = vscode.Uri.file(path.join(dir,filename));
-					fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
-					fileOps.startFileOps();
+					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
 				}
-	
-				vscode.commands.executeCommand('textView.refreshAll');	
+				visualText.fileOps.startFileOps();
 			});	
 		}
 	}
@@ -146,10 +147,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 					}
 					var newPath = vscode.Uri.file(path.join(dir,dirname));
 					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
-					visualText.fileOps.startFileOps();	
 				}
-	
-				vscode.commands.executeCommand('textView.refreshAll');	
+				visualText.fileOps.startFileOps();	
 			});	
 		}
 	}
@@ -205,7 +204,7 @@ export class TextView {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', (textItem) => treeDataProvider.refresh(textItem));
-		vscode.commands.registerCommand('textView.existingText', (textItem) => treeDataProvider.existingText(textItem));
+		vscode.commands.registerCommand('textView.existingFile', (textItem) => treeDataProvider.existingFile(textItem));
 		vscode.commands.registerCommand('textView.existingFolder', (textItem) => treeDataProvider.existingFolder(textItem));
 		vscode.commands.registerCommand('textView.rename', (textItem) => treeDataProvider.rename(textItem));
 		vscode.commands.registerCommand('textView.renameDir', (textItem) => treeDataProvider.renameDir(textItem));

@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.33.0",
+    "version": "1.33.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -571,8 +571,8 @@
                 }
             },
             {
-                "command": "textView.existingText",
-                "title": "Insert existing text",
+                "command": "textView.existingFile",
+                "title": "Insert existing file",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -1005,7 +1005,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.existingText",
+                    "command": "textView.existingFile",
                     "when": "view == textView",
                     "group": "navigation"
                 },
@@ -1307,7 +1307,7 @@
                     "group": "edit"
                 },
                 {
-                    "command": "textView.existingText",
+                    "command": "textView.existingFile",
                     "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
                     "group": "edit"
                 },
