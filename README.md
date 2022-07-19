@@ -80,7 +80,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.33.1
+### v1.33.2
 Fixed numerous problems with fileOps
 
 ### v1.33.0

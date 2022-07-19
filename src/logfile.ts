@@ -123,8 +123,7 @@ export class LogFile extends TextFile {
 							}
 						}
 					}
-					pathStr = '@PATH ' + pathStr;
-					pathStr = pathStr.trim();
+					pathStr = '@PATH _ROOT ' + pathStr.trim();
 	
 					let nlp = new NLPFile();
 					nlp.setFile(passFileUri);
