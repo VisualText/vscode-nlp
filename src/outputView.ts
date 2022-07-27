@@ -6,7 +6,7 @@ import { logView } from './logView';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 
-export enum outputFileType { TXT, KB, NLP }
+export enum outputFileType { TXT, TXXT, TREE, KB, NLP }
 
 interface OutputItem {
 	uri: vscode.Uri;
@@ -33,6 +33,8 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 			icon = 'nlp.svg';
 		} else if (element.uri.fsPath.endsWith('.kb') || element.uri.fsPath.endsWith('.kbb')) {
 			icon = 'kb.svg';
+		} else if (element.uri.fsPath.endsWith('.txxt')) {
+			icon = 'symbol-keyword.svg';
 		}
 		return {
 			resourceUri: element.uri,
@@ -80,6 +82,8 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
+		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
+		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
 		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
 		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
 
@@ -139,6 +143,14 @@ export class OutputView {
 		this.clearOutput(outputFileType.TXT);
 	}
 
+	private loadTxxt() {
+		this.clearOutput(outputFileType.TXXT);
+	}
+	
+	private loadTrees() {
+		this.clearOutput(outputFileType.TREE);
+	}
+
 	private loadKB() {
 		this.clearOutput(outputFileType.KB);
 	}
@@ -173,8 +185,8 @@ export class OutputView {
 				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb'],true);
 				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb'],true);
 				this.outputFiles = this.outputFiles.concat(kbFiles);
-
-			} else if (this.type == outputFileType.NLP) {
+			}
+			else if (this.type == outputFileType.NLP) {
 				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
 				for (let nlpFile of nlpFiles) {
 					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
@@ -182,8 +194,16 @@ export class OutputView {
 						this.outputFiles.push(nlpFile);
 					}
 				}
-
-			} else {
+			}
+			else if (this.type == outputFileType.TXXT) {
+				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.txxt'],true);
+				this.outputFiles = this.outputFiles.concat(matchFiles);
+			}
+			else if (this.type == outputFileType.TREE) {
+				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.tree'],true);
+				this.outputFiles = this.outputFiles.concat(matchFiles);
+			}
+			else {
 				var textPath = visualText.analyzer.getTextPath().fsPath;
 				this.outputFiles = [];
 				if (textPath.length && this.fileHasLog(textPath)) {
