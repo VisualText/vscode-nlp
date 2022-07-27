@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.33.3",
+    "version": "1.33.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -488,7 +488,7 @@
             },
             {
                 "command": "sequenceView.openHighlight",
-                "title": "Highlight Texts",
+                "title": "Highlight Matched Rules",
                 "icon": {
                     "light": "resources/light/symbol-keyword.svg",
                     "dark": "resources/dark/symbol-keyword.svg"
