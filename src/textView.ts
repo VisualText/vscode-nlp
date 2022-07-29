@@ -243,7 +243,7 @@ export class TextView {
 
 	analyze(textItem: TextItem) {
         if (textItem.uri.fsPath.length) {
-			this.openFile(textItem);
+			//this.openFile(textItem);
             var nlp = new NLPFile();
 			nlp.analyze(textItem.uri);
 			vscode.commands.executeCommand('analyzerView.refreshAll');
