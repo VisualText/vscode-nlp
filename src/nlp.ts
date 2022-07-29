@@ -112,6 +112,8 @@ export class NLPFile extends TextFile {
 			let contextSel = this.findLineStartsWith('@NODES');
 			if (contextSel.isEmpty)
 				contextSel = this.findLineStartsWith('@PATH');
+			if (contextSel.isEmpty)
+				contextSel = this.findLineStartsWith('@MULTI');
 			if (!contextSel.isEmpty) {
 				var snippet = new vscode.SnippetString(newContextStr);
 				editor.insertSnippet(snippet,contextSel);

@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.33.7
+Don't open text file when analyzing. Also @MULTI fixes and other fixes.
+
 ### v1.33.5
 Fixed numerous problems with fileOps
 

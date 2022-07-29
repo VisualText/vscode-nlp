@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.33.5",
+    "version": "1.33.7",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -440,7 +440,7 @@
             },
             {
                 "command": "sequenceView.typePat",
-                "title": "Pattern"
+                "title": "One Time"
             },
             {
                 "command": "sequenceView.typeRec",
@@ -1528,7 +1528,7 @@
         "os": "^0.1.2",
         "rimraf": "^3.0.2",
         "tslib": "^2.3.1",
-        "vsce": "^1.96.2"
+        "vsce": "^2.10.0"
     },
     "scripts": {
         "package": "vsce package",

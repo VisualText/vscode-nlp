@@ -200,6 +200,10 @@ export class OutputView {
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
 			else if (this.type == outputFileType.TREE) {
+				var finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath,'final.tree'));
+				if (fs.existsSync(finalTree.fsPath)) {
+					this.outputFiles.push(finalTree);
+				}
 				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.tree'],true);
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
@@ -214,7 +218,7 @@ export class OutputView {
 					var candidates = dirfuncs.getFiles(this.logDirectory);
 					for (let cand of candidates) {
 						let ext = path.parse(cand.fsPath).ext;
-						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.kbb') != 0)
+						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.kbb') != 0 && ext.localeCompare('.txxt') != 0)
 							this.outputFiles.push(cand);
 					}
 				} else {
