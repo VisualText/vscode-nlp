@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.35.0
+Added cancel analyzer during processing
+
 ### v1.34.2
 Don't open text file when analyzing. Also @MULTI fixes and other fixes.
 

@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { LogFile } from './logfile';
 import { nlpFileType } from './textFile';
+import { pseudoRandomBytes } from 'crypto';
+import * as os from 'os';
 
 let nlpStatusBarRun: vscode.StatusBarItem;
 let nlpStatusBarText: vscode.StatusBarItem;
@@ -32,7 +34,7 @@ export class NLPStatusBar {
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
         nlpStatusBarRun.text = `$(run)`;
         nlpStatusBarRun.tooltip = 'Analyze the text';
-        nlpStatusBarRun.command = 'textView.analyzeLast';
+        nlpStatusBarRun.command = 'status.clickedAnalyzerButton';
         nlpStatusBarRun.show();
 
         nlpStatusBarText = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 19);
@@ -73,6 +75,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings());
         vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
         vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
+        vscode.commands.registerCommand('status.clickedAnalyzerButton', () => this.clickedAnalyzerButton());
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPStatusBar {
@@ -81,7 +84,39 @@ export class NLPStatusBar {
         }
         return nlpStatusBar;
     }
-    
+
+    public clickedAnalyzerButton() {
+        this.analyzerButton(true);
+    }
+
+    public resetAnalyzerButton() {
+        nlpStatusBarRun.text = `$(run)`;
+        nlpStatusBarRun.tooltip = 'Analyze the text';
+        visualText.processID = 0;
+    }
+
+    public analyzerButton(statusBarClick: boolean=true) {
+        if (visualText.processID) {
+            let taskKill = "";
+            let exe = visualText.NLP_EXE;
+            switch (os.platform()) {
+                case 'win32':
+                    taskKill = `taskkill /IM "${exe}" /F`;
+                    break;
+                default:
+                    taskKill = `pkill -f "${exe}"`;
+            }
+            const cp = require('child_process');
+            cp.exec(taskKill);
+            this.resetAnalyzerButton();
+        } else {
+            nlpStatusBarRun.text = `$(chrome-close)`;
+            nlpStatusBarRun.tooltip = 'Stop analyzer';
+            if (statusBarClick)
+                vscode.commands.executeCommand('textView.analyzeLast');	
+        }
+    }
+
     openVisualTextVersionSettings() {
         visualText.runUpdater();
     }
