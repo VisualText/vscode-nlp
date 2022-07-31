@@ -335,10 +335,18 @@ ${ruleStr}
 	parseLogLine(line: string): LogLine {
 		let logLine: LogLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
 		var tokens = line.split('[');
+		let firstTok = 1;
 		if (tokens.length > 1) {
-			logLine.node = tokens[0].trim();
-			logLine.indent = tokens[0].search(/\S/) - 1;
-			var toks = tokens[1].split(/[,\]]/);
+			// Exception when the character is an open square bracket
+			if (line.trim().startsWith('[')) {
+				logLine.node = '[';
+				logLine.indent = tokens[0].length;
+				firstTok = 2;
+			} else {
+				logLine.node = tokens[0].trim();
+				logLine.indent = tokens[0].search(/\S/) - 1;
+			}
+			var toks = tokens[firstTok].split(/[,\]]/);
 			if (toks.length >= 4) {
 				logLine.start = +toks[0];
 				logLine.end = +toks[1];
