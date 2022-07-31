@@ -8,7 +8,6 @@ import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
 import { logView } from './logView';
-import { exec } from 'child_process';
 
 export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE, FAILED }
 export enum versionStatus { UNKNOWN, VERSIONING, DONE, FAILED }
@@ -77,6 +76,7 @@ export class VisualText {
     public repoVTFilesVersion: string = '';
     public engineDir: vscode.Uri = vscode.Uri.file('');
     public askModify: boolean = false;
+    public processID: number = 0;
 
     private platform: string = '';
     private homeDir: string = '';

@@ -17,14 +17,21 @@ export class NLPFile extends TextFile {
 	}
 
 	analyze(filepath: vscode.Uri) {
+		
+		if (visualText.processID) {
+			vscode.window.showWarningMessage("Analyzer already running");
+			return;
+		}
 
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
 			title: "Analyzer text",
-			cancellable: false
+			cancellable: true
 		}, async (progress, token) => {
             token.onCancellationRequested(() => {
-                console.log("User canceled the long running operation");
+				nlpStatusBar.analyzerButton();
+                console.log("User canceled analyzer");
+				return;
             });
 			
 			progress.report({ increment: 10, message: "Clearing log directories" });
@@ -62,7 +69,7 @@ export class NLPFile extends TextFile {
 			outputView.setType(outputFileType.TXT);
 	
 			var pos = filestr.search('input');
-			var anapath = filestr.substr(0,pos);
+			var anapath = filestr.substring(0,pos);
 	
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
 			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
@@ -72,13 +79,15 @@ export class NLPFile extends TextFile {
 			const cp = require('child_process');
 
 			return new Promise(resolve => {
-				cp.exec(cmd, (err, stdout, stderr) => {
+				nlpStatusBar.analyzerButton(false);
+				visualText.processID = cp.exec(cmd, (err, stdout, stderr) => {
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
 					if (err) {
 						logView.addMessage(err.message,vscode.Uri.file(filestr));
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
+						nlpStatusBar.resetAnalyzerButton();
 						resolve('Failed');
 					} else {
 						logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
@@ -90,9 +99,10 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('sequenceView.refreshAll');
 						vscode.commands.executeCommand('analyzerView.refreshAll');	
 						vscode.commands.executeCommand('logView.makeAna');
+						nlpStatusBar.resetAnalyzerButton();
 						resolve('Processed');
 					}
-				});
+				}).pid;
 			});
 		});
 	}
