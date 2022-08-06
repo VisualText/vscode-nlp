@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.36.0
+Added windows Help.chm file in context menu for windows only
+
 ### v1.35.0
 Added cancel analyzer during processing
 

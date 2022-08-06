@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.35.0",
+    "version": "1.36.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -229,6 +229,12 @@
                 "command": "nlp.sortText",
                 "title": "Sort & Unique text lines",
                 "description": "Sort and unique text lines"
+            },
+            {
+                "command": "nlp.windowCHMHelp",
+                "category": "NLP",
+                "title": "Open Full Windows Help",
+                "description": "Open online function help"
             },
             {
                 "command": "nlp.openOnlineFunctionHelp",
@@ -963,6 +969,11 @@
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.searchFunction",
                     "group": "nlp"
+                },
+                {
+                    "when": "isWindows",
+                    "command": "nlp.windowCHMHelp",
+                    "group": "help"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
