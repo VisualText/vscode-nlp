@@ -149,7 +149,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			var passItem = seqFile.findPass(seqItem.type,seqItem.name);
 			var order = passItem.order;
 
-			if (seqItem.type.localeCompare('tokenize') == 0 || seqItem.type.localeCompare('dicttokz') == 0) {
+			if (seqItem.type.localeCompare('tokenize') == 0 || seqItem.type.localeCompare('dicttokz') == 0 || seqItem.type.localeCompare('chartok') == 0) {
 				vscode.window.showWarningMessage('Cannot move the tokenizer');
 
 			} else if (order == 1 && direction == moveDirection.UP) {
@@ -340,6 +340,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		this.renameToken(seqItem,'dicttokz');
 	}
 
+	chartok(seqItem: SequenceItem) {
+		this.renameToken(seqItem,'chartok');
+	}
+
 	cmltok(seqItem: SequenceItem) {
 		this.renameToken(seqItem,'cmltok');
 	}
@@ -395,6 +399,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.tokenize', (seqItem) => treeDataProvider.tokenize(seqItem));
 		vscode.commands.registerCommand('sequenceView.dicttok', (seqItem) => treeDataProvider.dicttok(seqItem));
 		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
+		vscode.commands.registerCommand('sequenceView.chartok', (seqItem) => treeDataProvider.chartok(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 	}
 

@@ -80,6 +80,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.37.0
+Added chartok tokenize which breaks apart all characters
+
 ### v1.36.0
 Added windows Help.chm file in context menu for windows only
 

@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.36.0",
+    "version": "1.37.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -415,6 +415,10 @@
             {
                 "command": "sequenceView.dicttokz",
                 "title": "Dictionary No Whitespace Tokenizer"
+            },
+            {
+                "command": "sequenceView.chartok",
+                "title": "Separate All Characters"
             },
             {
                 "command": "sequenceView.cmltok",
@@ -1221,6 +1225,11 @@
                 },
                 {
                     "command": "sequenceView.dicttokz",
+                    "when": "view == sequenceView && viewItem == tokenize",
+                    "group": "tokenize"
+                },
+                {
+                    "command": "sequenceView.chartok",
                     "when": "view == sequenceView && viewItem == tokenize",
                     "group": "tokenize"
                 },

@@ -23,7 +23,7 @@ export class PassItem {
 	public empty: boolean = true;
 	public active: boolean = true;
 
-	public tokenizers: string[] = ['tokenize','tok','token','cmltokenize','cmltok','dicttok','dicttokz'];
+	public tokenizers: string[] = ['tokenize','tok','token','cmltokenize','cmltok','dicttok','dicttokz','chartok'];
 
 	constructor() {
 	}
