@@ -2,7 +2,7 @@
 
 ## Glitter Chat
 
-[![Join the chat at https://gitter.im/nlpppp/VisualText](https://badges.gitter.im/nlpppp/VisualText.svg)](https://gitter.im/nlpppp/VisualText?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) Join our glitter chat room for VisualText!
+[![Join the chat at https://gitter.im/NLPplusplus/VisualText](https://badges.gitter.im/nlpppp/VisualText.svg)](https://gitter.im/nlpppp/VisualText?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) Join our glitter chat room for VisualText!
 
 ## Only Computer Language Dedicated to Natural Language Processing
 NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
