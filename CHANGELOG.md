@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.37.0
+### v1.37.1
 Added chartok tokenize which breaks apart all characters
 
 ### v1.36.0
