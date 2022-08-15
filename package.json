@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.37.0",
+    "version": "1.37.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -975,7 +975,7 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "isWindows",
+                    "when": "isWindows && resourceExtname == .nlp",
                     "command": "nlp.windowCHMHelp",
                     "group": "help"
                 },
@@ -1005,12 +1005,12 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .log || resourceExtname == .tree",
+                    "when": "resourceExtname == .log || resourceExtname == .tree || resourceExtname == .kbb",
                     "command": "log.foldAll",
                     "group": "fold"
                 },
                 {
-                    "when": "resourceExtname == .log || resourceExtname == .tree",
+                    "when": "resourceExtname == .log || resourceExtname == .tree || resourceExtname == .kbb",
                     "command": "log.unfoldAll",
                     "group": "fold"
                 },

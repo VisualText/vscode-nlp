@@ -96,7 +96,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 				canSelectFiles: true,
 				canSelectFolders: false,
 				filters: {
-					'Text files': ['txt','xml','html','cvs'],
+					'Text files': ['txt','xml','html','csv'],
 					'All files': ['*']
 				}
 			};

@@ -11,7 +11,7 @@
         },
         {
             "name": "keyword.other.kb",
-            "match": "\\b(?i:(heir|attr|end|pst))\\b"
+            "match": "\\b(?i:(heir|attr|end|no_ptr|pchar|pcon|pfloat|pnum|pptr|psym|pst))\\b"
         },
         {
             "name": "variable.parameter.kb",
