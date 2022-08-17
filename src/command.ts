@@ -29,6 +29,8 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.foldRecursively', this.foldRecursively));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldRecursively', this.unfoldRecursively));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.ruleFired', this.ruleFiredLog));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.generatePath', this.generatePath));
@@ -181,6 +183,19 @@ export class NLPCommands {
             vscode.commands.executeCommand('editor.unfoldAll');
         }
     }
+
+    foldRecursively() {
+        if (vscode.window.activeTextEditor) {
+            vscode.commands.executeCommand('editor.foldRecursively');
+        }
+    }
+    
+    unfoldRecursively() {
+        if (vscode.window.activeTextEditor) {
+            vscode.commands.executeCommand('editor.unfoldRecursively');
+        }
+    }
+    
     
     highlightText() {
         if (vscode.window.activeTextEditor) {
