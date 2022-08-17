@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.37.1",
+    "version": "1.38.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -379,6 +379,18 @@
                 "category": "Tree",
                 "title": "Unfold All",
                 "description": "UnFold all indents for entire text"
+            },
+            {
+                "command": "log.foldRecursively",
+                "category": "Tree",
+                "title": "Fold Recursively",
+                "description": "Fold recursively"
+            },
+            {
+                "command": "log.unfoldRecursively",
+                "category": "Tree",
+                "title": "Unfold Recursively",
+                "description": "Unfold recursively"
             },
             {
                 "command": "log.highlightText",
@@ -1012,6 +1024,16 @@
                 {
                     "when": "resourceExtname == .log || resourceExtname == .tree || resourceExtname == .kbb",
                     "command": "log.unfoldAll",
+                    "group": "fold"
+                },
+                {
+                    "when": "resourceExtname == .log || resourceExtname == .tree || resourceExtname == .kbb",
+                    "command": "log.foldRecursively",
+                    "group": "fold"
+                },
+                {
+                    "when": "resourceExtname == .log || resourceExtname == .tree || resourceExtname == .kbb",
+                    "command": "log.unfoldRecursively",
                     "group": "fold"
                 },
                 {
