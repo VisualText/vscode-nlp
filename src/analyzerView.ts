@@ -74,6 +74,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
 		vscode.commands.registerCommand('analyzerView.copyAnalyzer', resource => this.copyAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.dupeAnalyzer', resource => this.dupeAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
     }
     
@@ -127,6 +128,20 @@ export class AnalyzerView {
 			});	
 		}
 	}
+
+	dupeAnalyzer(analyzerItem: AnalyzerItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter duplicate analyzer name' }).then(newname => {
+				if (newname) {
+					var folder = path.dirname(analyzerItem.uri.fsPath);
+					visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(folder,newname)),fileOperation.COPY);
+					visualText.fileOps.startFileOps();	
+					vscode.commands.executeCommand('analyzerView.refreshAll');	
+				}
+			});
+		}
+	}
+
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
 		/* Currently not compiling

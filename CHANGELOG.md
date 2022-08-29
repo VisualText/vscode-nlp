@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.39.0
+Added duplicate analyzer in the same folder
+
 ### v1.38.0
 Added fold and unfold recursively in trees and kbb displays
 
