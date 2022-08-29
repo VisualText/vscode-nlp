@@ -84,6 +84,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.39.0
+Added duplicate analyzer in the same folder
+
 ### v1.38.0
 Added fold and unfold recursively in trees and kbb displays
 

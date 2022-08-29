@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.38.0",
+    "version": "1.39.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -659,6 +659,14 @@
             {
                 "command": "analyzerView.copyAnalyzer",
                 "title": "Copy analyzer",
+                "icon": {
+                    "light": "resources/light/anacopy.svg",
+                    "dark": "resources/dark/anacopy.svg"
+                }
+            },
+            {
+                "command": "analyzerView.dupeAnalyzer",
+                "title": "Duplicate analyzer",
                 "icon": {
                     "light": "resources/light/anacopy.svg",
                     "dark": "resources/dark/anacopy.svg"
@@ -1432,6 +1440,16 @@
                 },
                 {
                     "command": "analyzerView.copyAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.dupeAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "edit"
+                },
+                {
+                    "command": "analyzerView.dupeAnalyzer",
                     "when": "view == analyzerView",
                     "group": "inline"
                 },
