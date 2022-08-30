@@ -337,7 +337,7 @@ export class TextView {
 			var filename = path.basename(textItem.uri.fsPath);
 			deleteDescr = deleteDescr.concat('Delete logs for \'',filename,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete '+filename });
+			items.push({label: 'No', description: 'Do not delete logs for '+filename });
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
