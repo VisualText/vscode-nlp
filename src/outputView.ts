@@ -239,9 +239,9 @@ export class OutputView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.fsPath),'\' analzyer');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.fsPath),'\'');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete pass'});
+			items.push({label: 'No', description: 'Do not delete file'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')

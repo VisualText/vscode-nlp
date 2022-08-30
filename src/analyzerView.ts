@@ -164,7 +164,7 @@ export class AnalyzerView {
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analyzer');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete log'});
+			items.push({label: 'No', description: 'Do not delete analyzer'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
@@ -203,7 +203,7 @@ export class AnalyzerView {
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete log directories for all analyzers');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete directory logs'});
+			items.push({label: 'No', description: 'Do not delete analyzers log files'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
@@ -220,7 +220,7 @@ export class AnalyzerView {
 			var analyzerName = path.basename(analyzerItem.uri.fsPath);
 			deleteDescr = deleteDescr.concat('Delete log directories for \'',analyzerName,'\'');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete directory logs'});
+			items.push({label: 'No', description: 'Do not delete analyzer log files'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
