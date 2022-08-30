@@ -20,6 +20,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateExactRule', this.generateExactRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.windowCHMHelp', this.windowCHMHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineVariableHelp', this.openOnlineVariableHelp));
