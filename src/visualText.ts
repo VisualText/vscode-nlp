@@ -1273,7 +1273,7 @@ export class VisualText {
             ext.vtFilesDownloadStatus = downloadStatus.UPDATE  
             ext.hasVTFiles = false;
             this.updaterGlobalStatus = updaterStatus.REPAIR;
-            this.debugMessage('VisualText files updating to version ' + visualText.vtFilesVersion); 
+            this.debugMessage('VisualText files updating to version ' + visualText.repoVTFilesVersion); 
             return true;        
         }
         return false;      
