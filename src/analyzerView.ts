@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
-import { textView } from './textView';
+import { textView, TextItem } from './textView';
 import { fileOperation } from './fileOps';
 
 interface AnalyzerItem {
@@ -162,7 +162,7 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analyzer');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analyzer?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer'});
 
@@ -201,14 +201,15 @@ export class AnalyzerView {
 
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete log directories for all analyzers');
+			deleteDescr = deleteDescr.concat('Delete log directories for all analyzers?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzers log files'});
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				textView.deleteAllLogDirs();
+				this.deleteAllAnalyzerLogDirs();
+				visualText.fileOps.startFileOps();
 			});
 		}
 	}
@@ -218,7 +219,7 @@ export class AnalyzerView {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			var analyzerName = path.basename(analyzerItem.uri.fsPath);
-			deleteDescr = deleteDescr.concat('Delete log directories for \'',analyzerName,'\'');
+			deleteDescr = deleteDescr.concat('Delete log directories for \'',analyzerName,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer log files'});
 
@@ -226,8 +227,43 @@ export class AnalyzerView {
 				if (!selection || selection.label == 'No')
 					return;
 
-				textView.deleteAnalyzerLogDir(analyzerItem.uri.fsPath);
+				this.deleteAnalyzerLogFiles(analyzerItem.uri);
+				visualText.fileOps.startFileOps();
 			});
 		}
+	}
+
+	public deleteAnalyzerLogFiles(analyzerDir: vscode.Uri) {
+		var analyzerName = path.basename(analyzerDir.fsPath);
+		const logDirs: TextItem[] = Array();
+		textView.getLogDirs(analyzerDir,logDirs,false);
+		var count = logDirs.length;
+		
+		if (count) {
+			for (let dir of logDirs) {
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,fileOperation.DELETE);
+			};
+		}
+	}
+
+	public deleteAllAnalyzerLogDirs() {
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: "Deleting all log directories",
+			cancellable: true
+		}, async (progress, token) => {
+			token.onCancellationRequested(() => {
+				console.log("User canceled the long running operation");
+			});
+
+			if (vscode.workspace.workspaceFolders) {
+				var analyzerUris = visualText.getAnalyzers();
+				for (let analyzerUri of analyzerUris) {
+					var analyzerName = path.basename(analyzerUri.fsPath);
+					progress.report({ increment: 10, message: analyzerName });
+					analyzerView.deleteAnalyzerLogFiles(analyzerUri);
+				}
+			}
+		});
 	}
 }

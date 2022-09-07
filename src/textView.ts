@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
+import { analyzerView } from './analyzerView';
 import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
@@ -220,8 +221,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.newDir', (textItem) => this.newDir(textItem));
 		vscode.commands.registerCommand('textView.deleteFile', (textItem) => this.deleteFile(textItem));
 		vscode.commands.registerCommand('textView.deleteDir', (textItem) => this.deleteFile(textItem));
-		vscode.commands.registerCommand('textView.deleteAnalyzerLogs', (textItem) => this.deleteAnalyzerLogs(textItem));
-		vscode.commands.registerCommand('textView.deleteAllLogs', () => this.deleteAllLogs());
+		vscode.commands.registerCommand('textView.deleteFileLogs', (textItem) => this.deleteFileLogs(textItem));
+		vscode.commands.registerCommand('textView.deleteAnalyzerLogs', () => this.deleteAnalyzerLogs());
 		vscode.commands.registerCommand('textView.updateTitle', (textItem) => this.updateTitle(textItem));
     }
     
@@ -330,7 +331,7 @@ export class TextView {
 		}
 	}
 
-	public deleteAnalyzerLogs(textItem: TextItem): void {
+	public deleteFileLogs(textItem: TextItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
@@ -342,73 +343,37 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				this.deleteAnalyzerLogDir(textItem.uri.fsPath);
+				this.deleteFileLogDir(textItem.uri.fsPath);
+				visualText.fileOps.startFileOps();
 			});
 		}
 	}
 
-	public deleteAnalyzerLogDir(dirPath: string): void {
+	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
 		visualText.fileOps.addFileOperation(logPath,logPath,fileOperation.DELETE);
-		visualText.fileOps.startFileOps();
 	}
 
-	private deleteAllLogs(): void {
+	public deleteAnalyzerLogs(): void {
 		if (visualText.hasWorkspaceFolder() && visualText.analyzer.hasText()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete all logs?');
+			deleteDescr = deleteDescr.concat('Delete all logs for this Analyzer?');
 			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete all logs' });
+			items.push({label: 'No', description: 'Do not delete all logs for this Analyzer' });
 
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				var anaPath = visualText.getCurrentAnalyzer();
 				if (anaPath.fsPath.length) {
-					this.deleteAnalyzerLogFiles(anaPath);
+					analyzerView.deleteAnalyzerLogFiles(anaPath);
 					visualText.fileOps.startFileOps();
 				}
 			});
 		}
 	}
 
-	public deleteAnalyzerLogFiles(analyzerDir: vscode.Uri) {
-		var analyzerName = path.basename(analyzerDir.fsPath);
-		const logDirs: TextItem[] = Array();
-		this.getLogDirs(analyzerDir,logDirs,false);
-		var count = logDirs.length;
-		
-		if (count) {
-			for (let dir of logDirs) {
-				var dirName = dir.uri.fsPath.substring(analyzerDir.fsPath.length);
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,fileOperation.DELETE);
-			};
-		}
-	}
-
-	public deleteAllLogDirs() {
-		vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,
-			title: "Deleting all log directories",
-			cancellable: true
-		}, async (progress, token) => {
-			token.onCancellationRequested(() => {
-				console.log("User canceled the long running operation");
-			});
-
-			if (vscode.workspace.workspaceFolders) {
-				var analyzers = dirfuncs.getDirectoryTypes(vscode.workspace.workspaceFolders[0].uri);
-				for (let analyzer of analyzers) {
-					var analyzerName = path.basename(analyzer.uri.fsPath);
-					progress.report({ increment: 10, message: analyzerName });
-					textView.deleteAnalyzerLogFiles(analyzer.uri);
-				}
-				visualText.fileOps.startFileOps();
-			}
-		});
-	}
-		
 	public getLogDirs(dir: vscode.Uri, logDirs: TextItem[],first: boolean) {
 		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
 		var entries = dirfuncs.getDirectoryTypes(inputDir);
