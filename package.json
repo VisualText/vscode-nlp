@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.39.4",
+    "version": "1.39.5",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -681,16 +681,8 @@
                 }
             },
             {
-                "command": "textView.deleteLogFiles",
-                "title": "Delete Log Files",
-                "icon": {
-                    "light": "resources/light/x-box.svg",
-                    "dark": "resources/dark/x-box.svg"
-                }
-            },
-            {
-                "command": "textView.deleteAllLogs",
-                "title": "Delete All Log Files",
+                "command": "textView.deleteFileLogs",
+                "title": "Delete Log Files for this File",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -698,7 +690,7 @@
             },
             {
                 "command": "textView.deleteAnalyzerLogs",
-                "title": "Delete Analyzer Logs",
+                "title": "Delete All Log Files for this Analyzer",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -1102,7 +1094,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.deleteAllLogs",
+                    "command": "textView.deleteAnalyzerLogs",
                     "when": "view == textView && text.hasLogs",
                     "group": "navigation"
                 },
@@ -1509,7 +1501,7 @@
                     "group": "inline"
                 },
                 {
-                    "command": "textView.deleteAnalyzerLogs",
+                    "command": "textView.deleteFileLogs",
                     "when": "view == textView && viewItem == fileHasLogs",
                     "group": "inline"
                 },
