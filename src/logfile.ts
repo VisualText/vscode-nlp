@@ -393,7 +393,7 @@ ${ruleStr}
 
 	bracketCount(text: string, end: number = 0): number {
 		if (end) {
-			text = text.substr(0,end);
+			text = text.substring(0,end);
 		}
 		var parens = text.split(/\(\(/);
 		var parens2 = text.split(/\)\)/);
@@ -427,11 +427,11 @@ ${ruleStr}
 					absEnd += 1;
 			}
 			else if (selection.start.line == linecount) {
-				var beforeStr = line.substr(0,selection.start.character);
+				var beforeStr = line.substring(0,selection.start.character);
 				var bLen = this.getCharacterLength(beforeStr);
 				absStart += bLen - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
-					var selStr = line.substr(selection.start.character,selection.end.character-selection.start.character);
+					var selStr = line.substring(selection.start.character,selection.end.character-selection.start.character);
 					absEnd = absStart + selStr.length - this.bracketCount(selStr) - 1;
 					break;
 				}
@@ -653,7 +653,7 @@ ${ruleStr}
 		var exts = new Array('.'+this.getExtension(fileType));
 		var files = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),exts);
 		for (let file of files) {
-			var numStr = path.basename(file.fsPath).substr(3,3);
+			var numStr = path.basename(file.fsPath).substring(3,3);
 			var passNum = Number.parseInt(numStr);
 			this.firedFile(passNum,true);
 		}

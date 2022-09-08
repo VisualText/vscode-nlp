@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.39.5
+### v1.39.6
 Added duplicate analyzer in the same folder
 
 ### v1.38.0

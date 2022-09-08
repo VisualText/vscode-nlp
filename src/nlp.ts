@@ -169,7 +169,7 @@ export class NLPFile extends TextFile {
 					if (addingFlag && !commented && line.length) {
 						line = '#' + line;
 					} if (!addingFlag && commented) {
-						line = line.substr(1);
+						line = line.substring(1);
 					}
 					if (newLineStr) {
 						newLineStr = newLineStr + this.getSeparator();
@@ -184,6 +184,7 @@ export class NLPFile extends TextFile {
 					var posEnd = new vscode.Position(end.line,lastLineLength+1);
 					var range = new vscode.Range(posStart, posEnd);
 	
+					newLineStr = newLineStr.replace(/\$/g,'\\$');
 					var snippet = new vscode.SnippetString(newLineStr);
 					editor.insertSnippet(snippet,range);
 				}
@@ -280,7 +281,7 @@ export class NLPFile extends TextFile {
 		var range = new vscode.Range(posStart, posEnd);
 
 		if (rulestr.length == 0) {
-			rulestr = lastline.substr(charStart,charEnd-charStart);
+			rulestr = lastline.substring(charStart,charEnd-charStart);
 		}
 
 		return [rulestr,range, arrowFlag, atSignFlag];
