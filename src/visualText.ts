@@ -918,8 +918,8 @@ export class VisualText {
 
     trimV(version: string): string {
         var ret = version;
-        if (version.substr(0,1) == 'v') {
-            ret = version.substr(1,version.length-1);
+        if (version.substring(0,1) == 'v') {
+            ret = version.substring(1,version.length-1);
         }
         return ret;
     }

@@ -58,11 +58,11 @@ export class FindFile {
 						if (line.length + escaped.length > context) {
 							let half = context / 2;
 							if (line.length - pos < half) {
-								line = line.substr(line.length-context-1,context);
+								line = line.substring(line.length-context-1,context);
 							} else if (pos > half) {
-								line = line.substr(pos-half,context+escaped.length);								
+								line = line.substring(pos-half,context+escaped.length);								
 							} else {
-								line = line.substr(0,context);
+								line = line.substring(0,context);
 							}
 						}
 						line = line.replace(searchTerm,` <<${searchTerm}>> `);

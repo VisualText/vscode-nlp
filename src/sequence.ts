@@ -399,7 +399,7 @@ export class SequenceFile extends TextFile {
 		const passItem = new PassItem();
 		passItem.uri = vscode.Uri.file(filePath);
 		passItem.name = this.base(filePath);
-		passItem.typeStr = path.extname(filePath).substr(1);
+		passItem.typeStr = path.extname(filePath).substring(1);
 		passItem.comment = '# comment';
 		passItem.text = this.passString(passItem);
 		passItem.empty = false;
