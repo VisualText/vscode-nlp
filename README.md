@@ -92,7 +92,7 @@ There are many details in the windows version of VisualText that are yet to be i
 ## Release Notes
 
 ### v1.39.6
-Added duplicate analyzer in the same folder
+Added duplicate analyzer in the same folder. Fixed bugs in delete log files and comment line removing dollar sign variables.
 
 ### v1.38.0
 Added fold and unfold recursively in trees and kbb displays
