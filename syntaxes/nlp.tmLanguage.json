@@ -68,13 +68,17 @@
             ]
         },
         "rules-region": {
-            "begin": "([_A-Za-z]+)\\s*([A-Za-z_\\[\\]]*)\\s*(<-)",
+            "begin": "([_A-Za-z]+)\\s*((\\[[^\\]]*\\]))*\\s*(<-)",
             "beginCaptures": {
                 "1": {
                     "name": "variable.rewrite.nlp"
                 },
                 "2": {
-                    "name": "variable.rewrite-attr.nlp"
+                    "patterns": [
+                        {
+                            "include": "#attributes"
+                        }
+                    ]
                 },
                 "3": {
                     "name": "variable.rewrite-symbol.nlp"
@@ -94,17 +98,33 @@
                     "include": "#attributes"
                 },
                 {
-                    "include": "#comment-line"
+                    "include": "#constant-nodes"
                 },
                 {
-                    "include": "#constant-nodes"
+                    "include": "#escaped-char"
+                },
+                {
+                    "include": "#comment-line"
                 }
             ]
         },
         "attributes": {
             "begin": "\\[",
+            "beginCaptures": {
+                "0": {
+                    "name": "punctuation.square.open"
+                }
+            },
             "end": "\\]",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.square.close"
+                }
+            },
             "patterns": [
+                {
+                    "include": "#attribute-equals"
+                },
                 {
                     "include": "#constant-nodes"
                 },
@@ -124,9 +144,51 @@
             "name": "keyword.constants.nlp",
             "match": "\\b_(xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND|xCTRL)\\b"
         },
+        "attribute-equals": {
+            "begin": "([_A-Za-z]+)\\s*(=)\\s*(\\()",
+            "beginCaptures": {
+                "1": {
+                    "patterns": [
+                        {
+                            "include": "#attribute"
+                        }
+                    ]
+                },
+                "2": {
+                    "name": "keyword.equals.nlp"
+                },
+                "3": {
+                    "name": "punctuation.paren.open"
+                }
+            },
+            "end": "\\)",
+            "endCaptures": {
+                "0": {
+                    "name": "punctuation.paren.open"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#token"
+                },
+                {
+                    "include": "#attribute"
+                },
+                {
+                    "include": "#constant-nodes"
+                },
+                {
+                    "include": "#escaped-char"
+                }
+            ]
+        },
         "attribute": {
             "name": "keyword.other.nlp",
-            "match": "\\b(?i:(attr|attrs|da|deacc|deaccent|except|excepts|fail|fails|gp|group|layer|layers|look|lookahead|match|matches|max|min|nest|o|one|opt|option|optional|pass|passes|plus|recurse|ren|rename|s|singlet|star|t|tree|trig|trigger))\\b"
+            "match": "\\b(?i:(attr|attrs|da|deacc|deaccent|except|excepts|fail|fails|gp|group|layer|layers|look|lookahead|match|matches|max|min|nest|o|one|opt|option|optional|pass|passes|plus|recurse|ren|rename|s|singlet|star|t|tree|trig|trigger|unsealed))\\b"
+        },
+        "escaped-char": {
+            "name": "constant.character.escape",
+            "match": "\\\\."
         },
         "token": {
             "name": "variable.parameter.nlp",
@@ -191,9 +253,6 @@
                     "include": "#numeric-literal"
                 },
                 {
-                    "include": "#boolean-literal"
-                },
-                {
                     "include": "#array-literal"
                 }
             ]
@@ -201,10 +260,6 @@
         "numeric-literal": {
             "match": "\\b(?<=[^$])((0(x|X)[0-9a-fA-F]+)|(0(o|O)[0-7]+)|(0(b|B)(0|1)+)|(([0-9]+(\\.[0-9]+)?))([eE]([+-]?)[0-9]+(\\.[0-9]+)?)?)\\b",
             "name": "constant.numeric.nlp"
-        },
-        "boolean-literal": {
-            "match": "\\b(?i:(false|true))\\b",
-            "name": "constant.language.boolean.nlp"
         },
         "array-literal": {
             "begin": "\\[",
