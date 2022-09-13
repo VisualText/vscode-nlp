@@ -14,6 +14,12 @@
                 }
             },
             {
+                "scope": "keyword.attribute.nlp",
+                "settings": {
+                    "foreground": "#f293fb",
+                }
+            },
+            {
                 "scope": "constant.numeric.tree",
                 "settings": {
                     "foreground": "#93bffb",
