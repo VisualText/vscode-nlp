@@ -183,7 +183,7 @@
             ]
         },
         "attribute": {
-            "name": "keyword.other.nlp",
+            "name": "keyword.attribute.nlp",
             "match": "\\b(?i:(attr|attrs|da|deacc|deaccent|except|excepts|fail|fails|gp|group|layer|layers|look|lookahead|match|matches|max|min|nest|o|one|opt|option|optional|pass|passes|plus|recurse|ren|rename|s|singlet|star|t|tree|trig|trigger|unsealed))\\b"
         },
         "escaped-char": {

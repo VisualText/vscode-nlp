@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.40.0
+Lexer improvements
+
 ### v1.39.7
 Added duplicate analyzer in the same folder. Fixed delete messages, generate exact rule, deleting analyzer logs, and comments that were removing $ variables.
 
