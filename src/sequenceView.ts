@@ -21,6 +21,8 @@ export interface SequenceItem extends vscode.TreeItem {
 	inFolder: boolean;
 }
 
+export let seqItems = new Array();
+
 export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	
 	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem> = new vscode.EventEmitter<SequenceItem>();
@@ -49,10 +51,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	getPasses(passes: PassItem[]): SequenceItem[] {
 		var folder = '';
-		const seqItems = new Array();
 		const logFile = new LogFile();
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
+		seqItems = [];
 
 		var hasPat: Boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
 		vscode.commands.executeCommand('setContext', 'sequence.hasPat', hasPat);
@@ -408,18 +410,19 @@ export class SequenceView {
 		var seqName = path.basename(nlpFilePath,'.pat');
 		var seqName = path.basename(seqName,'.nlp');
 		var passItem: PassItem = seqFile.findPass('nlp',seqName);
-		if (passItem.passNum) {
-			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),passItem.uri);
-		} else {
-			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(nlpFilePath));
+
+		if (passItem) {
+			var it = seqItems[passItem.passNum-1];
+			this.sequenceView.reveal(it, {select: true, focus: true, expand: false});
+			vscode.commands.executeCommand('sequenceView.refreshAll');
+	
+			if (passItem.passNum) {
+				logView.addMessage(seqName + ': ' + passItem.passNum.toString(),passItem.uri);
+			} else {
+				logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(nlpFilePath));
+			}
+			vscode.commands.executeCommand('logView.refreshAll');
 		}
-		vscode.commands.executeCommand('logView.refreshAll');
-		/*  WAITING FOR REVEAL UPDATE - IT IS COMING!
-		var label = passItem.passNum.toString() + ' ' + passItem.text;
-		var seqItem: SequenceItem = {uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'missing', inFolder: passItem.inFolder,
-		type: 'nlp', passNum: passItem.passNum, order: passItem.order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active};
-		this.sequenceView.reveal(seqItem, {select: true, focus: true, expand: false});
-		*/
 	}
 
 	convertPatToNLP() {

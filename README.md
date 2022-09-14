@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.40.0
+### v1.41.0
 Lexer improvements
 
 ### v1.39.7
