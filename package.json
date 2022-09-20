@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.40.0",
+    "version": "1.41.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -351,22 +351,34 @@
                 "description": "Generate a generalized rule from selected text"
             },
             {
+                "command": "nlp.openPassFile",
+                "category": "NLP",
+                "title": "Open Pass File",
+                "description": "Open pass file associated with the highlight file"
+            },
+            {
                 "command": "nlp.generateExactRule",
                 "category": "NLP",
                 "title": "Generate Rule Exact",
                 "description": "Generate an exact rule from selected text"
             },
             {
-                "command": "nlp.duplicateLine",
+                "command": "nlp.openHighlightText",
                 "category": "NLP",
-                "title": "Duplicate Line",
-                "description": "Duplicates the current line"
+                "title": "Display Rule Matches",
+                "description": "Display the rule matches"
             },
             {
                 "command": "nlp.commentLines",
                 "category": "NLP",
                 "title": "Comment Line",
                 "description": "Comments or uncomments selected lines"
+            },
+            {
+                "command": "nlp.highlightText",
+                "category": "Tree",
+                "title": "Hightlight Text",
+                "description": "Highlight the text of selected tree nodes"
             },
             {
                 "command": "log.foldAll",
@@ -411,6 +423,12 @@
                 "description": "Generate context @PATH for rule file"
             },
             {
+                "command": "log.openPassFile",
+                "category": "Tree",
+                "title": "Open Pass File",
+                "description": "Opens pass file associated with tree"
+            },
+            {
                 "command": "nlp.openSelTree",
                 "category": "NLP",
                 "title": "View selected tree",
@@ -447,6 +465,14 @@
             {
                 "command": "sequenceView.finalTree",
                 "title": "Display Final Tree",
+                "icon": {
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
+                }
+            },
+            {
+                "command": "nlp.passTree",
+                "title": "Display Pass Tree",
                 "icon": {
                     "light": "resources/light/tree.svg",
                     "dark": "resources/dark/tree.svg"
@@ -962,34 +988,54 @@
                     "group": "nlp"
                 },
                 {
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "command": "nlp.openPassFile",
+                    "group": "nlp"
+                },
+                {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
-                    "group": "nlp"
+                    "group": "anlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.duplicateLine",
-                    "group": "nlp"
+                    "group": "anlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.commentLines",
-                    "group": "nlp"
+                    "group": "anlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.searchWord",
-                    "group": "nlp"
+                    "group": "anlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.searchFunction",
-                    "group": "nlp"
+                    "group": "anlp"
                 },
                 {
                     "when": "isWindows && resourceExtname == .nlp",
                     "command": "nlp.windowCHMHelp",
                     "group": "help"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "sequenceView.finalTree",
+                    "group": "bnlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.passTree",
+                    "group": "bnlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.highlightText",
+                    "group": "bnlp"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
@@ -1049,6 +1095,11 @@
                 {
                     "when": "resourceExtname == .log || resourceExtname == .tree",
                     "command": "log.generatePath",
+                    "group": "display"
+                },
+                {
+                    "when": "resourceExtname == .log || resourceExtname == .tree",
+                    "command": "log.openPassFile",
                     "group": "display"
                 }
             ],

@@ -403,7 +403,17 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 	}
 
-	reveal(nlpFilePath: string) {
+	highlightText(nlpFilePath: string) {
+		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		this.openTreeFile(passItem.passNum);
+	}
+
+	passTree(nlpFilePath: string) {
+		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		this.openTreeFile(passItem.passNum);
+	}
+	
+	passItemFromPath(nlpFilePath: string): PassItem {
 		var seqFile = visualText.analyzer.seqFile;
 		var seqName = path.basename(nlpFilePath,'.pat');
 		var seqName = path.basename(seqName,'.nlp');
@@ -413,6 +423,11 @@ export class SequenceView {
 		} else {
 			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(nlpFilePath));
 		}
+		return passItem;
+	}
+
+	reveal(nlpFilePath: string) {
+		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
 		vscode.commands.executeCommand('logView.refreshAll');
 		/*  WAITING FOR REVEAL UPDATE - IT IS COMING!
 		var label = passItem.passNum.toString() + ' ' + passItem.text;
@@ -487,13 +502,30 @@ export class SequenceView {
 				return;
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
-				var logfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.TREE);
-				if (fs.existsSync(logfile.fsPath))
-					vscode.window.showTextDocument(logfile);
-				else
-					vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
+				this.openTreeFile(seqItem.passNum);
 			}
 		}
+	}
+
+	public openTreeFileFromPath(nlpFilePath: string) {
+		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		this.openHighlightFile(passItem.passNum);
+	}
+
+	private openTreeFile(passNum: number) {
+		var logfile = this.logFile.anaFile(passNum,nlpFileType.TREE);
+		if (fs.existsSync(logfile.fsPath))
+			vscode.window.showTextDocument(logfile);
+		else
+			vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
+	}
+
+	public openHighlightFile(passNum: number) {
+		var firefile = this.logFile.firedFile(passNum);
+		if (fs.existsSync(firefile.fsPath))
+			vscode.window.showTextDocument(firefile);
+		else
+			vscode.window.showWarningMessage('No highlight file with this pass');
 	}
 
 	private openHighlight(seqItem: SequenceItem): void {
@@ -504,11 +536,7 @@ export class SequenceView {
 				return;
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
-				var firefile = this.logFile.firedFile(seqItem.passNum);
-				if (fs.existsSync(firefile.fsPath))
-					vscode.window.showTextDocument(firefile);
-				else
-					vscode.window.showWarningMessage('No highlight file with this pass');
+				this.openHighlightFile(seqItem.passNum);
 			}
 		}
 	}
