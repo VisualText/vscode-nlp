@@ -138,7 +138,7 @@ export class LogFile extends TextFile {
 		}
 	}
 
-	getPassFromPath(editor: vscode.TextEditor): vscode.Uri {
+	public getPassFromPath(editor: vscode.TextEditor): vscode.Uri {
 		let filePath = editor.document.uri.fsPath;
 		let passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
 		var seqFile = new SequenceFile();

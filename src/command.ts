@@ -21,12 +21,15 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateExactRule', this.generateExactRule));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.windowCHMHelp', this.windowCHMHelp));
+
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openPassFile', this.openPassFile));        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.windowCHMHelp', this.windowCHMHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineVariableHelp', this.openOnlineVariableHelp));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.selectSequence', this.selectSequence));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.passTree', this.passTree));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.highlightText', this.highlightTextNLP));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
@@ -35,6 +38,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('log.highlightText', this.highlightText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.ruleFired', this.ruleFiredLog));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.generatePath', this.generatePath));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.openPassFile', this.openPassFile));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -63,6 +67,20 @@ export class NLPCommands {
                     editBuilder.replace(textRange, textFile.getText());
                 });
             }
+        }
+    }
+
+    passTree() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.passTree(vscode.window.activeTextEditor);
+        }
+    }
+
+    highlightTextNLP() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.openHighlightText(vscode.window.activeTextEditor);
         }
     }
 
@@ -216,6 +234,13 @@ export class NLPCommands {
         if (vscode.window.activeTextEditor) {
             var logFile = new LogFile();
             logFile.generatePath(vscode.window.activeTextEditor);
+        }
+    }
+
+    openPassFile() {
+        if (vscode.window.activeTextEditor) {
+            var nlp = new NLPFile();
+            nlp.openPassFile(vscode.window.activeTextEditor);
         }
     }
 }

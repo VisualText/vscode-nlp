@@ -5,6 +5,7 @@ import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView } from './logView';
+import { SequenceFile } from './sequence';
 import { sequenceView } from './sequenceView';
 import { nlpStatusBar, DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
@@ -145,6 +146,35 @@ export class NLPFile extends TextFile {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.reveal(editor.document.fileName);
+		}
+	}
+		
+	passTree(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			sequenceView.passTree(editor.document.fileName);
+		}
+	}
+			
+	openHighlightText(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			sequenceView.openTreeFileFromPath(editor.document.fileName);
+		}
+	}
+
+	openPassFile(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.TREE || this.getFileType() == nlpFileType.TXXT) {
+			let filePath = editor.document.uri.fsPath;
+			let passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
+			var seqFile = new SequenceFile();
+			seqFile.init();
+			let passFileUri: vscode.Uri = seqFile.getUriByPassNumber(passNum);
+			if (fs.existsSync(passFileUri.fsPath))
+				vscode.window.showTextDocument(passFileUri);
+			else
+				vscode.window.showWarningMessage('No pass file ' + path.basename(passFileUri.fsPath));
 		}
 	}
 
