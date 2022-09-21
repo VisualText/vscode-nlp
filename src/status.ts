@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { visualText } from './visualText';
-import { LogFile } from './logfile';
+import { TreeFile } from './treeFile';
 import { nlpFileType } from './textFile';
-import { pseudoRandomBytes } from 'crypto';
 import * as os from 'os';
 
 let nlpStatusBarRun: vscode.StatusBarItem;
@@ -22,7 +20,7 @@ export let nlpStatusBar: NLPStatusBar;
 export class NLPStatusBar {
 
     _ctx: vscode.ExtensionContext;
-    logFile = new LogFile();
+    logFile = new TreeFile();
     devMode: DevMode;
     firedMode: FiredMode;
     

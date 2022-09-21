@@ -11,14 +11,14 @@
             "name": "meta.expression.tree",
             "patterns": [
                 {
-                    "include": "#angle-highlight"
+                    "include": "#angle-match"
                 },
                 {
-                    "include": "#paren-highlight"
+                    "include": "#paren-match"
                 }               
             ]
         },
-        "angle-highlight": {
+        "angle-match": {
             "begin": "\\<\\<",
             "end": "\\>\\>",
             "beginCaptures": {
@@ -29,7 +29,7 @@
             },
             "name": "keyword.other.txxt"
         },
-        "paren-highlight": {
+        "paren-match": {
             "begin": "\\(\\(",
             "end": "\\)\\)",
             "beginCaptures": {

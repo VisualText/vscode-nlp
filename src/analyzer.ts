@@ -5,7 +5,7 @@ import { SequenceFile } from './sequence';
 import { visualText } from './visualText';
 import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
-import { LogFile } from './logfile';
+import { TextFile } from './textFile';
 import { nlpFileType } from './textFile';
 import { fileOperation } from './fileOps';
 
@@ -214,7 +214,7 @@ export class Analyzer {
         }
     }
 
-    logFile(name: string): vscode.Uri {
+    treeFile(name: string): vscode.Uri {
         if (this.logDir.fsPath.length) {
             var pather = path.join(this.logDir.fsPath,name);
             pather = pather.concat('.log');
@@ -255,9 +255,9 @@ export class Analyzer {
         return this.currentPassFile;
     }
 
-    getAnaLogFile(): vscode.Uri {
-        var logFile = new LogFile();
-        return logFile.anaFile(this.passNum, nlpFileType.TREE);
+    getTreeFile(): vscode.Uri {
+        var textFile = new TextFile();
+        return textFile.anaFile(this.passNum, nlpFileType.TREE);
     }
 
 	setWorkingDir(directory: vscode.Uri) {

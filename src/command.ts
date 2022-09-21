@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as os from 'os';
-import { LogFile, generateType } from './logfile';
+import { TreeFile, generateType } from './treeFile';
 import { NLPFile } from './nlp';
 import { TextFile } from './textFile';
 import { visualText } from './visualText';
+import { SequenceView } from './sequenceView';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
@@ -29,7 +30,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.selectSequence', this.selectSequence));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.passTree', this.passTree));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.highlightText', this.highlightTextNLP));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.displayMatchedRules', this.displayMatchedRulesNLP));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
@@ -39,6 +40,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('log.ruleFired', this.ruleFiredLog));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.generatePath', this.generatePath));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.openPassFile', this.openPassFile));
+        ctx.subscriptions.push(vscode.commands.registerCommand('log.displayMatchedRules', this.displayMatchedRulesNLP));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -77,10 +79,10 @@ export class NLPCommands {
         }
     }
 
-    highlightTextNLP() {
+    displayMatchedRulesNLP() {
         if (vscode.window.activeTextEditor) {
             var nlpFile = new NLPFile();
-            nlpFile.openHighlightText(vscode.window.activeTextEditor);
+            nlpFile.openRuleMatchesText(vscode.window.activeTextEditor);
         }
     }
 
@@ -149,28 +151,28 @@ export class NLPCommands {
 
     ruleFired() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.findRule(vscode.window.activeTextEditor);
         }
     }
 
     openSelTree() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.findSelectedTree(vscode.window.activeTextEditor);
         }
     }
         
     generateRule() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.generateRule(vscode.window.activeTextEditor,generateType.GENERAL);
         }
     }
 
     generateExactRule() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.generateRule(vscode.window.activeTextEditor,generateType.EXACT);
         }
     }
@@ -218,21 +220,21 @@ export class NLPCommands {
     
     highlightText() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
-            logFile.hightlightText(vscode.window.activeTextEditor);
+            var logFile = new TreeFile();
+            logFile.highlightText(vscode.window.activeTextEditor);
         }
     }
     
     ruleFiredLog() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.ruleFired(vscode.window.activeTextEditor);
         }
     }
 
     generatePath() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new LogFile();
+            var logFile = new TreeFile();
             logFile.generatePath(vscode.window.activeTextEditor);
         }
     }

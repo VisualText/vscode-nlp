@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { visualText } from './visualText';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
 export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, LOG, KB, KBB }
@@ -358,4 +359,29 @@ export class TextFile {
     getStartLine(): number {
         return this.selStartLine;
     }
+
+	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
+		var filename: string = 'ana';
+		if (pass > 0) {
+			if (pass < 10)
+				filename = filename + '00';
+			else if (pass < 100)
+				filename = filename + '0';
+			filename = filename + pass.toString() + '.' + this.getExtension(type);
+		} else {
+			filename = 'final.tree';
+		}
+		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
+    }
+
+	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
+		var anaFile = this.anaFile(pass,type);
+		if (type == nlpFileType.TREE) {
+			this.setFile(anaFile,true);
+			if (this.numberOfLines() > 6)
+				return true;
+			return false;
+		}
+		return fs.existsSync(anaFile.fsPath);
+	}
 }

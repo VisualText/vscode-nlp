@@ -5,7 +5,7 @@ import { SequenceItem } from './sequenceView';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
-import { LogFile } from './logfile';
+import { TreeFile } from './treeFile';
 import { fileOps, fileOperation } from './fileOps';
 
 export enum moveDirection { UP, DOWN }
@@ -594,7 +594,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	swapAuxFiles(itemOne: PassItem, itemTwo: PassItem, type: nlpFileType) {
-		var logFile = new LogFile();
+		var logFile = new TreeFile();
 		var oneFile = logFile.anaFile(itemOne.passNum,type).fsPath;
 		var swapFile = oneFile + ".swap";
 		var twoFile = logFile.anaFile(itemTwo.passNum,type).fsPath;
