@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.41.0
+### v1.41.1
 Added cross reference context menu items in nlp files, tree files, and txxt files
 
 ### v1.40.0
