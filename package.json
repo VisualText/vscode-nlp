@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.41.0",
+    "version": "1.41.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -988,7 +988,7 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "when": "resourceExtname == .txxt",
                     "command": "nlp.openPassFile",
                     "group": "nlp"
                 },
@@ -1098,7 +1098,7 @@
                     "group": "display"
                 },
                 {
-                    "when": "resourceExtname == .log || resourceExtname == .tree",
+                    "when": "resourceFilename != final.tree && resourceExtname == .tree",
                     "command": "log.openPassFile",
                     "group": "display"
                 }
