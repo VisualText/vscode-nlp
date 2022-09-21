@@ -28,7 +28,7 @@ export interface Fired {
 	built: boolean;
 }
 
-export interface LogLine {
+export interface TreeLine {
 	node: string
 	start: number;
 	end: number;
@@ -43,18 +43,18 @@ export interface LogLine {
 	indent: number;
 }
 
-export let logFile: LogFile;
-export class LogFile extends TextFile {
+export let treeFile: TreeFile;
+export class TreeFile extends TextFile {
 	
 	private fireds: Fired[] = [];
-	private highlights: Highlight[] = [];
+	private Highlight: Highlight[] = [];
 	private selectedTreeStr = '';
 	private selStart = -1;
 	private selEnd = -1;
-	private logFile = '';
-	private highlightFile = '';
+	private treeFile = '';
+	private HighlightFile = '';
 	private inputFile = '';
-	private selectedLines: LogLine[] = [];
+	private selectedLines: TreeLine[] = [];
 
 	constructor() {
 		super();
@@ -63,7 +63,7 @@ export class LogFile extends TextFile {
 	ruleFired(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
 			this.setFile(editor.document.uri);
-			this.parseLogLines(editor);
+			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
 				var seqFile = new SequenceFile();
 				seqFile.init();
@@ -82,10 +82,10 @@ export class LogFile extends TextFile {
 		}
 	}
 
-	hightlightText(editor: vscode.TextEditor) {
+	highlightText(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
 			this.setFile(editor.document.uri);
-			this.parseLogLines(editor);
+			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
 				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
 					{
@@ -105,21 +105,21 @@ export class LogFile extends TextFile {
 			let passFileUri = this.getPassFromPath(editor);
 			if (passFileUri.fsPath.length > 2) {
 				this.setFile(editor.document.uri);
-				this.parseLogLines(editor);
+				this.parseTreeLines(editor);
 	
 				if (this.selStart >= 0) {
 					let pathStr = '';
-					let logLine = this.selectedLines[0];
+					let treeLine = this.selectedLines[0];
 	
-					if (logLine) {
+					if (treeLine) {
 						let start = this.getStartLine();
-						let lastIndent = logLine.indent + 1;
-						while ( logLine.indent > 0) {
+						let lastIndent = treeLine.indent + 1;
+						while ( treeLine.indent > 0) {
 							let line = this.getLines()[start--];
-							logLine = this.parseLogLine(line);
-							if (logLine.indent < lastIndent) {
-								pathStr = logLine.node + ' ' + pathStr;
-								lastIndent = logLine.indent;
+							treeLine = this.parseTreeLine(line);
+							if (treeLine.indent < lastIndent) {
+								pathStr = treeLine.node + ' ' + pathStr;
+								lastIndent = treeLine.indent;
 							}
 						}
 					}
@@ -146,19 +146,19 @@ export class LogFile extends TextFile {
 		return seqFile.getUriByPassNumber(passNum);
 	}
 
-	parseLogLines(editor: vscode.TextEditor) {
+	parseTreeLines(editor: vscode.TextEditor) {
 		let lines = this.getSelectedLines(editor);
 		this.selectedLines = [];
 		this.selStart = -1;
 		this.selEnd = -1;
 
 		for (let line of lines) {
-			let logLine = this.parseLogLine(line);
-			if (this.selStart < 0 || logLine.ustart < this.selStart)
-				this.selStart = logLine.ustart;
-			if (this.selEnd < 0 || logLine.uend > this.selEnd)
-				this.selEnd = logLine.uend;
-			this.selectedLines.push(logLine);
+			let treeLine = this.parseTreeLine(line);
+			if (this.selStart < 0 || treeLine.ustart < this.selStart)
+				this.selStart = treeLine.ustart;
+			if (this.selEnd < 0 || treeLine.uend > this.selEnd)
+				this.selEnd = treeLine.uend;
+			this.selectedLines.push(treeLine);
 		}
 	}
 
@@ -168,7 +168,7 @@ export class LogFile extends TextFile {
 			this.setFilesNames(this.getUri().fsPath);
 
 			if (this.parseBrackets()) {
-				this.parseFireds(this.logFile);
+				this.parseFireds(this.treeFile);
 				var absolute = this.lineCharacterToAbsolute(editor.selection.active);
 
 				if (absolute >= 0) {
@@ -226,50 +226,25 @@ export class LogFile extends TextFile {
 			this.basename = path.basename(this.basename,'.txt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
-			this.logFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.tree');
-			this.highlightFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.txxt');
+			this.treeFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.tree');
+			this.HighlightFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.txxt');
 			this.inputFile = visualText.analyzer.getTextPath().fsPath;
 		}
 	}
 
-	hasLogFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
-		var anaFile = this.anaFile(pass,type);
-		if (type == nlpFileType.TREE) {
-			this.setFile(anaFile,true);
-			if (this.numberOfLines() > 6)
-				return true;
-			return false;
-		}
-		return fs.existsSync(anaFile.fsPath);
-	}
-
-	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
-		var filename: string = 'ana';
-		if (pass > 0) {
-			if (pass < 10)
-				filename = filename + '00';
-			else if (pass < 100)
-				filename = filename + '0';
-			filename = filename + pass.toString() + '.' + this.getExtension(type);
-		} else {
-			filename = 'final.tree';
-		}
-		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
-	}
-	
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
 		this.selectedTreeStr = '';
 		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
 
 			if (this.getFileType() == nlpFileType.TXT) {
-				this.setFilesNames(visualText.analyzer.getAnaLogFile().fsPath);
+				this.setFilesNames(visualText.analyzer.getTreeFile().fsPath);
 				this.absoluteRangeFromSelection(this.getUri().fsPath, editor.selection);	
 			} else {
 				this.setFilesNames(this.getUri().fsPath);
-				this.absoluteRangeFromSelection(this.highlightFile, editor.selection);	
+				this.absoluteRangeFromSelection(this.HighlightFile, editor.selection);	
 			}
-			this.findLogfileLines();
+			this.findTreeFileLines();
 		}
 		return this.selectedTreeStr.length ? true : false;
 	}
@@ -279,7 +254,7 @@ export class LogFile extends TextFile {
 			let passFilePath = visualText.analyzer.getPassPath();
 			let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
 			let passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
-			this.logFile = this.anaFile(passItem.passNum).fsPath;
+			this.treeFile = this.anaFile(passItem.passNum).fsPath;
 
 			if (this.findSelectedTreeStr(editor)) {
 				let num = 1;
@@ -332,40 +307,40 @@ ${ruleStr}
 		}
 	}
 
-	parseLogLine(line: string): LogLine {
-		let logLine: LogLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
+	parseTreeLine(line: string): TreeLine {
+		let treeLine: TreeLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
 		var tokens = line.split('[');
 		let firstTok = 1;
 		if (tokens.length > 1) {
 			// Exception when the character is an open square bracket
 			if (line.trim().startsWith('[')) {
-				logLine.node = '[';
-				logLine.indent = tokens[0].length;
+				treeLine.node = '[';
+				treeLine.indent = tokens[0].length;
 				firstTok = 2;
 			} else {
-				logLine.node = tokens[0].trim();
-				logLine.indent = tokens[0].search(/\S/) - 1;
+				treeLine.node = tokens[0].trim();
+				treeLine.indent = tokens[0].search(/\S/) - 1;
 			}
 			var toks = tokens[firstTok].split(/[,\]]/);
 			if (toks.length >= 4) {
-				logLine.start = +toks[0];
-				logLine.end = +toks[1];
-				logLine.ustart = +toks[2];
-				logLine.uend = +toks[3];	
-				logLine.passNum = +toks[4];
-				logLine.ruleLine = +toks[5];	
-				logLine.type = toks[6];
+				treeLine.start = +toks[0];
+				treeLine.end = +toks[1];
+				treeLine.ustart = +toks[2];
+				treeLine.uend = +toks[3];	
+				treeLine.passNum = +toks[4];
+				treeLine.ruleLine = +toks[5];	
+				treeLine.type = toks[6];
 				if (toks.length > 7 ) {
 					if (toks[7].length)
-						logLine.fired = true;
+						treeLine.fired = true;
 				}
 				if (toks.length > 8) {
 					if (toks[8].length > 0)
-						logLine.built = true;
+						treeLine.built = true;
 				}
 			}
 		}
-		return logLine;
+		return treeLine;
 	}
 
 	findSelectedTree(editor: vscode.TextEditor) {
@@ -449,8 +424,8 @@ ${ruleStr}
 		this.selEnd = absEnd;
 	}
 
-	findLogfileLines() {
-		var file = new TextFile(this.logFile);
+	findTreeFileLines() {
+		var file = new TextFile(this.treeFile);
 		var sep = file.getSeparatorNormalized();
 		var from = 0;
 		var to = 0;
@@ -470,7 +445,7 @@ ${ruleStr}
 					from = +toks[2];
 					to = +toks[3];
 					if (from >= this.selStart && to <= this.selEnd) {
-						this.selectedLines.push(this.parseLogLine(line));
+						this.selectedLines.push(this.parseTreeLine(line));
 						this.selectedTreeStr = this.selectedTreeStr.concat(line,sep);
 					}		
 				}
@@ -481,8 +456,8 @@ ${ruleStr}
 	findMatchByAbsolute(absolute: number): number {
 		var firedNumber = 0;
 
-		for (let highlight of this.highlights) {
-			if (highlight.startb <= absolute && absolute <= highlight.endb) {
+		for (let Highlight of this.Highlight) {
+			if (Highlight.startb <= absolute && absolute <= Highlight.endb) {
 				return firedNumber;
 			}
 			firedNumber++;
@@ -492,7 +467,7 @@ ${ruleStr}
 	}
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
-		var file = new TextFile(this.highlightFile);
+		var file = new TextFile(this.HighlightFile);
 		var lineCount = 0;
 		var absolute = 0;
 
@@ -507,10 +482,10 @@ ${ruleStr}
 	}
 
 	parseBrackets(): number {
-		this.highlights = [];
+		this.Highlight = [];
 		var squares = this.parseBracketsRegex('(');
 		var curlies = this.parseBracketsRegex('<');
-		this.highlights.sort(function(a,b){return a.start - b.start});
+		this.Highlight.sort(function(a,b){return a.start - b.start});
 		return squares + curlies;
 	}
 
@@ -518,7 +493,7 @@ ${ruleStr}
 		var startPattern = bracket === '(' ? '\<\<' : '\(\(';
 		var endPattern = bracket === '<' ? '\>\>' : '\(\(';
 
-		var file = new TextFile(this.highlightFile,false);
+		var file = new TextFile(this.HighlightFile,false);
 		var tokens = file.getText(true).split(startPattern);
 		var tokencount = 0;
 		var len = 0;
@@ -527,13 +502,13 @@ ${ruleStr}
 		for (let token of tokens) {
 			token = token.replace(/[\n\r]/g, '');
 			if (tokencount) {
-				let highlight: Highlight = {start: 0, end: 0, startb: 0, endb: 0};
+				let Highlight: Highlight = {start: 0, end: 0, startb: 0, endb: 0};
 				var toks = token.split(endPattern);
-				highlight.start = len;
-				highlight.end = len + toks[0].length - 1;
-				highlight.startb = lenBracket;
-				highlight.endb = lenBracket + toks[0].length - 1;
-				this.highlights.push(highlight);
+				Highlight.start = len;
+				Highlight.end = len + toks[0].length - 1;
+				Highlight.startb = lenBracket;
+				Highlight.endb = lenBracket + toks[0].length - 1;
+				this.Highlight.push(Highlight);
 			}
 
 			let tok = token.replace(/\<\</g, '');
@@ -547,11 +522,11 @@ ${ruleStr}
 		return tokencount - 1;
 	}
 	
-	parseFireds(logfile: string) {
+	parseFireds(treeFile: string) {
 		var refire = /[\[,\]]/g;
 		this.fireds = [];
 
-		var file = new TextFile(logfile);
+		var file = new TextFile(treeFile);
 		var lastTo = 0;
 
 		for (let line of file.getLines()) {
@@ -578,10 +553,10 @@ ${ruleStr}
 	firedFile(pass: number, rewrite: boolean=false): vscode.Uri {
 		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
 		if (!fs.existsSync(firefile.fsPath) || rewrite) {
-			var logfile = this.anaFile(pass);
-			if (fs.existsSync(logfile.fsPath)) {
-				this.parseFireds(logfile.fsPath);
-				this.writeFiredText(logfile,rewrite);
+			var treeFile = this.anaFile(pass);
+			if (fs.existsSync(treeFile.fsPath)) {
+				this.parseFireds(treeFile.fsPath);
+				this.writeFiredText(treeFile,rewrite);
 			}
 		}
 		return firefile;
@@ -596,21 +571,21 @@ ${ruleStr}
 		return new Date(1970, 1, 1);
 	}
 
-	writeFiredText(logfile: vscode.Uri, rewrite: boolean=false): vscode.Uri {
-		this.setFilesNames(logfile.fsPath);
-		var logDate: Date = this.fileCreateTime(logfile.fsPath);
+	writeFiredText(treeFile: vscode.Uri, rewrite: boolean=false): vscode.Uri {
+		this.setFilesNames(treeFile.fsPath);
+		var logDate: Date = this.fileCreateTime(treeFile.fsPath);
 		var inputDate: Date = this.fileCreateTime(this.inputFile);
-		if (!rewrite && inputDate < logDate && fs.existsSync(this.highlightFile))
-			return vscode.Uri.file(this.highlightFile);
+		if (!rewrite && inputDate < logDate && fs.existsSync(this.HighlightFile))
+			return vscode.Uri.file(this.HighlightFile);
 		else if (!rewrite && !fs.existsSync(this.inputFile))
-			return logfile;
+			return treeFile;
 
 		var file = new TextFile(this.inputFile,false);
 
 		var textfire = '';
 		var lastTo = 0;
 		var between = '';
-		var highlight = '';
+		var Highlight = '';
 		var from = 0;
 		var to = 0;
 		var built = false;
@@ -623,17 +598,17 @@ ${ruleStr}
 				built = this.fireds[i].built;
 
 				var hl = byteText.slice(from,to+1);
-				var highlight = new TextDecoder().decode(hl);
+				var Highlight = new TextDecoder().decode(hl);
 
 				var bt = byteText.slice(lastTo,from);
 				var between = new TextDecoder().decode(bt);
 
 				if (built)
-					textfire = textfire.concat(between,'<<',highlight,'>>');
+					textfire = textfire.concat(between,'<<',Highlight,'>>');
 				else if (nlpStatusBar.getFiredMode() == FiredMode.FIRED)
-					textfire = textfire.concat(between,'((',highlight,'))');
+					textfire = textfire.concat(between,'((',Highlight,'))');
 				else
-					textfire = textfire.concat(between,highlight);
+					textfire = textfire.concat(between,Highlight);
 
 				lastTo = to + 1;
 			}
@@ -644,9 +619,9 @@ ${ruleStr}
 			textfire = file.getText(true);
 		}
 
-		fs.writeFileSync(this.highlightFile,file.unnormalizeText(textfire));
+		fs.writeFileSync(this.HighlightFile,file.unnormalizeText(textfire));
 		this.fireds = [];
-		return vscode.Uri.file(this.highlightFile);
+		return vscode.Uri.file(this.HighlightFile);
 	}
 
 	updateTxxtFiles(fileType: nlpFileType) {
@@ -657,10 +632,5 @@ ${ruleStr}
 			var passNum = Number.parseInt(numStr);
 			this.firedFile(passNum,true);
 		}
-	}
-
-	deleteLogs(fileType: nlpFileType) {
-		var exts = new Array('.'+this.getExtension(fileType));
-		dirfuncs.deleteFiles(visualText.analyzer.getOutputDirectory(),exts);
 	}
 }

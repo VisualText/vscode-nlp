@@ -153,21 +153,30 @@ export class NLPFile extends TextFile {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.passTree(editor.document.fileName);
+		} else if (this.getFileType() == nlpFileType.TXXT) {
+			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
+			sequenceView.openTreeFile(passNum);
 		}
 	}
 			
-	openHighlightText(editor: vscode.TextEditor) {
+	openRuleMatchesText(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.openTreeFileFromPath(editor.document.fileName);
+		} else if (this.getFileType() == nlpFileType.TREE) {
+			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
+			sequenceView.openRuleMatchFile(passNum);
 		}
+	}
+
+	passNumberFromAna(filePath: string): number {
+		return parseInt(filePath.substring(filePath.length-8,filePath.length-5));
 	}
 
 	openPassFile(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.TREE || this.getFileType() == nlpFileType.TXXT) {
-			let filePath = editor.document.uri.fsPath;
-			let passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
+			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
 			var seqFile = new SequenceFile();
 			seqFile.init();
 			let passFileUri: vscode.Uri = seqFile.getUriByPassNumber(passNum);

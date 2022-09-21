@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.41.1",
+    "version": "1.41.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -363,10 +363,10 @@
                 "description": "Generate an exact rule from selected text"
             },
             {
-                "command": "nlp.openHighlightText",
+                "command": "nlp.opendisplayMatchedRules",
                 "category": "NLP",
-                "title": "Display Rule Matches",
-                "description": "Display the rule matches"
+                "title": "Display Matched Rules",
+                "description": "Display the rule matches for the pass"
             },
             {
                 "command": "nlp.commentLines",
@@ -375,10 +375,10 @@
                 "description": "Comments or uncomments selected lines"
             },
             {
-                "command": "nlp.highlightText",
+                "command": "nlp.displayMatchedRules",
                 "category": "Tree",
-                "title": "Hightlight Text",
-                "description": "Highlight the text of selected tree nodes"
+                "title": "Display Matched Rules",
+                "description": "Display the rule matches for the pass"
             },
             {
                 "command": "log.foldAll",
@@ -405,15 +405,15 @@
                 "description": "Unfold recursively"
             },
             {
-                "command": "log.highlightText",
+                "command": "log.displayMatchedRules",
                 "category": "Tree",
-                "title": "Hightlight Text",
-                "description": "Highlight the text of selected tree nodes"
+                "title": "Display Matched Rules",
+                "description": "Display rules that matched in this pass"
             },
             {
                 "command": "log.ruleFired",
                 "category": "Tree",
-                "title": "Display Rule",
+                "title": "Display Rule Fired",
                 "description": "Display the rule fired"
             },
             {
@@ -535,8 +535,8 @@
                 }
             },
             {
-                "command": "sequenceView.openHighlight",
-                "title": "Highlight Matched Rules",
+                "command": "sequenceView.displayMatchedRules",
+                "title": "Display Matched Rules",
                 "icon": {
                     "light": "resources/light/symbol-keyword.svg",
                     "dark": "resources/dark/symbol-keyword.svg"
@@ -859,8 +859,8 @@
                 }
             },
             {
-                "command": "sequenceView.openHighlight",
-                "title": "Highlight Matched Rules",
+                "command": "sequenceView.displayMatchedRules",
+                "title": "Display Matched Rules",
                 "icon": {
                     "light": "resources/light/symbol-keyword.svg",
                     "dark": "resources/dark/symbol-keyword.svg"
@@ -963,6 +963,11 @@
                     "group": "nlp"
                 },
                 {
+                    "when": "resourceExtname == .txt",
+                    "command": "sequenceView.finalTree",
+                    "group": "nlp"
+                },
+                {
                     "when": "resourceExtname == .txt || resourceExtname == .nlp",
                     "command": "nlp.sortText",
                     "group": "nlp"
@@ -990,6 +995,11 @@
                 {
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.openPassFile",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txxt",
+                    "command": "nlp.passTree",
                     "group": "nlp"
                 },
                 {
@@ -1034,7 +1044,7 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.highlightText",
+                    "command": "nlp.displayMatchedRules",
                     "group": "bnlp"
                 },
                 {
@@ -1084,7 +1094,7 @@
                 },
                 {
                     "when": "resourceExtname == .log || resourceExtname == .tree",
-                    "command": "log.highlightText",
+                    "command": "log.displayMatchedRules",
                     "group": "display"
                 },
                 {
@@ -1322,7 +1332,7 @@
                     "group": "display"
                 },
                 {
-                    "command": "sequenceView.openHighlight",
+                    "command": "sequenceView.displayMatchedRules",
                     "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
                     "group": "display"
                 },
@@ -1512,7 +1522,7 @@
                     "group": "inline"
                 },
                 {
-                    "command": "sequenceView.openHighlight",
+                    "command": "sequenceView.displayMatchedRules",
                     "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
                     "group": "inline"
                 },

@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { PassItem, moveDirection } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
-import { LogFile } from './logfile';
+import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
@@ -50,7 +50,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	getPasses(passes: PassItem[]): SequenceItem[] {
 		var folder = '';
 		const seqItems = new Array();
-		const logFile = new LogFile();
+		const treeFile = new TreeFile();
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
 
@@ -71,11 +71,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					folder = '';
 			
 			} else if (passItem.isRuleFile()) {
-				var logPath = logFile.anaFile(passItem.passNum,nlpFileType.TREE);
 				var conVal = '';
-				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
+				if (treeFile.hasFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
 					conVal = 'hasLog';
-				if (logFile.hasLogFileType(passItem.uri,passItem.passNum,nlpFileType.KBB))
+				if (treeFile.hasFileType(passItem.uri,passItem.passNum,nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
 				if (conVal.length == 0)
 					conVal = 'file';
@@ -360,7 +359,7 @@ export class SequenceView {
 	private sequenceView: vscode.TreeView<SequenceItem>;
 	workspacefolder: vscode.WorkspaceFolder | undefined;
 	private textFile = new TextFile();
-	private logFile = new LogFile();
+	private treeFile = new TreeFile();
 	private findFile = new FindFile();
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -376,7 +375,7 @@ export class SequenceView {
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
 		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
 		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
-		vscode.commands.registerCommand('sequenceView.openHighlight', (seqItem) => this.openHighlight(seqItem));
+		vscode.commands.registerCommand('sequenceView.displayMatchedRules', (seqItem) => this.displayMatchedRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
 		vscode.commands.registerCommand('sequenceView.search', () => this.search());
 		vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree());
@@ -401,11 +400,6 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
 		vscode.commands.registerCommand('sequenceView.chartok', (seqItem) => treeDataProvider.chartok(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
-	}
-
-	highlightText(nlpFilePath: string) {
-		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
-		this.openTreeFile(passItem.passNum);
 	}
 
 	passTree(nlpFilePath: string) {
@@ -442,7 +436,7 @@ export class SequenceView {
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
-	finalTree() {
+	public finalTree() {
 		var dir = visualText.analyzer.getOutputDirectory();
 		var finalTree = path.join(dir.fsPath,'final.tree');
 		if (fs.existsSync(finalTree)) {
@@ -509,26 +503,26 @@ export class SequenceView {
 
 	public openTreeFileFromPath(nlpFilePath: string) {
 		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
-		this.openHighlightFile(passItem.passNum);
+		this.openRuleMatchFile(passItem.passNum);
 	}
 
-	private openTreeFile(passNum: number) {
-		var logfile = this.logFile.anaFile(passNum,nlpFileType.TREE);
+	public openTreeFile(passNum: number) {
+		var logfile = this.treeFile.anaFile(passNum,nlpFileType.TREE);
 		if (fs.existsSync(logfile.fsPath))
 			vscode.window.showTextDocument(logfile);
 		else
 			vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
 	}
 
-	public openHighlightFile(passNum: number) {
-		var firefile = this.logFile.firedFile(passNum);
+	public openRuleMatchFile(passNum: number) {
+		var firefile = this.treeFile.firedFile(passNum);
 		if (fs.existsSync(firefile.fsPath))
 			vscode.window.showTextDocument(firefile);
 		else
-			vscode.window.showWarningMessage('No highlight file with this pass');
+			vscode.window.showWarningMessage('No rule matches file with this pass');
 	}
 
-	private openHighlight(seqItem: SequenceItem): void {
+	private displayMatchedRules(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
 			this.textFile.setFile(seqItem.uri);
 			if (!this.textFile.isFileType(nlpFileType.NLP)) {
@@ -536,7 +530,7 @@ export class SequenceView {
 				return;
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
-				this.openHighlightFile(seqItem.passNum);
+				this.openRuleMatchFile(seqItem.passNum);
 			}
 		}
 	}
@@ -549,7 +543,7 @@ export class SequenceView {
 				return;
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
-				var kbfile = this.logFile.anaFile(seqItem.passNum,nlpFileType.KBB);
+				var kbfile = this.treeFile.anaFile(seqItem.passNum,nlpFileType.KBB);
 				if (fs.existsSync(kbfile.fsPath))
 					vscode.window.showTextDocument(kbfile);
 				else
