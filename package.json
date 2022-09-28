@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.41.2",
+    "version": "1.41.3",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -405,10 +405,10 @@
                 "description": "Unfold recursively"
             },
             {
-                "command": "log.displayMatchedRules",
+                "command": "log.highlightText",
                 "category": "Tree",
-                "title": "Display Matched Rules",
-                "description": "Display rules that matched in this pass"
+                "title": "Highlight text",
+                "description": "Highlight the text of selected tree nodes"
             },
             {
                 "command": "log.ruleFired",
@@ -951,7 +951,7 @@
         "menus": {
             "explorer/context": [
                 {
-                    "when": "resourceLangId == nlp  && resourceExtname == .txt",
+                    "when": "resourceLangId == nlp && resourceExtname == .txt",
                     "command": "nlp.analyze",
                     "group": "sequence"
                 }
@@ -1094,7 +1094,7 @@
                 },
                 {
                     "when": "resourceExtname == .log || resourceExtname == .tree",
-                    "command": "log.displayMatchedRules",
+                    "command": "log.highlightText",
                     "group": "display"
                 },
                 {
