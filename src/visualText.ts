@@ -45,8 +45,8 @@ export class VisualText {
     public readonly LOG_SUFFIX = '_log';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
-    public readonly ICU1_WIN = 'icudt69.dll';
-    public readonly ICU2_WIN = 'icuuc69.dll';
+    public readonly ICU1_WIN = 'icudt71.dll';
+    public readonly ICU2_WIN = 'icuuc71.dll';
     public readonly ICU1_LINUX = 'libicutu.a';
     public readonly ICU2_LINUX = 'libicuuc.a';
     public readonly ICU1_MAC = 'libicutum.a';
