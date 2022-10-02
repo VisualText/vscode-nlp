@@ -159,7 +159,7 @@ export class FileOps {
                             else {
                                 fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
                                 op.status = fileOpStatus.DONE;
-                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath);
+                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
                             }
                         }
                     }
@@ -173,6 +173,7 @@ export class FileOps {
                 visualText.debugMessage('FILE PROCESSING COMPLETE');
                 vscode.commands.executeCommand('textView.refreshAll');
                 vscode.commands.executeCommand('analyzerView.refreshAll');
+                vscode.commands.executeCommand('sequenceView.refreshAll');
                 break;
             }
         }

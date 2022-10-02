@@ -91,7 +91,10 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.41.4
+### v1.42.0
+Check for older pat files more obvious and clean, misc fixes.
+
+### v1.41.7
 Added cross reference context menu items in nlp files, tree files, and txxt files
 
 ### v1.40.0
@@ -214,17 +217,7 @@ Analyze a folder of texts
 ## v1.0.11
 Fixed color highlights rule rewrite line
 
-## v1.0.8
-Updated NLP Engine with empty tmp folders
-
-## v1.0.5
-Added duplicate line for rule editor
-
-## v1.0.4
-
-The NLP engine executable and engine directory are now included in the NLP language extension for VSCode. The location of the engine is located in a subdirectory of the nlp extensions located in the extension directory located on the local computer. See documentation for VSCODE if you want to know the location of the directory which is different for different platforms.
-
-See change log for full list: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
+For a comprehension change list see: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
 
 # Development
 

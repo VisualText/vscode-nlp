@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.41.4",
+    "version": "1.42.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -379,6 +379,12 @@
                 "category": "Tree",
                 "title": "Display Matched Rules",
                 "description": "Display the rule matches for the pass"
+            },
+            {
+                "command": "nlp.duplicateLine",
+                "category": "Tree",
+                "title": "Duplicate Line",
+                "description": "Duplicate the current line"
             },
             {
                 "command": "log.foldAll",

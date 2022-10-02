@@ -6,7 +6,6 @@ import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { TreeFile } from './treeFile';
-import { fileOps, fileOperation } from './fileOps';
 
 export enum moveDirection { UP, DOWN }
 
@@ -622,11 +621,5 @@ export class SequenceFile extends TextFile {
 			}
 		}
 		return new PassItem();
-	}
-
-	convertPatFiles() {
-		this.saveFile();
-		visualText.fileOps.addFileOperation(this.getSpecDirectory(),this.getSpecDirectory(),fileOperation.RENAME,'pat','nlp');
-		visualText.fileOps.startFileOps(100);
 	}
 }
