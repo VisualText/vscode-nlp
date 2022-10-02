@@ -7,6 +7,7 @@ import { TextFile, nlpFileType } from './textFile';
 import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
 import { findView } from './findView';
+import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
 
@@ -54,11 +55,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var collapse = vscode.TreeItemCollapsibleState.None;
 		var order = 0;
 
-		var hasPat: Boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
+		var hasPat: boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
 		vscode.commands.executeCommand('setContext', 'sequence.hasPat', hasPat);
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
+			var hasPats = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
 
 			if (passItem.isFolder()) {
 				folder = passItem.name;
@@ -97,6 +99,18 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
 			order++;	
+		}
+
+		var specDir: vscode.Uri = visualText.analyzer.getSpecDirectory();
+		if (hasPat && analyzerView.getConverting(specDir) == false && visualText.analyzer.name.length) {
+			var button = "Convert to .nlp";
+
+			vscode.window.showInformationMessage("Analyzer " + visualText.analyzer.name + " sequence has .pat extensions", button).then(response => {
+				if (button === response) {
+					analyzerView.setConverting(visualText.analyzer.getAnalyzerDirectory(),true);
+					visualText.convertPatFiles(specDir);
+				}
+			});
 		}
 
 		return seqItems;
@@ -371,7 +385,7 @@ export class SequenceView {
 	
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
-
+		
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
 		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
 		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
@@ -432,8 +446,19 @@ export class SequenceView {
 	}
 
 	convertPatToNLP() {
-		visualText.analyzer.seqFile.convertPatFiles();
-		vscode.commands.executeCommand('sequenceView.refreshAll');
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			items.push({label: 'Yes', description: 'Convert all the .pat files to .nlp'});
+			items.push({label: 'No', description: 'Do not convert'});
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				visualText.convertPatFiles(visualText.analyzer.getAnalyzerDirectory());
+			});
+		}
 	}
 
 	public finalTree() {

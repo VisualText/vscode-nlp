@@ -3,7 +3,10 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.41.4
+### v1.42.0
+Check for older pat files more obvious and clean, misc fixes.
+
+### v1.41.7
 Added cross reference context menu items in nlp files, tree files, and txxt files
 
 ### v1.40.0

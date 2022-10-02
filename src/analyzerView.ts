@@ -8,7 +8,11 @@ import { fileOperation } from './fileOps';
 interface AnalyzerItem {
 	uri: vscode.Uri;
 	hasLogs: boolean;
+	hasPats: boolean;
+	isConverting: boolean;
 }
+
+export let analyzerItems: AnalyzerItem[] = new Array();
 
 export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<AnalyzerItem> {
 
@@ -42,15 +46,15 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	public getChildren(element?: AnalyzerItem): AnalyzerItem[] {
         if (visualText.hasWorkspaceFolder()) {
             const analyzers = visualText.getAnalyzers();
-            const children: AnalyzerItem[] = new Array();
+            analyzerItems = [];
 			var hasAllLogs = false;
             for (let analyzer of analyzers) {
 				var hasLogs = dirfuncs.hasLogDirs(analyzer,true);
 				if (hasLogs) hasAllLogs = true;
-                children.push({uri: analyzer, hasLogs: hasLogs});
+                analyzerItems.push({uri: analyzer, hasLogs: hasLogs, hasPats: false, isConverting: false});
             }
 			vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
-            return children;
+            return analyzerItems;
         }
 		return [];
 	}
@@ -136,21 +140,19 @@ export class AnalyzerView {
 					var folder = path.dirname(analyzerItem.uri.fsPath);
 					visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(folder,newname)),fileOperation.COPY);
 					visualText.fileOps.startFileOps();	
-					vscode.commands.executeCommand('analyzerView.refreshAll');	
+					vscode.commands.executeCommand('analyzerView.refreshAll');
+					vscode.commands.executeCommand('sequenceView.refreshAll');	
 				}
 			});
 		}
 	}
-
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
-		/* Currently not compiling
-		var analyzerName = path.basename(analyzerItem.uri.fsPath);
-		if (analyzerName.length)
-			this.analyzerView.title = `ANALYZERS (${analyzerName})`;
+		visualText.analyzer.name = path.basename(analyzerItem.uri.fsPath);
+		if (visualText.analyzer.name.length)
+			this.analyzerView.title = `ANALYZERS (${visualText.analyzer.name})`;
 		else
 			this.analyzerView.title = 'ANALYZERS';
-		*/
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
@@ -265,5 +267,23 @@ export class AnalyzerView {
 				}
 			}
 		});
+	}
+
+	private getAnalyzerItem(analyzerDir: vscode.Uri): AnalyzerItem {
+		for (let analyzerItem of analyzerItems) {
+			if (analyzerItem.uri.fsPath == analyzerDir.fsPath)
+				return analyzerItem;
+		}
+		return analyzerItems[0];
+	}
+
+	public getConverting(analyzerDir: vscode.Uri): boolean {
+		var item = this.getAnalyzerItem(analyzerDir);
+		return item.isConverting;
+	}
+
+	public setConverting(analyzerDir: vscode.Uri, value: boolean) {
+		var item = this.getAnalyzerItem(analyzerDir);
+		item.isConverting = value;
 	}
 }

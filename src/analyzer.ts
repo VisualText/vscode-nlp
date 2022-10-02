@@ -27,6 +27,7 @@ export class Analyzer {
     public timerCounter: number = 0;
     public timerID: number = 0;
     public analyzerCopyUri: vscode.Uri = vscode.Uri.file('');
+    public name: string = "";
 
 	constructor() {
     }
@@ -271,4 +272,8 @@ export class Analyzer {
         else
             this.loaded = false;
 	}
+
+    getAnalyzerConverting() {
+        let moose = 1;
+    }
 }
