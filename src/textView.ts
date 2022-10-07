@@ -217,8 +217,10 @@ export class TextView {
 		vscode.commands.registerCommand('textView.analyzeDir', (textItem) => this.analyzeDir(textItem));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
-		vscode.commands.registerCommand('textView.newText', (textItem) => this.newText(textItem));
-		vscode.commands.registerCommand('textView.newDir', (textItem) => this.newDir(textItem));
+		vscode.commands.registerCommand('textView.newTextTop', (textItem) => this.newText(textItem,true));
+		vscode.commands.registerCommand('textView.newText', (textItem) => this.newText(textItem,false));
+		vscode.commands.registerCommand('textView.newDirTop', (textItem) => this.newDir(textItem,true));
+		vscode.commands.registerCommand('textView.newDir', (textItem) => this.newDir(textItem,false));
 		vscode.commands.registerCommand('textView.deleteFile', (textItem) => this.deleteFile(textItem));
 		vscode.commands.registerCommand('textView.deleteDir', (textItem) => this.deleteFile(textItem));
 		vscode.commands.registerCommand('textView.deleteFileLogs', (textItem) => this.deleteFileLogs(textItem));
@@ -387,12 +389,12 @@ export class TextView {
 		}
 	}
 
-	private newDir(textItem: TextItem) {
+	private newDir(textItem: TextItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter directory name' }).then(newdir => {
 				if (newdir) {
 					var dirPath = visualText.analyzer.getInputDirectory().fsPath;
-					if (textItem)
+					if (textItem && !top)
 						dirPath = dirfuncs.getDirPath(textItem.uri.fsPath);
 					dirPath = path.join(dirPath,newdir);
 					dirfuncs.makeDir(dirPath);
@@ -402,12 +404,12 @@ export class TextView {
 		}
 	}
 	
-	private newText(textItem: TextItem) {
+	private newText(textItem: TextItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter text file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getInputDirectory().fsPath;
-					if (textItem)
+					if (textItem && !top)
 						dirPath = dirfuncs.getDirPath(textItem.uri.fsPath);
 					var filepath = path.join(dirPath,newname+'.txt');
 					if (path.extname(newname))

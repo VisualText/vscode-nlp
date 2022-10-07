@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.42.1
+Major fixes to the textview conext menu
+
 ### v1.42.0
 Check for older pat files more obvious and clean, misc fixes.
 

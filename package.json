@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.42.0",
+    "version": "1.42.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -339,10 +339,10 @@
                 "description": "Search for chosen word in passes"
             },
             {
-                "command": "nlp.searchFunction",
+                "command": "nlp.goToFunction",
                 "category": "NLP",
-                "title": "Search Function",
-                "description": "Search for function"
+                "title": "Go to Function",
+                "description": "Go to the selected Function"
             },
             {
                 "command": "nlp.generateRule",
@@ -617,8 +617,24 @@
                 }
             },
             {
+                "command": "textView.newDirTop",
+                "title": "New Top Folder",
+                "icon": {
+                    "light": "resources/light/new-folder.svg",
+                    "dark": "resources/dark/new-folder.svg"
+                }
+            },
+            {
                 "command": "textView.newText",
                 "title": "New Text File",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "textView.newTextTop",
+                "title": "New Top Text File",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -1030,7 +1046,7 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.searchFunction",
+                    "command": "nlp.goToFunction",
                     "group": "anlp"
                 },
                 {
@@ -1131,12 +1147,12 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.newDir",
+                    "command": "textView.newDirTop",
                     "when": "view == textView",
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.newText",
+                    "command": "textView.newTextTop",
                     "when": "view == textView",
                     "group": "navigation"
                 },
@@ -1298,11 +1314,6 @@
             ],
             "view/item/context": [
                 {
-                    "command": "textView.analyze",
-                    "when": "view == textView && viewItem == file",
-                    "group": "file"
-                },
-                {
                     "command": "sequenceView.tokenize",
                     "when": "view == sequenceView && viewItem == tokenize",
                     "group": "tokenize"
@@ -1329,37 +1340,37 @@
                 },
                 {
                     "command": "sequenceView.openFile",
-                    "when": "view == sequenceView && viewItem == file",
+                    "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openTree",
-                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /hasLog|hasLoghasKB/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.displayMatchedRules",
-                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /hasLog|hasLoghasKB/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == sequenceView && viewItem =~ /(hasKB|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /hasKB|hasLoghasKB/",
                     "group": "display"
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)",
+                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)",
+                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.rename",
-                    "when": "view == sequenceView && viewItem =~ /(file|folder|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB/",
                     "group": "edit"
                 },
                 {
@@ -1384,93 +1395,103 @@
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.duplicate",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "edit"
                 },
                 {
                     "command": "sequenceView.typePat",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeRec",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeOn",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "attribute"
                 },
                 {
                     "command": "sequenceView.typeOff",
-                    "when": "view == sequenceView && viewItem =~ /(file|hasKB|hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "attribute"
                 },
                 {
-                    "command": "textView.rename",
-                    "when": "view == textView && viewItem == file",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.deleteDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.analyzeDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.renameDir",
-                    "when": "view == textView && viewItem =~ /dir/)",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.newText",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.newDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "edit"
+                    "command": "textView.analyze",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "group": "arun"
                 },
                 {
                     "command": "textView.convert",
                     "when": "view == textView && viewItem == dirHasNonText",
-                    "group": "edit"
+                    "group": "arun"
+                },
+                {
+                    "command": "textView.analyzeDir",
+                    "when": "view == textView && viewItem =~ /dir/",
+                    "group": "arun"
+                },
+                {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem == fileHasLogs",
+                    "group": "file"
+                },
+                {
+                    "command": "textView.rename",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "group": "file"
+                },
+                {
+                    "command": "textView.deleteDir",
+                    "when": "view == textView && viewItem =~ /dir/",
+                    "group": "zdir"
+                },
+                {
+                    "command": "textView.renameDir",
+                    "when": "view == textView && viewItem =~ /dir/)",
+                    "group": "zdir"
+                },
+                {
+                    "command": "textView.newDirTop",
+                    "when": "view == textView",
+                    "group": "zdir"
                 },
                 {
                     "command": "textView.newDir",
-                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.newText",
-                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
-                    "group": "edit"
-                },
-                {
-                    "command": "textView.existingFile",
-                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
-                    "group": "edit"
+                    "when": "view == textView",
+                    "group": "zdir"
                 },
                 {
                     "command": "textView.existingFolder",
-                    "when": "view == textView && (viewItem == file || viewItem == fileHasLog)",
-                    "group": "edit"
+                    "when": "view == textView",
+                    "group": "zdir"
+                },
+                {
+                    "command": "textView.newText",
+                    "when": "view == textView",
+                    "group": "file"
+                },
+                {
+                    "command": "textView.newTextTop",
+                    "when": "view == textView",
+                    "group": "file"
+                },
+                {
+                    "command": "textView.existingFile",
+                    "when": "view == textView && viewItem =~ /file|fileHasLog/",
+                    "group": "file"
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem == file",
-                    "group": "edit"
+                    "when": "view == textView && viewItem =~ /file|fileHasLog/",
+                    "group": "file"
                 },
                 {
                     "command": "analyzerView.colorizeAnalyzer",
@@ -1519,7 +1540,7 @@
                 },
                 {
                     "command": "sequenceView.insertNew",
-                    "when": "view == sequenceView && viewItem =~ /(stub|folder|tokenize)/",
+                    "when": "view == sequenceView && viewItem =~ /stub|folder|tokenize/",
                     "group": "inline"
                 },
                 {
@@ -1529,12 +1550,12 @@
                 },
                 {
                     "command": "sequenceView.displayMatchedRules",
-                    "when": "view == sequenceView && viewItem =~ /(hasLog|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /hasLog|hasLoghasKB/",
                     "group": "inline"
                 },
                 {
                     "command": "sequenceView.openKB",
-                    "when": "view == sequenceView && viewItem =~ /(hasKB|hasLoghasKB)/",
+                    "when": "view == sequenceView && viewItem =~ /hasKB|hasLoghasKB/",
                     "group": "inline"
                 },
                 {
@@ -1549,7 +1570,7 @@
                 },
                 {
                     "command": "textView.rename",
-                    "when": "view == textView && viewItem =~ /(file|fileHasLogs)/",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
                     "group": "inline"
                 },
                 {
@@ -1564,7 +1585,7 @@
                 },
                 {
                     "command": "textView.analyze",
-                    "when": "view == textView && viewItem =~ /(file|fileHasLogs)/",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
                     "group": "inline"
                 },
                 {
@@ -1584,7 +1605,7 @@
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem == file",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
                     "group": "inline"
                 },
                 {
