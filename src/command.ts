@@ -17,7 +17,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyzeDir', this.analyzeDir));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.searchWord', this.searchWord));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.searchFunction', this.searchFunction));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.goToFunction', this.goToFunction));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
@@ -135,7 +135,7 @@ export class NLPCommands {
         }
     }
 
-    searchFunction() {
+    goToFunction() {
         if (vscode.window.activeTextEditor) {
             var nlpFile = new NLPFile();
             nlpFile.searchWord(vscode.window.activeTextEditor,true);
