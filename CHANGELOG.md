@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.43.0
+Added a KB View List
+
 ### v1.42.2
 Unicode fixes for colorizing
 

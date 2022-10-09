@@ -174,6 +174,7 @@ export class FileOps {
                 vscode.commands.executeCommand('textView.refreshAll');
                 vscode.commands.executeCommand('analyzerView.refreshAll');
                 vscode.commands.executeCommand('sequenceView.refreshAll');
+                vscode.commands.executeCommand('kbView.refreshAll');
                 break;
             }
         }

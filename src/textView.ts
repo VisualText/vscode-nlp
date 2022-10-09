@@ -6,7 +6,7 @@ import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { fileOps, fileOperation } from './fileOps';
+import {fileOperation } from './fileOps';
 import * as fs from 'fs';
 
 export interface TextItem {

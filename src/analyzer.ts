@@ -18,6 +18,7 @@ export class Analyzer {
     private specDir: vscode.Uri = vscode.Uri.file('');
     private inputDir: vscode.Uri = vscode.Uri.file('');
     private outputDir: vscode.Uri = vscode.Uri.file('');
+    private kbDir: vscode.Uri = vscode.Uri.file('');
     private logDir: vscode.Uri = vscode.Uri.file('');
     private currentTextFile: vscode.Uri = vscode.Uri.file('');
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
@@ -77,6 +78,7 @@ export class Analyzer {
         this.specDir = vscode.Uri.file('');
         this.inputDir = vscode.Uri.file('');
         this.outputDir = vscode.Uri.file('');
+        this.kbDir = vscode.Uri.file('');
         this.currentTextFile = vscode.Uri.file('');
         this.passNum = 0;
         this.loaded = false;
@@ -248,6 +250,10 @@ export class Analyzer {
         return this.logDir;
     }
 
+    getKBDirectory(): vscode.Uri {
+        return this.kbDir;
+    }
+
     getTextPath(): vscode.Uri {
         return this.currentTextFile;
     }
@@ -266,6 +272,7 @@ export class Analyzer {
         if (fs.existsSync(directory.fsPath)) {
             this.specDir = vscode.Uri.file(path.join(directory.fsPath,'spec'));
             this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'input'));
+            this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'kb','user'));
             this.logDir = vscode.Uri.file(path.join(directory.fsPath,'logs'));
             this.loaded = true;          
         }
