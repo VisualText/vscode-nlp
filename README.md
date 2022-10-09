@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.42.2
+Unicode fixes for colorizing
+
 ### v1.42.1
 Major fixes to the textview conext menu
 
