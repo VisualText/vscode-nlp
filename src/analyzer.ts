@@ -272,7 +272,7 @@ export class Analyzer {
         if (fs.existsSync(directory.fsPath)) {
             this.specDir = vscode.Uri.file(path.join(directory.fsPath,'spec'));
             this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'input'));
-            this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'kb','user'));
+            this.kbDir = vscode.Uri.file(path.join(directory.fsPath,'kb','user'));
             this.logDir = vscode.Uri.file(path.join(directory.fsPath,'logs'));
             this.loaded = true;          
         }
