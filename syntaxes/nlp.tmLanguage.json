@@ -26,7 +26,7 @@
             "match": "\\b(?i:(and|not|or|in|>|<|<>|/|\\|+|-|=))\\b"
         },
         {
-            "match": "([A-Za-z_]+)\\s*\\(",
+            "match": "([\\w_]+)\\s*\\(",
             "captures": {
                 "1": {
                     "patterns": [
@@ -68,7 +68,7 @@
             ]
         },
         "rules-region": {
-            "begin": "([_A-Za-z]+)\\s*((\\[[^\\]]*\\]))*\\s*(<-)",
+            "begin": "([_\\w]+)\\s*((\\[[^\\]]*\\]))*\\s*(<-)",
             "beginCaptures": {
                 "1": {
                     "name": "variable.rewrite.nlp"
@@ -145,7 +145,7 @@
             "match": "\\b_(xWILD|xNUM|xALPHA|xWHITE|xNIL|xSTART|xEND|xCTRL)\\b"
         },
         "attribute-equals": {
-            "begin": "([_A-Za-z]+)\\s*(=)\\s*(\\()",
+            "begin": "([_\\w]+)\\s*(=)\\s*(\\()",
             "beginCaptures": {
                 "1": {
                     "patterns": [
@@ -192,7 +192,7 @@
         },
         "token": {
             "name": "variable.parameter.nlp",
-            "match": "_[a-zA-Z]+\\b"
+            "match": "_[\\w]+\\b"
         },
         "comment": {
             "name": "comment.nlp",

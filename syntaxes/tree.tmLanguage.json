@@ -29,12 +29,12 @@
             ]
         },
         "node-name": {
-            "match": "\\b([a-zA-Z0-9]+)\\b",
+            "match": "\\b([\\w\\d]+)\\b",
             "name": "keyword.node.tree"
         },
         "rewrites": {
             "name": "keyword.rewrite.tree",
-            "match": "\\b_[a-zA-Z]+\\b"
+            "match": "\\b_[\\w]+\\b"
         },
         "attributes": {
             "begin": "\\[",
