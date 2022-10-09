@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.42.2",
+    "version": "1.43.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -49,6 +49,11 @@
                     "id": "sequenceView",
                     "name": "Analyzer Sequence",
                     "icon": "resources/dark/dna.svg"
+                },
+                {
+                    "id": "kbView",
+                    "name": "KB",
+                    "icon": "resources/dark/kb.svg"
                 }
             ],
             "vtOutput": [
@@ -225,6 +230,38 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.refreshAll",
+                "title": "Refresh List",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "kbView.newKBFile",
+                "title": "New KB File",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "kbView.deleteFile",
+                "title": "Delete KB File",
+                "icon": {
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "kbView.rename",
+                "title": "Rename KB File",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
+                }
+            },
             {
                 "command": "nlp.sortText",
                 "title": "Sort & Unique text lines",
@@ -1137,6 +1174,16 @@
             ],
             "view/title": [
                 {
+                    "command": "kbView.refreshAll",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.newKBFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "textView.search",
                     "when": "view == textView",
                     "group": "navigation"
@@ -1313,6 +1360,36 @@
                 }
             ],
             "view/item/context": [
+                {
+                    "command": "kbView.deleteFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.deleteFile",
+                    "when": "view == kbView",
+                    "group": "inline"
+                },
+                {
+                    "command": "kbView.rename",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.rename",
+                    "when": "view == kbView",
+                    "group": "inline"
+                },
+                {
+                    "command": "kbView.newKBFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.newKBFile",
+                    "when": "view == kbView",
+                    "group": "inline"
+                },
                 {
                     "command": "sequenceView.tokenize",
                     "when": "view == sequenceView && viewItem == tokenize",
