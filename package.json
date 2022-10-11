@@ -312,8 +312,8 @@
                 }
             },
             {
-                "command": "textView.analyzeLast",
-                "title": "Analyze Last file",
+                "command": "textView.analyzerCurrent",
+                "title": "Analyze Current file",
                 "icon": {
                     "light": "resources/light/run.svg",
                     "dark": "resources/dark/run.svg"
@@ -735,7 +735,15 @@
             },
             {
                 "command": "analyzerView.deleteLogFiles",
-                "title": "Delete Log Files",
+                "title": "Delete Log Files in this Analyzer",
+                "icon": {
+                    "light": "resources/light/x-box.svg",
+                    "dark": "resources/dark/x-box.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteAllAnalyzerLogs",
+                "title": "Delete Log Files for All Analyzers",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -743,7 +751,7 @@
             },
             {
                 "command": "analyzerView.copyAnalyzer",
-                "title": "Copy analyzer",
+                "title": "Copy Analyzer to Another Folder",
                 "icon": {
                     "light": "resources/light/anacopy.svg",
                     "dark": "resources/dark/anacopy.svg"
@@ -759,7 +767,7 @@
             },
             {
                 "command": "analyzerView.copyAll",
-                "title": "Copy All Analyzers",
+                "title": "Copy All Analyzers to Another Directory",
                 "icon": {
                     "light": "resources/light/anacopy.svg",
                     "dark": "resources/dark/anacopy.svg"
@@ -776,14 +784,6 @@
             {
                 "command": "textView.deleteAnalyzerLogs",
                 "title": "Delete All Log Files for this Analyzer",
-                "icon": {
-                    "light": "resources/light/x-box.svg",
-                    "dark": "resources/dark/x-box.svg"
-                }
-            },
-            {
-                "command": "analyzerView.deleteAllAnalyzerLogs",
-                "title": "Delete Log Files",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -996,7 +996,7 @@
         ],
         "keybindings": [
             {
-                "command": "textView.analyzeLast",
+                "command": "textView.analyzerCurrent",
                 "key": "f5",
                 "mac": "f5"
             },
@@ -1189,9 +1189,9 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.analyzeLast",
+                    "command": "textView.analyzerCurrent",
                     "when": "view == textView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "textView.newDirTop",
@@ -1206,17 +1206,12 @@
                 {
                     "command": "textView.existingFile",
                     "when": "view == textView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "textView.existingFolder",
                     "when": "view == textView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "textView.openText",
-                    "when": "view == textView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "textView.refreshAll",
@@ -1281,7 +1276,7 @@
                 {
                     "command": "outputView.addKB",
                     "when": "view == outputView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "outputView.refreshAll",
@@ -1316,7 +1311,7 @@
                 {
                     "command": "analyzerView.colorizeAnalyzer",
                     "when": "view == analyzerView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "analyzerView.loadDefaultAnalyzers",
@@ -1324,14 +1319,9 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "analyzerView.deleteAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "navigation"
-                },
-                {
                     "command": "analyzerView.deleteAllAnalyzerLogs",
                     "when": "view == analyzerView && analyzers.hasLogs",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "analyzerView.newAnalyzer",
@@ -1346,7 +1336,7 @@
                 {
                     "command": "analyzerView.copyAll",
                     "when": "view == analyzerView",
-                    "group": "navigation"
+                    "group": "secondary"
                 },
                 {
                     "command": "findView.clearAll",
@@ -1421,6 +1411,16 @@
                     "group": "display"
                 },
                 {
+                    "command": "sequenceView.newFolder",
+                    "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
+                    "group": "display"
+                },
+                {
+                    "command": "sequenceView.search",
+                    "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
+                    "group": "display"
+                },
+                {
                     "command": "sequenceView.openTree",
                     "when": "view == sequenceView && viewItem =~ /hasLog|hasLoghasKB/",
                     "group": "display"
@@ -1451,11 +1451,6 @@
                     "group": "edit"
                 },
                 {
-                    "command": "sequenceView.newFolder",
-                    "when": "view == sequenceView",
-                    "group": "edit"
-                },
-                {
                     "command": "sequenceView.insertLibrary",
                     "when": "view == sequenceView",
                     "group": "edit"
@@ -1472,7 +1467,7 @@
                 },
                 {
                     "command": "sequenceView.delete",
-                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
+                    "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB|folder/",
                     "group": "edit"
                 },
                 {
@@ -1501,18 +1496,28 @@
                     "group": "attribute"
                 },
                 {
+                    "command": "textView.openText",
+                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "group": "arun"
+                },
+                {
                     "command": "textView.analyze",
                     "when": "view == textView && viewItem =~ /file|fileHasLogs/",
                     "group": "arun"
                 },
                 {
                     "command": "textView.convert",
-                    "when": "view == textView && viewItem == dirHasNonText",
+                    "when": "view == textView && viewItem =~ /dirHasNonText/",
                     "group": "arun"
                 },
                 {
                     "command": "textView.analyzeDir",
                     "when": "view == textView && viewItem =~ /dir/",
+                    "group": "arun"
+                },
+                {
+                    "command": "textView.search",
+                    "when": "view == textView",
                     "group": "arun"
                 },
                 {
@@ -1571,16 +1576,6 @@
                     "group": "file"
                 },
                 {
-                    "command": "analyzerView.colorizeAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "edit"
-                },
-                {
-                    "command": "analyzerView.loadDefaultAnalyzers",
-                    "when": "view == analyzerView",
-                    "group": "edit"
-                },
-                {
                     "command": "analyzerView.deleteAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
@@ -1596,11 +1591,6 @@
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerView.copyAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "inline"
-                },
-                {
                     "command": "analyzerView.dupeAnalyzer",
                     "when": "view == analyzerView",
                     "group": "edit"
@@ -1613,7 +1603,7 @@
                 {
                     "command": "analyzerView.deleteAnalyzerLogs",
                     "when": "view == analyzerView && viewItem == hasLogs",
-                    "group": "inline"
+                    "group": "edit"
                 },
                 {
                     "command": "sequenceView.insertNew",
@@ -1646,11 +1636,6 @@
                     "group": "inline"
                 },
                 {
-                    "command": "textView.rename",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
-                    "group": "inline"
-                },
-                {
                     "command": "textView.analyzeDir",
                     "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
@@ -1672,12 +1657,12 @@
                 },
                 {
                     "command": "textView.newDir",
-                    "when": "view == textView",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
                 },
                 {
                     "command": "textView.newText",
-                    "when": "view == textView",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
                 },
                 {
@@ -1687,12 +1672,7 @@
                 },
                 {
                     "command": "textView.deleteDir",
-                    "when": "view == textView && viewItem == dir",
-                    "group": "inline"
-                },
-                {
-                    "command": "analyzerView.newAnalyzer",
-                    "when": "view == analyzerView",
+                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
                 },
                 {

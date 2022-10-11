@@ -212,7 +212,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.convert', (textItem) => treeDataProvider.convert(textItem));
 
 		vscode.commands.registerCommand('textView.openFile', (textItem) => this.openFile(textItem));
-		vscode.commands.registerCommand('textView.analyzeLast', () => this.analyzeLast());
+		vscode.commands.registerCommand('textView.analyzerCurrent', () => this.analyzerCurrent());
 		vscode.commands.registerCommand('textView.analyze', (textItem) => this.analyze(textItem));
 		vscode.commands.registerCommand('textView.analyzeDir', (textItem) => this.analyzeDir(textItem));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
@@ -235,7 +235,7 @@ export class TextView {
         return textView;
 	}
 
-	private analyzeLast() {
+	private analyzerCurrent() {
 		if (visualText.analyzer.hasText()) {
 			var textUri = visualText.analyzer.getTextPath();
 			this.openFile({uri: textUri, type: vscode.FileType.File, hasLogs: false, hasNonText: false});

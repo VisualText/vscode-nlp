@@ -111,7 +111,7 @@ export class NLPStatusBar {
             nlpStatusBarRun.text = `$(chrome-close)`;
             nlpStatusBarRun.tooltip = 'Stop analyzer';
             if (statusBarClick)
-                vscode.commands.executeCommand('textView.analyzeLast');	
+                vscode.commands.executeCommand('textView.analyzerCurrent');	
         }
     }
 
