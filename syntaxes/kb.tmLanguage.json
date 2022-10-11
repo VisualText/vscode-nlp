@@ -7,11 +7,11 @@
     "patterns": [
         {
             "name": "variable.parameter.nlp",
-            "match": "\\b(?i:(add|ind))\\b"
+            "match": "\\b(?i:(add|bind|ind|quit|take))\\b"
         },
         {
             "name": "keyword.other.kb",
-            "match": "\\b(?i:(heir|attr|end|no_ptr|pchar|pcon|pfloat|pnum|pptr|psym|pst))\\b"
+            "match": "\\b(?i:(attr|end|empty|hier|no_ptr|pchar|pcon|pfloat|pnum|pptr|psym|pst|root|word|sys))\\b"
         },
         {
             "name": "variable.parameter.kb",
