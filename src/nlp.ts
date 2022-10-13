@@ -72,7 +72,7 @@ export class NLPFile extends TextFile {
 			var pos = filestr.search('input');
 			var anapath = filestr.substring(0,pos);
 	
-			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '';
+			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
 			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
 			progress.report({ increment: 50, message: "Loading KB & Analyzing..." });
