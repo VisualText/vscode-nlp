@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.44.0
+Added webitekb function
+
 ### v1.43.4
 Added a KB View List
 

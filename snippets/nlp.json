@@ -679,6 +679,13 @@
         ],
         "description": "Create a dump file of knowledge base concept."
     },
+    "writekb": {
+        "prefix": ["writekb"],
+        "body": [
+            "writekb(${1:directory_str})"
+        ],
+        "description": "Writes the entire KB out to a directory under the kb directory"
+    },
     "take": {
         "prefix": ["take"],
         "body": [
