@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.44.0
+Added webitekb function
+
 ### v1.43.4
 Added a KB View List
 
@@ -213,18 +216,6 @@ Allow for creating different type analyzers including basic and English
 
 ### v1.3.0
 Changed all the pat files to nlp but still will process both extensions. Now downloads the latest version of nlp-engine at installation time, no longer included in the extension.
-
-## v1.2.0
-Fixed one line bug for the sequence file and allow for multiple pass selections for inserting.
-
-## v1.1.2
-Allows for dicttok, dicttokz, and cmltok variations of the tokenizer. Also delete and remame files also changes the log files directory name correctly in the textView.
-
-## v1.1.1
-Analyze a folder of texts
-
-## v1.0.11
-Fixed color highlights rule rewrite line
 
 For a comprehension change list see: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
 
