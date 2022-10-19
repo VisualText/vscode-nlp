@@ -7,7 +7,7 @@ import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
 import { TextFile } from './textFile';
 import { nlpFileType } from './textFile';
-import { fileOperation } from './fileOps';
+import { fileOpRefresh, fileOperation } from './fileOps';
 
 export let analyzer: Analyzer;
 export class Analyzer {
@@ -127,7 +127,7 @@ export class Analyzer {
             vscode.window.showWarningMessage(`Could not make directory: ${fromDir}`);
             return false;
         }
-        visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),this.analyzerDir,fileOperation.COPY);
+        visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),this.analyzerDir,[fileOpRefresh.ANALYZERS],fileOperation.COPY);
         visualText.fileOps.startFileOps();	
     }
 

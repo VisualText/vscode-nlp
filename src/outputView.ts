@@ -5,6 +5,8 @@ import { visualText } from './visualText';
 import { logView } from './logView';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
+import { fileOpRefresh, fileOperation } from './fileOps';
+import { Z_FIXED } from 'zlib';
 
 export enum outputFileType { TXT, TXXT, TREE, KB, NLP }
 
@@ -222,7 +224,11 @@ export class OutputView {
 							this.outputFiles.push(cand);
 					}
 				} else {
-					dirfuncs.delDir(visualText.analyzer.getOutputDirectory().fsPath);
+					var delPath = visualText.analyzer.getOutputDirectory();
+					if (delPath.fsPath.length > 2) {
+						visualText.fileOps.addFileOperation(delPath,delPath,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+						visualText.fileOps.startFileOps();
+					}
 				}					
 			}
 		}
@@ -246,10 +252,8 @@ export class OutputView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				if (!dirfuncs.delFile(resource.uri.fsPath)) {
-					vscode.window.showWarningMessage('Could not delete file: '+resource.uri.fsPath);
-				} else
-					vscode.commands.executeCommand('outputView.refreshAll');
+				visualText.fileOps.addFileOperation(resource.uri,resource.uri,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				visualText.fileOps.startFileOps();
 			});
 		}
 	}

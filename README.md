@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.46.0
+Added refresh treeviews array to fileops
+
 ### v1.45.0
 Added .dict files to be text files for dictionaries where each meaning for each word occupies one line
 
@@ -210,15 +213,6 @@ Analyzer log files now have the extension .tree, added duplicate pass, update nl
 
 ### v1.6.1
 Added updating VisualText files version separately allowing for independently updating
-
-### v1.5.2
-Now checks nlp-engine version and updates if newer exists. v1.5.2 improved lexer.
-
-### v1.4.1
-Allow for creating different type analyzers including basic and English
-
-### v1.3.0
-Changed all the pat files to nlp but still will process both extensions. Now downloads the latest version of nlp-engine at installation time, no longer included in the extension.
 
 For a comprehension change list see: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
 

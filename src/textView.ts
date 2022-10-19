@@ -6,7 +6,7 @@ import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import {fileOperation } from './fileOps';
+import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 
 export interface TextItem {
@@ -119,7 +119,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 							dir = visualText.analyzer.getInputDirectory().fsPath;
 					}
 					var newPath = vscode.Uri.file(path.join(dir,filename));
-					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
+					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.TEXT],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();
 			});	
@@ -147,7 +147,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 						dir = path.dirname(textItem.uri.fsPath);
 					}
 					var newPath = vscode.Uri.file(path.join(dir,dirname));
-					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
+					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.TEXT],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();	
 			});	
@@ -189,7 +189,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 	
 	convert(textItem: TextItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			visualText.fileOps.addFileOperation(textItem.uri,textItem.uri,fileOperation.RENAME,'','txt');
+			visualText.fileOps.addFileOperation(textItem.uri,textItem.uri,[fileOpRefresh.TEXT],fileOperation.RENAME,'','txt');
 			visualText.fileOps.startFileOps(100);
 		}
 	}
@@ -325,7 +325,7 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(textItem.uri,textItem.uri,fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(textItem.uri,textItem.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -351,7 +351,7 @@ export class TextView {
 
 	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
-		visualText.fileOps.addFileOperation(logPath,logPath,fileOperation.DELETE);
+		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT],fileOperation.DELETE);
 	}
 
 	public deleteAnalyzerLogs(): void {

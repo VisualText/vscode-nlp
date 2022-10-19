@@ -8,6 +8,7 @@ export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
 export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
+export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
 
 interface fileOperations {
     uriFile1: vscode.Uri;
@@ -17,6 +18,7 @@ interface fileOperations {
     type: fileOpType;
     extension1: string;
     extension2: string;
+    refreshes: fileOpRefresh[];
 }
 
 export let fileOps: FileOps;
@@ -39,13 +41,13 @@ export class FileOps {
         }
     }
 
-    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, operation: fileOperation, extension1: string='', extension2: string='') {
+    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') {
         var type: fileOpType = fileOpType.UNKNOWN
         if (dirfuncs.isDir(uri1.fsPath))
             type = fileOpType.DIRECTORY;
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
-        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2})
+        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2, refreshes: refreshes})
     }
 
     fileTimer() {
@@ -144,14 +146,14 @@ export class FileOps {
                     case fileOperation.RENAME: {
                         if (op.status == fileOpStatus.UNKNOWN) {
                             if (op.type == fileOpType.DIRECTORY) {
-                                visualText.debugMessage('Renameing extensions in directory: ' + op.uriFile1.fsPath);
+                                visualText.debugMessage('Renaming extensions in directory: ' + op.uriFile1.fsPath);
                                 let files = dirfuncs.getFiles(op.uriFile1);
                                 let ext1 = '.' + op.extension1;
                                 let ext2 = '.' + op.extension2;
                                 for (let file of files) {
                                     if (!file.fsPath.endsWith(ext2) && (op.extension1.length == 0 || file.fsPath.endsWith(ext1))) {
                                         let newFile = file.fsPath.replace(/\.[^.]+$/, ext2);
-                                        visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),fileOperation.RENAME,'','');
+                                        visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),op.refreshes,fileOperation.RENAME,'','');
                                     }
                                 }
                                 op.status = fileOpStatus.DONE;
@@ -171,10 +173,16 @@ export class FileOps {
                 visualText.fileOps.timerID = 0;
                 visualText.fileOps.opsQueue = [];
                 visualText.debugMessage('FILE PROCESSING COMPLETE');
-                vscode.commands.executeCommand('textView.refreshAll');
-                vscode.commands.executeCommand('analyzerView.refreshAll');
-                vscode.commands.executeCommand('sequenceView.refreshAll');
-                vscode.commands.executeCommand('kbView.refreshAll');
+                if (op.refreshes.includes(fileOpRefresh.TEXT))
+                    vscode.commands.executeCommand('textView.refreshAll');
+                if (op.refreshes.includes(fileOpRefresh.ANALYZERS))
+                    vscode.commands.executeCommand('analyzerView.refreshAll');
+                if (op.refreshes.includes(fileOpRefresh.ANALYZER))
+                    vscode.commands.executeCommand('sequenceView.refreshAll');
+                if (op.refreshes.includes(fileOpRefresh.KB))
+                    vscode.commands.executeCommand('kbView.refreshAll');
+                if (op.refreshes.includes(fileOpRefresh.OUTPUT))
+                    vscode.commands.executeCommand('outputView.refreshAll');
                 break;
             }
         }

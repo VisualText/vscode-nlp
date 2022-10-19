@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
-import { analyzerView } from './analyzerView';
-import { NLPFile } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { fileOperation } from './fileOps';
+import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 
 export interface KBItem {
@@ -110,7 +108,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 							dir = visualText.analyzer.getInputDirectory().fsPath;
 					}
 					var newPath = vscode.Uri.file(path.join(dir,filename));
-					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
+					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();
 			});	
@@ -138,7 +136,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 						dir = path.dirname(KBItem.uri.fsPath);
 					}
 					var newPath = vscode.Uri.file(path.join(dir,dirname));
-					visualText.fileOps.addFileOperation(sel,newPath,fileOperation.COPY);
+					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();	
 			});	
@@ -264,7 +262,7 @@ export class KBView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(KBItem.uri,KBItem.uri,fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(KBItem.uri,KBItem.uri,[fileOpRefresh.KB],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
