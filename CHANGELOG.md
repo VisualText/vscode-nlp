@@ -3,6 +3,12 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.46.0
+Added refresh treeviews array to fileops
+
+### v1.45.0
+Added .dict files to be text files for dictionaries where each meaning for each word occupies one line
+
 ### v1.44.0
 Added webitekb function
 

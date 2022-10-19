@@ -3,7 +3,7 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
-import { fileOperation } from './fileOps';
+import { fileOpRefresh, fileOperation } from './fileOps';
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -106,7 +106,7 @@ export class AnalyzerView {
 				var toFolder = vscode.Uri.file(selection[0].fsPath);
 				for (let analyzer of analyzers) {
 					var folder = path.basename(analyzer.fsPath);
-					visualText.fileOps.addFileOperation(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)),fileOperation.COPY);
+					visualText.fileOps.addFileOperation(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)),[fileOpRefresh.UNKNOWN],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();	
 			});	
@@ -127,7 +127,7 @@ export class AnalyzerView {
 					return;
 				}
 				var folder = path.basename(analyzerItem.uri.fsPath);
-				visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)),fileOperation.COPY);
+				visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)),[fileOpRefresh.UNKNOWN],fileOperation.COPY);
 				visualText.fileOps.startFileOps();	
 			});	
 		}
@@ -138,7 +138,7 @@ export class AnalyzerView {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter duplicate analyzer name' }).then(newname => {
 				if (newname) {
 					var folder = path.dirname(analyzerItem.uri.fsPath);
-					visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(folder,newname)),fileOperation.COPY);
+					visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(folder,newname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
 					visualText.fileOps.startFileOps();	
 					vscode.commands.executeCommand('analyzerView.refreshAll');
 					vscode.commands.executeCommand('sequenceView.refreshAll');	
@@ -171,7 +171,7 @@ export class AnalyzerView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -243,7 +243,7 @@ export class AnalyzerView {
 		
 		if (count) {
 			for (let dir of logDirs) {
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
 			};
 		}
 	}

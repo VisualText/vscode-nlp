@@ -8,7 +8,7 @@ import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
 import { logView } from './logView';
-import { fileOperation } from './fileOps';
+import { fileOperation, fileOpRefresh } from './fileOps';
 
 export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE, FAILED }
 export enum versionStatus { UNKNOWN, VERSIONING, DONE, FAILED }
@@ -1287,7 +1287,7 @@ export class VisualText {
     }
 
 	convertPatFiles(analyzerDir: vscode.Uri) {
-		visualText.fileOps.addFileOperation(analyzerDir,analyzerDir,fileOperation.RENAME,'pat','nlp');
+		visualText.fileOps.addFileOperation(analyzerDir,analyzerDir,[fileOpRefresh.UNKNOWN],fileOperation.RENAME,'pat','nlp');
 		visualText.fileOps.startFileOps(100);
 	}
 }
