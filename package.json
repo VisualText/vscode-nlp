@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.44.0",
+    "version": "1.45.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -188,6 +188,20 @@
                     ".kbb"
                 ],
                 "configuration": "./kbb-configuration.json"
+            },
+            {
+                "id": "dict",
+                "extensions": [
+                    ".dict"
+                ],
+                "aliases": [
+                    "DICT",
+                    ".DICT",
+                    "Dict",
+                    "dict",
+                    ".dict"
+                ],
+                "configuration": "./dict-configuration.json"
             }
         ],
         "grammars": [
@@ -220,6 +234,11 @@
                 "language": "kbb",
                 "scopeName": "source.kbb",
                 "path": "./syntaxes/kbb.tmLanguage.json"
+            },
+            {
+                "language": "dict",
+                "scopeName": "source.dict",
+                "path": "./syntaxes/dict.tmLanguage.json"
             }
         ],
         "snippets": [
@@ -242,8 +261,16 @@
                 "command": "kbView.newKBFile",
                 "title": "New KB File",
                 "icon": {
-                    "light": "resources/light/new-file.svg",
-                    "dark": "resources/dark/new-file.svg"
+                    "light": "resources/light/kb-new.svg",
+                    "dark": "resources/dark/kb-new.svg"
+                }
+            },
+            {
+                "command": "kbView.newDictFile",
+                "title": "New Dictionary File",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
                 }
             },
             {
@@ -1005,6 +1032,12 @@
                 "key": "ctrl+shift+D",
                 "mac": "cmd+shift+D",
                 "when": "resourceLangId == nlp"
+            },
+            {
+                "command": "log.foldAll",
+                "key": "ctrl+shift+F",
+                "mac": "cmd+shift+F",
+                "when": "resourceLangId == nlp"
             }
         ],
         "menus": {
@@ -1180,6 +1213,11 @@
                 },
                 {
                     "command": "kbView.newKBFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.newDictFile",
                     "when": "view == kbView",
                     "group": "navigation"
                 },
@@ -1376,9 +1414,9 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "kbView.newKBFile",
+                    "command": "kbView.newDictFile",
                     "when": "view == kbView",
-                    "group": "inline"
+                    "group": "navigation"
                 },
                 {
                     "command": "sequenceView.tokenize",

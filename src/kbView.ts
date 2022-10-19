@@ -42,16 +42,16 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
         treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [KBItem], };
         treeItem.contextValue = 'kb';
 
-		if (name != 'main.kb') {
-			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'kb.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'kb.svg'),
-			}
-		} else {
-			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'dark', 'kb-main.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'kb-main.svg'),
-			}
+		var icon = 'kb.svg';
+		if (name == 'main.kb') {
+			icon = 'kb-main.svg';
+		} else if (KBItem.uri.fsPath.endsWith('.dict')) {
+			icon = 'dict.svg';
+		}
+
+		treeItem.iconPath = {
+			light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+			dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
 		}
 
 		return treeItem;
@@ -198,6 +198,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.openText', () => this.openText());
 		vscode.commands.registerCommand('kbView.search', () => this.search());
 		vscode.commands.registerCommand('kbView.newKBFile', (KBItem) => this.newKBFile(KBItem,false));
+		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
 		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
@@ -280,6 +281,23 @@ export class KBView {
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
 					dirfuncs.writeFile(filepath,"\n\nquit\n\n");
+					vscode.commands.executeCommand('kbView.refreshAll');
+				}
+			});
+		}
+	}
+
+	private newDictFile(KBItem: KBItem, top: boolean) {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter Dictionary file name' }).then(newname => {
+				if (newname) {
+					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
+					if (KBItem && !top)
+						dirPath = dirfuncs.getDirPath(KBItem.uri.fsPath);
+					var filepath = path.join(dirPath,newname+'.dict');
+					if (path.extname(newname))
+						filepath = path.join(dirPath,newname);
+					dirfuncs.writeFile(filepath,"word attr=value");
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
 			});

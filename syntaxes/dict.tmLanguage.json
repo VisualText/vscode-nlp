@@ -1,0 +1,71 @@
+{
+    "scopeName": "source.dict",
+    "fileTypes": [
+        "dict"
+    ],
+    "name": "dict",
+    "patterns": [
+        {
+            "include": "#expression"
+        }
+    ],
+    "repository": {
+        "expression": {
+            "name": "meta.expression.dict",
+            "patterns": [
+                {
+                    "include": "#word"
+                },
+                {
+                    "include": "#attribute-equals"
+                },
+                {
+                    "include": "#value"
+                },
+                {
+                    "include": "#qstring-double"
+                },
+                {
+                    "include": "#comment-line"
+                }               
+            ]
+        },
+        "word": {
+            "match": "^([\\w\\d]+)",
+            "name": "comment.line.dict"
+        },
+        "value": {
+            "match": "[\\w\\d]+",
+            "name": "entity.name.function.dict"
+        },
+        "attribute-equals": {
+            "match": "([\\w]+)(=)",
+            "captures": {
+                "1": {
+                    "name": "keyword.region.dict"
+                },
+                "2": {
+                    "name": "keyword.operator.dict"
+                }
+            }
+        },
+        "comment-line": {
+            "match": "#.*$\\n?",
+            "name": "comment.line.dict"
+        },
+        "qstring-double": {
+            "begin": "\"",
+            "end": "\\\"|(?:[^\\\\\\n]$)",
+            "name": "string.double.dict",
+            "patterns": [
+                {
+                    "include": "#string-character-escape"
+                }
+            ]
+        },
+        "string-character-escape": {
+            "match": "\\\\(x\\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)",
+            "name": "constant.character.escape.dict"
+        }
+    }
+}

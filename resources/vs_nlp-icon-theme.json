@@ -37,6 +37,12 @@
 		"_log_light": {
 			"iconPath": "./light/symbol-property.svg"
 		},
+		"_dict_dark": {
+			"iconPath": "./dark/dict.svg"
+		},
+		"_dict_light": {
+			"iconPath": "./light/dict.svg"
+		},
 		"_markup_dark": {
 			"iconPath": "./dark/symbol-keyword.svg"
 		},
@@ -62,6 +68,7 @@
 		"log": "_log_dark",
 		"tree": "_tree_dark",
 		"txxt": "_markup_dark",
+		"dict": "_dict_dark",
 		"stub": "_stub_dark",
 		"cpp": "_code_dark",
 		"h": "_code_dark"
@@ -78,6 +85,7 @@
 			"log": "_log_light",
 			"tree": "_tree_light",
 			"txxt": "_markup_light",
+			"dict": "_dict_light",
 			"stub": "_stub_light",
 			"cpp": "_code_light",
 			"h": "_code_light"

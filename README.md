@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.45.0
+Added .dict files to be text files for dictionaries where each meaning for each word occupies one line
+
 ### v1.44.0
 Added webitekb function
 
