@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
-export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, LOG, KB, KBB }
+export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, LOG, KB, KBB, DICT }
 
 export class TextFile {
     private uri: vscode.Uri = vscode.Uri.file('');
@@ -18,7 +18,7 @@ export class TextFile {
     private linesNormalized = new Array();
     private filetype = nlpFileType.UNKNOWN;
     public basename: string = '';
-    private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb');
+    private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb', 'dict');
     private exists: boolean = false;
     private selLines: string[] = [];
     private selStartLine: number = 0;
@@ -215,6 +215,8 @@ export class TextFile {
 			this.filetype = nlpFileType.TREE;
 		else if (path.extname(filename) == '.log')
 			this.filetype = nlpFileType.LOG;
+        else if (path.extname(filename) == '.dict')
+			this.filetype = nlpFileType.DICT;
     }
 
     fileExists(): boolean {
