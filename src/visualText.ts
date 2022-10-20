@@ -150,7 +150,10 @@ export class VisualText {
                 var parse = this.jsonState.json.visualText[0];
                 var currAnalyzer = parse.currentAnalyzer;
 
-                if (currAnalyzer.length == 0) {
+                if (currAnalyzer.length > 0 && !fs.existsSync(currAnalyzer)) {
+                    this.setCurrentAnalyzer(vscode.Uri.file(''));
+                }
+                else if (currAnalyzer.length == 0) {
                     var analyzers = dirfuncs.getDirectories(this.workspaceFold);
                     currAnalyzer = analyzers[0].fsPath;
                     saveit = true;
