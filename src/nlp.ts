@@ -63,6 +63,8 @@ export class NLPFile extends TextFile {
 			const filestr = filepath.fsPath;
 
 			progress.report({ increment: 10, message: "Preparing command" });
+			visualText.analyzer.setCurrentTextFile(filepath);
+			visualText.analyzer.saveAnalyzerState();
 
 			var filename = path.basename(filepath.fsPath);
 			logView.addMessage('Analyzing '+filename,filepath);

@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.46.0
+### v1.46.2
 Added refresh treeviews array to fileops
 
 ### v1.45.0

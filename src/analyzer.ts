@@ -40,6 +40,9 @@ export class Analyzer {
                 var currentFile = parse.currentTextFile;
                 if (fs.existsSync(currentFile))
                     this.currentTextFile = vscode.Uri.file(currentFile);
+                else if (currentFile.includes('input')) {
+                    this.currentTextFile = vscode.Uri.file('');
+                }
                 else
                     this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().fsPath,currentFile));
 
@@ -161,6 +164,11 @@ export class Analyzer {
             }            
         }
 
+        this.saveAnalyzerState();
+        this.outputDirectory();
+    }
+
+    saveAnalyzerState() {
         var stateJsonDefault: any = {
             "visualText": [
                 {
@@ -172,18 +180,21 @@ export class Analyzer {
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.fsPath, 'state', stateJsonDefault);  
-        this.outputDirectory();
+    }
+
+    getCurrentFile(): vscode.Uri {
+        return this.currentTextFile;
     }
 
     saveCurrentFile(currentFile: vscode.Uri) {
         this.currentTextFile = currentFile;
-        this.saveStateFile();
+        this.saveAnalyzerState();
     }
 
     saveCurrentPass(passFile: vscode.Uri, passNum: number) {
         this.currentPassFile = passFile;
         this.passNum = passNum;
-        this.saveStateFile();
+        this.saveAnalyzerState();
     }
 
     load(analyzerDir: vscode.Uri) {
@@ -196,7 +207,7 @@ export class Analyzer {
     }
 
     outputDirectory() {
-        if (this.currentTextFile.fsPath.length) {
+        if (this.currentTextFile.fsPath.length > 2) {
             this.outputDir = vscode.Uri.file(this.currentTextFile.fsPath + visualText.LOG_SUFFIX);
         } else {
             this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.fsPath,'output'));
@@ -228,6 +239,10 @@ export class Analyzer {
 
     isLoaded(): boolean {
         return this.loaded;
+    }
+
+    setCurrentTextFile(filePath: vscode.Uri) {
+        this.currentTextFile = filePath;
     }
 
     getAnalyzerDirectory(subDir: string=''): vscode.Uri {
