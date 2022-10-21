@@ -223,12 +223,6 @@ export class OutputView {
 						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.kbb') != 0 && ext.localeCompare('.txxt') != 0)
 							this.outputFiles.push(cand);
 					}
-				} else {
-					var delPath = visualText.analyzer.getOutputDirectory();
-					if (delPath.fsPath.length > 2 && fs.existsSync(delPath.fsPath)) {
-						visualText.fileOps.addFileOperation(delPath,delPath,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
-						visualText.fileOps.startFileOps();
-					}
 				}					
 			}
 		}

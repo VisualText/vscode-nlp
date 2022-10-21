@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.46.2
+### v1.46.3
 Added refresh treeviews array to fileops
 
 ### v1.45.0
