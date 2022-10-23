@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.47.0
+Added struniquechars to NLP++ and snippets
+
 ### v1.46.3
 Added refresh treeviews array to fileops
 

@@ -230,6 +230,13 @@
         ],
         "description": "Remove leading and trailing whitespace from str."
     },
+    "struniquechars": {
+        "prefix": ["struniquechars"],
+        "body": [
+            "struniquechars(${1:str})"
+        ],
+        "description": "Returns all the unique characters in a string"
+    },
     "strwrap": {
         "prefix": ["strwrap"],
         "body": [
