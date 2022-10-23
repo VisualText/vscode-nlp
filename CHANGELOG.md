@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### v1.47.0
+Added struniquechars to NLP++ and snippets
+
 ### v1.46.3
 Added refresh treeviews array to fileops
 

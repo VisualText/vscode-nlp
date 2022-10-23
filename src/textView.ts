@@ -351,7 +351,7 @@ export class TextView {
 
 	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
-		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT],fileOperation.DELETE);
+		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 	}
 
 	public deleteAnalyzerLogs(): void {
