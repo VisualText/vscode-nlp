@@ -60,7 +60,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
 		for (let entry of entries) {
-			if (!(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
+			if (!(entry.type == vscode.FileType.Directory)) {
 				files.push({uri: entry.uri, type: entry.type});
 			}
 		}
