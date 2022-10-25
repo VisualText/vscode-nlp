@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.47.3",
+    "version": "1.47.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1052,7 +1052,7 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txt || resourceExtname == .nlp",
+                    "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict",
                     "command": "nlp.sortText",
                     "group": "nlp"
                 },
