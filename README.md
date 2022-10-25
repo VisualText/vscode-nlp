@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.47.2
+### v1.47.
 Added struniquechars to NLP++ and snippets
 
 ### v1.46.3
