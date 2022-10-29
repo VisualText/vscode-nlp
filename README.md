@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.48.0
+Add properties to files and folders. Sped up file operations, fixed log deletion bugs, added cancel file operations, added file operation counts display.
+
 ### v1.47.5
 Added struniquechars to NLP++ and snippets
 
@@ -213,9 +216,6 @@ Fixed autogenerate rule
 
 ### v1.7.7
 Analyzer log files now have the extension .tree, added duplicate pass, update nlp-engine fix
-
-### v1.6.1
-Added updating VisualText files version separately allowing for independently updating
 
 For a comprehension change list see: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
 

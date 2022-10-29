@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.47.5",
+    "version": "1.48.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -329,6 +329,22 @@
                 "category": "NLP",
                 "title": "Lookup Word in Browser",
                 "description": "Lookup a term in the help in Browser"
+            },
+            {
+                "command": "textView.propertiesFile",
+                "title": "File Properties",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
+            },
+            {
+                "command": "textView.propertiesFolder",
+                "title": "Folder Properties",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
             },
             {
                 "command": "textView.analyze",
@@ -761,7 +777,7 @@
                 }
             },
             {
-                "command": "analyzerView.deleteLogFiles",
+                "command": "analyzerView.deleteFileLogs",
                 "title": "Delete Log Files in this Analyzer",
                 "icon": {
                     "light": "resources/light/x-box.svg",
@@ -802,7 +818,7 @@
             },
             {
                 "command": "textView.deleteFileLogs",
-                "title": "Delete Log Files for this File",
+                "title": "Delete Log Files",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -966,6 +982,14 @@
                 "icon": {
                     "light": "resources/light/kb.svg",
                     "dark": "resources/dark/kb.svg"
+                }
+            },
+            {
+                "command": "logView.stopFileOps",
+                "title": "Stop file operations",
+                "icon": {
+                    "light": "resources/light/cancel-button.svg",
+                    "dark": "resources/dark/cancel-button.svg"
                 }
             },
             {
@@ -1314,6 +1338,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "logView.stopFileOps",
+                    "when": "view == logView && fileOps.running",
+                    "group": "navigation"
+                },
+                {
                     "command": "logView.refreshAll",
                     "when": "view == logView",
                     "group": "navigation"
@@ -1526,6 +1555,16 @@
                     "group": "attribute"
                 },
                 {
+                    "command": "textView.propertiesFile",
+                    "when": "view == textView && viewItem =~ /file/",
+                    "group": "arun"
+                },
+                {
+                    "command": "textView.propertiesFolder",
+                    "when": "view == textView && viewItem =~ /dir/",
+                    "group": "arun"
+                },
+                {
                     "command": "textView.openText",
                     "when": "view == textView && viewItem =~ /file|fileHasLogs/",
                     "group": "arun"
@@ -1541,6 +1580,11 @@
                     "group": "arun"
                 },
                 {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem =~ /fileHasLogs|dirHasLogs|dirHasNonText|dirHasNonTextHasLogs/",
+                    "group": "arun"
+                },
+                {
                     "command": "textView.analyzeDir",
                     "when": "view == textView && viewItem =~ /dir/",
                     "group": "arun"
@@ -1552,12 +1596,12 @@
                 },
                 {
                     "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem == fileHasLogs",
+                    "when": "view == textView && viewItem =~ /fileHasLogs/",
                     "group": "file"
                 },
                 {
                     "command": "textView.rename",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "when": "view == textView && viewItem =~ /file/",
                     "group": "file"
                 },
                 {
@@ -1671,18 +1715,8 @@
                     "group": "inline"
                 },
                 {
-                    "command": "textView.renameDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
-                },
-                {
                     "command": "textView.analyze",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem == fileHasLogs",
+                    "when": "view == textView && viewItem =~ /file/",
                     "group": "inline"
                 },
                 {
@@ -1697,7 +1731,12 @@
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "when": "view == textView && viewItem =~ /file/",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem =~ /fileHasLogs|dirHasLogs|dirHasNonTextHasLogs/",
                     "group": "inline"
                 },
                 {

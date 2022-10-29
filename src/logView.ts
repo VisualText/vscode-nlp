@@ -64,6 +64,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
+		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
     }
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -157,5 +158,16 @@ export class LogView {
 		} else if (logItem.uri) {
 			vscode.window.showTextDocument(logItem.uri);
 		}
+	}
+
+	public updateTitle(message: string): void {
+		if (message.length)
+			this.logView.title = `LOGGING (${message})`;
+		else
+			this.logView.title = 'LOGGING';
+	}
+
+	private stopFileOps(): void {
+		visualText.stopFileOps();
 	}
 }
