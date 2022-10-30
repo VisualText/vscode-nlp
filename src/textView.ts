@@ -452,9 +452,9 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var anaPath = visualText.getCurrentAnalyzer();
-				if (anaPath.fsPath.length) {
-					this.deleteFolderLogs(anaPath);
+				var inputPath = visualText.analyzer.getInputDirectory();
+				if (inputPath.fsPath.length) {
+					this.deleteFolderLogs(inputPath);
 					visualText.fileOps.startFileOps();
 				}
 			});
