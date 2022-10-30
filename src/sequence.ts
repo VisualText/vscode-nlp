@@ -23,12 +23,19 @@ export class PassItem {
 	public active: boolean = true;
 
 	public tokenizers: string[] = ['tokenize','tok','token','cmltokenize','cmltok','dicttok','dicttokz','chartok'];
+	public tokenizerTooltips: string[] = ['separate alphanumerics, numerics, and special','separate alphanumerics, numerics, and special','separate alphanumerics, numerics, and special','cml tokenizer (rarely used)','cml tokenizer (rarely used)','dictionary lookup','dictionary lookup no whitespace','separate all into characters'];
 
 	constructor() {
 	}
 
 	public isTokenizer() {
 		return this.tokenizers.includes(this.typeStr.toLowerCase());
+	}
+
+	public fetchTooltip(): string {
+		var index = this.tokenizers.indexOf(this.typeStr);
+		var tooltip = this.tokenizerTooltips[index];
+		return tooltip;
 	}
 
 	public isRuleFile(): boolean {

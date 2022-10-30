@@ -88,14 +88,16 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						type: 'missing', passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			
 			} else {
+				var tooltip = passItem.uri.fsPath;
 				if (passItem.tokenizer) {
 					label = '1 ' + passItem.typeStr;
+					tooltip = passItem.fetchTooltip();
 					conVal = 'tokenize';
 				} else {
 					label = passItem.name;
 					conVal = 'stub';
 				}
-				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal, inFolder: passItem.inFolder,
+				seqItems.push({label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
 			order++;	
@@ -133,6 +135,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		return {
 			resourceUri: seqItem.uri,
+			tooltip: seqItem.tooltip,
 			label: seqItem.label,
 			contextValue: seqItem.contextValue,
 			collapsibleState: collapse,
