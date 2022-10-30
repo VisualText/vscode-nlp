@@ -75,7 +75,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			}
 		}
 
-		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getCurrentAnalyzer(),true);
+		var hasAllLogs = dirfuncs.hasLogDirs(dir,true);
 		vscode.commands.executeCommand('setContext', 'text.hasLogs', hasAllLogs);
 		return keepers;
 	}

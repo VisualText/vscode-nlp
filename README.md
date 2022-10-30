@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### v1.49.2
+### v1.49.3
 Added descriptive tooltip to tokenizer path in the analyzer sequence. Fixed renaming.
 
 ### v1.48.0
