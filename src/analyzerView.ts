@@ -49,7 +49,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
             analyzerItems = [];
 			var hasAllLogs = false;
             for (let analyzer of analyzers) {
-				var hasLogs = dirfuncs.hasLogDirs(analyzer,true);
+				var hasLogs = dirfuncs.analyzerHasLogDirs(analyzer,true);
 				if (hasLogs) hasAllLogs = true;
                 analyzerItems.push({uri: analyzer, hasLogs: hasLogs, hasPats: false, isConverting: false});
             }
@@ -229,22 +229,9 @@ export class AnalyzerView {
 				if (!selection || selection.label == 'No')
 					return;
 
-				this.deleteAnalyzerLogFiles(analyzerItem.uri);
+				textView.deleteFolderLogs(analyzerItem.uri);
 				visualText.fileOps.startFileOps();
 			});
-		}
-	}
-
-	public deleteAnalyzerLogFiles(analyzerDir: vscode.Uri) {
-		var analyzerName = path.basename(analyzerDir.fsPath);
-		const logDirs: TextItem[] = Array();
-		textView.getLogDirs(analyzerDir,logDirs,false);
-		var count = logDirs.length;
-		
-		if (count) {
-			for (let dir of logDirs) {
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
-			};
 		}
 	}
 
@@ -263,7 +250,7 @@ export class AnalyzerView {
 				for (let analyzerUri of analyzerUris) {
 					var analyzerName = path.basename(analyzerUri.fsPath);
 					progress.report({ increment: 10, message: analyzerName });
-					analyzerView.deleteAnalyzerLogFiles(analyzerUri);
+					textView.deleteFolderLogs(analyzerUri);
 				}
 			}
 		});

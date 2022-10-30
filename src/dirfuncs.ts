@@ -247,10 +247,17 @@ export namespace dirfuncs {
         return false;
     }
 
-    export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
+    export function analyzerHasLogDirs(dir: vscode.Uri, first: boolean): boolean {
 		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
         if (fs.existsSync(inputDir.fsPath)) {
-            var entries = dirfuncs.getDirectoryTypes(inputDir);
+            return dirfuncs.hasLogDirs(inputDir,false);
+        }
+		return false;
+	}
+
+    export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
+        if (dirfuncs.isDir(dir.fsPath)) {
+            var entries = dirfuncs.getDirectoryTypes(dir);
 
             for (let entry of entries) {
                 if (entry.type == vscode.FileType.Directory) {
@@ -258,11 +265,15 @@ export namespace dirfuncs {
                         return true;
                     else {
                         var has = dirfuncs.hasLogDirs(entry.uri,false);
-                        if (has) return true;
+                        if (has)
+                            return true;
                     }
                 }
-            }            
+            }                  
+        } else {
+            return dirfuncs.fileHasLog(dir.fsPath);
         }
+
 		return false;
 	}
 

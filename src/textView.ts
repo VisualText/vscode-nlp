@@ -52,6 +52,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			}
 		} else {
 			var conval = textItem.hasNonText ? 'HasNonText' : '';
+			conval = textItem.hasLogs ? conval + 'HasLogs' : conval;
 			treeItem.contextValue = 'dir' + conval ;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
@@ -68,7 +69,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 
 		for (let entry of entries) {
 			if (!(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
-				var hasLogs =  dirfuncs.fileHasLog(entry.uri.fsPath);
+				var hasLogs =  dirfuncs.hasLogDirs(entry.uri,false);
 				var hasNonText = entry.type == vscode.FileType.Directory && this.dirHasNonText(entry.uri) ? true : false;
 				keepers.push({uri: entry.uri, type: entry.type, hasLogs: hasLogs, hasNonText: hasNonText});
 			}
@@ -226,6 +227,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.deleteFileLogs', (textItem) => this.deleteFileLogs(textItem));
 		vscode.commands.registerCommand('textView.deleteAnalyzerLogs', () => this.deleteAnalyzerLogs());
 		vscode.commands.registerCommand('textView.updateTitle', (textItem) => this.updateTitle(textItem));
+		vscode.commands.registerCommand('textView.propertiesFile', (textItem) => this.propertiesFile(textItem));
+		vscode.commands.registerCommand('textView.propertiesFolder', (textItem) => this.propertiesFolder(textItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -243,6 +246,48 @@ export class TextView {
 			nlp.analyze(textUri);
         }
 	}
+
+	propertiesFile(textItem: TextItem) {
+		fs.stat(textItem.uri.fsPath, (err, stats) => {
+			if (err) {
+				vscode.window.showInformationMessage('File read error: ' + err);
+			} else {
+				var sizeStr = this.humanFileSize(stats.size,true,1);
+				var base = path.basename(textItem.uri.fsPath);
+				vscode.window.showInformationMessage(base + ": " + sizeStr);
+			}
+		});
+	}
+
+	propertiesFolder(textItem: TextItem) {
+		var files = dirfuncs.getFiles(textItem.uri);
+		var len: number = files.length;
+		var base = path.basename(textItem.uri.fsPath);
+		vscode.window.showInformationMessage(base + ": " + len + " files");
+	}
+
+	humanFileSize(bytes: number, si: boolean, dp: number): string {
+		const thresh = si ? 1000 : 1024;
+	  
+		if (Math.abs(bytes) < thresh) {
+		  return bytes + ' B';
+		}
+	  
+		const units = si 
+		  ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+		  : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+		let u = -1;
+		const r = 10**dp;
+	  
+		do {
+		  bytes /= thresh;
+		  ++u;
+		} while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+	  
+	  
+		return bytes.toFixed(dp) + ' ' + units[u];
+	}
+	  
 
 	analyze(textItem: TextItem) {
         if (textItem.uri.fsPath.length) {
@@ -331,7 +376,36 @@ export class TextView {
 		}
 	}
 
+	public deleteFileOrFolderLogs(textItem: TextItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			if (dirfuncs.isDir(textItem.uri.fsPath)) {
+				this.deleteFolderLogs(textItem.uri);
+			} else {
+				this.deleteFileLogDir(textItem.uri.fsPath);
+			}
+		}
+	}
+
 	public deleteFileLogs(textItem: TextItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			var filename = path.basename(textItem.uri.fsPath);
+			var type = dirfuncs.isDir(textItem.uri.fsPath) ? 'directory' : 'file';
+			deleteDescr = deleteDescr.concat('Delete logs for ',type,' \'',filename,'\'?');
+			items.push({label: 'Yes', description: deleteDescr});
+			items.push({label: 'No', description: 'Do not delete logs for '+filename });
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				this.deleteFileOrFolderLogs(textItem);
+				visualText.fileOps.startFileOps();
+			});
+		}
+	}
+
+	public deleteFolderFileLogs(textItem: TextItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
@@ -343,9 +417,22 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				this.deleteFileLogDir(textItem.uri.fsPath);
+				this.deleteFolderLogs(textItem.uri);
 				visualText.fileOps.startFileOps();
 			});
+		}
+	}
+
+	public deleteFolderLogs(dir: vscode.Uri) {
+		var analyzerName = path.basename(dir.fsPath);
+		const logDirs: TextItem[] = Array();
+		textView.getLogDirs(dir,logDirs,false);
+		var count = logDirs.length;
+		
+		if (count) {
+			for (let dir of logDirs) {
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
+			};
 		}
 	}
 
@@ -367,7 +454,7 @@ export class TextView {
 					return;
 				var anaPath = visualText.getCurrentAnalyzer();
 				if (anaPath.fsPath.length) {
-					analyzerView.deleteAnalyzerLogFiles(anaPath);
+					this.deleteFolderLogs(anaPath);
 					visualText.fileOps.startFileOps();
 				}
 			});

@@ -26,7 +26,7 @@ export class NLPFile extends TextFile {
 
 		vscode.window.withProgress({
 			location: vscode.ProgressLocation.Notification,
-			title: "Analyzer text",
+			title: "Analyzer",
 			cancellable: true
 		}, async (progress, token) => {
             token.onCancellationRequested(() => {
@@ -34,8 +34,6 @@ export class NLPFile extends TextFile {
                 console.log("User canceled analyzer");
 				return;
             });
-			
-			progress.report({ increment: 10, message: "Clearing log directories" });
 
 			// Check to see if the engine executable is there
 			var exe = visualText.getEnginePath();
@@ -53,17 +51,16 @@ export class NLPFile extends TextFile {
 				});
 			}
 
-			progress.report({ increment: 10, message: "Saving Files..." });
 			visualText.readState();
 			vscode.commands.executeCommand('workbench.action.files.saveAll');
 
 			// Delete files in output directory
-			progress.report({ increment: 20, message: "Deleting log & output files..." });
+			progress.report({ increment: 10, message: "Running..." });
+
 			dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().fsPath);
 			dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
 
 			const filestr = filepath.fsPath;
-
 
 			visualText.analyzer.setCurrentTextFile(filepath);
 			visualText.analyzer.saveAnalyzerState();
@@ -79,12 +76,9 @@ export class NLPFile extends TextFile {
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
 			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
-			progress.report({ increment: 30, message: "Preparing command..." });
-
 			const cp = require('child_process');
 
 			return new Promise(resolve => {
-				progress.report({ increment: 40, message: "Loading KB & Analyzing..." });
 				nlpStatusBar.analyzerButton(false);
 				visualText.processID = cp.exec(cmd, (err, stdout, stderr) => {
 					console.log('stdout: ' + stdout);

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
+import { logView } from './logView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
 export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, DONE }
@@ -24,6 +24,8 @@ interface fileOperations {
 export let fileOps: FileOps;
 export class FileOps {
 
+    public stopAllFlag: boolean = false;
+
     public timerStatus: fileQueueStatus = fileQueueStatus.UNKNOWN;
     public opsQueue: fileOperations[] = new Array();
     public timerCounter: number = 0;
@@ -33,12 +35,16 @@ export class FileOps {
 	constructor() {
     }
 
-    public startFileOps(mils: number=1000) {
+    public startFileOps(mils: number=500) {
         if (this.timerID == 0) {
             this.timerCounter = 0;
             visualText.debugMessage('Starting file operations...');
             this.timerID = +setInterval(this.fileTimer,mils);
         }
+    }
+
+    public stopAll() {
+        this.stopAllFlag = true;
     }
 
     public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') {
@@ -53,11 +59,6 @@ export class FileOps {
     fileTimer() {
         let debug = false;
 
-        if (visualText.fileOps.timerCounter++ >= 45) {
-            visualText.debugMessage('File processing timed out');
-            visualText.fileOps.timerStatus = fileQueueStatus.DONE;
-        }
-
         // Cycle through operations and find the one to work on
         if (visualText.fileOps.opsQueue.length == 0) {
             visualText.fileOps.timerStatus = fileQueueStatus.DONE;
@@ -65,7 +66,9 @@ export class FileOps {
         let op = visualText.fileOps.opsQueue[0];
         let len = visualText.fileOps.opsQueue.length;
         let alldone = true;
+        let opNum = 0;
         for (let o of visualText.fileOps.opsQueue) {
+            opNum++;
             if (o.status == fileOpStatus.UNKNOWN || o.status == fileOpStatus.RUNNING) {
                 op = o;
                 alldone = false;
@@ -75,10 +78,16 @@ export class FileOps {
                 alldone = false;
             }
         }
-        if (alldone)
+        if (alldone || visualText.fileOps.stopAllFlag) {
+            vscode.commands.executeCommand('setContext', 'fileOps.running', false);
+            visualText.fileOps.stopAllFlag = false;
             visualText.fileOps.timerStatus = fileQueueStatus.DONE;
-        else
+        } else {
+            vscode.commands.executeCommand('setContext', 'fileOps.running', true);
             visualText.fileOps.timerStatus = fileQueueStatus.RUNNING;
+        }
+
+        logView.updateTitle(opNum.toString() + ' of ' + len.toString());
 
         //SIMPLE STATE MACHINE
         switch (visualText.fileOps.timerStatus) {
@@ -172,7 +181,11 @@ export class FileOps {
                 clearInterval(visualText.fileOps.timerID);
                 visualText.fileOps.timerID = 0;
                 visualText.fileOps.opsQueue = [];
-                visualText.debugMessage('FILE PROCESSING COMPLETE');
+                logView.updateTitle('');
+                if (visualText.fileOps.stopAllFlag)
+                    visualText.debugMessage('FILE PROCESSING CANCELED BY USER');
+                else
+                    visualText.debugMessage('FILE PROCESSING COMPLETE');
                 if (op.refreshes.includes(fileOpRefresh.TEXT))
                     vscode.commands.executeCommand('textView.refreshAll');
                 if (op.refreshes.includes(fileOpRefresh.ANALYZERS))
