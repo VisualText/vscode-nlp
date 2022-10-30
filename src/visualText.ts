@@ -1289,8 +1289,8 @@ export class VisualText {
     }
 
 	convertPatFiles(analyzerDir: vscode.Uri) {
-		visualText.fileOps.addFileOperation(analyzerDir,analyzerDir,[fileOpRefresh.UNKNOWN],fileOperation.RENAME,'pat','nlp');
-		visualText.fileOps.startFileOps(100);
+		visualText.fileOps.addFileOperation(analyzerDir,analyzerDir,[fileOpRefresh.ANALYZER],fileOperation.RENAME,'pat','nlp');
+		visualText.fileOps.startFileOps();
 	}
 
     stopFileOps() {

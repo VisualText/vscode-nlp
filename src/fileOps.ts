@@ -53,6 +53,17 @@ export class FileOps {
             type = fileOpType.DIRECTORY;
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
+
+        if (type == fileOpType.DIRECTORY && operation == fileOperation.RENAME) {
+            let files = dirfuncs.getFiles(uri1);
+            for (let file of files) {
+                if (!file.fsPath.endsWith(extension2) && (extension1.length == 0 || file.fsPath.endsWith(extension1))) {
+                    let newFile = file.fsPath.replace(/\.[^.]+$/, '.' + extension2);
+                    visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),refreshes,fileOperation.RENAME,'','');
+                }
+            }
+        }
+
         this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2, refreshes: refreshes})
     }
 
@@ -153,26 +164,9 @@ export class FileOps {
                         }
                     }
                     case fileOperation.RENAME: {
-                        if (op.status == fileOpStatus.UNKNOWN) {
-                            if (op.type == fileOpType.DIRECTORY) {
-                                visualText.debugMessage('Renaming extensions in directory: ' + op.uriFile1.fsPath);
-                                let files = dirfuncs.getFiles(op.uriFile1);
-                                let ext1 = '.' + op.extension1;
-                                let ext2 = '.' + op.extension2;
-                                for (let file of files) {
-                                    if (!file.fsPath.endsWith(ext2) && (op.extension1.length == 0 || file.fsPath.endsWith(ext1))) {
-                                        let newFile = file.fsPath.replace(/\.[^.]+$/, ext2);
-                                        visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),op.refreshes,fileOperation.RENAME,'','');
-                                    }
-                                }
-                                op.status = fileOpStatus.DONE;
-                            }
-                            else {
-                                fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
-                                op.status = fileOpStatus.DONE;
-                                visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
-                            }
-                        }
+                        fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
+                        op.status = fileOpStatus.DONE;
+                        visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
                     }
                 }
                 break;
