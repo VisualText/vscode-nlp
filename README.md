@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### v1.49.0
+Added descriptive tooltip to tokenizer path in the analyzer sequence.
+
 ### v1.48.0
 Add properties to files and folders. Sped up file operations, fixed log deletion bugs, added cancel file operations, added file operation counts display.
 
@@ -213,11 +216,6 @@ Added first version progress bar
 
 ### v1.7.8
 Fixed autogenerate rule
-
-### v1.7.7
-Analyzer log files now have the extension .tree, added duplicate pass, update nlp-engine fix
-
-For a comprehension change list see: https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md
 
 # Development
 
