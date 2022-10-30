@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### v1.49.2
+### v1.49.3
 Added descriptive tooltip to tokenizer path in the analyzer sequence. Fixed renaming.
 
 ### v1.48.0
