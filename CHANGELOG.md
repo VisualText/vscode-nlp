@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.50.0
+Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
+
 ### v1.49.3
 Added descriptive tooltip to tokenizer path in the analyzer sequence. Fixed renaming.
 
