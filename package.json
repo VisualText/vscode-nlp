@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.49.3",
+    "version": "1.50.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1053,6 +1053,30 @@
                 "command": "log.foldAll",
                 "key": "ctrl+shift+F",
                 "mac": "cmd+shift+F",
+                "when": "resourceLangId == tree"
+            },
+            {
+                "command": "log.unfoldAll",
+                "key": "ctrl+shift+U",
+                "mac": "cmd+shift+U",
+                "when": "resourceLangId == tree"
+            },
+            {
+                "command": "sequenceView.finalTree",
+                "key": "ctrl+shift+F",
+                "mac": "cmd+shift+F",
+                "when": "resourceLangId == nlp"
+            },
+            {
+                "command": "nlp.reformatRule",
+                "key": "ctrl+shift+R",
+                "mac": "cmd+shift+R",
+                "when": "resourceLangId == nlp"
+            },
+            {
+                "command": "nlp.passTree",
+                "key": "ctrl+shift+T",
+                "mac": "cmd+shift+T",
                 "when": "resourceLangId == nlp"
             }
         ],
