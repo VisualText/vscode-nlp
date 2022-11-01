@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.50.0
+### 1.50.1
 Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
 
 ### v1.49.3
