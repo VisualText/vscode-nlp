@@ -96,7 +96,7 @@
             "name": "keyword.fired.tree"
         },
         "types": {
-            "match": "\\b(?i:(node|alpha|punct|ctrl|emoji))\\b",
+            "match": "\\b(?i:(alpha|ctrl|emoji|node|num|punct))\\b",
             "name": "keyword.attribute.tree"
         }
     }

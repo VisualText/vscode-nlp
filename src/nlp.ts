@@ -261,6 +261,7 @@ export class NLPFile extends TextFile {
 			var line = lines[position.line];
 			var posEnd = new vscode.Position(position.line+1,0);
 			var rang = new vscode.Selection(posEnd,posEnd);
+			line = line.replace(/\$/g,'\\$');
 			var snippet = new vscode.SnippetString(line);
 			editor.insertSnippet(snippet,rang);
 			editor.selection = rang;
