@@ -10,6 +10,8 @@ import { sequenceView } from './sequenceView';
 import { nlpStatusBar, DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
+export enum analyzerStatus { UNKNOWN, DELETING_LOGS, ANALYZING, DONE, FAILED }
+
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
 

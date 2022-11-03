@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.51.0
+Added "Split directory" to textview to split large directories into smaller subdirectories
+
 ### 1.50.1
 Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
 

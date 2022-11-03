@@ -226,6 +226,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.deleteDir', (textItem) => this.deleteFile(textItem));
 		vscode.commands.registerCommand('textView.deleteFileLogs', (textItem) => this.deleteFileLogs(textItem));
 		vscode.commands.registerCommand('textView.deleteAnalyzerLogs', () => this.deleteAnalyzerLogs());
+		vscode.commands.registerCommand('textView.splitDir', (textItem) => this.splitDir(textItem));
 		vscode.commands.registerCommand('textView.updateTitle', (textItem) => this.updateTitle(textItem));
 		vscode.commands.registerCommand('textView.propertiesFile', (textItem) => this.propertiesFile(textItem));
 		vscode.commands.registerCommand('textView.propertiesFolder', (textItem) => this.propertiesFolder(textItem));
@@ -456,6 +457,17 @@ export class TextView {
 				if (inputPath.fsPath.length) {
 					this.deleteFolderLogs(inputPath);
 					visualText.fileOps.startFileOps();
+				}
+			});
+		}
+	}
+
+	public splitDir(textItem: TextItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: "3000", prompt: 'Enter number of files per directory' }).then(numFiles => {
+				if (numFiles) {
+					visualText.fileOps.addFileOperation(textItem.uri,vscode.Uri.file(''),[fileOpRefresh.TEXT],fileOperation.BREAK,numFiles.toString());
+					visualText.fileOps.startFileOps(0);
 				}
 			});
 		}
