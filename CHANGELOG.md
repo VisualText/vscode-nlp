@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.51.0
+Added "Split directory" to textview to split large directories into smaller subdirectories
+
 ### 1.50.1
 Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
 

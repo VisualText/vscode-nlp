@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
-export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, DONE }
+export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
@@ -19,6 +20,7 @@ interface fileOperations {
     extension1: string;
     extension2: string;
     refreshes: fileOpRefresh[];
+    display: boolean;
 }
 
 export let fileOps: FileOps;
@@ -35,7 +37,7 @@ export class FileOps {
 	constructor() {
     }
 
-    public startFileOps(mils: number=500) {
+    public startFileOps(mils: number=100) {
         if (this.timerID == 0) {
             this.timerCounter = 0;
             visualText.debugMessage('Starting file operations...');
@@ -54,17 +56,52 @@ export class FileOps {
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
 
-        if (type == fileOpType.DIRECTORY && operation == fileOperation.RENAME) {
+        if (type == fileOpType.DIRECTORY) {
             let files = dirfuncs.getFiles(uri1);
-            for (let file of files) {
-                if (!file.fsPath.endsWith(extension2) && (extension1.length == 0 || file.fsPath.endsWith(extension1))) {
-                    let newFile = file.fsPath.replace(/\.[^.]+$/, '.' + extension2);
-                    visualText.fileOps.addFileOperation(file,vscode.Uri.file(newFile),refreshes,fileOperation.RENAME,'','');
+            if (operation == fileOperation.RENAME) {
+                for (let file of files) {
+                    if (!file.fsPath.endsWith(extension2) && (extension1.length == 0 || file.fsPath.endsWith(extension1))) {
+                        let newFile = file.fsPath.replace(/\.[^.]+$/, '.' + extension2);
+                        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
+                    }
+                }
+            } else if (operation == fileOperation.BREAK) {
+                let filesPerDir: number = +extension1;
+                let numDirs = Math.ceil(files.length / filesPerDir);
+                let zeroLength: number = numDirs.toString().length;
+                let basename = path.basename(uri1.fsPath);
+                let fileCount = 0;
+
+                for (let i = 0; i < numDirs; i++) {
+                    let newDir = path.join(uri1.fsPath,basename + "_" + this.zeroStr(i,zeroLength));
+                    this.opsQueue.push({uriFile1: vscode.Uri.file(newDir), uriFile2: uri2, operation: fileOperation.MKDIR, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
+
+                    for (let i = 0; i < filesPerDir; i++) {
+                        if (fileCount >= files.length)
+                            break;
+                        let oldFile = files[fileCount++];
+                        let baseFile = path.basename(oldFile.fsPath);
+                        let newFile = path.join(newDir,baseFile);
+                        this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: '', extension2: '', refreshes: refreshes, display: false})
+                    }
                 }
             }
         }
+        else {
+            this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
+        }
+     }
 
-        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2, refreshes: refreshes})
+    zeroStr(num: number, charCount: number): string {
+        let numStr: string = num.toString();
+        let retStr = numStr;
+        let zeros: number = charCount - numStr.length;
+        if (zeros > 0) {
+            for (let i = 0; i < zeros; i++) {
+                retStr = "0" + retStr;
+            }
+        }
+        return retStr;
     }
 
     fileTimer() {
@@ -118,55 +155,61 @@ export class FileOps {
                                 copydir(op.uriFile1.fsPath,op.uriFile2.fsPath, function(err) {
                                     if (err) {
                                         op.status = fileOpStatus.FAILED;
-                                        visualText.debugMessage('DIRECTORY COPY FAILED: ' + op.uriFile2.fsPath);
+                                        if (op.display) visualText.debugMessage('DIRECTORY COPY FAILED: ' + op.uriFile2.fsPath);
                                     }
                                     op.status = fileOpStatus.DONE;
-                                    visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath);
                                 });
                             }
                             else {
-                                visualText.debugMessage('Copying file: ' + op.uriFile1.fsPath);
                                 if (dirfuncs.copyFile(op.uriFile1.fsPath,op.uriFile2.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    visualText.debugMessage('FILE COPIED TO: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE COPIED TO: ' + op.uriFile2.fsPath);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    visualText.debugMessage('FILE COPY FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE COPY FAILED: ' + op.uriFile2.fsPath);
                                 }
                             }
                         }
+                        break;
                     }
                     case fileOperation.DELETE: {
                         if (op.status == fileOpStatus.UNKNOWN) {
                             if (op.type == fileOpType.DIRECTORY) {
-                                visualText.debugMessage('Deleting directory: ' + op.uriFile1.fsPath);
                                 if (dirfuncs.delDir(op.uriFile1.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    visualText.debugMessage('DIRECTORY DELETED: ' + op.uriFile1.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY DELETED: ' + op.uriFile1.fsPath);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    visualText.debugMessage('DIRECTORY DELETE FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY DELETE FAILED: ' + op.uriFile2.fsPath);
                                 }
                             }
                             else {
-                                visualText.debugMessage('Deleting file: ' + op.uriFile1.fsPath);
                                 if (dirfuncs.delFile(op.uriFile1.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    visualText.debugMessage('FILE DELETED: ' + op.uriFile1.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE DELETED: ' + op.uriFile1.fsPath);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    visualText.debugMessage('FILE DELETE FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE DELETE FAILED: ' + op.uriFile2.fsPath);
                                 }
                             }
                         }
+                        break;
                     }
                     case fileOperation.RENAME: {
                         fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
                         op.status = fileOpStatus.DONE;
-                        visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
+                        if (op.display) visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
+                        break;
+                    }
+                    case fileOperation.MKDIR: {
+                        fs.mkdirSync(op.uriFile1.fsPath);
+                        op.status = fileOpStatus.DONE;
+                        if (op.display) visualText.debugMessage('NEW DIR: ' + op.uriFile1.fsPath);
+                        break;
                     }
                 }
                 break;
