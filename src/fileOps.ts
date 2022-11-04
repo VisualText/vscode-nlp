@@ -6,7 +6,7 @@ import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
-export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, DONE }
+export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, NEWFILE, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
@@ -84,6 +84,8 @@ export class FileOps {
                         let newFile = path.join(newDir,baseFile);
                         this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: '', extension2: '', refreshes: refreshes, display: false})
                     }
+                    let endFile = path.join(newDir,"zzzend.txt");
+                    this.opsQueue.push({uriFile1: vscode.Uri.file(endFile), uriFile2: vscode.Uri.file(''), operation: fileOperation.NEWFILE, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: 'Hello World!', extension2: '', refreshes: refreshes, display: false})
                 }
             }
         }
@@ -209,6 +211,12 @@ export class FileOps {
                         fs.mkdirSync(op.uriFile1.fsPath);
                         op.status = fileOpStatus.DONE;
                         if (op.display) visualText.debugMessage('NEW DIR: ' + op.uriFile1.fsPath);
+                        break;
+                    }
+                    case fileOperation.NEWFILE: {
+                        fs.writeFileSync(op.uriFile1.fsPath,op.extension1);
+                        op.status = fileOpStatus.DONE;
+                        if (op.display) visualText.debugMessage('NEW FILE: ' + op.uriFile1.fsPath);
                         break;
                     }
                 }
