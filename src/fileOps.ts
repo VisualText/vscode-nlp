@@ -56,7 +56,7 @@ export class FileOps {
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
 
-        if (type == fileOpType.DIRECTORY) {
+        if (type == fileOpType.DIRECTORY && (operation == fileOperation.RENAME || operation == fileOperation.BREAK)) {
             let files = dirfuncs.getFiles(uri1);
             if (operation == fileOperation.RENAME) {
                 for (let file of files) {
