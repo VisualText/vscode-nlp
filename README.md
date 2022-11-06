@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.53.0
+### 1.53.1
 Added help for special variables with dollar signs
 
 ### 1.52.0
