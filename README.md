@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.53.0
+Added help for special variables with dollar signs
+
 ### 1.52.0
 Added analyzer processing queue for running multiple folders
 

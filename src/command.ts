@@ -1,11 +1,7 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as os from 'os';
 import { TreeFile, generateType } from './treeFile';
 import { NLPFile } from './nlp';
 import { TextFile } from './textFile';
-import { visualText } from './visualText';
-import { SequenceView } from './sequenceView';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
@@ -23,9 +19,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateExactRule', this.generateExactRule));
 
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openPassFile', this.openPassFile));        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.windowCHMHelp', this.windowCHMHelp));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineFunctionHelp', this.openOnlineFunctionHelp));
-        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openOnlineVariableHelp', this.openOnlineVariableHelp));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openPassFile', this.openPassFile));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.commentLines', this.commentLines));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.selectSequence', this.selectSequence));
@@ -107,26 +101,6 @@ export class NLPCommands {
         }
     }
 
-    windowCHMHelp() {
-        if (os.platform() == 'win32') {
-            let cmd = path.join(visualText.getVisualTextDirectory('Help'),'Help.chm');
-			const cp = require('child_process');
-			cp.exec(cmd, (err, stdout, stderr) => {
-                console.log('stdout: ' + stdout);
-                console.log('stderr: ' + stderr);
-            });
-        } else {
-            vscode.window.showInformationMessage('Couldn\'t open Windows help file');
-        }
-    }
-
-    openOnlineFunctionHelp() {
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Functions.htm'));
-    }
-
-    openOnlineVariableHelp() {
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Variable_types.htm'));
-    }
 
     searchWord() {
         if (vscode.window.activeTextEditor) {
