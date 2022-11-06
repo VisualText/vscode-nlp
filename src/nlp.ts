@@ -10,10 +10,25 @@ import { sequenceView } from './sequenceView';
 import { nlpStatusBar, DevMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
-export enum analyzerStatus { UNKNOWN, DELETING_LOGS, ANALYZING, DONE, FAILED }
+export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
+export enum analyzerStatus { UNKNOWN, ANALYZING, DONE, FAILED }
+export enum analyzerOperation { UNKNOWN, RUN, STOP }
+export enum analyzerType { UNKNOWN, FILE, DIRECTORY }
+
+interface analyzerRun {
+    uri: vscode.Uri;
+    operation: analyzerOperation;
+    status: analyzerStatus;
+    type: analyzerType;
+}
 
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
+
+	public anaQueue: analyzerRun[] = new Array();
+    public timerStatus: anaQueueStatus = anaQueueStatus.UNKNOWN;
+	private timerID = 0;
+	private stopAllFlag: boolean = false;
 
 	constructor() {
         super();
@@ -33,6 +48,7 @@ export class NLPFile extends TextFile {
 		}, async (progress, token) => {
             token.onCancellationRequested(() => {
 				nlpStatusBar.analyzerButton();
+				visualText.nlp.stopAll();
                 console.log("User canceled analyzer");
 				return;
             });
@@ -78,6 +94,8 @@ export class NLPFile extends TextFile {
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
 			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
+			visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.ANALYZING);
+
 			const cp = require('child_process');
 
 			return new Promise(resolve => {
@@ -88,12 +106,13 @@ export class NLPFile extends TextFile {
 					if (err) {
 						logView.addMessage(err.message,vscode.Uri.file(filestr));
 						vscode.commands.executeCommand('outputView.refreshAll');
-						vscode.commands.executeCommand('logView.refreshAll');
+						//vscode.commands.executeCommand('logView.refreshAll');
+						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Failed');
 					} else {
 						logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
-						vscode.commands.executeCommand('logView.refreshAll');
+						//vscode.commands.executeCommand('logView.refreshAll');
 						//logView.loadMakeAna();
 						visualText.analyzer.saveCurrentFile(filepath);
 						vscode.commands.executeCommand('textView.refreshAll');
@@ -101,13 +120,112 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('sequenceView.refreshAll');
 						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('kbView.refreshAll');
-						vscode.commands.executeCommand('logView.makeAna');
+						//vscode.commands.executeCommand('logView.makeAna');
+						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.DONE);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Processed');
 					}
 				}).pid;
 			});
 		});
+	}
+
+    public stopAll() {
+        visualText.nlp.stopAllFlag = true;
+    }
+
+	public setAnalyzerStatus(uri: vscode.Uri, status: analyzerStatus) {
+        for (let o of visualText.nlp.anaQueue) {
+            if (o.uri.fsPath == uri.fsPath) {
+                o.status = status;
+				break;
+            }
+        }
+	}
+	
+	public addAnalyzer(uri: vscode.Uri, type: analyzerType) {
+		if (type == analyzerType.FILE) {
+			this.anaQueue.push({uri: uri, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type});
+		} else {
+			this.addDirsRecursive(uri,type);
+		}
+	}
+
+	private addDirsRecursive(dir: vscode.Uri, type: analyzerType) {
+		var files = dirfuncs.getFiles(dir);
+		if (files.length > 0) {
+			this.anaQueue.push({uri: dir, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type});
+		}
+        var dirs = dirfuncs.getDirectories(dir);
+        for (let subdir of dirs) {
+			this.addDirsRecursive(subdir,type);
+        }
+    }
+	
+    public startAnalyzer(mils: number=100) {
+        if (visualText.nlp.timerID == 0) {
+            visualText.debugMessage('Analyzing...');
+            visualText.nlp.timerID = +setInterval(this.analyzerTimer,mils);
+        }
+    }
+
+	analyzerTimer() {
+        let op: analyzerRun = visualText.nlp.anaQueue[0];
+        let len = visualText.nlp.anaQueue.length;
+        let alldone = true;
+        let opNum = 0;
+
+		if (visualText.nlp.stopAllFlag) {
+			visualText.nlp.shutDown();
+			return;
+		}
+
+        for (let o of visualText.nlp.anaQueue) {
+            opNum++;
+            if (o.status == analyzerStatus.UNKNOWN || o.status == analyzerStatus.ANALYZING) {
+                op = o;
+                alldone = false;
+                break;
+            }
+            else if (o.status != analyzerStatus.FAILED && o.status != analyzerStatus.DONE) {
+                alldone = false;
+            }
+        }
+        if (alldone) {
+            vscode.commands.executeCommand('setContext', 'anaOps.running', false);
+            visualText.nlp.stopAllFlag = false;
+            visualText.nlp.timerStatus = anaQueueStatus.DONE;
+        } else {
+            vscode.commands.executeCommand('setContext', 'anaOps.running', true);
+            visualText.nlp.timerStatus = anaQueueStatus.RUNNING;
+        }
+
+		//SIMPLE STATE MACHINE
+		switch (visualText.nlp.timerStatus) {
+			case anaQueueStatus.RUNNING: {
+				if (op.status == analyzerStatus.UNKNOWN) {
+					switch (op.operation) {
+						case analyzerOperation.RUN: {
+							op.status = analyzerStatus.ANALYZING;
+							visualText.nlp.analyze(op.uri);
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case anaQueueStatus.DONE: {
+				visualText.nlp.shutDown();
+				break;
+			}
+		}
+	}
+
+	shutDown() {
+		clearInterval(visualText.nlp.timerID);
+		visualText.nlp.stopAllFlag = false;
+		visualText.nlp.timerID = 0;
+		visualText.nlp.anaQueue = [];
 	}
 
 	insertRule(ruleStr: string) {

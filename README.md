@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.52.0
+Added analyzer processing queue for running multiple folders
+
 ### 1.51.2
 Added "Split directory" to textview to split large directories into smaller subdirectories
 
@@ -216,12 +219,6 @@ Copies settings.json file to the current work file for special NLP++ colorizatio
 
 ### v1.9.6
 Added comment / uncomment lines
-
-### v1.8.0
-Added first version progress bar
-
-### v1.7.8
-Fixed autogenerate rule
 
 # Development
 

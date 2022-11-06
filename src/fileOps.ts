@@ -46,7 +46,7 @@ export class FileOps {
     }
 
     public stopAll() {
-        this.stopAllFlag = true;
+        visualText.fileOps.stopAllFlag = true;
     }
 
     public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') {
@@ -84,8 +84,6 @@ export class FileOps {
                         let newFile = path.join(newDir,baseFile);
                         this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: '', extension2: '', refreshes: refreshes, display: false})
                     }
-                    let endFile = path.join(newDir,"zzzend.txt");
-                    this.opsQueue.push({uriFile1: vscode.Uri.file(endFile), uriFile2: vscode.Uri.file(''), operation: fileOperation.NEWFILE, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: 'Hello World!', extension2: '', refreshes: refreshes, display: false})
                 }
             }
         }
