@@ -8,6 +8,7 @@ import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
 import { logView } from './logView';
 import { FileOps,fileOperation,fileOpRefresh } from './fileOps';
+import { NLPFile } from './nlp';
 
 export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE, FAILED }
 export enum versionStatus { UNKNOWN, VERSIONING, DONE, FAILED }
@@ -68,6 +69,7 @@ export class VisualText {
 
     public analyzer = new Analyzer();
     public fileOps = new FileOps();
+    public nlp = new NLPFile();
     public version: string = '';
     public engineVersion: string = '';
     public cmdEngineVersion: string = '';

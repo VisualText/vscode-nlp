@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { visualText } from './visualText';
-import { analyzerView } from './analyzerView';
-import { NLPFile } from './nlp';
+import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
@@ -202,6 +201,8 @@ export class TextView {
 	private textView: vscode.TreeView<TextItem>;
 	private findFile = new FindFile();
 
+	private analyzingID: number = 0;
+
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
@@ -237,6 +238,13 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	analyze(textItem: TextItem) {
+        if (textItem.uri.fsPath.length) {
+			visualText.nlp.addAnalyzer(textItem.uri,analyzerType.FILE);
+			visualText.nlp.startAnalyzer();
+		}
 	}
 
 	private analyzerCurrent() {
@@ -288,16 +296,6 @@ export class TextView {
 	  
 		return bytes.toFixed(dp) + ' ' + units[u];
 	}
-	  
-
-	analyze(textItem: TextItem) {
-        if (textItem.uri.fsPath.length) {
-			//this.openFile(textItem);
-            var nlp = new NLPFile();
-			nlp.analyze(textItem.uri);
-			vscode.commands.executeCommand('analyzerView.refreshAll');
-		}
-	}
 
 	analyzeDir(textItem: TextItem) {
         if (textItem.uri.fsPath.length) {
@@ -311,9 +309,8 @@ export class TextView {
 			vscode.window.showQuickPick(items).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var nlp = new NLPFile();
-				nlp.analyze(textItem.uri);
-				vscode.commands.executeCommand('analyzerView.refreshAll');
+				visualText.nlp.addAnalyzer(textItem.uri,analyzerType.DIRECTORY);
+				visualText.nlp.startAnalyzer();
 			});
 		}
 	}
