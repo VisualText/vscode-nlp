@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { visualText } from './visualText';
+import { ETIME } from 'constants';
 
 export let helpView: HelpView;
 export class HelpView {
@@ -45,10 +46,11 @@ export class HelpView {
         if (editor) {
             let cursorPosition = editor.selection.start;
 			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
-			let text = editor.document.getText(wordRange);
-
-            var url = 'http://visualtext.org/help/' + text + '.htm';
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+            if (wordRange) {
+                let text = this.getTerm(editor,wordRange);
+                var url = 'http://visualtext.org/help/' + text + '.htm';
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+            }
         }
     }
     
@@ -71,18 +73,22 @@ export class HelpView {
                     this.exists = true;
                 }
                 if (this.panel) {
-                    let word = editor.document.getText(wordRange);
-                    var startPos = new vscode.Position(wordRange.start.line,wordRange.start.character-1);
-                    var endPos = new vscode.Position(wordRange.end.line,wordRange.end.character);
-                    var dollarRange = new vscode.Range(startPos, endPos);
-                    let dollarWord = editor.document.getText(dollarRange);
-                    if (dollarWord[0] == '$')
-                        this.panel.webview.html = this.getWebviewContent(dollarWord);
-                    else
-                        this.panel.webview.html = this.getWebviewContent(word);
+                    let word = this.getTerm(editor,wordRange);
+                    this.panel.webview.html = this.getWebviewContent(word);
                 }
             }                
          }
+    }
+
+    getTerm(editor: vscode.TextEditor, wordRange: vscode.Range): string {
+        let term = editor.document.getText(wordRange);
+        var startPos = new vscode.Position(wordRange.start.line,wordRange.start.character-1);
+        var endPos = new vscode.Position(wordRange.end.line,wordRange.end.character);
+        var dollarRange = new vscode.Range(startPos, endPos);
+        let dollarWord = editor.document.getText(dollarRange);
+        if (dollarWord[0] == '$')
+            term = dollarWord;
+        return term;
     }
 
     getWebviewContent(term: string): string {
