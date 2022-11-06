@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.52.0",
+    "version": "1.53.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -295,19 +295,19 @@
                 "description": "Sort and unique text lines"
             },
             {
-                "command": "nlp.windowCHMHelp",
+                "command": "helpView.windowCHMHelp",
                 "category": "NLP",
                 "title": "Open Full Windows Help",
                 "description": "Open online function help"
             },
             {
-                "command": "nlp.openOnlineFunctionHelp",
+                "command": "helpView.openOnlineFunctionHelp",
                 "category": "NLP",
                 "title": "Open online function help",
                 "description": "Open online function help"
             },
             {
-                "command": "nlp.openOnlineVariableHelp",
+                "command": "helpView.openOnlineVariableHelp",
                 "category": "NLP",
                 "title": "Open online variable help",
                 "description": "Open online variable help"
@@ -1169,7 +1169,7 @@
                 },
                 {
                     "when": "isWindows && resourceExtname == .nlp",
-                    "command": "nlp.windowCHMHelp",
+                    "command": "helpView.windowCHMHelp",
                     "group": "help"
                 },
                 {
@@ -1189,12 +1189,12 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.openOnlineFunctionHelp",
+                    "command": "helpView.openOnlineFunctionHelp",
                     "group": "help"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "nlp.openOnlineVariableHelp",
+                    "command": "helpView.openOnlineVariableHelp",
                     "group": "help"
                 },
                 {
