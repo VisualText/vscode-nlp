@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.54.0
+Added generate main.kb
+
 ### 1.53.1
 Added help for special variables with dollar signs
 

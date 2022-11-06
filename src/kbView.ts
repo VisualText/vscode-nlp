@@ -200,6 +200,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
 		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
+		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -240,6 +241,45 @@ export class KBView {
 			}
 		}
 		this.kbView.title = 'KB';
+	}
+
+	private generateMain(): void {
+		if (visualText.hasWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			deleteDescr = deleteDescr.concat('Generate main.kb file');
+			items.push({label: 'Yes', description: deleteDescr});
+			items.push({label: 'No', description: 'Do not generate main.kb' });
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				var kbPath = visualText.analyzer.getKBDirectory();
+				var filePath = path.join(kbPath.fsPath,'main.kb');
+				var files = dirfuncs.getFiles(kbPath);
+				var attrs = '';
+				var words = '';
+
+				for (let file of files) {
+					let filename = path.basename(file.fsPath);
+					if (filename.startsWith('attr')) {
+						attrs += "take \"kb/user/" +  filename + "\"\n";
+					}
+					else if (filename.startsWith('word')) {
+						words += "take \"kb/user/" +  filename + "\"\n";
+					}
+				}
+				let content = '';
+				content += "take \"kb/user/hier.kb\"\nbind sys\n";
+				content += words;
+				content += "take \"kb/user/phr.kb\"\n";
+				content += attrs;
+				content += "quit\n";
+
+				dirfuncs.writeFile(filePath,content);
+				visualText.debugMessage('main.kb generated');
+			});
+		}
 	}
 
 	private openFile(KBItem: KBItem): void {
