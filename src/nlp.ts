@@ -223,6 +223,7 @@ export class NLPFile extends TextFile {
 
 	shutDown() {
 		clearInterval(visualText.nlp.timerID);
+		visualText.debugMessage('Analyzing done');
 		visualText.nlp.stopAllFlag = false;
 		visualText.nlp.timerID = 0;
 		visualText.nlp.anaQueue = [];
