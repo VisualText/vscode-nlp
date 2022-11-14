@@ -84,7 +84,8 @@ export class NLPFile extends TextFile {
 			visualText.analyzer.saveAnalyzerState();
 
 			var filename = path.basename(filepath.fsPath);
-			logView.addMessage('Analyzing '+filename,filepath);
+			var typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
+			logView.addMessage('Analyzing '+typeStr+': '+filename,filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
 			outputView.setType(outputFileType.TXT);
 	
@@ -111,7 +112,8 @@ export class NLPFile extends TextFile {
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Failed');
 					} else {
-						logView.addMessage('Done: '+filename,vscode.Uri.file(filestr));
+						var typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
+						logView.addMessage('Done analyzing '+typeStr+': '+filename,vscode.Uri.file(filestr));
 						//vscode.commands.executeCommand('logView.refreshAll');
 						//logView.loadMakeAna();
 						visualText.analyzer.saveCurrentFile(filepath);
@@ -153,7 +155,7 @@ export class NLPFile extends TextFile {
 
 	private addDirsRecursive(dir: vscode.Uri, type: analyzerType) {
 		var files = dirfuncs.getFiles(dir);
-		if (files.length > 0) {
+		if (files.length > 0 && !dirfuncs.directoryIsLog(dir.fsPath)) {
 			this.anaQueue.push({uri: dir, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type});
 		}
         var dirs = dirfuncs.getDirectories(dir);
