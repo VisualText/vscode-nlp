@@ -319,6 +319,8 @@ export class TextView {
 						nlpStatusBar.updateFiredState();
 						textView.askAnalyzeFolder(textItem);
 					});
+				} else {
+					textView.askAnalyzeFolder(textItem);					
 				}
 			} else {
 				textView.askAnalyzeFolder(textItem);
