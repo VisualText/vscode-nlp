@@ -305,7 +305,7 @@ export class TextView {
 
 			if (nlpStatusBar.getDevMode() == DevMode.DEV) {
 				let fileCount = dirfuncs.fileCount(textItem.uri);
-				if (fileCount > 1) {
+				if (fileCount > 10) {
 					let items: vscode.QuickPickItem[] = [];
 					items.push({label: 'Turn Off Logs', description: fileCount + ' files will be analyzed, each will generate logs'});
 					items.push({label: 'Leave Logs On', description: ', please generate all the logs'});
