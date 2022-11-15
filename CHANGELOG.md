@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 1.54.4
+### 1.54.5
 Added generate main.kb
 
 ### 1.53.1
