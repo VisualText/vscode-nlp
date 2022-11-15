@@ -175,7 +175,7 @@ export class NLPStatusBar {
             if (!selection) {
                 return;
             }
-            var mode: DevMode = selection.label === 'Log files' ? DevMode.DEV : DevMode.NORMAL;
+            var mode: DevMode = selection.label === 'Turn ON log files' ? DevMode.DEV : DevMode.NORMAL;
             nlpStatusBar.setDevState(mode);
         });	
     }

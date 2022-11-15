@@ -308,7 +308,7 @@ export class TextView {
 				if (fileCount > 10) {
 					let items: vscode.QuickPickItem[] = [];
 					items.push({label: 'Turn Off Logs', description: fileCount + ' files will be analyzed, each will generate logs'});
-					items.push({label: 'Leave Logs On', description: ', please generate all the logs'});
+					items.push({label: 'Leave Logs On', description: 'please generate all the logs'});
 		
 					vscode.window.showQuickPick(items).then(selection => {
 						if (!selection || selection.label == 'No') {
