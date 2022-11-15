@@ -166,6 +166,7 @@ export class NLPFile extends TextFile {
 	
     public startAnalyzer(mils: number=100) {
         if (visualText.nlp.timerID == 0) {
+			vscode.commands.executeCommand('logView.clear');
             visualText.debugMessage('Analyzing...');
             visualText.nlp.timerID = +setInterval(this.analyzerTimer,mils);
         }

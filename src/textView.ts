@@ -5,6 +5,7 @@ import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
+import { nlpStatusBar, DevMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 
@@ -201,8 +202,6 @@ export class TextView {
 	private textView: vscode.TreeView<TextItem>;
 	private findFile = new FindFile();
 
-	private analyzingID: number = 0;
-
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
@@ -303,16 +302,44 @@ export class TextView {
 			var foldername = path.basename(textItem.uri.fsPath);
 			var msg = '';
 			msg = msg.concat('Analyze all files in folder \'',foldername,'\'?');
-			items.push({label: 'Yes', description: msg});
-			items.push({label: 'No', description: 'Do not analyze folder \''+foldername+'\''});
 
-			vscode.window.showQuickPick(items).then(selection => {
-				if (!selection || selection.label == 'No')
-					return;
-				visualText.nlp.addAnalyzer(textItem.uri,analyzerType.DIRECTORY);
-				visualText.nlp.startAnalyzer();
-			});
+			if (nlpStatusBar.getDevMode() == DevMode.DEV) {
+				let fileCount = dirfuncs.fileCount(textItem.uri);
+				if (fileCount > 1) {
+					let items: vscode.QuickPickItem[] = [];
+					items.push({label: 'Turn Off Logs', description: fileCount + ' files will be analyzed, each will generate logs'});
+					items.push({label: 'Leave Logs On', description: ', please generate all the logs'});
+		
+					vscode.window.showQuickPick(items).then(selection => {
+						if (!selection || selection.label == 'No') {
+							textView.askAnalyzeFolder(textItem);
+							return;
+						}
+						nlpStatusBar.setDevState(DevMode.NORMAL);
+						nlpStatusBar.updateFiredState();
+						textView.askAnalyzeFolder(textItem);
+					});
+				}
+			} else {
+				textView.askAnalyzeFolder(textItem);
+			}
 		}
+	}
+
+	askAnalyzeFolder(textItem: TextItem) {
+		let items: vscode.QuickPickItem[] = [];
+		var foldername = path.basename(textItem.uri.fsPath);
+		var msg = '';
+		msg = msg.concat('Analyze all files in folder \'',foldername,'\'?');
+		items.push({label: 'Yes', description: msg});
+		items.push({label: 'No', description: 'Do not analyze folder \''+foldername+'\''});
+
+		vscode.window.showQuickPick(items).then(selection => {
+			if (!selection || selection.label == 'No')
+				return;
+			visualText.nlp.addAnalyzer(textItem.uri,analyzerType.DIRECTORY);
+			visualText.nlp.startAnalyzer();
+		});
 	}
 
 	search() {

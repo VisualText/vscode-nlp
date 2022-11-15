@@ -450,9 +450,7 @@ export class SequenceView {
 
 	convertPatToNLP() {
 		if (visualText.hasWorkspaceFolder()) {
-			var seqFile = visualText.analyzer.seqFile;
 			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
 			items.push({label: 'Yes', description: 'Convert all the .pat files to .nlp'});
 			items.push({label: 'No', description: 'Do not convert'});
 

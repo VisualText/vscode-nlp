@@ -148,6 +148,17 @@ export namespace dirfuncs {
         return dirsAndTypes;
     }
 
+    export function fileCount(dir: vscode.Uri): number {
+        const files = fs.readdirSync(dir.fsPath, { withFileTypes: true });
+        let count = files.length;
+        for (const file of files) {
+            if (file.isDirectory()) {
+                count += fileCount(vscode.Uri.file(path.join(dir.fsPath, file.name)));
+            }
+        }
+        return count;
+    }
+
     export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.fsPath);
