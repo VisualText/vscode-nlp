@@ -150,9 +150,12 @@ export namespace dirfuncs {
 
     export function fileCount(dir: vscode.Uri): number {
         const files = fs.readdirSync(dir.fsPath, { withFileTypes: true });
-        let count = files.length;
+        let count = 0;
         for (const file of files) {
-            if (file.isDirectory()) {
+            if (file.isFile()) {
+                count++;
+            }
+            else if (file.isDirectory() && !dirfuncs.directoryIsLog(file.name)) {
                 count += fileCount(vscode.Uri.file(path.join(dir.fsPath, file.name)));
             }
         }
