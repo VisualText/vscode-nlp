@@ -45,6 +45,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 			icon = 'kb-main.svg';
 		} else if (KBItem.uri.fsPath.endsWith('.dict')) {
 			icon = 'dict.svg';
+		} else if (KBItem.uri.fsPath.endsWith('.kbb')) {
+			icon = 'kbb.svg';
 		}
 
 		treeItem.iconPath = {
