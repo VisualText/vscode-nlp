@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.54.8
+### 1.54.9
 Added generate main.kb
 
 ### 1.53.1
