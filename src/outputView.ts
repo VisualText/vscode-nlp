@@ -16,11 +16,11 @@ interface OutputItem {
 
 export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputItem> {
 
-	private _onDidChangeTreeData: vscode.EventEmitter<OutputItem> = new vscode.EventEmitter<OutputItem>();
-	readonly onDidChangeTreeData: vscode.Event<OutputItem> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<OutputItem | undefined | null | void> = new vscode.EventEmitter<OutputItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<OutputItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-	refresh(outputItem: OutputItem): void {
-		this._onDidChangeTreeData.fire(outputItem);
+	refresh(): void {
+		this._onDidChangeTreeData.fire();
 	}
 
 	constructor() { }
@@ -78,7 +78,7 @@ export class OutputView {
 	constructor(context: vscode.ExtensionContext) {
 		const outputViewProvider = new OutputTreeDataProvider();
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
-		vscode.commands.registerCommand('outputView.refreshAll', (resource) => outputViewProvider.refresh(resource));
+		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
 
 		vscode.commands.registerCommand('outputView.addKB', (resource) => this.addKB(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));

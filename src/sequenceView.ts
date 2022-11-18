@@ -24,11 +24,11 @@ export interface SequenceItem extends vscode.TreeItem {
 
 export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	
-	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem> = new vscode.EventEmitter<SequenceItem>();
-	readonly onDidChangeTreeData: vscode.Event<SequenceItem> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem | undefined | null | void> = new vscode.EventEmitter<SequenceItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<SequenceItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-	refresh(seqItem: SequenceItem): void {
-		this._onDidChangeTreeData.fire(seqItem);
+	refresh(): void {
+		this._onDidChangeTreeData.fire();
 	}
 
 	constructor() {
@@ -204,7 +204,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					if (!selection || selection.label == 'No')
 						return;
 					seqFile.deletePass(seqItem);
-					this.refresh(seqItem);					
+					this.refresh();					
 				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});
@@ -400,7 +400,7 @@ export class SequenceView {
 
 		vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem));
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
-		vscode.commands.registerCommand('sequenceView.refreshAll', (seqItem) => treeDataProvider.refresh(seqItem));
+		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));

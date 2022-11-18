@@ -14,11 +14,11 @@ export interface KBItem {
 
 export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
-	private _onDidChangeTreeData: vscode.EventEmitter<KBItem> = new vscode.EventEmitter<KBItem>();
-	readonly onDidChangeTreeData: vscode.Event<KBItem> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<KBItem | undefined | null | void> = new vscode.EventEmitter<KBItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<KBItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-	refresh(KBItem: KBItem): void {
-		this._onDidChangeTreeData.fire(KBItem);
+	refresh(): void {
+		this._onDidChangeTreeData.fire();
 	}
 
 	constructor() {}
@@ -188,7 +188,7 @@ export class KBView {
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.kbView = vscode.window.createTreeView('kbView', { treeDataProvider });
-		vscode.commands.registerCommand('kbView.refreshAll', (KBItem) => treeDataProvider.refresh(KBItem));
+		vscode.commands.registerCommand('kbView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('kbView.existingFile', (KBItem) => treeDataProvider.existingFile(KBItem));
 		vscode.commands.registerCommand('kbView.existingFolder', (KBItem) => treeDataProvider.existingFolder(KBItem));
 		vscode.commands.registerCommand('kbView.rename', (KBItem) => treeDataProvider.rename(KBItem));

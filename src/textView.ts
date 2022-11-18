@@ -18,11 +18,11 @@ export interface TextItem {
 
 export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 
-	private _onDidChangeTreeData: vscode.EventEmitter<TextItem> = new vscode.EventEmitter<TextItem>();
-	readonly onDidChangeTreeData: vscode.Event<TextItem> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<TextItem | undefined | null | void> = new vscode.EventEmitter<TextItem | undefined | null | void>();
+	readonly onDidChangeTreeData: vscode.Event<TextItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-	refresh(textItem: TextItem): void {
-		this._onDidChangeTreeData.fire(textItem);
+	refresh(): void {
+		this._onDidChangeTreeData.fire();
 	}
 
 	constructor() {}
@@ -205,7 +205,7 @@ export class TextView {
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
-		vscode.commands.registerCommand('textView.refreshAll', (textItem) => treeDataProvider.refresh(textItem));
+		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.existingFile', (textItem) => treeDataProvider.existingFile(textItem));
 		vscode.commands.registerCommand('textView.existingFolder', (textItem) => treeDataProvider.existingFolder(textItem));
 		vscode.commands.registerCommand('textView.rename', (textItem) => treeDataProvider.rename(textItem));
