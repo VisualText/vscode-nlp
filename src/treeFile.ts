@@ -277,8 +277,10 @@ export class TreeFile extends TextFile {
 								node = '_xWHITE';
 							else if (line.type.localeCompare('num') == 0)
 								node = '_xNUM';
-							else if (line.type.localeCompare('punct') == 0)
+							else if (line.type.localeCompare('punct') == 0 || node.length == 1)
 								node = `\\${node}`;
+						} else if (node.length == 1) {
+							node = `\\${node}`;
 						}
 						let newRuleStr = `\t${node}\t### (${num})`;
 						ruleStr = ruleStr + '\n' + newRuleStr;
