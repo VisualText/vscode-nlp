@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### 1.54.10
 Added generate main.kb
 
-### 1.53.1
+### 1.53.11
 Added help for special variables with dollar signs
 
 ### 1.52.0
