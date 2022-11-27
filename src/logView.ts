@@ -105,7 +105,7 @@ export class LogView {
 		if (fs.existsSync(logFileName.fsPath)) {
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
-				line = line.substring(0,line.length-1);
+				line = line.substring(0,line.length);
 				if (line.length) {
 					let log = this.parseLogLine(line);
 					this.logs.push(log);						
