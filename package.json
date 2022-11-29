@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.54.11",
+    "version": "1.55.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.mergeDicts",
+                "title": "Merge dictionary files",
+                "icon": {
+                    "light": "resources/light/gear.svg",
+                    "dark": "resources/dark/gear.svg"
+                }
+            },
             {
                 "command": "kbView.generateMain",
                 "title": "Generate main.kb",
@@ -1454,6 +1462,16 @@
                 }
             ],
             "view/item/context": [
+                {
+                    "command": "kbView.mergeDicts",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "kbView.generateMain",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
                 {
                     "command": "kbView.deleteFile",
                     "when": "view == kbView",

@@ -203,6 +203,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
 		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
+		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -243,6 +244,24 @@ export class KBView {
 			}
 		}
 		this.kbView.title = 'KB';
+	}
+	
+	private mergeDicts(): void {
+		if (visualText.hasWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			items.push({label: 'Yes', description: 'Merge all the dictionary files into all.dict?'});
+			items.push({label: 'No', description: 'Do not merge dictionary files' });
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				var kbDir = visualText.analyzer.getKBDirectory();
+				var appFile = vscode.Uri.file(path.join(visualText.analyzer.getKBDirectory().fsPath,"all.dict"));
+				visualText.fileOps.addFileOperation(kbDir,appFile,[fileOpRefresh.KB],fileOperation.APPEND,".dict","");
+				visualText.fileOps.startFileOps();
+			});
+		}
 	}
 
 	private generateMain(): void {

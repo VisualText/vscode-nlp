@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.55.0
+Added merge .dict files to the KB View context menu
+
 ### 1.54.11
 Added generate main.kb
 
