@@ -6,7 +6,7 @@ import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
-export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, NEWFILE, DONE }
+export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, NEWFILE, APPEND, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
@@ -56,12 +56,11 @@ export class FileOps {
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
 
-        if (type == fileOpType.DIRECTORY && (operation == fileOperation.RENAME || operation == fileOperation.BREAK)) {
+        if (type == fileOpType.DIRECTORY && (operation == fileOperation.RENAME || operation == fileOperation.BREAK || operation == fileOperation.APPEND)) {
             let files = dirfuncs.getFiles(uri1);
             if (operation == fileOperation.RENAME) {
                 for (let file of files) {
                     if (!file.fsPath.endsWith(extension2) && (extension1.length == 0 || file.fsPath.endsWith(extension1))) {
-                        let newFile = file.fsPath.replace(/\.[^.]+$/, '.' + extension2);
                         this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
                     }
                 }
@@ -83,6 +82,16 @@ export class FileOps {
                         let baseFile = path.basename(oldFile.fsPath);
                         let newFile = path.join(newDir,baseFile);
                         this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: '', extension2: '', refreshes: refreshes, display: false})
+                    }
+                }
+            } else if (operation == fileOperation.APPEND) {
+                let files = dirfuncs.getFiles(uri1);
+                for (let file of files) {
+                    if (file.fsPath == uri2.fsPath) {
+                        dirfuncs.delDir(uri2.fsPath);
+                    }
+                    else if (file.fsPath.endsWith(extension1)) {
+                        this.opsQueue.push({uriFile1: file, uriFile2: uri2, operation: fileOperation.APPEND, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
                     }
                 }
             }
@@ -215,6 +224,13 @@ export class FileOps {
                         fs.writeFileSync(op.uriFile1.fsPath,op.extension1);
                         op.status = fileOpStatus.DONE;
                         if (op.display) visualText.debugMessage('NEW FILE: ' + op.uriFile1.fsPath);
+                        break;
+                    }
+                    case fileOperation.APPEND: {
+                        let content = fs.readFileSync(op.uriFile1.fsPath,'utf8');
+                        fs.appendFileSync(op.uriFile2.fsPath,content);
+                        op.status = fileOpStatus.DONE;
+                        if (op.display) visualText.debugMessage('APPEND: ' + op.uriFile1.fsPath + ' => ' + op.uriFile2.fsPath);
                         break;
                     }
                 }
