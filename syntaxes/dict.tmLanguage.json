@@ -14,10 +14,13 @@
             "name": "meta.expression.dict",
             "patterns": [
                 {
-                    "include": "#word"
+                    "include": "#attribute-equals"
                 },
                 {
-                    "include": "#attribute-equals"
+                    "include": "#word-first-attr"
+                },
+                {
+                    "include": "#other-attrs"
                 },
                 {
                     "include": "#value"
@@ -30,15 +33,28 @@
                 }               
             ]
         },
-        "word": {
-            "match": "^([\\w\\d]+)",
-            "name": "comment.line.dict"
+        "word-first-attr": {
+            "match": "^([\\w\\d\\s]+)(\\s)([\\w\\d]+)(=)",
+            "captures": {
+                "1": {
+                    "name": "comment.line.dict"
+                },
+                "2": {
+                    "name": "entity.nothing.dict"
+                },
+                "3": {
+                    "name": "keyword.region.dict"
+                },
+                "4": {
+                    "name": "keyword.operator.dict"
+                }
+            }
         },
         "value": {
             "match": "[\\w\\d]+",
             "name": "entity.name.function.dict"
         },
-        "attribute-equals": {
+        "other-attrs": {
             "match": "([\\w]+)(=)",
             "captures": {
                 "1": {

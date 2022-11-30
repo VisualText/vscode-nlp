@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 1.55.0
+### 1.55.1
 Added merge .dict files to the KB View context menu
 
 ### 1.54.11
