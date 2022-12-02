@@ -188,6 +188,7 @@ export class Analyzer {
 
     saveCurrentFile(currentFile: vscode.Uri) {
         this.currentTextFile = currentFile;
+        this.outputDirectory();
         this.saveAnalyzerState();
     }
 
