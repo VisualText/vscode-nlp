@@ -218,10 +218,11 @@ export class KBView {
 			if (visualText.hasWorkspaceFolder()) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord) {
-						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.kb']);
+						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.kb','.kbb','.dict']);
 						findView.loadFinds(searchWord,this.findFile.getMatches());
-						vscode.commands.executeCommand('findView.refreshAll');
+						findView.setSearchWord(searchWord);
 						vscode.commands.executeCommand('findView.updateTitle');
+						vscode.commands.executeCommand('findView.refreshAll');
 					}
 				});
 			}

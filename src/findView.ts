@@ -74,6 +74,8 @@ export class FindView {
 
 	private clearAll() {
 		this.findItems = [];
+		this.setSearchWord('');
+		this.updateTitle();
 		vscode.commands.executeCommand('findView.refreshAll');
 	}
 
@@ -82,7 +84,12 @@ export class FindView {
 			let word = this.searchWord;
 			this.findView.title = `FIND RESULTS: (${word})`;				
 		}
-		this.findView.title = 'FIND RESULTS';
+		else
+			this.findView.title = 'FIND RESULTS';
+	}
+
+	public setSearchWord(word: string) {
+		this.searchWord = word;
 	}
 
 	public loadFinds(searchWord: string, findItems: FindItem[]) {
