@@ -35,6 +35,8 @@ export class FindFile {
 		var escaped = this.escapeRegExp(searchTerm);
 
 		for (let file of files) {
+			if (dirfuncs.directoryIsLog(file.fsPath))
+				continue;
 			if (extensions.length) {
 				let found: boolean = false;
 				for (let extension of extensions) {
@@ -80,7 +82,8 @@ export class FindFile {
 		const dirs = dirfuncs.getDirectories(dir);
 
 		for (let dir of dirs) {
-			this.searchFiles(dir, searchTerm, extensions, level+1)
+			if (!dirfuncs.directoryIsLog(dir.fsPath))
+				this.searchFiles(dir, searchTerm, extensions, level+1)
 		}
 
 		return this.finds.length ? true : false;
