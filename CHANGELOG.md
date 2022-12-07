@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 1.57.0
+### 1.57.1
 Advises on NLP-ENGINE update fail. Also opens file browser for any file or directory on all three platforms.
 
 ### 1.56.1
