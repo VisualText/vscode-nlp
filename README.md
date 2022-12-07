@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.57.0
+Advises on NLP-ENGINE update fail. Also opens file browser for any file or directory on all three platforms.
+
 ### 1.56.1
 Colorization of NLP++ folders added automatically
 

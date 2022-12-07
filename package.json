@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.56.1",
+    "version": "1.57.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -353,6 +353,14 @@
                 "category": "NLP",
                 "title": "Lookup Word in Browser",
                 "description": "Lookup a term in the help in Browser"
+            },
+            {
+                "command": "textView.explore",
+                "title": "Open in file explorer",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
             },
             {
                 "command": "textView.propertiesFile",
@@ -1001,6 +1009,14 @@
                 }
             },
             {
+                "command": "logView.exploreEngineDir",
+                "title": "Open Engine Directory",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
                 "command": "logView.conceptualGrammar",
                 "title": "KB",
                 "icon": {
@@ -1401,6 +1417,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "logView.exploreEngineDir",
+                    "when": "view == logView",
+                    "group": "navigation"
+                },
+                {
                     "command": "logView.refreshAll",
                     "when": "view == logView",
                     "group": "navigation"
@@ -1616,6 +1637,11 @@
                     "command": "sequenceView.typeOff",
                     "when": "view == sequenceView && viewItem =~ /file|hasKB|hasLog|hasLoghasKB/",
                     "group": "attribute"
+                },
+                {
+                    "command": "textView.explore",
+                    "when": "view == textView",
+                    "group": "arun"
                 },
                 {
                     "command": "textView.propertiesFile",

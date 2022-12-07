@@ -488,6 +488,13 @@ export class VisualText {
         })();     
     }
 
+    failedWarning() {
+        vscode.window.showErrorMessage("Update failed", "Click here to see solutions").then(response => {
+            let downloadWarningFile: vscode.Uri = vscode.Uri.file(path.join(visualText.extensionDirectory().fsPath,'DOWNLOADWARNING.md'));
+            vscode.commands.executeCommand('vscode.open', downloadWarningFile);
+        });
+    }
+
     downloadExecutableICU(extension: ExtensionItem, icuFileNum: number) {
         const config = vscode.workspace.getConfiguration('engine');
         config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
@@ -1327,6 +1334,27 @@ export class VisualText {
 				dirfuncs.copyFile(fromFile,toFile);
                 this.debugMessage('Copying settings file with colorization: ' + fromFile + ' => ' + toFile); 
             }
+		}
+	}
+
+	openFileManager(dir: string) {
+		let platformCmd = '';
+		if (os.platform() == 'win32') {
+			platformCmd = 'explorer.exe';
+		} else if (os.platform() == 'linux') {
+			platformCmd = 'xdg-open';
+		} else if (os.platform() == 'darwin') {
+			platformCmd = 'open';
+		}
+		if (platformCmd != '') {
+			let cmd = platformCmd + ' ' + dir;
+			const cp = require('child_process');
+			cp.exec(cmd, (err, stdout, stderr) => {
+                console.log('stdout: ' + stdout);
+                console.log('stderr: ' + stderr);
+            });
+        } else {
+            vscode.window.showInformationMessage('Couldn\'t open nlp engine folder');
 		}
 	}
 }

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { visualText } from './visualText';
@@ -65,6 +66,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
 		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
+		vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir());
     }
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -158,6 +160,8 @@ export class LogView {
 		} else if (logItem.uri) {
 			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(logItem.uri);
+		} else {
+			visualText.failedWarning();
 		}
 	}
 
@@ -170,5 +174,10 @@ export class LogView {
 
 	private stopFileOps(): void {
 		visualText.stopFileOps();
+	}
+
+	exploreEngineDir() {
+		let dir = visualText.engineDirectory();
+		visualText.openFileManager(dir.fsPath);
 	}
 }
