@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
@@ -71,7 +72,6 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
-		vscode.commands.registerCommand('analyzerView.colorizeAnalyzer', resource => this.colorizeAnalyzer());
 		vscode.commands.registerCommand('analyzerView.loadDefaultAnalyzers', resource => this.loadDefaultAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
@@ -80,6 +80,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyAnalyzer', resource => this.copyAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.dupeAnalyzer', resource => this.dupeAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
+
+		this.colorizeAnalyzer();
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -179,9 +181,11 @@ export class AnalyzerView {
 
 	private colorizeAnalyzer() {
 		if (vscode.workspace.workspaceFolders) {
-			var fromFile = path.join(visualText.extensionDirectory().fsPath,'.vscode','settings.json');
 			var toFile = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath,'.vscode','settings.json');
-			dirfuncs.copyFile(fromFile,toFile);
+			if (!fs.existsSync(toFile)) {
+				var fromFile = path.join(visualText.extensionDirectory().fsPath,'.vscode','settings.json');
+				dirfuncs.copyFile(fromFile,toFile);
+			}
 		}
 	}
 
