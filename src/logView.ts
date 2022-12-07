@@ -52,6 +52,10 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 export let logView: LogView;
 export class LogView {
 
+	panel: vscode.WebviewPanel | undefined;
+	exists: boolean;
+	ctx: vscode.ExtensionContext;
+
 	public logView: vscode.TreeView<LogItem>;
 	private logs: LogItem[] = new Array();
 
@@ -67,6 +71,11 @@ export class LogView {
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
 		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
 		vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir());
+		vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp());
+
+		this.exists = false;
+		this.ctx = context;
+        this.panel = undefined;
     }
 
     static attach(ctx: vscode.ExtensionContext) {
@@ -74,6 +83,37 @@ export class LogView {
             logView = new LogView(ctx);
         }
         return logView;
+	}
+
+    createPanel(): vscode.WebviewPanel {
+        return vscode.window.createWebviewPanel(
+            'logView',
+            'Download Help',
+            {
+                viewColumn: vscode.ViewColumn.Beside,
+                preserveFocus: false
+            }
+        );
+    }
+
+	downloadHelp() {
+		this.panel = this.createPanel();
+		this.panel.onDidDispose(
+			() => {
+				this.exists = false;
+			},
+			null,
+			this.ctx.subscriptions
+		);
+		this.exists = true;
+
+		if (this.panel) {
+			let htmlFile = path.join(visualText.extensionDirectory().fsPath,'DOWNLOADHELP.html');
+			if (fs.existsSync(htmlFile)) {
+				this.panel.webview.html = fs.readFileSync(htmlFile, 'utf8');
+			}
+
+		}
 	}
 
 	private loadTimingLog() {

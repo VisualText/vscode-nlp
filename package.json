@@ -355,8 +355,16 @@
                 "description": "Lookup a term in the help in Browser"
             },
             {
+                "command": "textView.exploreAll",
+                "title": "Explore input directory",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
                 "command": "textView.explore",
-                "title": "Open in file explorer",
+                "title": "Explore current directory",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"
@@ -801,6 +809,14 @@
                 }
             },
             {
+                "command": "analyzerView.explore",
+                "title": "Explore analyzer folder",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
                 "command": "analyzerView.loadDefaultAnalyzers",
                 "title": "Load Default Analyzers",
                 "icon": {
@@ -1006,6 +1022,14 @@
                 "icon": {
                     "light": "resources/light/kb-new.svg",
                     "dark": "resources/dark/kb-new.svg"
+                }
+            },
+            {
+                "command": "logView.downloadHelp",
+                "title": "Download Error Help",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
                 }
             },
             {
@@ -1417,11 +1441,6 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "logView.exploreEngineDir",
-                    "when": "view == logView",
-                    "group": "navigation"
-                },
-                {
                     "command": "logView.refreshAll",
                     "when": "view == logView",
                     "group": "navigation"
@@ -1447,9 +1466,14 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "analyzerView.loadDefaultAnalyzers",
-                    "when": "view == analyzerView",
-                    "group": "navigation"
+                    "command": "logView.exploreEngineDir",
+                    "when": "view == logView",
+                    "group": "secondary"
+                },
+                {
+                    "command": "logView.downloadHelp",
+                    "when": "view == logView",
+                    "group": "secondary"
                 },
                 {
                     "command": "analyzerView.deleteAllAnalyzerLogs",
@@ -1644,6 +1668,11 @@
                     "group": "arun"
                 },
                 {
+                    "command": "textView.exploreAll",
+                    "when": "view == textView",
+                    "group": "arun"
+                },
+                {
                     "command": "textView.propertiesFile",
                     "when": "view == textView && viewItem =~ /file/",
                     "group": "arun"
@@ -1742,6 +1771,11 @@
                     "command": "textView.deleteFile",
                     "when": "view == textView && viewItem =~ /file|fileHasLog/",
                     "group": "file"
+                },
+                {
+                    "command": "analyzerView.explore",
+                    "when": "view == analyzerView",
+                    "group": "edit"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzer",

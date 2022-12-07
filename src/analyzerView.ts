@@ -79,6 +79,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.updateTitle', resource => this.updateTitle(resource));
 		vscode.commands.registerCommand('analyzerView.copyAnalyzer', resource => this.copyAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.dupeAnalyzer', resource => this.dupeAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.explore', resource => this.explore(resource));
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 
 		visualText.colorizeAnalyzer();
@@ -89,6 +90,13 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	explore(analyzerItem: AnalyzerItem) {
+		let dir = visualText.getCurrentAnalyzer();
+        if (fs.existsSync(dir.fsPath)) {
+			visualText.openFileManager(dir.fsPath);
+		}
 	}
 
 	copyAll() {
