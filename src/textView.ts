@@ -231,6 +231,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.propertiesFile', (textItem) => this.propertiesFile(textItem));
 		vscode.commands.registerCommand('textView.propertiesFolder', (textItem) => this.propertiesFolder(textItem));
 		vscode.commands.registerCommand('textView.explore', (textItem) => this.explore(textItem));
+		vscode.commands.registerCommand('textView.exploreAll', (textItem) => this.exploreAll(textItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -239,13 +240,21 @@ export class TextView {
         }
         return textView;
 	}
-
+	
 	explore(textItem: TextItem) {
         if (textItem.uri.fsPath.length) {
 			let pather = textItem.uri.fsPath;
 			if (!dirfuncs.isDir(pather))
 				pather = path.dirname(pather);
 			visualText.openFileManager(pather);
+		}
+	}
+
+	exploreAll(textItem: TextItem) {
+		let dir = visualText.getCurrentAnalyzer();
+		let inputDir = path.join(dir.fsPath,'input');
+        if (fs.existsSync(inputDir)) {
+			visualText.openFileManager(inputDir);
 		}
 	}
 
