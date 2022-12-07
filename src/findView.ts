@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FindItem } from './findFile';
+import { visualText } from './visualText';
 
 export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 
@@ -103,6 +104,7 @@ export class FindView {
 	}
 
 	private openFile(findItem: FindItem): void {
+		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(findItem.uri).then(editor => 
 			{
 				var pos = new vscode.Position(findItem.line,findItem.pos);

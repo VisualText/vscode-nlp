@@ -147,7 +147,7 @@ export class LogView {
 	private openFile(logItem: LogItem): void {
 		if (logItem.passNum && logItem.uri) {
 			var seqFile = visualText.analyzer.seqFile;
-
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(logItem.uri).then(editor => 
 				{
 					var pos = new vscode.Position(logItem.line-1,0);
@@ -156,6 +156,7 @@ export class LogView {
 					editor.revealRange(range);
 				});
 		} else if (logItem.uri) {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(logItem.uri);
 		}
 	}

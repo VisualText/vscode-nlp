@@ -34,7 +34,7 @@ export class Analyzer {
     }
 
 	readState() {
-        if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+        if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
             var parse = this.jsonState.json.visualText[0];
             if (parse.currentTextFile) {
                 var currentFile = parse.currentTextFile;
@@ -145,7 +145,7 @@ export class Analyzer {
 
     saveStateFile() {
         if (this.currentPassFile.fsPath.length == 0 || this.currentTextFile.fsPath.length == 0) {
-            if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+            if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
                 var parse = this.jsonState.json.visualText[0];
                 if (parse.currentTextFile && this.currentPassFile.fsPath.length == 0) {
                     var currentFile = parse.currentTextFile;

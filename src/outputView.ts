@@ -232,6 +232,7 @@ export class OutputView {
 	private openFile(resource: vscode.Uri): void {
 		var textFile = new TextFile(resource.fsPath);
 		textFile.cleanZeroZero();
+		visualText.colorizeAnalyzer();
         vscode.window.showTextDocument(resource);
 	}
 

@@ -466,6 +466,7 @@ export class SequenceView {
 		var dir = visualText.analyzer.getOutputDirectory();
 		var finalTree = path.join(dir.fsPath,'final.tree');
 		if (fs.existsSync(finalTree)) {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(vscode.Uri.file(finalTree));	
 		} else {
 			vscode.window.showInformationMessage('No final tree found');
@@ -511,6 +512,7 @@ export class SequenceView {
 				return;
 			}
 			visualText.analyzer.saveCurrentPass(seqItem.uri, seqItem.passNum);
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(seqItem.uri);			
 		}
 	}
@@ -535,17 +537,20 @@ export class SequenceView {
 
 	public openTreeFile(passNum: number) {
 		var logfile = this.treeFile.anaFile(passNum,nlpFileType.TREE);
-		if (fs.existsSync(logfile.fsPath))
+		if (fs.existsSync(logfile.fsPath)) {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(logfile);
+		}
 		else
 			vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
 	}
 
 	public openRuleMatchFile(passNum: number) {
 		var firefile = this.treeFile.firedFile(passNum);
-		if (fs.existsSync(firefile.fsPath))
+		if (fs.existsSync(firefile.fsPath)) {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(firefile);
-		else
+		} else
 			vscode.window.showWarningMessage('No rule matches file with this pass');
 	}
 
@@ -571,9 +576,10 @@ export class SequenceView {
 			}
 			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
 				var kbfile = this.treeFile.anaFile(seqItem.passNum,nlpFileType.KBB);
-				if (fs.existsSync(kbfile.fsPath))
+				if (fs.existsSync(kbfile.fsPath)) {
+					visualText.colorizeAnalyzer();
 					vscode.window.showTextDocument(kbfile);
-				else
+				} else
 					vscode.window.showWarningMessage('No KB file for this pass');
 			}
 		}

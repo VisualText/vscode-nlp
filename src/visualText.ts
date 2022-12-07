@@ -146,7 +146,7 @@ export class VisualText {
 	readState(): boolean {
         if (vscode.workspace.workspaceFolders) {
             this.analyzerDir = this.workspaceFold;
-            if (this.jsonState.jsonParse(this.analyzerDir,'state','visualText')) {
+            if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
                 var saveit = false;
                 var parse = this.jsonState.json.visualText[0];
                 var currAnalyzer = parse.currentAnalyzer;
@@ -1298,4 +1298,35 @@ export class VisualText {
     stopFileOps() {
         visualText.fileOps.stopAll();
     }
+
+	colorizeAnalyzer() {
+		if (vscode.workspace.workspaceFolders) {
+            let add = false;
+            var toDir = vscode.workspace.workspaceFolders[0].uri;
+			var toFile = path.join(toDir.fsPath,'.vscode','settings.json');
+            var fromDir = visualText.extensionDirectory();
+            var fromFile = path.join(fromDir.fsPath,'.vscode','settings.json');
+			if (fs.existsSync(toFile)) {
+                if (this.jsonState.jsonParse(toDir,'settings')) {
+                    if (!this.jsonState.json.hasOwnProperty('editor.tokenColorCustomizations')) {
+                        const settingsObj1 = this.jsonState.json;
+                        this.jsonState.jsonParse(fromDir,'settings')
+                        const settingsObj2 = this.jsonState.json;
+                         
+                        const mergedObj = {
+                          ...settingsObj1,
+                          ...settingsObj2
+                        };
+                        this.jsonState.saveFile(toDir.fsPath,"settings",mergedObj);
+                    }             
+                }
+			} else
+                add = true;
+
+            if (add) {
+				dirfuncs.copyFile(fromFile,toFile);
+                this.debugMessage('Copying settings file with colorization: ' + fromFile + ' => ' + toFile); 
+            }
+		}
+	}
 }
