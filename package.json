@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.55.2",
+    "version": "1.56.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.search",
+                "title": "Search",
+                "icon": {
+                    "light": "resources/light/search.svg",
+                    "dark": "resources/dark/search.svg"
+                }
+            },
             {
                 "command": "kbView.mergeDicts",
                 "title": "Merge dictionary files",
@@ -785,14 +793,6 @@
                 }
             },
             {
-                "command": "analyzerView.colorizeAnalyzer",
-                "title": "Colorize Analyzer Folder",
-                "icon": {
-                    "light": "resources/light/color-mode.svg",
-                    "dark": "resources/dark/color-mode.svg"
-                }
-            },
-            {
                 "command": "analyzerView.loadDefaultAnalyzers",
                 "title": "Load Default Analyzers",
                 "icon": {
@@ -1271,6 +1271,11 @@
             ],
             "view/title": [
                 {
+                    "command": "kbView.search",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "kbView.refreshAll",
                     "when": "view == kbView",
                     "group": "navigation"
@@ -1419,11 +1424,6 @@
                     "command": "logView.makeAna",
                     "when": "view == logView",
                     "group": "navigation"
-                },
-                {
-                    "command": "analyzerView.colorizeAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "secondary"
                 },
                 {
                     "command": "analyzerView.loadDefaultAnalyzers",
