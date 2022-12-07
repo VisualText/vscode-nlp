@@ -33,12 +33,17 @@ export class JsonState {
         return this.filePath;
     }
 
-    jsonParse(dirPath: vscode.Uri, filename: string, label: string): boolean {
+    jsonParse(dirPath: vscode.Uri, filename: string): boolean {
         if (this.setFilePath(dirPath.fsPath,filename)) {
             this.jsonStr = fs.readFileSync(this.filePath, 'utf8');
             if (this.jsonStr.length) {
-                this.json = JSON.parse(this.jsonStr);
-                return true;
+                try {
+                    this.json = JSON.parse(this.jsonStr);
+                    return true;
+                } catch(e) {
+                    alert(e); // error in the above string (in this case, yes)!
+                    return false;
+                }
             }            
         }
         return false;

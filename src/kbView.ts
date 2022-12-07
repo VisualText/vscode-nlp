@@ -231,6 +231,7 @@ export class KBView {
 
 	private openText() {
 		if (visualText.analyzer.hasText())
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(visualText.analyzer.getTextPath());
 			vscode.commands.executeCommand('status.update');
 	}
@@ -306,6 +307,7 @@ export class KBView {
 
 	private openFile(KBItem: KBItem): void {
 		this.updateTitle(KBItem.uri);
+		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(KBItem.uri);
 		visualText.analyzer.saveCurrentFile(KBItem.uri);
 		vscode.commands.executeCommand('outputView.refreshAll');

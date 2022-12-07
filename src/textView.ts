@@ -360,9 +360,11 @@ export class TextView {
 	}
 
 	private openText() {
-		if (visualText.analyzer.hasText())
+		if (visualText.analyzer.hasText()) {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(visualText.analyzer.getTextPath());
 			vscode.commands.executeCommand('status.update');
+		}
 	}
 	
 	private updateTitle(resource: vscode.Uri): void {
@@ -379,6 +381,7 @@ export class TextView {
 
 	private openFile(textItem: TextItem): void {
 		this.updateTitle(textItem.uri);
+		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(textItem.uri);
 		visualText.analyzer.saveCurrentFile(textItem.uri);
 		vscode.commands.executeCommand('outputView.refreshAll');

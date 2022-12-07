@@ -81,7 +81,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.dupeAnalyzer', resource => this.dupeAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 
-		this.colorizeAnalyzer();
+		visualText.colorizeAnalyzer();
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -176,16 +176,6 @@ export class AnalyzerView {
 				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
-		}
-	}
-
-	private colorizeAnalyzer() {
-		if (vscode.workspace.workspaceFolders) {
-			var toFile = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath,'.vscode','settings.json');
-			if (!fs.existsSync(toFile)) {
-				var fromFile = path.join(visualText.extensionDirectory().fsPath,'.vscode','settings.json');
-				dirfuncs.copyFile(fromFile,toFile);
-			}
 		}
 	}
 

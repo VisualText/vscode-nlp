@@ -233,6 +233,7 @@ export class NLPFile extends TextFile {
 	}
 
 	insertRule(ruleStr: string) {
+		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(this.getUri()).then(editor => {
 			let len = this.getText().length
 			let pos = editor.document.positionAt(len);
@@ -243,6 +244,7 @@ export class NLPFile extends TextFile {
 	}
 
 	replaceContext(newContextStr: string) {
+		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(this.getUri()).then(editor => {
 			let contextSel = this.findLineStartsWith('@NODES');
 			if (contextSel.isEmpty)
@@ -304,8 +306,10 @@ export class NLPFile extends TextFile {
 			var seqFile = new SequenceFile();
 			seqFile.init();
 			let passFileUri: vscode.Uri = seqFile.getUriByPassNumber(passNum);
-			if (fs.existsSync(passFileUri.fsPath))
+			if (fs.existsSync(passFileUri.fsPath)) {
+				visualText.colorizeAnalyzer();
 				vscode.window.showTextDocument(passFileUri);
+			}
 			else
 				vscode.window.showWarningMessage('No pass file ' + path.basename(passFileUri.fsPath));
 		}

@@ -70,6 +70,7 @@ export class TreeFile extends TextFile {
 				var passNum = this.selectedLines[0].passNum;
 				if (passNum) {
 					var passFile = seqFile.getUriByPassNumber(passNum);
+					visualText.colorizeAnalyzer();
 					vscode.window.showTextDocument(passFile).then(edit => 
 						{
 							var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
@@ -87,6 +88,7 @@ export class TreeFile extends TextFile {
 			this.setFile(editor.document.uri);
 			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
+				visualText.colorizeAnalyzer();
 				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
 					{
 						var txt = new TextFile(visualText.analyzer.getTextPath().fsPath);
@@ -178,7 +180,7 @@ export class TreeFile extends TextFile {
 						var chosen = this.getFired(firedNumber);
 						if (chosen.rulenum > 0) {
 							var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rulenum);
-
+							visualText.colorizeAnalyzer();
 							vscode.window.showTextDocument(ruleFileUri).then(editor => 
 							{
 								var pos = new vscode.Position(chosen.ruleline-1,0);
@@ -364,6 +366,7 @@ ${ruleStr}
 		var filePath = vscode.Uri.file(path.join(tempDir,filepath));
 		fs.writeFileSync(filePath.fsPath, content);
 		vscode.workspace.openTextDocument(filePath).then(document => {
+			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(document);
 		});
 	}

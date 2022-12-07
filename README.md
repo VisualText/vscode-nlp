@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.56.0
+### 1.56.1
 Colorization of NLP++ folders added automatically
 
 ### 1.55.3
