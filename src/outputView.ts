@@ -6,7 +6,6 @@ import { logView } from './logView';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { fileOpRefresh, fileOperation } from './fileOps';
-import { Z_FIXED } from 'zlib';
 
 export enum outputFileType { TXT, TXXT, TREE, KB, NLP }
 

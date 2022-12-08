@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.57.1",
+    "version": "1.58.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -809,6 +809,38 @@
                 }
             },
             {
+                "command": "analyzerView.newFolder",
+                "title": "Create new folder",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
+                "command": "analyzerView.moveToFolder",
+                "title": "Move to selected folder",
+                "icon": {
+                    "light": "resources/light/right.svg",
+                    "dark": "resources/dark/right.svg"
+                }
+            },
+            {
+                "command": "analyzerView.moveUp",
+                "title": "Move up a folder",
+                "icon": {
+                    "light": "resources/light/left.svg",
+                    "dark": "resources/dark/left.svg"
+                }
+            },
+            {
+                "command": "analyzerView.exploreAll",
+                "title": "Explore Analyzers folder",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
                 "command": "analyzerView.explore",
                 "title": "Explore analyzer folder",
                 "icon": {
@@ -1476,9 +1508,9 @@
                     "group": "secondary"
                 },
                 {
-                    "command": "analyzerView.deleteAllAnalyzerLogs",
-                    "when": "view == analyzerView && analyzers.hasLogs",
-                    "group": "secondary"
+                    "command": "analyzerView.newFolder",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
                 },
                 {
                     "command": "analyzerView.newAnalyzer",
@@ -1492,6 +1524,16 @@
                 },
                 {
                     "command": "analyzerView.copyAll",
+                    "when": "view == analyzerView",
+                    "group": "secondary"
+                },
+                {
+                    "command": "analyzerView.deleteAllAnalyzerLogs",
+                    "when": "view == analyzerView && analyzers.hasLogs",
+                    "group": "secondary"
+                },
+                {
+                    "command": "analyzerView.exploreAll",
                     "when": "view == analyzerView",
                     "group": "secondary"
                 },
@@ -1604,12 +1646,12 @@
                 },
                 {
                     "command": "sequenceView.moveUp",
-                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB",
+                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB/",
                     "group": "move"
                 },
                 {
                     "command": "sequenceView.moveDown",
-                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB",
+                    "when": "view == sequenceView && viewItem =~ /file|folder|hasKB|hasLog|hasLoghasKB/",
                     "group": "move"
                 },
                 {
@@ -1773,6 +1815,21 @@
                     "group": "file"
                 },
                 {
+                    "command": "analyzerView.newFolder",
+                    "when": "view == analyzerView",
+                    "group": "folder"
+                },
+                {
+                    "command": "analyzerView.moveToFolder",
+                    "when": "view == analyzerView",
+                    "group": "folder"
+                },
+                {
+                    "command": "analyzerView.moveUp",
+                    "when": "view == analyzerView",
+                    "group": "folder"
+                },
+                {
                     "command": "analyzerView.explore",
                     "when": "view == analyzerView",
                     "group": "edit"
@@ -1789,23 +1846,38 @@
                 },
                 {
                     "command": "analyzerView.copyAnalyzer",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem != isFolder",
                     "group": "edit"
                 },
                 {
                     "command": "analyzerView.dupeAnalyzer",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem != isFolder",
                     "group": "edit"
-                },
-                {
-                    "command": "analyzerView.dupeAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "inline"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzerLogs",
                     "when": "view == analyzerView && viewItem == hasLogs",
                     "group": "edit"
+                },
+                {
+                    "command": "analyzerView.deleteAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.dupeAnalyzer",
+                    "when": "view == analyzerView && viewItem != isFolder",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.moveToFolder",
+                    "when": "view == analyzerView && viewItem =~ /moveDown/",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.moveUp",
+                    "when": "view == analyzerView && viewItem =~ /moveUp/",
+                    "group": "inline"
                 },
                 {
                     "command": "sequenceView.insertNew",
@@ -1870,11 +1942,6 @@
                 {
                     "command": "textView.deleteDir",
                     "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
-                },
-                {
-                    "command": "analyzerView.deleteAnalyzer",
-                    "when": "view == analyzerView",
                     "group": "inline"
                 },
                 {

@@ -8,16 +8,16 @@
    y="0px"
    viewBox="0 0 22.857143 22.857143"
    xml:space="preserve"
-   sodipodi:docname="down.svg"
+   sodipodi:docname="right.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
    width="16"
    height="16"
-   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"><defs
-   id="defs235" /><sodipodi:namedview
-   id="namedview233"
+   id="defs211" /><sodipodi:namedview
+   id="namedview209"
    pagecolor="#ffffff"
    bordercolor="#000000"
    borderopacity="0.25"
@@ -27,7 +27,7 @@
    inkscape:deskcolor="#d1d1d1"
    showgrid="false"
    inkscape:zoom="14.75"
-   inkscape:cx="-2.8474576"
+   inkscape:cx="-2.779661"
    inkscape:cy="8.0338983"
    inkscape:window-width="1920"
    inkscape:window-height="1111"
@@ -35,14 +35,8 @@
    inkscape:window-y="1341"
    inkscape:window-maximized="1"
    inkscape:current-layer="Layer_1" />
-<style
-   type="text/css"
-   id="style228">
-	.st0{fill:#D6D6D6;}
-</style>
 <polyline
-   class="st0"
-   points="5.9,0 5.9,11.1 1.5,11.1 8.3,16 14.4,11.1 9.9,11.1 9.9,0 "
-   id="polyline230"
-   transform="translate(3.4785714,3.4285715)" />
+   points="9.9,16 9.9,4.9 14.4,4.9 7.5,0 1.5,4.9 5.9,4.9 6,16 "
+   id="polyline206"
+   transform="rotate(90,7.9750001,11.453572)" />
 </svg>
