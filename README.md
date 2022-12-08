@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.58.0
+Added folders to the analyzer view
+
 ### 1.57.1
 Advises on NLP-ENGINE update fail. Also opens file browser for any file or directory on all three platforms.
 
@@ -225,9 +228,6 @@ Simple search for function. This is a workable hack.
 
 ### v1.12.2
 Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
-
-### v1.11.1
-Add clearing log folders for all analyzers for archiving analyzers
 
 # Development
 

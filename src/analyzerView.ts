@@ -6,10 +6,15 @@ import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 
+export enum analyzerFolderType { ANALYZER, FOLDER }
+
 interface AnalyzerItem {
 	uri: vscode.Uri;
+	type: analyzerFolderType;
 	hasLogs: boolean;
 	hasPats: boolean;
+	moveUp: boolean;
+	moveDown: boolean;
 	isConverting: boolean;
 }
 
@@ -26,38 +31,79 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 	constructor() { }
 
-	public getTreeItem(element: AnalyzerItem): vscode.TreeItem {
-		var conVal = element.hasLogs ? 'hasLogs' : '';
-		return {
-			resourceUri: element.uri,
-			collapsibleState: void 0,
-			contextValue: conVal,
-			iconPath: {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
-			},
-			command: {
-				command: 'analyzerView.openAnalyzer',
-				arguments: [element],
-				title: 'Open Analyzer'
-			}
-		};
-	}
-
-	public getChildren(element?: AnalyzerItem): AnalyzerItem[] {
-        if (visualText.hasWorkspaceFolder()) {
-            const analyzers = visualText.getAnalyzers();
-            analyzerItems = [];
-			var hasAllLogs = false;
-            for (let analyzer of analyzers) {
-				var hasLogs = dirfuncs.analyzerHasLogDirs(analyzer,true);
-				if (hasLogs) hasAllLogs = true;
-                analyzerItems.push({uri: analyzer, hasLogs: hasLogs, hasPats: false, isConverting: false});
-            }
-			vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
-            return analyzerItems;
+	async getChildren(analyzerItem?: AnalyzerItem): Promise<AnalyzerItem[]> {
+		if (analyzerItem) {
+			return this.getKeepers(analyzerItem.uri); 
+		}
+		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
+			return this.getKeepers(visualText.getWorkspaceFolder());  
         }
 		return [];
+	}
+
+	getMovement(analyzerItem: AnalyzerItem) {
+		analyzerItem.moveDown = false;
+		analyzerItem.moveUp = false;
+		var itemPath = analyzerItem.uri.fsPath;
+		var parent = path.dirname(itemPath);
+		if (parent != visualText.getAnalyzerDir().fsPath) {
+			analyzerItem.moveUp = true;
+		}
+		if (analyzerItem.type == analyzerFolderType.FOLDER) {
+			if (dirfuncs.parentHasOtherDirs(analyzerItem.uri)) {
+				analyzerItem.moveDown = true;
+			}
+		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(parent))) {
+			analyzerItem.moveDown = true;
+		}
+	}
+
+	getTreeItem(analyzerItem: AnalyzerItem): vscode.TreeItem {
+		const treeItem = new vscode.TreeItem(analyzerItem.uri, visualText.isAnalyzerDirectory(analyzerItem.uri) ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
+		this.getMovement(analyzerItem);
+		var conVal = analyzerItem.moveDown ? 'moveDown' : '';
+		if (analyzerItem.moveUp)
+			conVal = conVal + 'moveUp';
+
+		if (analyzerItem.type === analyzerFolderType.ANALYZER) {
+			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
+			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
+			treeItem.contextValue = conVal + hasLogs;
+			treeItem.tooltip = treeItem.contextValue;
+			treeItem.iconPath = {
+				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
+			}
+		} else {
+			treeItem.contextValue = conVal + 'isFolder';
+			treeItem.tooltip = treeItem.contextValue;
+			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
+			treeItem.iconPath = {
+				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+			}
+		}
+		return treeItem;
+	}
+
+	getKeepers(dir: vscode.Uri): AnalyzerItem[] {
+		var keepers = Array();
+		var entries = dirfuncs.getDirectoryTypes(dir);
+		var hasAllLogs = false;
+		var type: analyzerFolderType = analyzerFolderType.ANALYZER;
+
+		for (let entry of entries) {
+			if (entry.type == vscode.FileType.Directory) {
+				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerFolderType.ANALYZER : analyzerFolderType.FOLDER;
+				var hasLogs = dirfuncs.analyzerHasLogDirs(entry.uri,true);
+				if (hasLogs) hasAllLogs = true;
+                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, moveUp: false, moveDown: false, isConverting: false});
+			}
+		}
+
+		var hasAllLogs = dirfuncs.hasLogDirs(dir,true);
+		vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
+		return keepers;
 	}
 }
 
@@ -65,6 +111,7 @@ export let analyzerView: AnalyzerView;
 export class AnalyzerView {
 
 	public analyzerView: vscode.TreeView<AnalyzerItem>;
+	public folderUri: vscode.Uri | undefined;
 
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
@@ -80,9 +127,13 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyAnalyzer', resource => this.copyAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.dupeAnalyzer', resource => this.dupeAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.explore', resource => this.explore(resource));
+		vscode.commands.registerCommand('analyzerView.newFolder', resource => this.newFolder(resource));
+		vscode.commands.registerCommand('analyzerView.moveToFolder', resource => this.moveToFolder(resource));
+		vscode.commands.registerCommand('analyzerView.moveUp', resource => this.moveUp(resource));		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 
 		visualText.colorizeAnalyzer();
+		this.folderUri = undefined;
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -92,8 +143,57 @@ export class AnalyzerView {
         return analyzerView;
 	}
 
+	newFolder(analyzerItem: AnalyzerItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter folder name' }).then(newdir => {
+				if (newdir) {
+					var dirPath = '';
+					if (!analyzerItem) {
+						dirPath = visualText.getAnalyzerDir().fsPath;
+					} else if (analyzerItem.type == analyzerFolderType.FOLDER) {
+						dirPath = analyzerItem.uri.fsPath;
+					} else {
+						dirPath = path.dirname(analyzerItem.uri.fsPath);
+					}
+
+					dirfuncs.makeDir(path.join(dirPath,newdir));
+					vscode.commands.executeCommand('analyzerView.refreshAll');
+				}
+			});
+		}
+	}
+
+	moveToFolder(analyzerItem: AnalyzerItem) {
+		if (this.folderUri) {
+			var to = path.join(this.folderUri.fsPath,path.basename(analyzerItem.uri.fsPath));
+			dirfuncs.rename(analyzerItem.uri.fsPath,to);
+			vscode.commands.executeCommand('analyzerView.refreshAll');
+		} else {
+			vscode.window.showInformationMessage('No folder selected');
+		}
+	}
+
+	moveUp(analyzerItem: AnalyzerItem) {
+		var parent = path.dirname(analyzerItem.uri.fsPath);
+		var analyzersFolder = visualText.getAnalyzerDir();
+		if (parent != analyzersFolder.fsPath) {
+			parent = path.dirname(parent);
+			var to = path.join(parent,path.basename(analyzerItem.uri.fsPath));
+			dirfuncs.rename(analyzerItem.uri.fsPath,to);
+			vscode.commands.executeCommand('analyzerView.refreshAll');
+		} else {
+			vscode.window.showInformationMessage('Already at the top');
+		}
+	}
+
 	explore(analyzerItem: AnalyzerItem) {
-		let dir = visualText.getCurrentAnalyzer();
+        if (fs.existsSync(analyzerItem.uri.fsPath)) {
+			visualText.openFileManager(analyzerItem.uri.fsPath);
+		}
+	}
+
+	exploreAll() {
+		let dir = visualText.getAnalyzerDir();
         if (fs.existsSync(dir.fsPath)) {
 			visualText.openFileManager(dir.fsPath);
 		}
@@ -158,16 +258,22 @@ export class AnalyzerView {
 	}
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
-		visualText.analyzer.name = path.basename(analyzerItem.uri.fsPath);
-		if (visualText.analyzer.name.length)
-			this.analyzerView.title = `ANALYZERS (${visualText.analyzer.name})`;
-		else
-			this.analyzerView.title = 'ANALYZERS';
+		this.analyzerView.title = 'ANALYZERS';
+		if (analyzerItem && analyzerItem.uri) {
+			visualText.analyzer.name = path.basename(analyzerItem.uri.fsPath);
+			if (visualText.analyzer.name.length)
+				this.analyzerView.title = `ANALYZERS (${visualText.analyzer.name})`;
+		}
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
 		this.updateTitle(analyzerItem);
-		visualText.loadAnalyzer(analyzerItem.uri);
+		if (analyzerItem.type == analyzerFolderType.ANALYZER) {
+			visualText.loadAnalyzer(analyzerItem.uri);
+			this.folderUri = undefined;
+		} else {
+			this.folderUri = analyzerItem.uri;
+		}
 	}
 
 	private deleteAnalyzer(analyzerItem: AnalyzerItem): void {

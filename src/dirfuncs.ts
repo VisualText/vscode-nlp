@@ -291,6 +291,34 @@ export namespace dirfuncs {
 		return false;
 	}
 
+    export function hasDirs(dir: vscode.Uri): boolean {
+        if (dirfuncs.isDir(dir.fsPath)) {
+            var entries = dirfuncs.getDirectoryTypes(dir);
+
+            for (let entry of entries) {
+                if (entry.type == vscode.FileType.Directory && !visualText.isAnalyzerDirectory(entry.uri)) {
+                    return true;
+                }
+            }                  
+        }
+		return false;
+	}
+
+    export function parentHasOtherDirs(uri: vscode.Uri): boolean {
+        var parent = path.dirname(uri.fsPath);
+        var basename = path.basename(uri.fsPath);
+        if (parent.length) {
+            var entries = dirfuncs.getDirectoryTypes(vscode.Uri.file(parent));
+
+            for (let entry of entries) {
+                if (entry.type == vscode.FileType.Directory && path.basename(entry.uri.fsPath) != basename && !visualText.isAnalyzerDirectory(entry.uri)) {
+                    return true;
+                }
+            }                  
+        }
+		return false;
+	}
+
     export function directoryIsLog(dirPath: string): boolean {
 		return dirPath.endsWith(visualText.LOG_SUFFIX);
 	}
