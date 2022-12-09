@@ -490,8 +490,7 @@ export class VisualText {
 
     failedWarning() {
         vscode.window.showErrorMessage("Update failed", "Click here to see solutions").then(response => {
-            let downloadWarningFile: vscode.Uri = vscode.Uri.file(path.join(visualText.extensionDirectory().fsPath,'DOWNLOADWARNING.md'));
-            vscode.commands.executeCommand('vscode.open', downloadWarningFile);
+            logView.downloadHelp();
         });
     }
 

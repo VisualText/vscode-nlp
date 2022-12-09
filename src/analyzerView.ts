@@ -69,14 +69,12 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs;
-			treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
 			}
 		} else {
 			treeItem.contextValue = conVal + 'isFolder';
-			treeItem.tooltip = treeItem.contextValue;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
@@ -268,6 +266,7 @@ export class AnalyzerView {
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
 		this.updateTitle(analyzerItem);
+		visualText.colorizeAnalyzer();
 		if (analyzerItem.type == analyzerFolderType.ANALYZER) {
 			visualText.loadAnalyzer(analyzerItem.uri);
 			this.folderUri = undefined;
