@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.59.0",
+    "version": "1.59.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1542,6 +1542,11 @@
                     "command": "analyzerView.copyAll",
                     "when": "view == analyzerView",
                     "group": "secondary"
+                },
+                {
+                    "command": "analyzerView.loadDefaultAnalyzers",
+                    "when": "view == analyzerView",
+                    "group": "navigation"
                 },
                 {
                     "command": "analyzerView.deleteAllAnalyzerLogs",
