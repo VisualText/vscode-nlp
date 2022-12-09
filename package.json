@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.58.0",
+    "version": "1.59.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -806,6 +806,22 @@
                 "icon": {
                     "light": "resources/light/chrome-close.svg",
                     "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "textView.moveToFolder",
+                "title": "Move to selected folder",
+                "icon": {
+                    "light": "resources/light/right.svg",
+                    "dark": "resources/dark/right.svg"
+                }
+            },
+            {
+                "command": "textView.moveUp",
+                "title": "Move up a folder",
+                "icon": {
+                    "light": "resources/light/left.svg",
+                    "dark": "resources/dark/left.svg"
                 }
             },
             {
@@ -1813,6 +1829,26 @@
                     "command": "textView.deleteFile",
                     "when": "view == textView && viewItem =~ /file|fileHasLog/",
                     "group": "file"
+                },
+                {
+                    "command": "textView.moveToFolder",
+                    "when": "view == textView",
+                    "group": "folder"
+                },
+                {
+                    "command": "textView.moveUp",
+                    "when": "view == textView",
+                    "group": "folder"
+                },
+                {
+                    "command": "textView.moveToFolder",
+                    "when": "view == textView && viewItem =~ /moveDown/",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.moveUp",
+                    "when": "view == textView && viewItem =~ /moveUp/",
+                    "group": "inline"
                 },
                 {
                     "command": "analyzerView.newFolder",

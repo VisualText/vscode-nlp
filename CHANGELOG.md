@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.59.0
+Added move folders to the text view
+
 ### 1.58.0
 Added folders to the analyzer view
 

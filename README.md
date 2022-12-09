@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.59.0
+Added move folders to the text view
+
 ### 1.58.0
 Added folders to the analyzer view
 

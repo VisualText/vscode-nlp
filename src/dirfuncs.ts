@@ -311,7 +311,7 @@ export namespace dirfuncs {
             var entries = dirfuncs.getDirectoryTypes(vscode.Uri.file(parent));
 
             for (let entry of entries) {
-                if (entry.type == vscode.FileType.Directory && path.basename(entry.uri.fsPath) != basename && !visualText.isAnalyzerDirectory(entry.uri)) {
+                if (entry.type == vscode.FileType.Directory && path.basename(entry.uri.fsPath) != basename && !visualText.isAnalyzerDirectory(entry.uri) && !dirfuncs.directoryIsLog(entry.uri.fsPath)) {
                     return true;
                 }
             }                  
