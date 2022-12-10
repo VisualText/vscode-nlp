@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { visualText } from './visualText';
 
 export let jsonState: JsonState;
 export class JsonState {
@@ -41,7 +42,7 @@ export class JsonState {
                     this.json = JSON.parse(this.jsonStr);
                     return true;
                 } catch(e) {
-                    alert(e); // error in the above string (in this case, yes)!
+                    visualText.debugMessage('Jason file error: ' + this.filePath + ' -- ' + e); 
                     return false;
                 }
             }            

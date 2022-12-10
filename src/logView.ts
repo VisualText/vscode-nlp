@@ -201,7 +201,17 @@ export class LogView {
 			visualText.colorizeAnalyzer();
 			vscode.window.showTextDocument(logItem.uri);
 		} else {
-			visualText.failedWarning();
+			let line = logItem.label;
+			if (line.startsWith('FAILED download')) {
+				visualText.failedWarning();
+			} else if (line.startsWith('Jason file error:')) {
+				let pos = line.indexOf('.json');
+				let filepath = line.substring(18,pos+5);
+				let msg = 'Json error(s) in file: ' + filepath;
+				vscode.window.showErrorMessage(msg, "Click to edit file").then(response => {
+					vscode.window.showTextDocument(vscode.Uri.file(filepath));
+				});
+			}
 		}
 	}
 
