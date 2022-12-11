@@ -5,12 +5,15 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { TextFile } from './textFile';
 
+export enum logLineType { INFO, SYNTAX_ERROR, DOWNLOAD_ERROR, UPDATER_TIMEOUT, JSON_ERROR }
+
 interface LogItem {
 	uri?: vscode.Uri | undefined;
 	passNum: number;
 	line: number;
 	label: string;
 	icon: string;
+	type: logLineType;
 }
 
 export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> {
@@ -72,6 +75,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
 		vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir());
 		vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp());
+		vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp());
 
 		this.exists = false;
 		this.ctx = context;
@@ -85,35 +89,12 @@ export class LogView {
         return logView;
 	}
 
-    createPanel(): vscode.WebviewPanel {
-        return vscode.window.createWebviewPanel(
-            'logView',
-            'Download Help',
-            {
-                viewColumn: vscode.ViewColumn.Beside,
-                preserveFocus: false
-            }
-        );
-    }
-
 	downloadHelp() {
-		this.panel = this.createPanel();
-		this.panel.onDidDispose(
-			() => {
-				this.exists = false;
-			},
-			null,
-			this.ctx.subscriptions
-		);
-		this.exists = true;
+		visualText.displayHTMLFile('DOWNLOADHELP.html');
+	}
 
-		if (this.panel) {
-			let htmlFile = path.join(visualText.extensionDirectory().fsPath,'DOWNLOADHELP.html');
-			if (fs.existsSync(htmlFile)) {
-				this.panel.webview.html = fs.readFileSync(htmlFile, 'utf8');
-			}
-
-		}
+	updaterHelp() {
+		visualText.displayHTMLFile('UPDATERHELP.html');
 	}
 
 	private loadTimingLog() {
@@ -140,7 +121,7 @@ export class LogView {
 	}
 
 	public addMessage(message: string, uri: vscode.Uri | undefined) {
-		this.logs.push(this.messageLine(message, uri));
+		this.logs.push(this.parseLogLine(message, uri));
 	}
 
 	public addLogFile(logFileName: vscode.Uri) {
@@ -149,8 +130,8 @@ export class LogView {
 			for (let line of logFile.getLines()) {
 				line = line.substring(0,line.length);
 				if (line.length) {
-					let log = this.parseLogLine(line);
-					this.logs.push(log);						
+					let log = this.parseLogLine(line,undefined);
+					this.logs.push(log);		
 				}
 			}
 		}		
@@ -160,58 +141,78 @@ export class LogView {
 		return this.logs;
 	}
 
-	private messageLine(label: string, uri: vscode.Uri | undefined): LogItem {
-		return ({label: label, uri: uri, passNum: 0, line: 0, icon: 'arrow-small-right.svg'});	
-	}
-
-	private parseLogLine(line: string): LogItem {
-		var uri = vscode.Uri.file('');
+	private parseLogLine(line: string, uri: vscode.Uri | undefined): LogItem {
 		var passNum = 0;
 		var lineNum = -1;
+		var type = logLineType.INFO;
 		var icon = 'arrow-small-right.svg';
+		var firstTwoNumbers = false;
 
-		if (line.length) {
-			let tokens = line.split(/[\t\s]/,2);  
-			if (tokens.length >= 2) {
-				var seqFile = visualText.analyzer.seqFile;
-				passNum = +tokens[0];
-				if (passNum) {
-					uri = seqFile.getUriByPassNumber(passNum);
-					icon = 'gear.svg';
-				}
-				lineNum = +tokens[1];
+		let tokens = line.split(/[\t\s]/,2);  
+		if (tokens.length >= 2) {
+			passNum = +tokens[0];
+			lineNum = +tokens[1];
+			if (!isNaN(passNum) && !isNaN(lineNum) && lineNum > 0) {
+				firstTwoNumbers = true;
 			}
 		}
 
-		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon});
+		if (line.length) {
+			if (firstTwoNumbers) {
+				if (visualText.analyzer.isLoaded()) {
+					var seqFile = visualText.analyzer.seqFile;
+					uri = seqFile.getUriByPassNumber(passNum);
+					type = logLineType.SYNTAX_ERROR;
+				}
+			} else if (line.startsWith('FAILED download')) {
+				type = logLineType.DOWNLOAD_ERROR;
+			} else if (line.startsWith('Jason file error:')) {
+				type = logLineType.JSON_ERROR;
+			} else if (line.startsWith('Updater timed out')) {
+				type = logLineType.UPDATER_TIMEOUT;
+			}
+		}
+		if (type != logLineType.INFO) {
+			icon = 'error.svg';
+		}
+
+		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
 	}
 
 	private openFile(logItem: LogItem): void {
-		if (logItem.passNum && logItem.uri) {
-			var seqFile = visualText.analyzer.seqFile;
-			visualText.colorizeAnalyzer();
-			vscode.window.showTextDocument(logItem.uri).then(editor => 
-				{
-					var pos = new vscode.Position(logItem.line-1,0);
-					editor.selections = [new vscode.Selection(pos,pos)]; 
-					var range = new vscode.Range(pos, pos);
-					editor.revealRange(range);
-				});
-		} else if (logItem.uri) {
-			visualText.colorizeAnalyzer();
-			vscode.window.showTextDocument(logItem.uri);
-		} else {
-			let line = logItem.label;
-			if (line.startsWith('FAILED download')) {
-				visualText.failedWarning();
-			} else if (line.startsWith('Jason file error:')) {
+		let line = logItem.label;
+		visualText.colorizeAnalyzer();
+
+		switch (logItem.type) {
+			case logLineType.SYNTAX_ERROR: 
+				var seqFile = visualText.analyzer.seqFile;
+				if (logItem.uri) {
+					vscode.window.showTextDocument(logItem.uri).then(editor => 
+						{
+							var pos = new vscode.Position(logItem.line-1,0);
+							editor.selections = [new vscode.Selection(pos,pos)]; 
+							var range = new vscode.Range(pos, pos);
+							editor.revealRange(range);
+						});
+				}
+				break;
+
+			case logLineType.UPDATER_TIMEOUT:
+				visualText.displayHTMLFile('UPDATERHELP.html');
+				break;
+
+			case logLineType.DOWNLOAD_ERROR:
+				visualText.displayHTMLFile('DOWNLOADHELP.html');
+				break;
+
+			case logLineType.JSON_ERROR:
 				let pos = line.indexOf('.json');
 				let filepath = line.substring(18,pos+5);
 				let msg = 'Json error(s) in file: ' + filepath;
 				vscode.window.showErrorMessage(msg, "Click to edit file").then(response => {
 					vscode.window.showTextDocument(vscode.Uri.file(filepath));
 				});
-			}
+				break;
 		}
 	}
 

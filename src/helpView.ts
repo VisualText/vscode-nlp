@@ -30,17 +30,6 @@ export class HelpView {
         return helpView;
     }
 
-    createPanel(): vscode.WebviewPanel {
-        return vscode.window.createWebviewPanel(
-            'helpView',
-            'NLP++ Help',
-            {
-                viewColumn: vscode.ViewColumn.Beside,
-                preserveFocus: false
-            }
-        );
-    }
-
     lookupBrowser(resource: vscode.Uri) {
         let editor = vscode.window.activeTextEditor;
         if (editor) {
@@ -61,21 +50,8 @@ export class HelpView {
 			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
 
             if (wordRange) {
-                if (!this.exists) {
-                    this.panel = this.createPanel();
-                    this.panel.onDidDispose(
-                        () => {
-                            this.exists = false;
-                        },
-                        null,
-                        this.context.subscriptions
-                    );
-                    this.exists = true;
-                }
-                if (this.panel) {
-                    let word = this.getTerm(editor,wordRange);
-                    this.panel.webview.html = this.getWebviewContent(word);
-                }
+                let word = this.getTerm(editor,wordRange);
+                visualText.displayHTML(this.getWebviewContent(word));
             }                
          }
     }

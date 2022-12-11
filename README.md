@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.60.0
+Enhanced error reporting in log view
+
 ### 1.59.3
 Added move folders to the text view
 
@@ -210,27 +213,6 @@ Added stable file and directory deletes and copies
 
 ### v1.19.0
 Added copy single analyzer or all analyzers to chosen folder
-
-### v1.18.2
-Added analyzer operation queue
-
-### v1.17.1
-Added sort & unique to text files
-
-### v1.16.2
-Major overhaul on updater
-
-### v1.15.10
-Reveals sequence number for an nlp file. This will eventually select the sequence item once Microsoft fully implements the reveal function for tree items.
-
-### v1.14.3
-Added delete logs to textview. Initialization messages now to LOGGING tab.
-
-### v1.13.1
-Simple search for function. This is a workable hack.
-
-### v1.12.2
-Added online browser lookup help where links work. This is to fix the fact that links don't work in the WebView inside VSCode.
 
 # Development
 
