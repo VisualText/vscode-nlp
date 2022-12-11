@@ -13,6 +13,7 @@
 !.vscodeignore
 !CHANGELOG.md
 !DOWNLOADHELP.html
+!UPDATERHELP.html
 !node_modules/agent-base/**/*
 !node_modules/balanced-match/**/*
 !node_modules/brace-expansion/**/*
