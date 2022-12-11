@@ -99,22 +99,6 @@ export class VisualText {
 
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
-
-        this.platform = os.platform();
-        let plat = this.platform == 'darwin' ? 'mac' : this.platform;
-        this.debugMessage('Platform: ' + plat);
-
-        this.homeDir = os.homedir();
-        this.debugMessage('User profile path: ' + this.homeDir);
-
-        var rootPath = vscode.extensions.getExtension(this.EXTENSION_NAME)?.extensionPath;
-        if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
-
-        this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
-        this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
-        this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
-
-        this.startUpdater();
     }
     
     static attach(ctx: vscode.ExtensionContext): VisualText {
@@ -132,6 +116,20 @@ export class VisualText {
 
     startUpdater() {
         if (this.updaterID == 0) {
+            this.platform = os.platform();
+            let plat = this.platform == 'darwin' ? 'mac' : this.platform;
+            this.debugMessage('Platform: ' + plat);
+
+            this.homeDir = os.homedir();
+            this.debugMessage('User profile path: ' + this.homeDir);
+
+            var rootPath = vscode.extensions.getExtension(this.EXTENSION_NAME)?.extensionPath;
+            if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
+
+            this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
+            this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
+            this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
+
             this.updaterCounter = 0;
             this.debugMessage('Checking for updates or repairs...');
             this.updaterID = +setInterval(this.updaterTimer,1000);
@@ -1354,6 +1352,31 @@ export class VisualText {
             });
         } else {
             vscode.window.showInformationMessage('Couldn\'t open nlp engine folder');
+		}
+	}
+
+    createPanel(): vscode.WebviewPanel {
+        return vscode.window.createWebviewPanel(
+            'logView',
+            'Download Help',
+            {
+                viewColumn: vscode.ViewColumn.Beside,
+                preserveFocus: false
+            }
+        );
+    }
+
+    displayHTMLFile(filename: string) {
+        let htmlFile = path.join(visualText.extensionDirectory().fsPath,filename);
+        if (fs.existsSync(htmlFile)) {
+            this.displayHTML(fs.readFileSync(htmlFile, 'utf8'));
+        }
+	}
+
+	displayHTML(html: string) {
+		const panel = this.createPanel();
+		if (panel) {
+			panel.webview.html = html;
 		}
 	}
 }

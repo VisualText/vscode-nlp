@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.60.0
+Enhanced error reporting in log view
+
 ### 1.59.3
 Added move folders to the text view
 

@@ -1073,6 +1073,14 @@
                 }
             },
             {
+                "command": "logView.updaterHelp",
+                "title": "Updater Timeout Help",
+                "icon": {
+                    "light": "resources/light/folder.svg",
+                    "dark": "resources/dark/folder.svg"
+                }
+            },
+            {
                 "command": "logView.downloadHelp",
                 "title": "Download Error Help",
                 "icon": {
@@ -1515,6 +1523,11 @@
                 },
                 {
                     "command": "logView.exploreEngineDir",
+                    "when": "view == logView",
+                    "group": "secondary"
+                },
+                {
+                    "command": "logView.updaterHelp",
                     "when": "view == logView",
                     "group": "secondary"
                 },
