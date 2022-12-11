@@ -304,7 +304,7 @@ export class TextView {
 	}
 
 	exploreAll(textItem: TextItem) {
-		let inputDir = '';
+		let inputDir = visualText.analyzer.getInputDirectory().fsPath;
         if (fs.existsSync(inputDir)) {
 			visualText.openFileManager(inputDir);
 		}
