@@ -44,14 +44,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		textItem.moveUp = false;
 		var itemPath = textItem.uri.fsPath;
 		var parent = path.dirname(itemPath);
-		if (parent != visualText.analyzer.getInputDirectory().fsPath) {
+		var inputPath = visualText.analyzer.getInputDirectory().fsPath;
+		if (parent != inputPath) {
 			textItem.moveUp = true;
 		}
 		if (textItem.type == vscode.FileType.Directory) {
 			if (dirfuncs.parentHasOtherDirs(textItem.uri)) {
 				textItem.moveDown = true;
 			}
-		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(parent))) {
+		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(itemPath))) {
 			textItem.moveDown = true;
 		}
 	}

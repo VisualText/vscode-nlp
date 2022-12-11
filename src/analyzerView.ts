@@ -46,14 +46,15 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		analyzerItem.moveUp = false;
 		var itemPath = analyzerItem.uri.fsPath;
 		var parent = path.dirname(itemPath);
-		if (parent != visualText.getAnalyzerDir().fsPath) {
+		var anaDir = visualText.getAnalyzerDir().fsPath;
+		if (parent != anaDir) {
 			analyzerItem.moveUp = true;
 		}
 		if (analyzerItem.type == analyzerFolderType.FOLDER) {
 			if (dirfuncs.parentHasOtherDirs(analyzerItem.uri)) {
 				analyzerItem.moveDown = true;
 			}
-		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(parent))) {
+		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(itemPath))) {
 			analyzerItem.moveDown = true;
 		}
 	}
@@ -69,12 +70,15 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs;
+			treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
 			}
 		} else {
 			treeItem.contextValue = conVal + 'isFolder';
+			treeItem.contextValue = conVal + 'isFolder';
+			treeItem.tooltip = treeItem.contextValue;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
@@ -256,12 +260,13 @@ export class AnalyzerView {
 	}
 	
 	private updateTitle(analyzerItem: AnalyzerItem): void {
-		this.analyzerView.title = 'ANALYZERS';
-		if (analyzerItem && analyzerItem.uri) {
-			visualText.analyzer.name = path.basename(analyzerItem.uri.fsPath);
-			if (visualText.analyzer.name.length)
-				this.analyzerView.title = `ANALYZERS (${visualText.analyzer.name})`;
+		if (analyzerItem.type == analyzerFolderType.ANALYZER && analyzerItem && analyzerItem.uri) {
+			var anaChosen = path.basename(analyzerItem.uri.fsPath);
+			if (anaChosen.length)
+				this.analyzerView.title = `ANALYZERS (${anaChosen})`;
+			return;
 		}
+		this.analyzerView.title = 'ANALYZERS';
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
