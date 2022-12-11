@@ -259,9 +259,9 @@ export class AnalyzerView {
 		}
 	}
 	
-	private updateTitle(analyzerItem: AnalyzerItem): void {
-		if (analyzerItem.type == analyzerFolderType.ANALYZER && analyzerItem && analyzerItem.uri) {
-			var anaChosen = path.basename(analyzerItem.uri.fsPath);
+	private updateTitle(uri: vscode.Uri): void {
+		if (uri.fsPath.length > 0) {
+			var anaChosen = path.basename(uri.fsPath);
 			if (anaChosen.length)
 				this.analyzerView.title = `ANALYZERS (${anaChosen})`;
 			return;
@@ -270,7 +270,6 @@ export class AnalyzerView {
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
-		this.updateTitle(analyzerItem);
 		visualText.colorizeAnalyzer();
 		if (analyzerItem.type == analyzerFolderType.ANALYZER) {
 			visualText.loadAnalyzer(analyzerItem.uri);
