@@ -198,11 +198,11 @@ export class LogView {
 				break;
 
 			case logLineType.UPDATER_TIMEOUT:
-				this.downloadHelp();
+				this.updaterHelp();
 				break;
 
 			case logLineType.DOWNLOAD_ERROR:
-				this.updaterHelp();
+				this.downloadHelp();
 				break;
 
 			case logLineType.JSON_ERROR:
