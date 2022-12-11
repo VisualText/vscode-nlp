@@ -51,7 +51,7 @@ export class HelpView {
 
             if (wordRange) {
                 let word = this.getTerm(editor,wordRange);
-                visualText.displayHTML(this.getWebviewContent(word));
+                visualText.displayHTML(word,this.getWebviewContent(word));
             }                
          }
     }

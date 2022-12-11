@@ -1355,10 +1355,10 @@ export class VisualText {
 		}
 	}
 
-    createPanel(): vscode.WebviewPanel {
+    createPanel(title: string): vscode.WebviewPanel {
         return vscode.window.createWebviewPanel(
             'logView',
-            'Download Help',
+            title,
             {
                 viewColumn: vscode.ViewColumn.Beside,
                 preserveFocus: false
@@ -1366,15 +1366,15 @@ export class VisualText {
         );
     }
 
-    displayHTMLFile(filename: string) {
+    displayHTMLFile(title:string, filename: string) {
         let htmlFile = path.join(visualText.extensionDirectory().fsPath,filename);
         if (fs.existsSync(htmlFile)) {
-            this.displayHTML(fs.readFileSync(htmlFile, 'utf8'));
+            this.displayHTML(title,fs.readFileSync(htmlFile, 'utf8'));
         }
 	}
 
-	displayHTML(html: string) {
-		const panel = this.createPanel();
+	displayHTML(title: string, html: string) {
+		const panel = this.createPanel(title);
 		if (panel) {
 			panel.webview.html = html;
 		}
