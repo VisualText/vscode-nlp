@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.59.3",
+    "version": "1.60.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
