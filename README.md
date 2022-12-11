@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.60.4
+### 1.60.5
 Enhanced error reporting in log view
 
 ### 1.59.3
