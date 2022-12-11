@@ -90,11 +90,11 @@ export class LogView {
 	}
 
 	downloadHelp() {
-		visualText.displayHTMLFile('DOWNLOADHELP.html');
+		visualText.displayHTMLFile('Download Help','DOWNLOADHELP.html');
 	}
 
 	updaterHelp() {
-		visualText.displayHTMLFile('UPDATERHELP.html');
+		visualText.displayHTMLFile('Updater Help','UPDATERHELP.html');
 	}
 
 	private loadTimingLog() {
@@ -198,11 +198,11 @@ export class LogView {
 				break;
 
 			case logLineType.UPDATER_TIMEOUT:
-				visualText.displayHTMLFile('UPDATERHELP.html');
+				this.downloadHelp();
 				break;
 
 			case logLineType.DOWNLOAD_ERROR:
-				visualText.displayHTMLFile('DOWNLOADHELP.html');
+				this.updaterHelp();
 				break;
 
 			case logLineType.JSON_ERROR:
