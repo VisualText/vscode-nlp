@@ -123,7 +123,7 @@ export class NLPStatusBar {
     }
 
     openVisualTextVersionSettings() {
-        visualText.runUpdater();
+        vscode.window.showWarningMessage('Not implemented yet');
     }
 
     openFilesVersionSettings() {
@@ -139,7 +139,7 @@ export class NLPStatusBar {
                 visualText.updateVTFiles();     
             });
         }
-        vscode.window.showWarningMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
+        vscode.window.showInformationMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
     }
 
     openAnalyzersVersionSettings() {
@@ -155,13 +155,13 @@ export class NLPStatusBar {
                 visualText.updateAnalyzersFiles();     
             });
         }
-        vscode.window.showWarningMessage('Analyzers verion ' + visualText.repoVTFilesVersion + ' is the latest');
+        vscode.window.showInformationMessage('Analyzers verion ' + visualText.repoVTFilesVersion + ' is the latest');
     }
 
     openEngineVersionSettings() {
         // Need to check the engine cmd version and repo version to compare
 
-        visualText.fetchExeVersion(visualText.getExtensionPath().fsPath)?.then(msg => {
+        visualText.fetchExeVersion(visualText.getEnginePath())?.then(msg => {
             if (msg == 'no exe') {
 				vscode.window.showErrorMessage("NLP Engine executable missing", "Run Engine Updater").then(response => {
 					visualText.updateEngine();
@@ -183,7 +183,7 @@ export class NLPStatusBar {
                         });                    
                     }
                     else {
-                        vscode.window.showWarningMessage('NLP Engine verion ' + visualText.cmdEngineVersion + ' is the latest');
+                        vscode.window.showInformationMessage('NLP Engine verion ' + visualText.cmdEngineVersion + ' is the latest');
                     }  
                 });
             }
@@ -267,6 +267,7 @@ export class NLPStatusBar {
         this.updateEngineVersion('');
         this.updateVisualTextVersion('');
         this.updateFilesVersion('');
+        this.updateAnalyzerssVersion('');
     }
 
     updateEngineVersion(version: string) {
@@ -312,6 +313,24 @@ export class NLPStatusBar {
             nlpStatusBarFilesVersion.text = version;
         } else {
             nlpStatusBarFilesVersion.text = '';
+        }
+    }
+
+    updateAnalyzerssVersion(version: string) {
+        var repoVersion = visualText.repoAnalyzersVersion;
+        if (version.length == 0) {
+            const config = vscode.workspace.getConfiguration('engine');
+            let currentVersion = config.get<string>('analyzers');
+            if (currentVersion != undefined) {
+                version = currentVersion;
+            }       
+        }
+        if (version != undefined && version.length) {
+            if (visualText.versionCompare(repoVersion,version) > 0)
+                version = version + '*';
+            nlpStatusBarAnalyzersVersion.text = version;
+        } else {
+            nlpStatusBarAnalyzersVersion.text = '';
         }
     }
 }
