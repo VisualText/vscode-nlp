@@ -9,39 +9,38 @@ import { nlpStatusBar } from './status';
 import { logView } from './logView';
 import { FileOps,fileOperation,fileOpRefresh } from './fileOps';
 import { NLPFile } from './nlp';
+import { resolve } from 'dns';
+import { rejects } from 'assert';
 
-export enum updaterStatus { UNKNOWN, GATHER_EXTENSIONS, VERSION_ENGINES, CHOOSE_LATEST, REPAIR, CHECK_ENGINE, CHECKING_ENGINE, CHECK_FILES, CHECKING_FILES, VERSION_FILES, DONE, FAILED }
-export enum versionStatus { UNKNOWN, VERSIONING, DONE, FAILED }
-export enum downloadStatus { UNKNOWN, UPDATE, DELETE, DOWNLOADING, DONE, FAILED }
-export enum zippingStatus { UNKNOWN, UNZIPPING, DONE, FAILED }
+export enum updateStatus { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
+export enum updateOperation { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
+export enum updateType { UNKNOWN, VERSION, DOWNLOAD, UNZIP }
+export enum updateComponent { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
+export enum updatePush { FRONT, BACK }
+
+export interface updateOp {
+    type: updateType;
+    status: updateStatus;
+    operation: updateOperation;
+    component: updateComponent;
+    remote: string;
+    local: string;
+    folders: Array<string>;
+}
 
 interface ExtensionItem {
     uri: vscode.Uri;
-    hasEngine: boolean;
-    hasICU1File: boolean;
-    hasICU2File: boolean;
-    hasEngineFiles: boolean;
-    hasVTFiles: boolean;
-    vtVersion: string;
-    isLatest: boolean;
-    isLatestEngine: boolean;
-    engineVersion: string;
-    timerCount: number;
-    engineDownloadStatus: downloadStatus;
-    engineDownloadICU1Status: downloadStatus;
-    engineDownloadICU2Status: downloadStatus;
-    engineVersionStatus: versionStatus;
-    engineFilesDownloadStatus: downloadStatus;
-    engineFilesZipStatus: zippingStatus;
-    vtFilesVersion: string;
-    vtFilesDownloadStatus: downloadStatus;
-    vtFilesZipStatus: zippingStatus;
-    vtFilesVersionStatus: versionStatus;
+    version: string;
+    latest: boolean;
 }
 
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
+    public opsQueue: updateOp[] = new Array();
+    public statusStrs = [ 'UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE' ];
+    public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE' ];
+    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES' ];
     
     public readonly LOG_SUFFIX = '_log';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
@@ -53,19 +52,19 @@ export class VisualText {
     public readonly ICU1_MAC = 'libicutum.a';
     public readonly ICU2_MAC = 'libicuucm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
-    public readonly NLPENGINE_FOLDER = 'nlp-engine';
-    public readonly VISUALTEXT_FILES_FOLDER = 'visualtext';
+    public readonly NLPENGINE_REPO = 'nlp-engine';
+    public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';
+    public readonly ANALYZERS_REPO = 'analyzers';
     public readonly VISUALTEXT_FILES_ASSET = 'visualtext.zip';
+    public readonly ANALYZERS_ASSET = 'analyzers.zip';
     public readonly ANALYZER_SEQUENCE_FILE = 'analyzer.seq';
-    public readonly GITHUB_ENGINE_LATEST_RELEASE = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/download/';
-    public readonly GITHUB_ENGINE_LATEST_VERSION = 'https://github.com/VisualText/' + this.NLPENGINE_FOLDER + '/releases/latest/';
-    public readonly GITHUB_VISUALTEXT_FILES_LATEST_RELEASE = 'https://github.com/VisualText/visualtext-files/releases/latest/download/';
-    public readonly GITHUB_VISUALTEXT_FILES_LATEST_VERSION = 'https://github.com/VisualText/visualtext-files/releases/latest/';
-
-    public updaterStatusStrs = [ 'UNKNOWN', 'GATHER_EXTENSIONS', 'VERSION_ENGINES', 'CHOOSE_LATEST', 'REPAIR', 'CHECK_ENGINE', 'CHECKING_ENGINE', 'CHECK_FILES', 'CHECKING_FILES', 'VERSION_FILES', 'DONE' ];
-    public versionStatusStrs = [ 'UNKNOWN', 'VERSIONING', 'DONE' ];
-    public downloadStatusStrs = [ 'UNKNOWN', 'UPDATE', 'DELETE', 'DOWNLOADING', 'DONE' ];
-    public zippingStatusStrs = [ 'UNKNOWN', 'UNZIPPING', 'DONE' ];
+    public readonly GITHUB_REPOSITORY = 'https://github.com/VisualText/';
+    public readonly GITHUB_RELEASE_LATEST = '/releases/latest/';
+    public readonly GITHUB_RELEASE_LATEST_DOWNLOAD = '/releases/latest/download/';
+    public readonly GITHUB_ENGINE_LATEST_RELEASE = this.GITHUB_REPOSITORY + this.NLPENGINE_REPO + this.GITHUB_RELEASE_LATEST_DOWNLOAD;
+    public readonly GITHUB_ENGINE_LATEST_VERSION = this.GITHUB_REPOSITORY + this.NLPENGINE_REPO + this.GITHUB_RELEASE_LATEST;
+    public readonly GITHUB_VISUALTEXT_FILES_LATEST_VERSION = this.GITHUB_REPOSITORY + this.VISUALTEXT_FILES_REPO + this.GITHUB_RELEASE_LATEST;
+    public readonly GITHUB_ANALYZERS_LATEST_VERSION = this.GITHUB_REPOSITORY + this.ANALYZERS_REPO + this.GITHUB_RELEASE_LATEST;
 
     public analyzer = new Analyzer();
     public fileOps = new FileOps();
@@ -75,10 +74,14 @@ export class VisualText {
     public cmdEngineVersion: string = '';
     public repoEngineVersion: string = '';
     public vtFilesVersion: string = '';
-    public repoVTFilesVersion: string = '';
+    public repoVTFilesVersion: string = ''
+    public analyzersVersion: string = '';;
+    public repoAnalyzersVersion: string = '';
     public engineDir: vscode.Uri = vscode.Uri.file('');
     public askModify: boolean = false;
     public processID: number = 0;
+    public stopAll: boolean = false;
+    public debug: boolean = true;
 
     private platform: string = '';
     private homeDir: string = '';
@@ -92,10 +95,9 @@ export class VisualText {
     private workspaceFold: vscode.Uri = vscode.Uri.file('');
 
     private extensionItems: ExtensionItem[] = new Array();
+    private latestExtIndex: number = 0;
     private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
-    private updaterCounter: number = 0;
-    public updaterGlobalStatus: updaterStatus = updaterStatus.GATHER_EXTENSIONS;
 
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
@@ -107,33 +109,470 @@ export class VisualText {
             if (vscode.workspace.workspaceFolders) {
                 visualText.workspaceFold = vscode.workspace.workspaceFolders[0].uri;
             }
+
+            visualText.platform = os.platform();
+            visualText.homeDir = os.homedir();
+
             visualText.readConfig();
             visualText.readState();
             visualText.initSettings();
+            visualText.getExtensionDirs();
         }
         return visualText;
     }
 
-    startUpdater() {
+    startUpdater(preInfoFlag: boolean = true) {
         if (this.updaterID == 0) {
             this.platform = os.platform();
             let plat = this.platform == 'darwin' ? 'mac' : this.platform;
-            this.debugMessage('Platform: ' + plat);
-
             this.homeDir = os.homedir();
-            this.debugMessage('User profile path: ' + this.homeDir);
-
-            var rootPath = vscode.extensions.getExtension(this.EXTENSION_NAME)?.extensionPath;
+            var rootPath = this.getLatestExtPath(this.extensionParentDirectory());
             if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
-
-            this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
             this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
-            this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
 
-            this.updaterCounter = 0;
+            if (preInfoFlag) {
+                this.debugMessage('Platform: ' + plat);
+                this.debugMessage('User profile path: ' + this.homeDir);
+                this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
+                this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
+            }
+
             this.debugMessage('Checking for updates or repairs...');
+            this.pushCheckVersions();
             this.updaterID = +setInterval(this.updaterTimer,1000);
         }
+    }
+
+    stopUpdater() {
+        this.debugMessage('STOP requested by user');
+        for (let o of visualText.opsQueue) {
+            if (o.status != updateStatus.RUNNING) {
+                o.status = updateStatus.DONE;
+            }
+        }
+        visualText.stopAll = true;
+    }
+
+    pushCheckVersions() {
+        visualText.pushCheckEngineFiles();
+        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.NLP_EXE);
+        visualText.pushCheckVTFiles();
+        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.VT_FILES);
+        visualText.pushCheckAnalyzerFiles();
+        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.ANALYZER_FILES);
+    }
+
+    pushCheckVTFiles() {
+        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.VT_FILES);
+    }
+
+    pushCheckAnalyzerFiles() {
+        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ANALYZER_FILES);
+    }
+
+    pushCheckEngineFiles() {
+        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU1);
+        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU2);
+        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.NLP_EXE);
+        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ENGINE_FILES);
+    }
+
+    pushDeleteEngineFiles(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.ICU1);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.ICU2);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.NLP_EXE);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.ENGINE_FILES);
+    }
+    
+    pushDeleteVTFiles(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.VT_FILES);
+    }
+
+    pushDeleteAnalyzers(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DELETE,updateComponent.ANALYZER_FILES);
+    }
+
+    pushDownloadEngineFiles(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU1);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU2);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.NLP_EXE);
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ENGINE_FILES);
+    }
+
+    pushDownloadVTFiles(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.VT_FILES);
+    }
+
+    pushDownloadAnalyzers(push: updatePush) {
+        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ANALYZER_FILES);
+    }
+
+    addUpdateOperation(push: updatePush, type: updateType, status: updateStatus, operation: updateOperation, component: updateComponent) {
+        var op = {type: type, status: status, operation: operation, component: component, remote: '', local: '', folders: []};
+
+        switch (component) {
+            case updateComponent.ICU1:
+            case updateComponent.ICU2:
+                visualText.icuFilenames(op);
+                break;
+            case updateComponent.NLP_EXE:
+                visualText.nlpExe(op);
+                break;
+            case updateComponent.ENGINE_FILES:
+                visualText.zipFiles(op,visualText.NLPENGINE_REPO,'',visualText.NLPENGINE_FILES_ASSET,['data']);
+                break;
+            case updateComponent.VT_FILES:
+                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualtext',visualText.VISUALTEXT_FILES_ASSET,['visualtext']);
+                break;
+            case updateComponent.ANALYZER_FILES:
+                visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['analyzers']);
+                break;
+        }
+
+        if (push == updatePush.BACK)
+            this.opsQueue.push(op);
+        else
+            this.opsQueue.unshift(op);
+    }
+
+    zipFiles(op: updateOp, repo: string, folder: string, download: string, folders: string[]) {
+        op.remote = visualText.GITHUB_REPOSITORY + repo + visualText.GITHUB_RELEASE_LATEST_DOWNLOAD + download;
+        const engDir = visualText.engineDirectory().fsPath;
+        op.local = path.join(engDir,folder,download);
+        op.folders = folders;
+    }
+    
+    nlpExe(op: updateOp) {
+        var exe = '';
+        switch (visualText.platform) {
+            case 'win32':
+                exe = 'nlpw.exe';
+                break;
+            case 'darwin':
+                exe = 'nlpm.exe';
+                break;
+            default:
+                exe = 'nlpl.exe';
+        }
+        op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + exe;
+        const engDir = visualText.engineDirectory().fsPath;
+        op.local = path.join(engDir,visualText.NLP_EXE);
+    }
+
+    icuFilenames(op: updateOp) {
+        var libRelease = '';
+        var lib = '';
+        var icu1 = op.component == updateComponent.ICU1 ? 1 : 0;
+        switch (visualText.platform) {
+            case 'win32':
+                libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
+                lib = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
+                break;
+            case 'darwin':
+                libRelease = icu1 ? visualText.ICU1_MAC : visualText.ICU2_MAC;
+                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+                break;
+            default:
+                libRelease = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+        }
+        op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
+        var engDir = visualText.engineDirectory().fsPath;
+        op.local = path.join(engDir,lib);
+    }
+
+    getLatestExtPath(dir: vscode.Uri): string {
+        var files = dirfuncs.getFiles(dir);
+        for (let file of files.reverse()) {
+            let filename = path.basename(file.fsPath);
+            if (filename.startsWith(this.EXTENSION_NAME)) {
+                this.version = this.versionFromPath(file);
+                return file.fsPath;
+            }
+        }
+        return '';
+    }
+
+    updaterTimer() {
+        let op = visualText.opsQueue[0];
+        let q = visualText.opsQueue;
+        let allDone = true;
+
+        for (let o of visualText.opsQueue) {
+            if (visualText.stopAll) {
+                if (o.status == updateStatus.RUNNING)
+                    allDone = false;
+                else
+                    o.status = updateStatus.DONE;
+            }
+            else {
+                if (o.status == updateStatus.UNKNOWN || o.status == updateStatus.START || o.status == updateStatus.RUNNING) {
+                    op = o;
+                    allDone = false;
+                    break;
+                }
+                else if (o.status != updateStatus.FAILED && o.status != updateStatus.CANCEL && o.status != updateStatus.DONE) {
+                    allDone = false;
+                }
+            }
+        }
+        if (allDone) {
+            vscode.commands.executeCommand('setContext', 'updating.running', false);
+            visualText.opsQueue = [];
+            clearInterval(visualText.updaterID);
+            visualText.updaterID = 0;
+            if (visualText.stopAll)
+                visualText.debugMessage('UPDATE STOPPED BY USER');
+            else
+                visualText.debugMessage('UPDATE CHECK COMPLETE');
+            visualText.stopAll = false;
+            return;
+        } else {
+            vscode.commands.executeCommand('setContext', 'updating.running', true);
+        }
+        if (visualText.stopAll)
+            return;
+
+        if (visualText.debug)
+            visualText.debugMessage(visualText.statusStrs[op.status] + ' ' + visualText.opStrs[op.operation] + ' ' + visualText.compStrs[op.component]);
+
+        switch (op.status) {
+            case updateStatus.START:
+                switch (op.operation) {
+                    case updateOperation.CHECK_EXISTS:
+                        var endDir = path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO);
+                        if (op.folders.length && endDir) {
+                            var missingOne = false;
+                            for (let folder of op.folders) {
+                                let f = path.join(endDir,folder);
+                                if (!fs.existsSync(f)) {
+                                    missingOne = true;
+                                    break;
+                                }
+                            }
+                            if (!missingOne) {
+                                op.status = updateStatus.DONE;
+                            } else {
+                                op.operation = updateOperation.DOWNLOAD;
+                            }
+                        } else if (fs.existsSync(op.local)) {
+                            op.status = updateStatus.DONE;
+                        } else {
+                            op.operation = updateOperation.DOWNLOAD;
+                        }
+                        break;
+
+                    case updateOperation.DOWNLOAD:
+                        if (fs.existsSync(op.local)) {
+                            if (op.type == updateType.UNZIP) {
+                                op.operation = updateOperation.UNZIP;
+                            } else {
+                                op.status = updateStatus.DONE;
+                            }
+                        }
+                        else {
+                            op.status = updateStatus.RUNNING;
+                            visualText.download(op);
+                        }
+                        break;
+                        
+                    case updateOperation.DELETE:
+                        if (fs.existsSync(op.local)) {
+                            visualText.debugMessage('Deleting: ' + op.local);
+                            fs.unlinkSync(op.local);
+                        }
+                        if (op.folders.length) {
+                            for (let folder of op.folders) {
+                                let f = path.join(path.dirname(op.local),folder);
+                                if (fs.existsSync(f)) {
+                                    dirfuncs.delDir(f);
+                                }
+                            }
+                        }
+                        op.status = updateStatus.DONE;
+                        break;
+
+                    case updateOperation.UNZIP:
+                        op.status = updateStatus.RUNNING;
+                        visualText.unzip(op);
+                        break;
+
+                    case updateOperation.VERSION:
+
+                        switch(op.component) {
+                            case updateComponent.NLP_EXE:
+                                visualText.checkExeVersion(op);
+                                break;
+                            
+                            case updateComponent.VT_FILES:
+                                visualText.checkVTFilesVersion(op);
+                                break;
+                                                            
+                            case updateComponent.ANALYZER_FILES:
+                                if (visualText.debug) visualText.debugMessage('VERSION CHECK: Analyzers');
+                                visualText.checkAnalyzersVersion(op);
+                                break;
+                        }
+                    break;
+                }
+                break;
+            
+            case updateStatus.RUNNING:
+                let donothing = 1;
+                break;
+        }
+    }
+
+    emptyOp(): updateOp {
+        return {type: updateType.UNKNOWN, status: updateStatus.UNKNOWN, operation: updateOperation.UNKNOWN, component: updateComponent.UNKNOWN, remote: '', local: '', folders: []};
+    }
+
+    checkExeVersion(op: updateOp) {
+        if (!fs.existsSync(op.local)) {
+            visualText.pushDownloadEngineFiles(updatePush.FRONT);
+        }
+        visualText.fetchExeVersion(op.local)?.then(version => {
+            visualText.checkEngineVersion(op)
+            .then(newerVersion => {
+                if (newerVersion) {
+                    visualText.pushDownloadEngineFiles(updatePush.FRONT);
+                    visualText.pushDeleteEngineFiles(updatePush.FRONT);
+                }
+                op.status = updateStatus.DONE;
+            })
+        })
+        .catch(error => {
+            op.status = updateStatus.FAILED;
+        });
+        op.status = updateStatus.RUNNING;
+    }
+
+    checkVTFilesVersion(op: updateOp): boolean {
+        const https = require('follow-redirects').https;
+
+        const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
+            res.on('data', function (chunk) {
+                let newer = false;
+                if (op.status != updateStatus.DONE) {
+                    let url = res.responseUrl;
+                    visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
+                    let currentVersion = visualText.getVTFilesVersion();
+                    if (visualText.debug) visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion);
+
+                    if (currentVersion) {
+                        visualText.vtFilesVersion = currentVersion;
+                        if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
+                            newer = true;
+                        }                       
+                    }
+                    else {
+                        newer = true;
+                    }
+                    if (newer) {
+                        visualText.setVTFilesVersion(visualText.repoVTFilesVersion);  
+                        visualText.pushDownloadVTFiles(updatePush.FRONT);
+                        visualText.pushDeleteVTFiles(updatePush.FRONT);
+
+                    }
+                    op.status = updateStatus.DONE;
+                }
+                return newer;
+            });
+        }).on('error', function (err) {
+            op.status = updateStatus.FAILED;
+        });
+        op.status = updateStatus.RUNNING;
+
+        return false;
+    }
+
+    checkAnalyzersVersion(op: updateOp): boolean {
+        const https = require('follow-redirects').https;
+
+        const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
+            res.on('data', function (chunk) {
+                let newer = false;
+                if (op.status != updateStatus.DONE) {
+                    let url = res.responseUrl;
+                    visualText.repoAnalyzersVersion = url.substring(url.lastIndexOf('/') + 1);
+                    let currentVersion = visualText.getAnalyzersVersion();
+                    if (visualText.debug) visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion);
+                    if (currentVersion) {
+                        visualText.analyzersVersion = currentVersion;
+                        if (visualText.versionCompare(visualText.repoAnalyzersVersion,currentVersion) > 0) {
+                            newer = true;
+                        }                       
+                    }
+                    else {
+                        newer = true;
+                    }
+                    if (newer) {
+                        visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);  
+                        visualText.pushDownloadAnalyzers(updatePush.FRONT);
+                        visualText.pushDeleteAnalyzers(updatePush.FRONT);
+                    }
+                    op.status = updateStatus.DONE;                    
+                }
+                return newer;
+            });
+        }).on('error', function (err) {
+            op.status = updateStatus.FAILED;
+        });
+        op.status = updateStatus.RUNNING;
+
+        return false;
+    }
+
+    download(op: updateOp) {
+        const Downloader = require('nodejs-file-downloader');
+
+        (async () => {
+            var dir = path.dirname(op.local);
+            var filename = path.basename(op.local);
+            var url = op.remote;
+
+            const downloader = new Downloader({
+                url: url,   
+                directory: dir,
+                filename: filename
+            });
+            let moose = 1;
+            try {
+                visualText.debugMessage('Downloading: ' + url);
+                await downloader.download();
+                visualText.debugMessage('DONE DOWNLOAD: ' + url);
+                if (op.type == updateType.UNZIP && !visualText.stopAll) {
+                    op.operation = updateOperation.UNZIP;
+                    op.status = updateStatus.START;
+                } else {
+                    op.status = updateStatus.DONE;
+                }
+            }
+            catch (error) {
+                op.status = updateStatus.FAILED;
+                visualText.debugMessage('FAILED download: ' + url + '\n' + error);
+            }
+        })();  
+    }
+
+    unzip(op: updateOp) {
+        (async () => {
+            const toPath = op.local;
+            const vtFileDir = path.dirname(op.local);
+
+            const extract = require('extract-zip')
+            try {
+                this.debugMessage('Unzipping: ' + toPath);
+                await extract(toPath, { dir: vtFileDir });
+                this.debugMessage('UNZIPPED: ' + toPath);
+                op.status = updateStatus.DONE;
+                dirfuncs.delFile(toPath);
+            }
+            catch (err) {
+                this.debugMessage('Could not unzip file: ' + toPath + '\n' + err);
+                op.status = updateStatus.FAILED;
+            }
+        })();
     }
 
     public debugMessage(msg: string) {
@@ -241,97 +680,48 @@ export class VisualText {
             config.update('directory',directory,vscode.ConfigurationTarget.Global);
     }
 
-    checkForVisualTextFilesUpdate() {
-        if (vscode.workspace.workspaceFolders && visualText.updaterGlobalStatus == updaterStatus.CHECK_FILES) {
-            visualText.updaterGlobalStatus = updaterStatus.CHECKING_FILES;
-            this.checkVTFilesVersion()
-            .then(newVersion => {
-                if (newVersion) {
-                    visualText.setUpdateVTFiles();      
-                }
-                else {
-                    visualText.debugMessage('VisualText files version ' + visualText.repoVTFilesVersion);
-                    visualText.updaterGlobalStatus = updaterStatus.DONE;
-                }
-            }).catch(err => {
-                this.debugMessage(err);
-            });
-        }
-    }
-
-    checkVTFilesVersion(updateVersionFlag: boolean = false) {
-        return new Promise((resolve,reject) => {
-            const https = require('follow-redirects').https;
-
-            const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
-                res.on('data', function (chunk) {
-                    let url = res.responseUrl;
-                    visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
-                    let currentVersion = visualText.getVTFilesVersion();
-                    let newer = false;
-                    if (currentVersion) {
-                        visualText.vtFilesVersion = currentVersion;
-                        if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
-                            newer = true;
-                        }                       
-                    }
-                    else {
-                        newer = true;
-                    }
-                    if (updateVersionFlag) {
-                        visualText.setLatestVTVersionStatus(versionStatus.DONE);
-                        visualText.setVTFilesVersion(visualText.repoVTFilesVersion);
-                        visualText.updaterGlobalStatus = updaterStatus.DONE;                        
-                    }
-                    resolve(newer);
-                });
-            }).on('error', function (err) {
-                reject(err);
-            });
-            request.end();
+    checkForEngineUpdate() {
+        var op: updateOp = visualText.emptyOp();
+        this.checkEngineVersion(op)
+        .then(newerVersion => {
+            if (newerVersion) {
+                visualText.setUpdateEngine();
+            } else {
+                visualText.setEngineVersion(visualText.repoEngineVersion);
+                visualText.debugMessage('NLP Engine version ' + visualText.repoEngineVersion);
+            }
+            if (nlpStatusBar !== undefined) {
+                nlpStatusBar.updateEngineVersion(visualText.engineVersion);     
+            }
+        }).catch(err => {
+            this.debugMessage(err);
         });
     }
 
-    checkForEngineUpdate() {
-        if (vscode.workspace.workspaceFolders && visualText.updaterGlobalStatus == updaterStatus.CHECK_ENGINE) {
-            this.updaterGlobalStatus = updaterStatus.CHECKING_ENGINE;
-            this.checkEngineVersion()
-            .then(newerVersion => {
-                if (newerVersion) {
-                    visualText.setUpdateEngine();
-                } else {
-                    visualText.setEngineVersion(visualText.repoEngineVersion);
-                    visualText.debugMessage('NLP Engine version ' + visualText.repoEngineVersion);
-                    visualText.updaterGlobalStatus = updaterStatus.CHECK_FILES;
-                }
-                if (nlpStatusBar !== undefined) {
-                    nlpStatusBar.updateEngineVersion(visualText.engineVersion);     
-                }
-            }).catch(err => {
-                this.debugMessage(err);
-            });
-        }
-    }
-
-    checkEngineVersion() {
+    checkEngineVersion(op: updateOp) {
         return new Promise((resolve,reject) => {
 
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
-                    let url = res.responseUrl;
-                    visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
-                    let currentVersion = visualText.engineVersion;
                     var newer = false;
-                    if (currentVersion) {
-                        visualText.engineVersion = currentVersion;
-                        if (visualText.versionCompare(visualText.repoEngineVersion,currentVersion) > 0) {
+                    if (op.status != updateStatus.DONE) {
+                        let url = res.responseUrl;
+                        visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
+                        let cmdVersion = visualText.cmdEngineVersion;
+                        let repoVersion = visualText.repoEngineVersion;
+                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + cmdVersion + ' == ' + repoVersion);
+
+                        if (cmdVersion && repoVersion) {
+                            if (visualText.versionCompare(repoVersion,cmdVersion) > 0) {
+                                newer = true;
+                            }
+                        } else {
                             newer = true;
                         }
-                    } else {
-                        newer = true;
-                    }            
+                        op.status = updateStatus.DONE;           
+                    }
                     resolve(newer);
                 });
             }).on('error', function (err) {
@@ -341,218 +731,10 @@ export class VisualText {
         });
     }
 
-    downloadVisualTextFiles(extension: ExtensionItem) {
-        const url = this.GITHUB_VISUALTEXT_FILES_LATEST_RELEASE + this.VISUALTEXT_FILES_ASSET;
-        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
-
-        const Downloader = require('nodejs-file-downloader');
-
-        (async () => {
-        
-            const downloader = new Downloader({
-                url: url,   
-                directory: engineDir        
-            })
-            try {
-                var zipFile = path.join(engineDir,this.VISUALTEXT_FILES_ASSET);
-                if (fs.existsSync(zipFile))
-                    dirfuncs.delFile(zipFile);
-                this.debugMessage('Downloading: ' + url);
-                await downloader.download();
-                this.debugMessage('DONE DOWNLOAD: ' + url);
-                visualText.setLatestVTFilesDownload(downloadStatus.DONE);
-
-            } catch (error) {
-                console.log('Download failed',error);
-            }
-        })();
-    }
-
-    unzipVTFiles(extension: ExtensionItem) {
-        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.VISUALTEXT_FILES_ASSET;
-        const vtFileDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
-
-        (async () => {
-            const toPath = path.join(vtFileDir,this.VISUALTEXT_FILES_ASSET);
-
-            const extract = require('extract-zip')
-            try {
-                this.debugMessage('Unzipping: ' + vtFileDir);
-                await extract(toPath, { dir: vtFileDir });
-                this.debugMessage('UNZIPPED: ' + toPath);
-                visualText.finalizeVTFilesVersion(zippingStatus.DONE);
-                dirfuncs.delFile(toPath);
-            }
-            catch (err) {
-                this.debugMessage('Could not unzip file: ' + toPath + '\n' + err);
-                extension.vtFilesZipStatus = zippingStatus.FAILED;
-            }
-        })();
-    }
-
-    downloadEngineFiles(extension: ExtensionItem) {
-        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.NLPENGINE_FILES_ASSET;
-        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
-
-        const Downloader = require('nodejs-file-downloader');
-
-        (async () => {
-        
-            const downloader = new Downloader({
-                url: url,   
-                directory: engineDir     
-            })
-            try {
-                var zipFile = path.join(engineDir,this.NLPENGINE_FILES_ASSET);
-                if (fs.existsSync(zipFile))
-                    dirfuncs.delFile(zipFile);
-                this.debugMessage('Downloading: ' + url);
-                await downloader.download();
-                this.debugMessage('DONE DOWNLOAD: ' + url);
-                visualText.setLatestEngineFilesDownload(downloadStatus.DONE);
-            }
-            catch (error) {
-                console.log('Download failed',error);
-            }
-        })();
-    }
-
-    unzipEngineFiles(extension: ExtensionItem) {
-        const url = this.GITHUB_ENGINE_LATEST_RELEASE + this.NLPENGINE_FILES_ASSET;
-        const engineDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
-
-        (async () => {
-            const toPath = path.join(engineDir,this.NLPENGINE_FILES_ASSET);
-
-            const extract = require('extract-zip')
-            try {
-                this.debugMessage('Unzipping: ' + engineDir);
-                await extract(toPath, { dir: engineDir });
-                this.debugMessage('UNZIPPED: ' + toPath);
-                dirfuncs.delFile(toPath);
-                extension.engineFilesZipStatus = zippingStatus.DONE;
-                extension.hasEngineFiles = true;
-            }
-            catch (err) {
-                this.debugMessage('Could not unzip file: ' + toPath);
-            }
-        })();
-    }
-
-    downloadExecutable(extension: ExtensionItem) {
-        const config = vscode.workspace.getConfiguration('engine');
-        config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
-        var exe = '';
-        switch (this.platform) {
-            case 'win32':
-                exe = 'nlpw.exe';
-                break;
-            case 'darwin':
-                exe = 'nlpm.exe';
-                break;
-            default:
-                exe = 'nlpl.exe';
-        }
-        const url = this.GITHUB_ENGINE_LATEST_RELEASE + exe;
-        const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
-        if (!fs.existsSync(engDir)) {
-            dirfuncs.makeDir(engDir);
-        }
-        var localExePat = path.join(engDir,this.NLP_EXE);
-        if (fs.existsSync(localExePat)) {
-            dirfuncs.delFile(localExePat);
-        }
-        const Downloader = require('nodejs-file-downloader');
-
-        (async () => {
-        
-            const downloader = new Downloader({
-                url: url,   
-                directory: engDir,
-                filename: this.NLP_EXE
-            })
-            try {
-                this.debugMessage('Downloading: ' + url);
-                await downloader.download();
-                dirfuncs.changeMod(localExePat,0o755);
-                this.debugMessage('DONE DOWNLOAD: ' + url);
-                visualText.setLatestEngineDownload(engDir);
-            }
-            catch (error) {
-                extension.engineDownloadStatus = downloadStatus.FAILED;
-                this.debugMessage('FAILED download: ' + url + '\n' + error);
-            }
-
-        })();     
-    }
-
     failedWarning() {
         vscode.window.showErrorMessage("Update failed", "Click here to see solutions").then(response => {
             logView.downloadHelp();
         });
-    }
-
-    downloadExecutableICU(extension: ExtensionItem, icuFileNum: number) {
-        const config = vscode.workspace.getConfiguration('engine');
-        config.update('platform',this.platform,vscode.ConfigurationTarget.Global);
-        var libRelease = '';
-        var lib = '';
-        switch (this.platform) {
-            case 'win32':
-                libRelease = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
-                lib = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
-                break;
-            case 'darwin':
-                libRelease = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
-                break;
-            default:
-                libRelease = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
-                lib = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
-        }
-        const url = this.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
-        const engDir = path.join(extension.uri.fsPath,this.NLPENGINE_FOLDER);
-        if (!fs.existsSync(engDir)) {
-            dirfuncs.makeDir(engDir);
-        }
-        var localExePat = path.join(engDir,lib);
-        if (fs.existsSync(localExePat)) {
-            dirfuncs.delFile(localExePat);
-        }
-        const Downloader = require('nodejs-file-downloader');
-
-        (async () => {
-        
-            const downloader = new Downloader({
-                url: url,   
-                directory: engDir,
-                filename: lib
-            })
-            try {
-                this.debugMessage('Downloading: ' + url);
-                await downloader.download();
-                this.debugMessage('DONE DOWNLOAD: ' + url);
-                if (icuFileNum == 1) {
-                    extension.engineDownloadICU1Status = downloadStatus.DONE;
-                    extension.hasICU1File = true;
-                }
-                else if (icuFileNum == 2) {
-                    extension.engineDownloadICU2Status = downloadStatus.DONE;
-                    extension.hasICU2File = true;
-                }
-            }
-            catch (error) {
-                if (icuFileNum == 1) {
-                    extension.engineDownloadICU1Status = downloadStatus.FAILED;
-                    extension.hasICU1File = false;
-                }
-                else if (icuFileNum == 2) {
-                    extension.engineDownloadICU2Status = downloadStatus.FAILED;
-                    extension.hasICU2File = false;
-                }
-                this.debugMessage('FAILED download: ' + url + '\n' + error);
-            }
-        })();     
     }
 
     getVersions() {
@@ -571,336 +753,14 @@ export class VisualText {
             visualText.vtFilesVersion = '';
     }
 
-    updaterTimer() {
-        let debug = false;
-
-        if (visualText.updaterCounter++ >= 60) {
-            visualText.debugMessage('Updater timed out');
-            visualText.updaterGlobalStatus = updaterStatus.DONE;
-        }
-
-        if (debug) visualText.debugMessage('status: ' + visualText.updaterStatusStrs[visualText.updaterGlobalStatus] + ' ' + visualText.updaterCounter.toString());
-
-        switch (visualText.updaterGlobalStatus) {
-            case updaterStatus.FAILED: {
-                clearInterval(visualText.updaterID);
-                visualText.debugMessage('UPDATE FAILED');
-                break;
-            }
-            case updaterStatus.GATHER_EXTENSIONS: {
-                visualText.getVersions();
-                if (!visualText.extensionItems.length)
-                    visualText.getExtensionDirs();
-                visualText.updaterGlobalStatus = updaterStatus.VERSION_ENGINES;
-                break;
-            }
-            case updaterStatus.VERSION_ENGINES: {
-                var versionsDone = true;
-                for (let ext of visualText.extensionItems) {
-                    if (ext.hasEngine) {
-                        if (ext.engineVersion.length == 0 && ext.engineVersionStatus == versionStatus.UNKNOWN) {
-                            ext.engineVersionStatus = versionStatus.VERSIONING;
-                            visualText.debugMessage('Versioning engine: ' + ext.uri.fsPath.toString());
-                            ext.timerCount++;
-                            visualText.fetchExeVersion(ext.uri.fsPath,debug)?.then(notUsed => {
-                                visualText.setExtEngineVersion(ext.uri.fsPath,visualText.cmdEngineVersion);
-                            });
-                            versionsDone = false;
-                        }
-                        else if (ext.engineVersionStatus == versionStatus.VERSIONING) {
-                            if (ext.timerCount++ < 10)
-                                versionsDone = false;
-                            else {
-                                visualText.debugMessage('Versioning FAILED: ' + ext.uri.fsPath.toString());
-                                ext.timerCount = 0;
-                                ext.engineVersionStatus = versionStatus.FAILED;
-                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
-                            }
-                        }
-                    }       
-                }
-                if (versionsDone && visualText.updaterGlobalStatus != updaterStatus.FAILED) {
-                    visualText.updaterGlobalStatus = updaterStatus.CHOOSE_LATEST;
-                }
-                break;
-            }
-            case updaterStatus.CHOOSE_LATEST: {
-                var latestVersion = '';
-                var latestEngineVersion = '';
-                var latestIndex = 0;
-                var index = 0;
-                for (let ext of visualText.extensionItems) {
-                    if (ext.hasEngine && ext.engineVersion.length) {
-                        if (latestEngineVersion.length == 0) {
-                            latestVersion = ext.vtVersion
-                            latestEngineVersion = ext.engineVersion;
-                            latestIndex = index;
-                        } else if (visualText.versionCompare(ext.vtVersion,latestVersion) > 0 && visualText.versionCompare(ext.engineVersion,latestEngineVersion) >= 0) {
-                            latestVersion = ext.vtVersion
-                            latestEngineVersion = ext.engineVersion;
-                            latestIndex = index;
-                        }
-                    }
-                    index++;
-                }
-                // Mark for deletion
-                index = 0;
-                for (let ext of visualText.extensionItems) {
-                    if (ext.hasEngine && ext.engineVersionStatus != versionStatus.FAILED) {
-                        if (index != latestIndex)
-                            ext.engineDownloadStatus = downloadStatus.DELETE;
-                        else
-                            ext.isLatestEngine = true;
-                    }
-                    index++;
-                }
-                visualText.lastestEngineIndex = latestIndex;
-                visualText.updaterGlobalStatus = updaterStatus.REPAIR;
-                break;
-            }
-            case updaterStatus.REPAIR: {
-                for (let ext of visualText.extensionItems) {
-                    if (ext.engineDownloadStatus == downloadStatus.DELETE) {
-                        var engFolder = path.join(ext.uri.fsPath,visualText.NLPENGINE_FOLDER);
-                        visualText.debugMessage('Removing NLP Engine: ' + engFolder);
-                        dirfuncs.delDir(engFolder);
-                        visualText.debugMessage('REMOVE DONE: ' + engFolder);
-                        ext.hasEngine = false;
-                        ext.engineDownloadStatus = downloadStatus.DONE;
-                        continue;
-                    }
-                    if (ext.isLatestEngine ||
-                        (!ext.isLatestEngine && ext.hasEngineFiles && ext.hasVTFiles) ||
-                        ext.engineDownloadStatus == downloadStatus.UPDATE ||
-                        ext.vtFilesDownloadStatus == downloadStatus.UPDATE) {
-
-                        if (ext.engineVersion.length == 0 || !ext.hasICU1File) {
-                            if (debug) visualText.debugMessage('   engineDownloadICU1Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU1Status]);
-                            if (ext.engineDownloadICU1Status == downloadStatus.FAILED) {
-                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
-                            }
-                            else if (ext.engineDownloadICU1Status == downloadStatus.UNKNOWN) {
-                                ext.engineDownloadICU1Status = downloadStatus.DOWNLOADING;
-                                visualText.downloadExecutableICU(ext,1);
-                            }
-                        }
-
-                        if (ext.hasICU1File && (ext.engineVersion.length == 0 || !ext.hasICU2File)) {
-                            if (debug) visualText.debugMessage('   engineDownloadICU2Status: ' + visualText.downloadStatusStrs[ext.engineDownloadICU2Status]);
-                            if (ext.engineDownloadICU2Status == downloadStatus.FAILED) {
-                                visualText.updaterGlobalStatus = updaterStatus.FAILED;
-                            }
-                            else if (ext.engineDownloadICU2Status == downloadStatus.UNKNOWN) {
-                                ext.engineDownloadICU2Status = downloadStatus.DOWNLOADING;
-                                visualText.downloadExecutableICU(ext,2);
-                            }
-                        }
-
-                        if (ext.hasICU1File && ext.hasICU2File && ext.engineDownloadStatus == downloadStatus.UPDATE || (visualText.engineDir.fsPath.length <= 1 && ext.engineDownloadStatus == downloadStatus.UNKNOWN)) {
-                            if (debug) visualText.debugMessage('   engineDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineDownloadStatus]);
-                            ext.engineDownloadStatus = downloadStatus.DOWNLOADING;
-                            visualText.downloadExecutable(ext);
-                        }
-                        else if (visualText.engineDir.fsPath.length > 1 && ext.engineFilesDownloadStatus == downloadStatus.UPDATE) {
-                            if (debug) visualText.debugMessage('   engineFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineFilesDownloadStatus]);
-                            ext.engineFilesDownloadStatus = downloadStatus.DOWNLOADING;
-                        }
-
-                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && (ext.engineVersion.length == 0 || !ext.hasEngineFiles)) {
-                            if (debug) visualText.debugMessage('   engineFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.engineFilesDownloadStatus]);
-                            if (debug) visualText.debugMessage('   engineFilesZipStatus: ' + visualText.zippingStatusStrs[ext.engineFilesZipStatus]);
-                            if (!ext.hasEngineFiles && ext.engineVersion.length && ext.engineFilesDownloadStatus == downloadStatus.UNKNOWN) {
-                                ext.engineFilesDownloadStatus = downloadStatus.DOWNLOADING;
-                                visualText.downloadEngineFiles(ext);
-                            }
-                            else if (!ext.hasEngineFiles && ext.engineVersion.length && ext.engineFilesDownloadStatus == downloadStatus.DONE && ext.engineFilesZipStatus == zippingStatus.UNKNOWN) {
-                                ext.engineFilesZipStatus = zippingStatus.UNZIPPING;
-                                visualText.unzipEngineFiles(ext);
-                            }
-                        }
-
-                        if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasEngineFiles && (!ext.hasVTFiles || !visualText.vtFilesVersion.length)) {
-                            if (debug) visualText.debugMessage('   vtFilesDownloadStatus: ' + visualText.downloadStatusStrs[ext.vtFilesDownloadStatus]);
-                            if (debug) visualText.debugMessage('   vtFilesZipStatus: ' + visualText.zippingStatusStrs[ext.vtFilesZipStatus]);
-                            if (debug) visualText.debugMessage('   vtFilesVersionStatus: ' + visualText.versionStatusStrs[ext.vtFilesVersionStatus]);
-                            if (ext.vtFilesDownloadStatus == downloadStatus.UNKNOWN || ext.vtFilesDownloadStatus == downloadStatus.UPDATE) {
-                                ext.vtFilesDownloadStatus = downloadStatus.DOWNLOADING;
-                                visualText.downloadVisualTextFiles(ext);
-                            }
-                            else if (ext.engineVersion.length && ext.vtFilesDownloadStatus == downloadStatus.DONE && ext.vtFilesZipStatus == zippingStatus.UNKNOWN) {
-                                ext.vtFilesZipStatus = zippingStatus.UNZIPPING;
-                                visualText.unzipVTFiles(ext);
-                            }
-                            else if (ext.engineVersion.length && ext.vtFilesZipStatus == zippingStatus.DONE && ext.vtFilesVersionStatus == versionStatus.UNKNOWN) {
-                                ext.vtFilesVersionStatus = versionStatus.VERSIONING;
-                                visualText.checkVTFilesVersion(true);
-                            }
-                        }
-                        if (ext.hasEngine && ext.hasEngineFiles && ext.hasVTFiles &&
-                            visualText.engineVersion.length && visualText.engineVersion.length && visualText.vtFilesVersion.length)
-                            visualText.updaterGlobalStatus = updaterStatus.CHECK_ENGINE; 
-                    }
-                }
-                break;
-            }
-            case updaterStatus.CHECK_ENGINE: {
-                visualText.checkForEngineUpdate();
-                break;
-            }
-            case updaterStatus.CHECK_FILES: {
-                visualText.checkForVisualTextFilesUpdate();
-                break;
-            }
-            case updaterStatus.DONE: {
-                clearInterval(visualText.updaterID);
-                visualText.debugMessage('UPDATE CHECK COMPLETE');
-                break;
-            }
-        }
-    }
-
-    getExtensionDirs() {
-        var parentDir = this.extensionParentDirectory();
-        var dirs: vscode.Uri[] = new Array();
-        this.extensionItems = [];
-        dirs = dirfuncs.getDirectories(parentDir);
-        var latestVersion = '';
-        var latestEngineVersion = '';
-        var extLatest = 0;
-        var engineLatest = 0;
-        var counter = 0;
-        var hasAll = -1;
-
-        for (let dir of dirs) {
-            var name = path.basename(dir.fsPath);
-            if (name.startsWith(this.EXTENSION_NAME)) {
-                this.extensionItems.push({
-                    uri: dir,
-                    hasEngine: this.hasEngine(dir),
-                    hasICU1File: this.hasICUFiles(dir, 1),
-                    hasICU2File: this.hasICUFiles(dir, 2),
-                    hasEngineFiles: this.isEngineDirectory(dir),
-                    hasVTFiles: this.isVisualTextDirectory(dir),
-                    vtVersion: this.versionFromPath(dir),
-                    isLatest: false,
-                    isLatestEngine: false,
-                    engineVersion: '',
-                    timerCount: 0,
-                    engineDownloadStatus: downloadStatus.UNKNOWN,
-                    engineDownloadICU1Status: downloadStatus.UNKNOWN,
-                    engineDownloadICU2Status: downloadStatus.UNKNOWN,
-                    engineVersionStatus: versionStatus.UNKNOWN,
-                    engineFilesDownloadStatus: downloadStatus.UNKNOWN,
-                    engineFilesZipStatus: zippingStatus.UNKNOWN,
-                    vtFilesVersion: '',
-                    vtFilesDownloadStatus: downloadStatus.UNKNOWN,
-                    vtFilesZipStatus: zippingStatus.UNKNOWN,
-                    vtFilesVersionStatus: versionStatus.UNKNOWN
-                });
-                var ext = this.extensionItems[this.extensionItems.length - 1];
-                if (ext.hasEngine && ext.hasICU1File && ext.hasICU2File && ext.hasVTFiles && ext.hasEngineFiles)
-                    hasAll = counter;
-                if (ext.vtVersion.length && (!latestVersion.length || this.versionCompare(ext.vtVersion,latestVersion) > 0)) {
-                    latestVersion = ext.vtVersion;
-                    if (counter) {
-                        this.extensionItems[extLatest].isLatest = false;
-                    }
-                    extLatest = counter;
-                    ext.isLatest = true;
-                }
-                if (ext.engineVersion.length && (!latestEngineVersion.length || this.versionCompare(ext.vtVersion,latestEngineVersion))) {
-                    latestEngineVersion = ext.engineVersion;
-                    if (counter) {
-                        this.extensionItems[engineLatest].isLatestEngine = false;
-                    }
-                    engineLatest = counter;
-                    ext.isLatestEngine = true;
-                }
-                counter++;
-            }
-        }
-
-        // Look for incomplete
-        if (hasAll < 0) {
-            var hasSomething = false;
-            for (let ext of visualText.extensionItems) {
-                if (ext.hasEngine || ext.hasICU1File || ext.hasICU2File || ext.hasEngineFiles || ext.hasVTFiles) {
-                    hasSomething = true;
-                }
-            }
-            if (!hasSomething && this.extensionItems[extLatest]) {
-                var ext = this.extensionItems[extLatest];
-                ext.engineDownloadStatus = downloadStatus.UPDATE;
-                if (ext.engineVersion.length)
-                    ext.isLatestEngine = true;
-            }
-        }
-    }
-
-    getExtension(): ExtensionItem {
-        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
-        return ext; 
-    }
-
-    setLatestVTVersionStatus(status: versionStatus) {
-        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
-        if (ext) {
-            ext.vtFilesVersionStatus = status;
-        }
-    }
-
-    setLatestEngineDownload(engDir: string) {
-        var engDirIndex = this.findExtensionIndex(engDir);
-        engDirIndex = engDirIndex != this.lastestEngineIndex ? engDirIndex : this.lastestEngineIndex;
-        var ext = visualText.extensionItems[engDirIndex];
-        if (ext) {
-            this.setEnginePath(path.join(engDir,this.NLP_EXE));
-            this.updaterGlobalStatus = updaterStatus.VERSION_ENGINES;
-            ext.hasEngine = true;
-            ext.hasEngineFiles = false;
-            ext.engineDownloadStatus = downloadStatus.DONE;
-            this.engineVersion = this.repoEngineVersion;
-            if (nlpStatusBar !== undefined) {
-                nlpStatusBar.updateEngineVersion(this.engineVersion);    
-            }
-        }
-    }
-
     findExtensionIndex(engDir: string): number {
         var index = 0;
-        for (let ext of this.extensionItems) {
+        for (let ext of this.extensionItems) {visualText.stopAll
             if (engDir.startsWith(ext.uri.fsPath))
                 break;
             index++;
         }
         return index;
-    }
-
-    setLatestEngineFilesDownload(status: downloadStatus) {
-        var ext = this.extensionItems[this.lastestEngineIndex];
-        if (ext) {
-            ext.engineFilesDownloadStatus = status;
-        }
-    }
-
-    setLatestVTFilesDownload(status: downloadStatus) {
-        var ext = this.extensionItems[this.lastestEngineIndex];
-        if (ext) {
-            ext.vtFilesDownloadStatus = status;
-        }
-    }
-    
-    finalizeVTFilesVersion(status: zippingStatus) {
-        var ext = this.extensionItems[this.lastestEngineIndex];
-        if (ext) {
-            ext.hasVTFiles = true;
-            ext.vtFilesZipStatus = status;
-            this.vtFilesVersion = this.repoVTFilesVersion;
-            this.setVTFilesVersion(this.repoVTFilesVersion);
-            if (nlpStatusBar !== undefined) {
-                nlpStatusBar.updateFilesVersion(this.repoVTFilesVersion);
-            }
-        }
     }
 
     versionFromPath(extDir: vscode.Uri): string {
@@ -917,8 +777,8 @@ export class VisualText {
         var toks2 = version2.split('.');
         var num = toks1.length > toks2.length ? toks1.length : toks2.length;
         for (let i = 0; i < num; i++) {
-            let v1 = parseInt(this.trimV(toks1[i]));
-            let v2 = parseInt(this.trimV(toks2[i]));
+            let v1 = parseInt(visualText.trimV(toks1[i]));
+            let v2 = parseInt(visualText.trimV(toks2[i]));
             if (v1 > v2) return 1;
             if (v2 > v1) return -1;
         }
@@ -928,13 +788,13 @@ export class VisualText {
     trimV(version: string): string {
         var ret = version;
         if (version.substring(0,1) == 'v') {
-            ret = version.substring(1,version.length-1);
+            ret = version.substring(1,version.length);
         }
         return ret;
     }
 
     engineDirectory() {
-        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_FOLDER));
+        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_REPO));
     }
 
     extensionDirectory() {
@@ -950,70 +810,63 @@ export class VisualText {
     }
 
     visualTextFilesDirectory() {
-        return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_FOLDER));
+        return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_REPO));
     }
   
-    fetchExeVersion(extentionDir: string = '', debug: boolean=false) {
+    fetchExeVersion(nlpExePath: string = '', debug: boolean=false) {
         visualText.cmdEngineVersion = '';
 		const cp = require('child_process');
-		var exe = path.join(extentionDir,this.NLPENGINE_FOLDER,this.NLP_EXE);
-        if (debug) visualText.debugMessage('version exe: ' + exe);
-        if (fs.existsSync(exe)) {
-            return new Promise((resolve) => {
-                const child = cp.spawn(exe, ['--version']);
-                let stdOut = "";
-                let stdErr = "";
-                child.stdout.on("data", (data) => {
-                    let versionStr = data.toString();
-                    if (debug) visualText.debugMessage('version str: ' + versionStr);
-                    let tokens = versionStr.split('\r\n');
-                    if (tokens.length) {
-                        if (tokens.length == 1)
-                            visualText.cmdEngineVersion = versionStr;
-                        else
-                            visualText.cmdEngineVersion = tokens[tokens.length - 2];
-                        if (debug) visualText.debugMessage('version found: ' + visualText.cmdEngineVersion);
-                    }
-                    resolve(visualText.cmdEngineVersion);
-                });
-            }).catch(err => {
-                this.debugMessage(err);
-            });      
-        }
+        return new Promise((resolve,reject) => {
+            const child = cp.spawn(nlpExePath, ['--version']);
+            let stdOut = "";
+            let stdErr = "";
+            child.stdout.on("data", (data) => {
+                let versionStr = data.toString();
+                if (debug) visualText.debugMessage('version str: ' + versionStr);
+                let tokens = versionStr.split('\r\n');
+                if (tokens.length) {
+                    if (tokens.length == 1)
+                        visualText.cmdEngineVersion = versionStr;
+                    else
+                        visualText.cmdEngineVersion = tokens[tokens.length - 2];
+                    if (debug) visualText.debugMessage('version found: ' + visualText.cmdEngineVersion);
+                }
+                resolve(visualText.cmdEngineVersion);
+            });
+        }).catch(err => {
+            visualText.debugMessage(err);
+        });
 	}
 
-    setExtEngineVersion(extentionDir: string, version: string): boolean {
-        if (version.length) {
-            var missingEngineVersion: boolean = false;
-            var currentVersion = '';
-            var latestVersion = '';
-            let latestPath = '';
-            for (let ext of this.extensionItems) {
-                if (ext.uri.fsPath == extentionDir) {
-                    ext.engineVersion = version;
-                    ext.engineVersionStatus = versionStatus.DONE;
-                    currentVersion = version;
-                    latestPath = ext.uri.fsPath;
-                } else if (ext.hasEngine == true) {
-                    if (ext.engineVersion.length == 0) {
-                        missingEngineVersion = true;
-                    } else {
-                        currentVersion = ext.engineVersion;
-                        latestPath = ext.uri.fsPath;
-                    }
-                }
-                if (latestVersion.length == 0 || this.versionCompare(currentVersion,latestVersion)) {
-                    latestVersion = currentVersion;
-                }
-            }
+    getExtensionPath(): vscode.Uri {
+        return this.extensionItems[this.latestExtIndex].uri;
+    }
 
-            // If all versions are filled, set the global version
-            if (!missingEngineVersion) {
-                this.setEngineVersion(latestVersion);
-                this.setEnginePath(path.join(latestPath,this.NLPENGINE_FOLDER,this.NLP_EXE));
-            }         
+    getExtensionDirs() {
+        var parentDir = this.extensionParentDirectory();
+        var dirs: vscode.Uri[] = new Array();
+        this.extensionItems = [];
+        dirs = dirfuncs.getDirectories(parentDir);
+        var latestVersion = '';
+        this.latestExtIndex = -1;
+        var counter = 0;
+
+        for (let dir of dirs) {
+            var name = path.basename(dir.fsPath);
+            if (name.startsWith(this.EXTENSION_NAME)) {
+                let version = this.versionFromPath(dir);
+                if (latestVersion.length == 0 || this.versionCompare(version, latestVersion) > 0) {
+                    latestVersion = version;
+                    this.latestExtIndex = counter;
+                }
+                this.extensionItems.push({uri: dir, version: version, latest: false});
+                counter++;
+            }
         }
-        return false;
+
+        if (this.latestExtIndex >= 0) {
+            this.extensionItems[this.latestExtIndex].latest = true; 
+        }
     }
 
     setEngineVersion(version: string) {
@@ -1046,7 +899,20 @@ export class VisualText {
 
     getVTFilesVersion(): string | undefined {
         const config = vscode.workspace.getConfiguration('engine');
+        var version = config.get<string>('visualtext');
         return config.get<string>('visualtext');
+    }
+
+    setAnalyzersVersion(version: string) {
+        this.vtFilesVersion = version;
+        const config = vscode.workspace.getConfiguration('engine');
+        config.update('analyzers',version,vscode.ConfigurationTarget.Global);
+    }
+
+    getAnalyzersVersion(): string | undefined {
+        const config = vscode.workspace.getConfiguration('engine');
+        var version = config.get<string>('analyzers');
+        return config.get<string>('analyzers');
     }
 
     configFindUsername() {
@@ -1106,7 +972,6 @@ export class VisualText {
     }
 
     hasAnalyzers(): boolean {
-        var i = 0;
         return this.analyzers.length ? true : false;
     }
 
@@ -1147,80 +1012,11 @@ export class VisualText {
         if (exePath) {
             var engineDir = path.dirname(exePath);
             if (dirName.length)
-                return path.join(engineDir,this.VISUALTEXT_FILES_FOLDER,dirName);
+                return path.join(engineDir,this.VISUALTEXT_FILES_REPO,dirName);
             else
-                return path.join(engineDir,this.VISUALTEXT_FILES_FOLDER);
+                return path.join(engineDir,this.VISUALTEXT_FILES_REPO);
         }
         return '';
-    }
-
-    hasEngine(extDir: vscode.Uri): boolean {
-        var engPath = path.join(extDir.fsPath,this.NLPENGINE_FOLDER,this.NLP_EXE);
-        return fs.existsSync(engPath);
-    }
-
-    hasICUFiles(extDir: vscode.Uri, icuFileNum: number): boolean {
-        var icu = '';
-        switch (this.platform) {
-            case 'win32':
-                icu = icuFileNum == 1 ? this.ICU1_WIN : this.ICU2_WIN;
-                break;
-
-            case 'darwin':
-                icu = icuFileNum == 1 ? this.ICU1_MAC : this.ICU2_MAC;
-                break;
-
-            default:
-                icu = icuFileNum == 1 ? this.ICU1_LINUX : this.ICU2_LINUX;
-        }
-        var icuPath = path.join(extDir.fsPath,this.NLPENGINE_FOLDER,icu);
-        return fs.existsSync(icuPath);
-    }
-
-    isEngineDirectory(dirPath: vscode.Uri): boolean {
-        var engDir = path.join(dirPath.fsPath,this.NLPENGINE_FOLDER);
-        if (engDir.length > 1 && fs.existsSync(engDir)) {
-            var dirs = dirfuncs.getDirectories(vscode.Uri.file(engDir));
-            var data = false;
-            var analyzers = false;
-    
-            for (let dir of dirs) {
-                if (path.basename(dir.fsPath).localeCompare('data') == 0) {
-                    data = true;
-                }
-                else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
-                    analyzers = true;
-                }
-            }
-    
-            return data && analyzers;
-        }
-        return false;
-    }
-
-    isVisualTextDirectory(dirPath: vscode.Uri): boolean {
-        var engDir = path.join(dirPath.fsPath,this.NLPENGINE_FOLDER,this.VISUALTEXT_FILES_FOLDER);
-        if (engDir.length > 1 && fs.existsSync(engDir)) {
-            var dirs = dirfuncs.getDirectories(vscode.Uri.file(engDir));
-            var spec = false;
-            var analyzers = false;
-            var help = false;
-
-            for (let dir of dirs) {
-                if (path.basename(dir.fsPath).localeCompare('spec') == 0) {
-                    spec = true;
-                }
-                else if (path.basename(dir.fsPath).localeCompare('analyzers') == 0) {
-                    analyzers = true;
-                }
-                else if (path.basename(dir.fsPath).localeCompare('Help') == 0) {
-                    help = true;
-                }
-            }
-
-            return spec && analyzers && help;            
-        }
-        return false;
     }
 
     isAnalyzerDirectory(dirPath: vscode.Uri): boolean {
@@ -1245,11 +1041,8 @@ export class VisualText {
     }
 
     setUpdateEngine(): boolean {
-        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
-        if (ext) {
-            ext.engineDownloadStatus = downloadStatus.UPDATE;
-            ext.hasEngine = false;
-            this.updaterGlobalStatus = updaterStatus.REPAIR;
+        var uri = visualText.getExtensionPath();
+        if (uri) {
             this.debugMessage('NLP Engine updating version');
             return true;   
         }
@@ -1267,10 +1060,9 @@ export class VisualText {
     }
 
     setRerunUpdater(): boolean {
-        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
-        if (ext) {
+        var uri = visualText.getExtensionPath();
+        if (uri) {
             visualText.extensionItems = [];
-            this.updaterGlobalStatus = updaterStatus.GATHER_EXTENSIONS;
             this.debugMessage('Update NLP Engine'); 
             return true;        
         }
@@ -1278,11 +1070,8 @@ export class VisualText {
     }
 
     setUpdateVTFiles(): boolean {
-        var ext = visualText.extensionItems[visualText.lastestEngineIndex];
-        if (ext) {
-            ext.vtFilesDownloadStatus = downloadStatus.UPDATE  
-            ext.hasVTFiles = false;
-            this.updaterGlobalStatus = updaterStatus.REPAIR;
+        var uri = visualText.getExtensionPath();
+        if (uri) {
             this.debugMessage('VisualText files updating to version ' + visualText.repoVTFilesVersion); 
             return true;        
         }
@@ -1290,8 +1079,15 @@ export class VisualText {
     }
 
     updateVTFiles() {
-        if (this.setUpdateVTFiles())
-            this.startUpdater(); 
+        visualText.pushDeleteVTFiles(updatePush.BACK);
+        visualText.pushDownloadVTFiles(updatePush.BACK);
+        this.startUpdater(); 
+    }
+
+    updateAnalyzersFiles() {
+        visualText.pushDeleteAnalyzers(updatePush.BACK);
+        visualText.pushDownloadAnalyzers(updatePush.BACK);
+        this.startUpdater(); 
     }
 
 	convertPatFiles(analyzerDir: vscode.Uri) {

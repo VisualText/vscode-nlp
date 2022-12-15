@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { visualText } from './visualText';
+import { visualText,updateOp } from './visualText';
 import { TreeFile } from './treeFile';
 import { nlpFileType } from './textFile';
 import * as os from 'os';
@@ -12,6 +12,7 @@ let nlpStatusBarFired: vscode.StatusBarItem;
 let nlpStatusBarEngineVersion: vscode.StatusBarItem;
 let nlpStatusBarVisualTextVersion: vscode.StatusBarItem;
 let nlpStatusBarFilesVersion: vscode.StatusBarItem;
+let nlpStatusBarAnalyzersVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV }
 export enum FiredMode { BUILT, FIRED }
@@ -58,9 +59,14 @@ export class NLPStatusBar {
         nlpStatusBarVisualTextVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
         nlpStatusBarVisualTextVersion.tooltip = 'VisualText Version';
         nlpStatusBarVisualTextVersion.command = 'status.openVisualTextVersionSettings';
-        nlpStatusBarVisualTextVersion.show(); 
+        nlpStatusBarVisualTextVersion.show();
+                                
+        nlpStatusBarAnalyzersVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 3);
+        nlpStatusBarAnalyzersVersion.tooltip = 'Analyzers Version';
+        nlpStatusBarAnalyzersVersion.command = 'status.openAnalyzerVersionSettings';
+        nlpStatusBarAnalyzersVersion.show();
                         
-        nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 3);
+        nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 4);
         nlpStatusBarFilesVersion.tooltip = 'VisualText Files Version';
         nlpStatusBarFilesVersion.command = 'status.openFilesVersionSettings';
         nlpStatusBarFilesVersion.show();
@@ -73,6 +79,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings());
         vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
         vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
+        vscode.commands.registerCommand('status.openAnalyzerVersionSettings', () => this.openAnalyzersVersionSettings());        
         vscode.commands.registerCommand('status.clickedAnalyzerButton', () => this.clickedAnalyzerButton());
     }
 
@@ -120,33 +127,49 @@ export class NLPStatusBar {
     }
 
     openFilesVersionSettings() {
-        visualText.checkVTFilesVersion()
-        .then(newer => {
-            if (newer) {
-                nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
-                let items: vscode.QuickPickItem[] = [];
-                items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.repoVTFilesVersion});
-                items.push({label: 'No', description: 'Cancel VisualText files update'});
+        if (visualText.checkVTFilesVersion(visualText.emptyOp())) {
+            nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
+            let items: vscode.QuickPickItem[] = [];
+            items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.repoVTFilesVersion});
+            items.push({label: 'No', description: 'Cancel VisualText files update'});
 
-                vscode.window.showQuickPick(items).then(selection => {
-                    if (!selection || selection.label == 'No')
-                        return;
-                    visualText.updateVTFiles();     
-                });
-            }
-            else {
-                vscode.window.showWarningMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
-            }   
-        });
+            vscode.window.showQuickPick(items).then(selection => {
+                if (!selection || selection.label == 'No')
+                    return;
+                visualText.updateVTFiles();     
+            });
+        }
+        vscode.window.showWarningMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
+    }
+
+    openAnalyzersVersionSettings() {
+        if (visualText.checkVTFilesVersion(visualText.emptyOp())) {
+            nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
+            let items: vscode.QuickPickItem[] = [];
+            items.push({label: 'Yes', description: 'Update Analyzers to version ' + visualText.repoVTFilesVersion});
+            items.push({label: 'No', description: 'Cancel Analyzers update'});
+
+            vscode.window.showQuickPick(items).then(selection => {
+                if (!selection || selection.label == 'No')
+                    return;
+                visualText.updateAnalyzersFiles();     
+            });
+        }
+        vscode.window.showWarningMessage('Analyzers verion ' + visualText.repoVTFilesVersion + ' is the latest');
     }
 
     openEngineVersionSettings() {
         // Need to check the engine cmd version and repo version to compare
 
-        var ext = visualText.getExtension();
-        visualText.fetchExeVersion(ext.uri.fsPath)?.then(notUsed => {
-            if (visualText.cmdEngineVersion.length) {
-                visualText.checkEngineVersion().then(newVersion => {
+        visualText.fetchExeVersion(visualText.getExtensionPath().fsPath)?.then(msg => {
+            if (msg == 'no exe') {
+				vscode.window.showErrorMessage("NLP Engine executable missing", "Run Engine Updater").then(response => {
+					visualText.updateEngine();
+				}); 
+
+            } else if (visualText.cmdEngineVersion.length) {
+                let op: updateOp = visualText.emptyOp();
+                visualText.checkEngineVersion(op).then(newVersion => {
                     if (visualText.versionCompare(visualText.repoEngineVersion,visualText.cmdEngineVersion)) {
                         nlpStatusBar.updateEngineVersion(visualText.engineVersion);
                         let items: vscode.QuickPickItem[] = [];
