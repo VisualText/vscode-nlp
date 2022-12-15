@@ -1050,32 +1050,9 @@ export class VisualText {
     }
     
     updateEngine() {
-        if (this.setUpdateEngine())
-            this.startUpdater();          
-    }
-
-    runUpdater() {
-        if (this.setRerunUpdater())
-            this.startUpdater();    
-    }
-
-    setRerunUpdater(): boolean {
-        var uri = visualText.getExtensionPath();
-        if (uri) {
-            visualText.extensionItems = [];
-            this.debugMessage('Update NLP Engine'); 
-            return true;        
-        }
-        return false;      
-    }
-
-    setUpdateVTFiles(): boolean {
-        var uri = visualText.getExtensionPath();
-        if (uri) {
-            this.debugMessage('VisualText files updating to version ' + visualText.repoVTFilesVersion); 
-            return true;        
-        }
-        return false;      
+        visualText.pushDownloadEngineFiles(updatePush.FRONT);
+        visualText.pushDeleteEngineFiles(updatePush.FRONT);
+        visualText.startUpdater();          
     }
 
     updateVTFiles() {

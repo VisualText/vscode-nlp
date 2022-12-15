@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.61.1
+### 1.61.2
 Complete overhaul of updater
 
 ### 1.60.5
