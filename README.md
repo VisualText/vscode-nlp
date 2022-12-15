@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.61.0
+Complete overhaul of updater
+
 ### 1.60.5
 Enhanced error reporting in log view
 
@@ -207,12 +210,6 @@ Now handles utf8 files and characters (unicode)
 
 ### v1.21.4
 Various minor issues fixed
-
-### v1.20.7
-Added stable file and directory deletes and copies
-
-### v1.19.0
-Added copy single analyzer or all analyzers to chosen folder
 
 # Development
 

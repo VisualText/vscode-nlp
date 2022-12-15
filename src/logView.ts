@@ -73,9 +73,11 @@ export class LogView {
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
 		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
+		vscode.commands.registerCommand('logView.stopUpdater', () => this.stopUpdater());
 		vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir());
 		vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp());
 		vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp());
+		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
 
 		this.exists = false;
 		this.ctx = context;
@@ -87,6 +89,14 @@ export class LogView {
             logView = new LogView(ctx);
         }
         return logView;
+	}
+
+	stopUpdater() {
+		visualText.stopUpdater();
+	}
+
+	checkUpdates() {
+		visualText.startUpdater(false);
 	}
 
 	downloadHelp() {
@@ -209,7 +219,7 @@ export class LogView {
 				let pos = line.indexOf('.json');
 				let filepath = line.substring(18,pos+5);
 				let msg = 'Json error(s) in file: ' + filepath;
-				vscode.window.showErrorMessage(msg, "Click to edit file").then(response => {
+				vscode.window.showErrorMessage(msg, "Click to fix file").then(response => {
 					vscode.window.showTextDocument(vscode.Uri.file(filepath));
 				});
 				break;

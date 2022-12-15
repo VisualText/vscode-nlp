@@ -11,7 +11,7 @@ export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
 
-interface fileOperations {
+interface fileOp {
     uriFile1: vscode.Uri;
     uriFile2: vscode.Uri;
     operation: fileOperation;
@@ -29,7 +29,7 @@ export class FileOps {
     public stopAllFlag: boolean = false;
 
     public timerStatus: fileQueueStatus = fileQueueStatus.UNKNOWN;
-    public opsQueue: fileOperations[] = new Array();
+    public opsQueue: fileOp[] = new Array();
     public timerCounter: number = 0;
     public timerID: number = 0;
     public fileOpTypeStrs = [ 'UNKNOWN', 'FILE', 'DIRECTORY' ];
