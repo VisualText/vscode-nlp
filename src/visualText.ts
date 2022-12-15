@@ -81,7 +81,7 @@ export class VisualText {
     public askModify: boolean = false;
     public processID: number = 0;
     public stopAll: boolean = false;
-    public debug: boolean = true;
+    public debug: boolean = false;
 
     private platform: string = '';
     private homeDir: string = '';
