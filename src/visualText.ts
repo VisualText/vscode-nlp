@@ -838,6 +838,10 @@ export class VisualText {
         });
 	}
 
+    getExampleAnalyzersPath(): vscode.Uri {
+       return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,visualText.ANALYZERS_REPO));
+    }
+
     getExtensionPath(): vscode.Uri {
         return this.extensionItems[this.latestExtIndex].uri;
     }

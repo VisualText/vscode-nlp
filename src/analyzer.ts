@@ -66,14 +66,30 @@ export class Analyzer {
 
     newAnalyzer(): string {
         if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
-				if (newname) {
-                    this.createNewAnalyzer(newname);
-                    return newname;
-				}
-			});
+            var exampleDir = visualText.getExampleAnalyzersPath().fsPath;
+            var workDir = visualText.getWorkspaceFolder().fsPath;
+
+            if (exampleDir == workDir) {
+                var button = "Create analyzer reguardless";
+                vscode.window.showInformationMessage("Any analyzer in the example analyzers folder will be lost when updated.", button).then(response => {
+                    if (button === response) {
+                        this.askToCreateNewAnalyzer();
+                    }
+                });
+            } else {
+                this.askToCreateNewAnalyzer();
+            }
         }
         return '';
+    }
+
+    askToCreateNewAnalyzer() {
+        vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
+            if (newname) {
+                this.createNewAnalyzer(newname);
+                return newname;
+            }
+        });
     }
 
     zeroAnalyzer() {
@@ -203,7 +219,7 @@ export class Analyzer {
         this.readState();
         this.seqFile.init();
         vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
-        if (this.currentTextFile.fsPath.length)
+        if (this.currentTextFile.fsPath.length > 2)
             vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.fsPath));
     }
 
