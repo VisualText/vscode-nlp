@@ -121,7 +121,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
-		vscode.commands.registerCommand('analyzerView.loadDefaultAnalyzers', resource => this.loadDefaultAnalyzers());
+		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', resource => this.loadExampleAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
@@ -205,7 +205,7 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: false,
-				openLabel: 'Folder to copy all Analyzers to',
+				openLabel: 'Analyzers to here',
 				defaultUri: visualText.getWorkspaceFolder(),
 				canSelectFiles: false,
 				canSelectFolders: true
@@ -296,9 +296,9 @@ export class AnalyzerView {
 		}
 	}
 
-	private loadDefaultAnalyzers() {
-		var defaults = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,'analyzers'));
-		vscode.commands.executeCommand("vscode.openFolder",defaults);
+	private loadExampleAnalyzers() {
+		var examples = visualText.getExampleAnalyzersPath();
+		vscode.commands.executeCommand("vscode.openFolder",examples);
 		vscode.commands.executeCommand('workbench.action.openPanel');
 	}
 	
