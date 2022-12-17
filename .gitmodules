@@ -1,6 +1,0 @@
-[submodule "parse-en-us"]
-	path = parse-en-us
-	url = https://github.com/VisualText/parse-en-us.git
-[submodule "nlp-tutorials"]
-	path = nlp-tutorials
-	url = https://github.com/VisualText/nlp-tutorials.git
