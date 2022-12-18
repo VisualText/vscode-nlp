@@ -374,11 +374,14 @@ export class AnalyzerView {
 
 	public getConverting(analyzerDir: vscode.Uri): boolean {
 		var item = this.getAnalyzerItem(analyzerDir);
-		return item.isConverting;
+		if (item)
+			return item.isConverting;
+		return false;
 	}
 
 	public setConverting(analyzerDir: vscode.Uri, value: boolean) {
 		var item = this.getAnalyzerItem(analyzerDir);
-		item.isConverting = value;
+		if (item)
+			item.isConverting = value;
 	}
 }
