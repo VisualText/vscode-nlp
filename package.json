@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.62.2",
+    "version": "1.62.3",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1810,27 +1810,17 @@
                 },
                 {
                     "command": "textView.openText",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "arun"
                 },
                 {
                     "command": "textView.analyze",
-                    "when": "view == textView && viewItem =~ /file|fileHasLogs/",
+                    "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "arun"
                 },
                 {
                     "command": "textView.convert",
                     "when": "view == textView && viewItem =~ /dirHasNonText/",
-                    "group": "arun"
-                },
-                {
-                    "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem =~ /fileHasLogs|dirHasLogs|dirHasNonText|dirHasNonTextHasLogs/",
-                    "group": "arun"
-                },
-                {
-                    "command": "textView.analyzeDir",
-                    "when": "view == textView && viewItem =~ /dir/",
                     "group": "arun"
                 },
                 {
@@ -1840,7 +1830,7 @@
                 },
                 {
                     "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem =~ /fileHasLogs/",
+                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
                     "group": "file"
                 },
                 {
@@ -1890,12 +1880,12 @@
                 },
                 {
                     "command": "textView.existingFile",
-                    "when": "view == textView && viewItem =~ /file|fileHasLog/",
+                    "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "file"
                 },
                 {
                     "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem =~ /file|fileHasLog/",
+                    "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "file"
                 },
                 {
@@ -1907,6 +1897,11 @@
                     "command": "textView.moveUp",
                     "when": "view == textView",
                     "group": "folder"
+                },
+                {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
+                    "group": "inline"
                 },
                 {
                     "command": "textView.moveToFolder",
