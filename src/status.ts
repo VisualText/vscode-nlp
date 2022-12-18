@@ -161,7 +161,7 @@ export class NLPStatusBar {
     openEngineVersionSettings() {
         // Need to check the engine cmd version and repo version to compare
 
-        visualText.fetchExeVersion(visualText.getEnginePath())?.then(msg => {
+        visualText.fetchExeVersion(visualText.engineDirectory().fsPath)?.then(msg => {
             if (msg == 'no exe') {
 				vscode.window.showErrorMessage("NLP Engine executable missing", "Run Engine Updater").then(response => {
 					visualText.updateEngine();
