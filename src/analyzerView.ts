@@ -13,6 +13,7 @@ interface AnalyzerItem {
 	type: analyzerFolderType;
 	hasLogs: boolean;
 	hasPats: boolean;
+	hasReadme: boolean;
 	moveUp: boolean;
 	moveDown: boolean;
 	isConverting: boolean;
@@ -65,20 +66,21 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		var conVal = analyzerItem.moveDown ? 'moveDown' : '';
 		if (analyzerItem.moveUp)
 			conVal = conVal + 'moveUp';
+		if (analyzerItem.hasReadme)
+			conVal = conVal + 'readMe';
 
 		if (analyzerItem.type === analyzerFolderType.ANALYZER) {
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs;
-			treeItem.tooltip = treeItem.contextValue;
+			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
 			}
 		} else {
 			treeItem.contextValue = conVal + 'isFolder';
-			treeItem.contextValue = conVal + 'isFolder';
-			treeItem.tooltip = treeItem.contextValue;
+			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
@@ -99,7 +101,8 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerFolderType.ANALYZER : analyzerFolderType.FOLDER;
 				var hasLogs = dirfuncs.analyzerHasLogDirs(entry.uri,true);
 				if (hasLogs) hasAllLogs = true;
-                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, moveUp: false, moveDown: false, isConverting: false});
+				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
+                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false, isConverting: false});
 			}
 		}
 
@@ -131,7 +134,11 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.explore', resource => this.explore(resource));
 		vscode.commands.registerCommand('analyzerView.newFolder', resource => this.newFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToFolder', resource => this.moveToFolder(resource));
-		vscode.commands.registerCommand('analyzerView.moveUp', resource => this.moveUp(resource));		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
+		vscode.commands.registerCommand('analyzerView.moveUp', resource => this.moveUp(resource));
+		vscode.commands.registerCommand('analyzerView.readMe', resource => this.readMe(resource));
+		vscode.commands.registerCommand('analyzerView.editReadMe', resource => this.editReadMe(resource));
+		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
+		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 
 		visualText.colorizeAnalyzer();
@@ -172,6 +179,57 @@ export class AnalyzerView {
 			vscode.commands.executeCommand('analyzerView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('No folder selected');
+		}
+	}
+
+	deleteReadMe(analyzerItem: AnalyzerItem) {
+		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath,"README.md"));
+		if (fs.existsSync(readMe.fsPath)) {
+			let items: vscode.QuickPickItem[] = [];
+			items.push({label: 'Yes', description: 'Delete README.md?'});
+			items.push({label: 'No', description: 'Do not delete README.md'});
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				dirfuncs.delFile(readMe.fsPath);
+				vscode.commands.executeCommand('analyzerView.refreshAll');
+			});
+		} else {
+			vscode.window.showWarningMessage('README.md does not exist');
+		}
+	}
+
+	editReadMe(analyzerItem: AnalyzerItem) {
+		var readMe = path.join(analyzerItem.uri.fsPath,"README.md");
+
+		if (!fs.existsSync(readMe)) {
+			var content = "# " + path.basename(analyzerItem.uri.fsPath).toUpperCase() + "\n\nDescription here.";
+			readMe = "untitled:" + readMe;
+			var rm = vscode.Uri.parse(readMe);
+			
+			vscode.workspace.openTextDocument(rm).then(document => {
+				const edit = new vscode.WorkspaceEdit();
+				edit.insert(rm, new vscode.Position(0, 0), content);
+				return vscode.workspace.applyEdit(edit).then(success => {
+					if (success) {
+						vscode.window.showTextDocument(document);
+					} else {
+						vscode.window.showInformationMessage('Error!');
+					}
+				});
+			});
+
+		} else {
+			vscode.window.showTextDocument(vscode.Uri.file(readMe));
+		}
+		vscode.commands.executeCommand('analyzerView.refreshAll');
+	}
+
+	readMe(analyzerItem: AnalyzerItem) {
+		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath,"README.md"));
+		if (fs.existsSync(readMe.fsPath)) {
+			vscode.commands.executeCommand("markdown.showPreview", readMe);
 		}
 	}
 

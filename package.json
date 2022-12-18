@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.61.4",
+    "version": "1.62.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -702,7 +702,7 @@
             },
             {
                 "command": "sequenceView.insertLibrary",
-                "title": "Insert Library pass",
+                "title": "Library pass",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -710,7 +710,7 @@
             },
             {
                 "command": "sequenceView.insertNew",
-                "title": "Insert New pass",
+                "title": "New pass",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -718,7 +718,7 @@
             },
             {
                 "command": "sequenceView.insert",
-                "title": "Insert Existing pass",
+                "title": "Existing pass",
                 "icon": {
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
@@ -822,6 +822,30 @@
                 "icon": {
                     "light": "resources/light/left.svg",
                     "dark": "resources/dark/left.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteReadMe",
+                "title": "README Delete file",
+                "icon": {
+                    "light": "resources/light/readme.svg",
+                    "dark": "resources/dark/readme.svg"
+                }
+            },
+            {
+                "command": "analyzerView.editReadMe",
+                "title": "README Edit/Create file",
+                "icon": {
+                    "light": "resources/light/readme.svg",
+                    "dark": "resources/dark/readme.svg"
+                }
+            },
+            {
+                "command": "analyzerView.readMe",
+                "title": "README Open file",
+                "icon": {
+                    "light": "resources/light/readme.svg",
+                    "dark": "resources/dark/readme.svg"
                 }
             },
             {
@@ -1895,6 +1919,26 @@
                     "group": "inline"
                 },
                 {
+                    "command": "analyzerView.readMe",
+                    "when": "view == analyzerView && viewItem =~ /.*readMe.*/",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.deleteReadMe",
+                    "when": "view == analyzerView",
+                    "group": "readme"
+                },
+                {
+                    "command": "analyzerView.editReadMe",
+                    "when": "view == analyzerView",
+                    "group": "readme"
+                },
+                {
+                    "command": "analyzerView.readMe",
+                    "when": "view == analyzerView",
+                    "group": "readme"
+                },
+                {
                     "command": "analyzerView.newFolder",
                     "when": "view == analyzerView",
                     "group": "folder"
@@ -1912,7 +1956,7 @@
                 {
                     "command": "analyzerView.explore",
                     "when": "view == analyzerView",
-                    "group": "edit"
+                    "group": "folder"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzer",
@@ -1936,7 +1980,7 @@
                 },
                 {
                     "command": "analyzerView.deleteAnalyzerLogs",
-                    "when": "view == analyzerView && viewItem == hasLogs",
+                    "when": "view == analyzerView && viewItem =~ /.*hasLogs.*/",
                     "group": "edit"
                 },
                 {

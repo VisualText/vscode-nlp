@@ -22,6 +22,10 @@ export namespace dirfuncs {
     }
 
     export function copyFile(fromPath: string, toPath: string): boolean {
+        if (!fs.existsSync(fromPath)) {
+            vscode.window.showInformationMessage('copyFile from does not exist: ' + fromPath);
+            return false;
+        }
         try {
             const statsFrom = fs.statSync(fromPath);
             if (statsFrom.isFile()) {
@@ -286,6 +290,18 @@ export namespace dirfuncs {
             }                  
         } else {
             return dirfuncs.fileHasLog(dir.fsPath);
+        }
+
+		return false;
+	}
+
+    export function hasFile(dir: vscode.Uri, filename: string): boolean {
+        if (dirfuncs.isDir(dir.fsPath)) {
+            const files = fs.readdirSync(dir.fsPath, { withFileTypes: true });
+            for (const file of files) {
+                if (file.name == filename)
+                    return true;
+            }                  
         }
 
 		return false;
