@@ -54,21 +54,14 @@ export class NLPFile extends TextFile {
             });
 
 			// Check to see if the engine executable is there
-			var exe = visualText.getExtensionPath().fsPath;
-			var engineDir = '';
-			var exists = false;
-			if (exe) {
-				engineDir = path.dirname(exe);
-				if (exe.length && fs.existsSync(exe))
-					exists = true;
-			}
-
-			if (!exists) {
+			var exe = visualText.exePath().fsPath;
+			if (!exe.length || !fs.existsSync(exe)) {
 				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(response => {
 					visualText.startUpdater();
 				});
 			}
 
+			var engineDir = path.dirname(exe);
 			visualText.readState();
 			vscode.commands.executeCommand('workbench.action.files.saveAll');
 

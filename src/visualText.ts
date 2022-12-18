@@ -791,6 +791,10 @@ export class VisualText {
         return ret;
     }
 
+    exePath() {
+        return vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,visualText.NLP_EXE));
+    }
+
     engineDirectory() {
         return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_REPO));
     }
