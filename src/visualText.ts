@@ -9,8 +9,6 @@ import { nlpStatusBar } from './status';
 import { logView } from './logView';
 import { FileOps,fileOperation,fileOpRefresh } from './fileOps';
 import { NLPFile } from './nlp';
-import { resolve } from 'dns';
-import { rejects } from 'assert';
 
 export enum updateStatus { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum updateOperation { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -884,17 +882,6 @@ export class VisualText {
         return config.get<string>('version');
     }
     
-    setEnginePath(path: string) {
-        this.engineDir = vscode.Uri.file(path);
-        const config = vscode.workspace.getConfiguration('engine');
-        config.update('path',path,vscode.ConfigurationTarget.Global);
-    }
-
-    getEnginePath(): string | undefined {
-        const config = vscode.workspace.getConfiguration('engine');
-        return config.get<string>('path');
-    }
-
     setVTFilesVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
@@ -1012,7 +999,7 @@ export class VisualText {
     }
 
     getVisualTextDirectory(dirName: string=''): string {
-        var exePath = this.getEnginePath();
+        var exePath = this.engineDirectory().fsPath;
         if (exePath) {
             var engineDir = path.dirname(exePath);
             if (dirName.length)

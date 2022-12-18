@@ -54,7 +54,7 @@ export class NLPFile extends TextFile {
             });
 
 			// Check to see if the engine executable is there
-			var exe = visualText.getEnginePath();
+			var exe = visualText.getExtensionPath().fsPath;
 			var engineDir = '';
 			var exists = false;
 			if (exe) {
