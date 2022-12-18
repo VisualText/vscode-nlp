@@ -68,6 +68,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			var hasLogs = textItem.hasLogs ? 'HasLogs' : '';
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
 			treeItem.contextValue = 'file' + conVal + hasLogs;
+			//treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
 				light: textItem.hasLogs ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
 									path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
@@ -79,6 +80,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			var hasLogs = textItem.hasLogs ? 'HasLogs' : '';
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
 			treeItem.contextValue = 'dir' + conVal + hasNonText + hasLogs ;
+			//treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
