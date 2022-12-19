@@ -91,6 +91,9 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
+### 1.63.0
+Added new and library pass submenus
+
 ### 1.62.4
 Added README files to analyzer view
 
@@ -204,15 +207,6 @@ Mac and Linux fixes
 
 ### v1.30.8
 Security updates
-
-### v1.30.7
-Now uses the unicode version of the nlp-engine
-
-### v1.30.0
-Now handles utf8 files and characters (unicode)
-
-### v1.21.4
-Various minor issues fixed
 
 # Development
 

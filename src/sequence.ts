@@ -8,6 +8,7 @@ import { dirfuncs } from './dirfuncs';
 import { TreeFile } from './treeFile';
 
 export enum moveDirection { UP, DOWN }
+export enum newPassType { RULES, CODE, DECL }
 
 export class PassItem {
 	public uri = vscode.Uri.file('');
@@ -292,11 +293,11 @@ export class SequenceFile extends TextFile {
 		}	
 	}
 		
-	insertNewPass(seqItem: SequenceItem, newPass: string) {
+	insertNewPass(seqItem: SequenceItem, newPass: string, type: newPassType) {
 		if (this.passItems.length && newPass.length) {
 			var foundItem = this.findPass(seqItem.type,seqItem.name);
 			if (foundItem) {
-				var newfile = this.createNewPassFile(newPass);
+				var newfile = this.createNewPassFile(newPass,type);
 				var passItem = this.createPassItemFromFile(newfile);
 				this.passItems.splice(foundItem.order+1,0,passItem);
 				this.saveFile();			
@@ -304,9 +305,9 @@ export class SequenceFile extends TextFile {
 		}	
 	}
 
-	insertNewPassEnd(newpass: string) {
+	insertNewPassEnd(newpass: string, type: newPassType) {
 		if (this.passItems.length && newpass.length) {
-			var newfile = this.createNewPassFile(newpass);
+			var newfile = this.createNewPassFile(newpass,type);
 			var passItem = this.createPassItemFromFile(newfile);
 			this.passItems.push(passItem);
 			this.saveFile();			
@@ -365,9 +366,9 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	createNewPassFile(filename: string): string {
+	createNewPassFile(filename: string, type: newPassType): string {
 		var newfilepath = path.join(visualText.analyzer.getSpecDirectory().fsPath,filename.concat('.nlp'));
-		fs.writeFileSync(newfilepath,this.newPassContent(filename),{flag:'w+'});
+		fs.writeFileSync(newfilepath,this.newPassContent(filename,type),{flag:'w+'});
 		return newfilepath;
 	}
 
@@ -378,7 +379,7 @@ export class SequenceFile extends TextFile {
 		return date + ' ' + time;
 	}
 
-	newPassContent(filename: string) {
+	newPassContent(filename: string, type: newPassType) {
 		const config = vscode.workspace.getConfiguration('user');
         var username = config.get<string>('name');
 		if (username?.length == 0)
@@ -391,12 +392,30 @@ export class SequenceFile extends TextFile {
 		newpass = newpass.concat('# MODIFIED:\n');
 		newpass = newpass.concat('###############################################\n\n');
 
-		newpass = newpass.concat('@NODES _ROOT\n\n');
+		switch (type) {
+			case newPassType.RULES:
+				newpass = newpass.concat('@NODES _ROOT\n\n');
 
-		newpass = newpass.concat('@RULES\n');
-		newpass = newpass.concat('_xNIL <-\n');
-		newpass = newpass.concat('	_xNIL	### (1)\n');
-		newpass = newpass.concat('	@@\n');
+				newpass = newpass.concat('@RULES\n');
+				newpass = newpass.concat('_xNIL <-\n');
+				newpass = newpass.concat('	_xNIL	### (1)\n');
+				newpass = newpass.concat('	@@\n');
+				break;
+
+			case newPassType.CODE:
+				newpass = newpass.concat('@CODE\n\n');
+				newpass = newpass.concat('G("this") = 1;\n');
+				newpass = newpass.concat('\n@@CODE');
+				break;
+
+			case newPassType.DECL:
+				newpass = newpass.concat('@DECL\n\n');
+				newpass = newpass.concat('myfunction(L("var")) {\n');
+				newpass = newpass.concat('\n');
+				newpass = newpass.concat('}\n');
+				newpass = newpass.concat('\n@@DECL');
+				break;
+		}
 
 		return newpass;
 	}
