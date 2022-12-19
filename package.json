@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.62.4",
+    "version": "1.63.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -702,7 +702,31 @@
             },
             {
                 "command": "sequenceView.insertLibrary",
-                "title": "Library pass",
+                "title": "Select Library Pass",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.libraryKBFuncs",
+                "title": "KB Functions",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.libraryLines",
+                "title": "Lines",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.libraryWhiteSpaces",
+                "title": "White Space",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -710,7 +734,23 @@
             },
             {
                 "command": "sequenceView.insertNew",
-                "title": "New pass",
+                "title": "Rules",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertCode",
+                "title": "Code",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertDecl",
+                "title": "Functions",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -1240,6 +1280,16 @@
                 "when": "resourceLangId == nlp"
             }
         ],
+        "submenus": [
+            {
+              "id": "sequencetype",
+              "label": "New Pass"
+            },
+            {
+                "id": "librarypass",
+                "label": "Library Pass"
+            }
+          ],
         "menus": {
             "explorer/context": [
                 {
@@ -1632,6 +1682,38 @@
                     "group": "navigation"
                 }
             ],
+            "sequencetype":[
+                {
+                    "command": "sequenceView.insertNew",
+                    "group": "edit@1"
+                },
+                {
+                    "command": "sequenceView.insertCode",
+                    "group": "edit@2"
+                },
+                {
+                    "command": "sequenceView.insertDecl",
+                    "group": "edit@3"
+                }
+            ],
+            "librarypass":[
+                {
+                    "command": "sequenceView.insertLibrary",
+                    "group": "edit@1"
+                },
+                {
+                    "command": "sequenceView.libraryKBFuncs",
+                    "group": "edit@2"
+                },
+                {
+                    "command": "sequenceView.libraryLines",
+                    "group": "edit@3"
+                },
+                {
+                    "command": "sequenceView.libraryWhiteSpaces",
+                    "group": "edit@4"
+                }
+            ],
             "view/item/context": [
                 {
                     "command": "kbView.mergeDicts",
@@ -1744,12 +1826,12 @@
                     "group": "edit"
                 },
                 {
-                    "command": "sequenceView.insertLibrary",
+                    "submenu": "librarypass",
                     "when": "view == sequenceView",
                     "group": "edit"
                 },
                 {
-                    "command": "sequenceView.insertNew",
+                    "submenu": "sequencetype",
                     "when": "view == sequenceView",
                     "group": "edit"
                 },
@@ -2051,11 +2133,6 @@
                 {
                     "command": "textView.deleteFile",
                     "when": "view == textView && viewItem =~ /file/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem =~ /fileHasLogs|dirHasLogs|dirHasNonTextHasLogs/",
                     "group": "inline"
                 },
                 {

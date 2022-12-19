@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.63.0
+Added new and library pass submenus
+
 ### 1.62.4
 Added README files to analyzer view
 

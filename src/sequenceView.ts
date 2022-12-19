@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { PassItem, moveDirection } from './sequence';
+import { PassItem, moveDirection, newPassType } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
 import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
@@ -211,6 +211,26 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	libraryKBFuncs(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'','KBFuncs.nlp');
+	}
+
+	libraryLines(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'Formatting','Lines.nlp');
+	}
+
+	libraryWhiteSpaces(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'Formatting','RemoveWhiteSpace.nlp');
+	}
+
+	insertLibraryFile(seqItem: SequenceItem, dir: string, filename: string) {
+		var filepath = path.join(visualText.getVisualTextDirectory('spec'),dir,filename);
+		var newfile: vscode.Uri = vscode.Uri.file(filepath);
+		var seqFile = visualText.analyzer.seqFile;
+		seqFile.insertPass(seqItem,newfile);
+		vscode.commands.executeCommand('sequenceView.refreshAll');
+	}
+
 	insertLibraryPass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
@@ -262,16 +282,28 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			});			
 		}
 	}
+
+	insertCode(seqItem: SequenceItem): void {
+		this.insertNew(seqItem,newPassType.CODE);
+	}
+
+	insertDecl(seqItem: SequenceItem): void {
+		this.insertNew(seqItem,newPassType.DECL);
+	}
+
+	insertRules(seqItem: SequenceItem): void {
+		this.insertNew(seqItem,newPassType.RULES);
+	}
 	
-	insertNewPass(seqItem: SequenceItem): void {
+	insertNew(seqItem: SequenceItem, type: newPassType): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
 					if (seqItem && (seqItem.uri || seqFile.getPasses().length > 1))
-						seqFile.insertNewPass(seqItem,newname);
+						seqFile.insertNewPass(seqItem,newname,type);
 					else
-						seqFile.insertNewPassEnd(newname);
+						seqFile.insertNewPassEnd(newname,type);
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
@@ -402,8 +434,13 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
 		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
-		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertNewPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertRules(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertCode', (seqItem) => treeDataProvider.insertCode(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryWhiteSpaces', (seqItem) => treeDataProvider.libraryWhiteSpaces(seqItem));
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.duplicate', (seqItem) => treeDataProvider.duplicatePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
