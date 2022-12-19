@@ -113,8 +113,8 @@ export class VisualText {
 
             visualText.readConfig();
             visualText.readState();
-            visualText.initSettings();
             visualText.getExtensionDirs();
+            visualText.initSettings();
         }
         return visualText;
     }
@@ -132,7 +132,6 @@ export class VisualText {
                 this.debugMessage('Platform: ' + plat);
                 this.debugMessage('User profile path: ' + this.homeDir);
                 this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath);
-                this.debugMessage('VSCode NLP++ Extension version: ' + this.version);
             }
 
             this.debugMessage('Checking for updates or repairs...');
@@ -614,7 +613,7 @@ export class VisualText {
     }
 
     initSettings(): boolean {
-        var fromDir = this.getVisualTextDirectory('.vscode');
+        var fromDir = path.join(visualText.getExtensionPath().fsPath,'.vscode');
         if (fs.existsSync(fromDir)) {
             var toDir = path.join(this.analyzerDir.fsPath,'.vscode');
             if (!fs.existsSync(toDir)) {
@@ -1003,15 +1002,16 @@ export class VisualText {
     }
 
     getVisualTextDirectory(dirName: string=''): string {
-        var exePath = this.engineDirectory().fsPath;
-        if (exePath) {
-            var engineDir = path.dirname(exePath);
+        var vtDir = '';
+        var engineDir = this.engineDirectory().fsPath;
+        var vtDirName = 'visualtext';
+        if (engineDir) {
             if (dirName.length)
-                return path.join(engineDir,this.VISUALTEXT_FILES_REPO,dirName);
+                vtDir = path.join(engineDir,vtDirName,dirName);
             else
-                return path.join(engineDir,this.VISUALTEXT_FILES_REPO);
+                vtDir = path.join(engineDir,vtDirName);
         }
-        return '';
+        return vtDir;
     }
 
     isAnalyzerDirectory(dirPath: vscode.Uri): boolean {

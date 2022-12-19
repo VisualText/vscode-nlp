@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.62.3
+### 1.62.4
 Added README files to analyzer view
 
 ### 1.61.4

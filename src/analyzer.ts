@@ -110,7 +110,7 @@ export class Analyzer {
             vscode.window.showWarningMessage('Analyzer folder already exists');
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
-            vscode.window.showWarningMessage('NLP Engine not found');
+            vscode.window.showWarningMessage('Template analyzer files missing');
             return false;
         } else {
             let items: vscode.QuickPickItem[] = [];
