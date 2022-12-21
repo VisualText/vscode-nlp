@@ -310,7 +310,6 @@ export class KBView {
 		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(KBItem.uri);
 		visualText.analyzer.saveCurrentFile(KBItem.uri);
-		vscode.commands.executeCommand('outputView.refreshAll');
 		vscode.commands.executeCommand('status.update');
 	}
 
