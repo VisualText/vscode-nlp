@@ -91,7 +91,7 @@ There are many details in the windows version of VisualText that are yet to be i
 
 ## Release Notes
 
-### 1.63.0
+### 1.63.1
 Added new and library pass submenus
 
 ### 1.62.4
