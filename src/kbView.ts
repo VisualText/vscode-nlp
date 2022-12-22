@@ -204,6 +204,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
 		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
 		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
+		vscode.commands.registerCommand('kbView.explore', () => this.explore());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -211,6 +212,12 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	explore() {
+		let kbDir = visualText.analyzer.getKBDirectory().fsPath;
+		if (dirfuncs.isDir(kbDir))
+			visualText.openFileManager(kbDir);
 	}
 
 	search() {

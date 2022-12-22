@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.63.1",
+    "version": "1.63.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.explore",
+                "title": "Explore KB Directory",
+                "icon": {
+                    "light": "resources/light/search.svg",
+                    "dark": "resources/dark/search.svg"
+                }
+            },
             {
                 "command": "kbView.search",
                 "title": "Search",
@@ -978,7 +986,7 @@
             },
             {
                 "command": "textView.deleteFileLogs",
-                "title": "Delete Log Files",
+                "title": "Remove Log Files",
                 "icon": {
                     "light": "resources/light/x-box.svg",
                     "dark": "resources/dark/x-box.svg"
@@ -1716,6 +1724,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "kbView.explore",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "kbView.mergeDicts",
                     "when": "view == kbView",
                     "group": "navigation"
@@ -1981,21 +1994,6 @@
                     "group": "folder"
                 },
                 {
-                    "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.moveToFolder",
-                    "when": "view == textView && viewItem =~ /moveDown/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.moveUp",
-                    "when": "view == textView && viewItem =~ /moveUp/",
-                    "group": "inline"
-                },
-                {
                     "command": "analyzerView.readMe",
                     "when": "view == analyzerView && viewItem =~ /.*readMe.*/",
                     "group": "inline"
@@ -2111,6 +2109,21 @@
                     "group": "inline"
                 },
                 {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.moveToFolder",
+                    "when": "view == textView && viewItem =~ /moveDown/",
+                    "group": "inline"
+                },
+                {
+                    "command": "textView.moveUp",
+                    "when": "view == textView && viewItem =~ /moveUp/",
+                    "group": "inline"
+                },
+                {
                     "command": "textView.analyzeDir",
                     "when": "view == textView && viewItem =~ /dir/",
                     "group": "inline"
@@ -2128,11 +2141,6 @@
                 {
                     "command": "textView.newText",
                     "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.deleteFile",
-                    "when": "view == textView && viewItem =~ /file/",
                     "group": "inline"
                 },
                 {
