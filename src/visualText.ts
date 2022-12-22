@@ -7,7 +7,7 @@ import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
 import { logView } from './logView';
-import { FileOps,fileOperation,fileOpRefresh } from './fileOps';
+import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
 
 export enum updateStatus { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
@@ -1063,7 +1063,9 @@ export class VisualText {
     }
 
 	convertPatFiles(analyzerDir: vscode.Uri) {
-		visualText.fileOps.addFileOperation(analyzerDir,analyzerDir,[fileOpRefresh.ANALYZER],fileOperation.RENAME,'pat','nlp');
+        var spec = vscode.Uri.file(path.join(analyzerDir.fsPath,'spec'));
+		var op = visualText.fileOps.addFileOperation(spec,spec,[fileOpRefresh.ANALYZER],fileOperation.RENAME,'pat','nlp');
+        op.oneOff = fileOneOff.PAT_TO_NLP;
 		visualText.fileOps.startFileOps();
 	}
 
