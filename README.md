@@ -87,9 +87,14 @@ This file will automatically get generated when a new analyzer is created in Vis
 
 ## Known Issues
 
-There are many details in the windows version of VisualText that are yet to be implemented in the VSCode version.
+Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 ## Release Notes
+
+For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
+
+### 1.64.0
+Added download of the boost file system library
 
 ### 1.63.3
 Added new and library pass submenus
@@ -198,15 +203,6 @@ Added icons to output view
 
 ### v1.31.3
 Fixed version number bug in linux and mac
-
-### v1.31.2
-Added unicode character offsets to trees
-
-### v1.30.16
-Mac and Linux fixes
-
-### v1.30.8
-Security updates
 
 # Development
 
