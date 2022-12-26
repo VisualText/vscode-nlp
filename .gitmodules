@@ -1,3 +1,0 @@
-[submodule "ecl-tmLanguage"]
-	path = nlp-engine
-	url = https://github.com/VisualText/nlp-engine.git
