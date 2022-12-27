@@ -10,6 +10,7 @@ import { findView } from './findView';
 import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
+import { analyzer } from './analyzer';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -108,11 +109,11 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var anaName = visualText.getCurrentAnalyzerName();
 		if (hasPat && converting == false && anaName.length) {
 			var button = "Convert to .nlp";
-
 			vscode.window.showInformationMessage("Analyzer " + anaName + " sequence has .pat extensions", button).then(response => {
 				if (button === response) {
-					analyzerView.setConverting(visualText.analyzer.getAnalyzerDirectory(),true);
-					visualText.convertPatFiles(specDir);
+					analyzerView.converting = true;
+					if (analyzerView.chosen)
+						visualText.convertPatFiles(analyzerView.chosen);
 				}
 			});
 		}

@@ -16,10 +16,7 @@ interface AnalyzerItem {
 	hasReadme: boolean;
 	moveUp: boolean;
 	moveDown: boolean;
-	isConverting: boolean;
 }
-
-export let analyzerItems: AnalyzerItem[] = new Array();
 
 export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<AnalyzerItem> {
 
@@ -102,7 +99,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 				var hasLogs = dirfuncs.analyzerHasLogDirs(entry.uri,true);
 				if (hasLogs) hasAllLogs = true;
 				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
-                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false, isConverting: false});
+                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
 			}
 		}
 
@@ -117,6 +114,8 @@ export class AnalyzerView {
 
 	public analyzerView: vscode.TreeView<AnalyzerItem>;
 	public folderUri: vscode.Uri | undefined;
+	public chosen: vscode.Uri | undefined;
+	public converting: Boolean;
 
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
@@ -143,6 +142,7 @@ export class AnalyzerView {
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
+		this.converting = false;
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -319,11 +319,13 @@ export class AnalyzerView {
 	
 	private updateTitle(uri: vscode.Uri): void {
 		if (uri.fsPath.length > 0) {
+			this.chosen = uri;
 			var anaChosen = path.basename(uri.fsPath);
 			if (anaChosen.length)
 				this.analyzerView.title = `ANALYZERS (${anaChosen})`;
 			return;
 		}
+		this.chosen = undefined;
 		this.analyzerView.title = 'ANALYZERS';
 	}
 
@@ -420,26 +422,5 @@ export class AnalyzerView {
 				}
 			}
 		});
-	}
-
-	private getAnalyzerItem(analyzerDir: vscode.Uri): AnalyzerItem {
-		for (let analyzerItem of analyzerItems) {
-			if (analyzerItem.uri.fsPath == analyzerDir.fsPath)
-				return analyzerItem;
-		}
-		return analyzerItems[0];
-	}
-
-	public getConverting(analyzerDir: vscode.Uri): boolean {
-		var item = this.getAnalyzerItem(analyzerDir);
-		if (item)
-			return item.isConverting;
-		return false;
-	}
-
-	public setConverting(analyzerDir: vscode.Uri, value: boolean) {
-		var item = this.getAnalyzerItem(analyzerDir);
-		if (item)
-			item.isConverting = value;
 	}
 }
