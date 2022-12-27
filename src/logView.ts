@@ -78,6 +78,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp());
 		vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp());
 		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
+		vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug());
 
 		this.exists = false;
 		this.ctx = context;
@@ -89,6 +90,19 @@ export class LogView {
             logView = new LogView(ctx);
         }
         return logView;
+	}
+
+	updateDebug() {
+		let items: vscode.QuickPickItem[] = [];
+		let arfirm = 'Turn ON update debugging';
+        items.push({label: arfirm, description: 'display extra details of updating for debugging purposes'});
+        items.push({label: 'Turn OFF update debugging', description: 'do not display debugging info for updating'});
+        vscode.window.showQuickPick(items).then(selection => {
+            if (!selection) {
+                return;
+            }
+            visualText.debug = selection.label === arfirm ? true : false;
+        });	
 	}
 
 	stopUpdater() {
