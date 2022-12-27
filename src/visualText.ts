@@ -45,7 +45,7 @@ export class VisualText {
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt71.dll';
     public readonly ICU2_WIN = 'icuuc71.dll';
-    public readonly FILESYSTEM_WIN = 'boost_filesystem.dll';
+    public readonly FILESYSTEM_WIN = 'boost_filesystem-vc142-mt-x32-1_80.dll';
     public readonly ICU1_LINUX = 'libicutu.a';
     public readonly ICU2_LINUX = 'libicuuc.a';
     public readonly FILESYSTEM_LINUX = 'boost_filesystem.a';
@@ -82,7 +82,7 @@ export class VisualText {
     public askModify: boolean = false;
     public processID: number = 0;
     public stopAll: boolean = false;
-    public debug: boolean = false;
+    public debug: boolean = true;
 
     private platform: string = '';
     private homeDir: string = '';
