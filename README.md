@@ -93,7 +93,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 1.64.4
+### 1.64.5
 Added download of the boost file system library
 
 ### 1.63.2

@@ -104,10 +104,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 
 		var specDir: vscode.Uri = visualText.analyzer.getSpecDirectory();
-		if (hasPat && analyzerView.getConverting(specDir) == false && visualText.analyzer.name.length) {
+		var converting = analyzerView.getConverting(specDir);
+		var anaName = visualText.getCurrentAnalyzerName();
+		if (hasPat && converting == false && anaName.length) {
 			var button = "Convert to .nlp";
 
-			vscode.window.showInformationMessage("Analyzer " + visualText.analyzer.name + " sequence has .pat extensions", button).then(response => {
+			vscode.window.showInformationMessage("Analyzer " + anaName + " sequence has .pat extensions", button).then(response => {
 				if (button === response) {
 					analyzerView.setConverting(visualText.analyzer.getAnalyzerDirectory(),true);
 					visualText.convertPatFiles(specDir);

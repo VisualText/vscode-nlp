@@ -48,10 +48,10 @@ export class VisualText {
     public readonly FILESYSTEM_WIN = 'boost_filesystem-vc142-mt-x32-1_80.dll';
     public readonly ICU1_LINUX = 'libicutu.a';
     public readonly ICU2_LINUX = 'libicuuc.a';
-    public readonly FILESYSTEM_LINUX = 'boost_filesystem.a';
+    public readonly FILESYSTEM_LINUX = 'libboost_filesystem.a';
     public readonly ICU1_MAC = 'libicutum.a';
     public readonly ICU2_MAC = 'libicuucm.a';
-    public readonly FILESYSTEM_MAC = 'boost_filesystemm.a';
+    public readonly FILESYSTEM_MAC = 'libboost_filesystemm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
     public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';
@@ -967,6 +967,10 @@ export class VisualText {
 
     getCurrentAnalyzer(): vscode.Uri {
         return this.currentAnalyzer;
+    }
+    
+    getCurrentAnalyzerName(): string {
+        return path.basename(this.currentAnalyzer.fsPath);
     }
 
     getAnalyzer(): vscode.Uri {
