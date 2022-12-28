@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 1.65.0
+Removed boost and used std::filesystem and std::regex
+
 ### 1.64.5
 Added download of the boost file system library
 
