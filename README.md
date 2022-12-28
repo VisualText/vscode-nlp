@@ -93,7 +93,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 1.65.0
+### 1.65.1
 Removed boost and used std::filesystem and std::regex
 
 ### 1.64.5
