@@ -4,12 +4,14 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { logView } from './logView';
+import { analyzerView } from './analyzerView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
 export enum fileOperation { UNKNOWN, COPY, DELETE, RENAME, BREAK, MKDIR, NEWFILE, APPEND, DONE }
 export enum fileOpStatus { UNKNOWN, RUNNING, FAILED, DONE }
 export enum fileOpType { UNKNOWN, FILE, DIRECTORY }
 export enum fileOpRefresh { UNKNOWN, TEXT, ANALYZER, KB, OUTPUT, ANALYZERS }
+export enum fileOneOff { UNKNOWN, PAT_TO_NLP }
 
 interface fileOp {
     uriFile1: vscode.Uri;
@@ -17,6 +19,7 @@ interface fileOp {
     operation: fileOperation;
     status: fileOpStatus;
     type: fileOpType;
+    oneOff: fileOneOff;
     extension1: string;
     extension2: string;
     refreshes: fileOpRefresh[];
@@ -49,7 +52,7 @@ export class FileOps {
         visualText.fileOps.stopAllFlag = true;
     }
 
-    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') {
+    public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') : fileOp {
         var type: fileOpType = fileOpType.UNKNOWN
         if (dirfuncs.isDir(uri1.fsPath))
             type = fileOpType.DIRECTORY;
@@ -67,7 +70,7 @@ export class FileOps {
                             this.opsQueue.push({uriFile1: u1, uriFile2: u2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
                         }
                     } else {
-                        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
+                        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
                     }
                 }
             } else if (operation == fileOperation.BREAK) {
@@ -79,7 +82,7 @@ export class FileOps {
 
                 for (let i = 0; i < numDirs; i++) {
                     let newDir = path.join(uri1.fsPath,basename + "_" + this.zeroStr(i,zeroLength));
-                    this.opsQueue.push({uriFile1: vscode.Uri.file(newDir), uriFile2: uri2, operation: fileOperation.MKDIR, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, extension1: '', extension2: '', refreshes: refreshes, display: true})
+                    this.opsQueue.push({uriFile1: vscode.Uri.file(newDir), uriFile2: uri2, operation: fileOperation.MKDIR, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
 
                     for (let i = 0; i < filesPerDir; i++) {
                         if (fileCount >= files.length)
@@ -87,7 +90,7 @@ export class FileOps {
                         let oldFile = files[fileCount++];
                         let baseFile = path.basename(oldFile.fsPath);
                         let newFile = path.join(newDir,baseFile);
-                        this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: '', extension2: '', refreshes: refreshes, display: false})
+                        this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: false})
                     }
                 }
             } else if (operation == fileOperation.APPEND) {
@@ -97,14 +100,16 @@ export class FileOps {
                         dirfuncs.delDir(uri2.fsPath);
                     }
                     else if (file.fsPath.endsWith(extension1)) {
-                        this.opsQueue.push({uriFile1: file, uriFile2: uri2, operation: fileOperation.APPEND, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
+                        this.opsQueue.push({uriFile1: file, uriFile2: uri2, operation: fileOperation.APPEND, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, oneOff: fileOneOff.UNKNOWN, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
                     }
                 }
             }
         }
         else {
-            this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
+            this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: operation, status: fileOpStatus.UNKNOWN, type: type, oneOff: fileOneOff.UNKNOWN, extension1: extension1, extension2: extension2, refreshes: refreshes, display: true})
         }
+
+        return this.opsQueue[this.opsQueue.length - 1];
      }
 
     zeroStr(num: number, charCount: number): string {
@@ -261,6 +266,12 @@ export class FileOps {
                     vscode.commands.executeCommand('kbView.refreshAll');
                 if (op.refreshes.includes(fileOpRefresh.OUTPUT))
                     vscode.commands.executeCommand('outputView.refreshAll');
+
+                switch (op.oneOff) {
+                    case fileOneOff.PAT_TO_NLP:
+                        analyzerView.converting = false;
+                        break;
+                }
                 break;
             }
         }
