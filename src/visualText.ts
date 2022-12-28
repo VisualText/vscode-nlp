@@ -13,7 +13,7 @@ import { NLPFile } from './nlp';
 export enum updateStatus { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum updateOperation { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
 export enum updateType { UNKNOWN, VERSION, DOWNLOAD, DELETE, UNZIP }
-export enum updateComponent { UNKNOWN, ICU1, ICU2, FILESYSTEM, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
+export enum updateComponent { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
 export enum updatePush { FRONT, BACK }
 
 export interface updateOp {
@@ -38,20 +38,17 @@ export class VisualText {
     public opsQueue: updateOp[] = new Array();
     public statusStrs = [ 'UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE' ];
     public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE' ];
-    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'FILESYSTEM', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES' ];
+    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES' ];
     
     public readonly LOG_SUFFIX = '_log';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt71.dll';
     public readonly ICU2_WIN = 'icuuc71.dll';
-    public readonly FILESYSTEM_WIN = 'boost_filesystem-vc142-mt-x32-1_80.dll';
     public readonly ICU1_LINUX = 'libicutu.a';
     public readonly ICU2_LINUX = 'libicuuc.a';
-    public readonly FILESYSTEM_LINUX = 'libboost_filesystem.a';
     public readonly ICU1_MAC = 'libicutum.a';
     public readonly ICU2_MAC = 'libicuucm.a';
-    public readonly FILESYSTEM_MAC = 'libboost_filesystemm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
     public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';
@@ -173,7 +170,6 @@ export class VisualText {
     pushCheckEngineFiles() {
         visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU1);
         visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU2);
-        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.FILESYSTEM);
         visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.NLP_EXE);
         visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ENGINE_FILES);
     }
@@ -181,7 +177,6 @@ export class VisualText {
     pushDeleteEngineFiles(push: updatePush) {
         visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ICU1);
         visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ICU2);
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.FILESYSTEM);
         visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.NLP_EXE);
         visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ENGINE_FILES);
     }
@@ -197,7 +192,6 @@ export class VisualText {
     pushDownloadEngineFiles(push: updatePush) {
         visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU1);
         visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU2);
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.FILESYSTEM);
         visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.NLP_EXE);
         visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ENGINE_FILES);
     }
@@ -216,7 +210,6 @@ export class VisualText {
         switch (component) {
             case updateComponent.ICU1:
             case updateComponent.ICU2:
-            case updateComponent.FILESYSTEM:
                 visualText.libFilenames(op);
                 break;
             case updateComponent.NLP_EXE:
@@ -267,19 +260,18 @@ export class VisualText {
         var libRelease = '';
         var lib = '';
         var icu1 = op.component == updateComponent.ICU1 ? 1 : 0;
-        var filesystem = op.component == updateComponent.FILESYSTEM ? 1 : 0;
         switch (visualText.platform) {
             case 'win32':
-                libRelease = filesystem ? visualText.FILESYSTEM_WIN : icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
-                lib = filesystem ? visualText.FILESYSTEM_WIN : icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
+                libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
+                lib = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
                 break;
             case 'darwin':
-                libRelease = filesystem ? visualText.FILESYSTEM_MAC : icu1 ? visualText.ICU1_MAC : visualText.ICU2_MAC;
-                lib = filesystem ? visualText.FILESYSTEM_LINUX : icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+                libRelease = icu1 ? visualText.ICU1_MAC : visualText.ICU2_MAC;
+                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
                 break;
             default:
-                libRelease = filesystem ? visualText.FILESYSTEM_LINUX : icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
-                lib = filesystem ? visualText.FILESYSTEM_LINUX : icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+                libRelease = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
+                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         var engDir = visualText.engineDirectory().fsPath;

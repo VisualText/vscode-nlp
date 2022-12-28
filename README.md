@@ -93,6 +93,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 1.65.0
+Removed boost and used std::filesystem and std::regex
+
 ### 1.64.5
 Added download of the boost file system library
 
@@ -197,12 +200,6 @@ Fixed numerous problems with fileOps
 
 ### v1.33.0
 Added "Generate @PATH" from tree
-
-### v1.32.0
-Added icons to output view
-
-### v1.31.3
-Fixed version number bug in linux and mac
 
 # Development
 
