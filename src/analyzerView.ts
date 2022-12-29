@@ -115,7 +115,7 @@ export class AnalyzerView {
 	public analyzerView: vscode.TreeView<AnalyzerItem>;
 	public folderUri: vscode.Uri | undefined;
 	public chosen: vscode.Uri | undefined;
-	public converting: Boolean;
+	public converting: boolean;
 
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
