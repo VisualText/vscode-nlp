@@ -14,6 +14,9 @@
             "name": "meta.expression.dict",
             "patterns": [
                 {
+                    "include": "#comment-line"
+                },    
+                {
                     "include": "#attribute-equals"
                 },
                 {
@@ -27,10 +30,7 @@
                 },
                 {
                     "include": "#qstring-double"
-                },
-                {
-                    "include": "#comment-line"
-                }               
+                }           
             ]
         },
         "word-first-attr": {
@@ -66,7 +66,7 @@
             }
         },
         "comment-line": {
-            "match": "#.*$\\n?",
+            "match": "\\s*#.*$\\n?",
             "name": "comment.line.dict"
         },
         "qstring-double": {

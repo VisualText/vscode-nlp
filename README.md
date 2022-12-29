@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.1.0
+Comments now follow VSCode standard of ctrl-/
+
 ### 2.0.2
 New version: KB Browser with .dict files and .kbb files which make dictionary and knowledge base building much easier. Is in conjunciton with version 2 of the NLP Engine.
 
@@ -198,15 +201,6 @@ Added windows Help.chm file in context menu for windows only
 
 ### v1.35.0
 Added cancel analyzer during processing
-
-### v1.34.2
-Don't open text file when analyzing. Also @MULTI fixes and other fixes.
-
-### v1.33.5
-Fixed numerous problems with fileOps
-
-### v1.33.0
-Added "Generate @PATH" from tree
 
 # Development
 
