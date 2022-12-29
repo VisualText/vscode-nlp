@@ -99,6 +99,7 @@ export class Analyzer {
         this.outputDir = vscode.Uri.file('');
         this.kbDir = vscode.Uri.file('');
         this.currentTextFile = vscode.Uri.file('');
+        this.name = '';
         this.passNum = 0;
         this.loaded = false;
     }
@@ -299,9 +300,14 @@ export class Analyzer {
         return textFile.anaFile(this.passNum, nlpFileType.TREE);
     }
 
+    getName(): string {
+        return this.name;
+    }
+
 	setWorkingDir(directory: vscode.Uri) {
         this.analyzerDir = directory;
         if (fs.existsSync(directory.fsPath)) {
+            this.name = path.basename(directory.fsPath);
             this.specDir = vscode.Uri.file(path.join(directory.fsPath,'spec'));
             this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'input'));
             this.kbDir = vscode.Uri.file(path.join(directory.fsPath,'kb','user'));
@@ -313,6 +319,6 @@ export class Analyzer {
 	}
 
     getAnalyzerConverting() {
-        let moose = 1;
+        return this.getAnalyzerConverting;
     }
 }

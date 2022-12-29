@@ -962,7 +962,7 @@ export class VisualText {
     }
     
     getCurrentAnalyzerName(): string {
-        return path.basename(this.currentAnalyzer.fsPath);
+        return this.analyzer.getName();
     }
 
     getAnalyzer(): vscode.Uri {
