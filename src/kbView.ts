@@ -194,10 +194,11 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.rename', (KBItem) => treeDataProvider.rename(KBItem));
 		vscode.commands.registerCommand('kbView.renameDir', (KBItem) => treeDataProvider.renameDir(KBItem));
 
-		vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openFile(KBItem));
+		vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openKBFile(KBItem));
 		vscode.commands.registerCommand('kbView.openText', () => this.openText());
 		vscode.commands.registerCommand('kbView.search', () => this.search());
 		vscode.commands.registerCommand('kbView.newKBFile', (KBItem) => this.newKBFile(KBItem,false));
+		vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
 		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
@@ -312,11 +313,15 @@ export class KBView {
 		}
 	}
 
-	private openFile(KBItem: KBItem): void {
-		this.updateTitle(KBItem.uri);
+	private openKBFile(KBItem: KBItem): void {
+		this.openFile(KBItem.uri);
+	}
+
+	private openFile(uri: vscode.Uri): void {
+		this.updateTitle(uri);
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(KBItem.uri);
-		visualText.analyzer.saveCurrentFile(KBItem.uri);
+		vscode.window.showTextDocument(uri);
+		visualText.analyzer.saveCurrentFile(uri);
 		vscode.commands.executeCommand('status.update');
 	}
 
@@ -337,6 +342,24 @@ export class KBView {
 			});
 		}
 	}
+	
+	private newKBBFile(KBItem: KBItem, top: boolean) {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter KBB file name' }).then(newname => {
+				if (newname) {
+					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
+					if (KBItem && !top)
+						dirPath = dirfuncs.getDirPath(KBItem.uri.fsPath);
+					var filepath = path.join(dirPath,newname+'.kbb');
+					if (path.extname(newname))
+						filepath = path.join(dirPath,newname);
+					dirfuncs.writeFile(filepath,"topconcept\n\tchild attr=[value,value2]\n\t\tgrandchild one\n\t\tgrandchild two\n");
+					this.openFile(vscode.Uri.file(filepath));
+					vscode.commands.executeCommand('kbView.refreshAll');
+				}
+			});
+		}
+	}
 
 	private newKBFile(KBItem: KBItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
@@ -349,6 +372,7 @@ export class KBView {
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
 					dirfuncs.writeFile(filepath,"\n\nquit\n\n");
+					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
 			});
@@ -366,6 +390,7 @@ export class KBView {
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
 					dirfuncs.writeFile(filepath,"word attr=value");
+					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
 			});
