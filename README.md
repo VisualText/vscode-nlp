@@ -1,5 +1,9 @@
 # NLP++ Language Extension
 
+## Version 2 Released
+
+As of December 20, 2022, version 2 has been released. Since the NLP++ language extension is updated frequently, the new version is more of a formality. The major change is the ability to build and use the .kbb files to load a knowledge base. This is in conjunction with version 2 of the NLP Engine which is necessary for reading .kbb files into the knowledge base.
+
 ## Tutorial Videos
 
 Many of you have been asking for tutorial videos on NLP++ and here is the first set. More coming soon...
@@ -92,6 +96,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 ## Release Notes
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
+
+### 2.0.0
+New version: KB Browser with .dict files and .kbb files which make dictionary and knowledge base building much easier. Is in conjunciton with version 2 of the NLP Engine.
 
 ### 1.65.1
 Removed boost and used std::filesystem and std::regex

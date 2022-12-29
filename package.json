@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "1.65.1",
+    "version": "2.0.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -287,6 +287,14 @@
                 "icon": {
                     "light": "resources/light/refresh.svg",
                     "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
+                "command": "kbView.newKBBFile",
+                "title": "New KBB File",
+                "icon": {
+                    "light": "resources/light/kbb-new.svg",
+                    "dark": "resources/dark/kbb-new.svg"
                 }
             },
             {
@@ -1483,6 +1491,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "kbView.newKBBFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "kbView.newKBFile",
                     "when": "view == kbView",
                     "group": "navigation"
@@ -1770,6 +1783,11 @@
                     "command": "kbView.rename",
                     "when": "view == kbView",
                     "group": "inline"
+                },
+                {
+                    "command": "kbView.newKBBFile",
+                    "when": "view == kbView",
+                    "group": "navigation"
                 },
                 {
                     "command": "kbView.newKBFile",
