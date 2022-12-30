@@ -56,6 +56,8 @@
 !tree-configuration.json
 !txxt-configuration.json
 !kb-configuration.json
+!kbb-configuration.json
+!dict-configuration.json
 !LICENSE
 !package.json
 !README.md
