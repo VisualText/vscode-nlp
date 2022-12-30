@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.1.2",
+    "version": "2.2.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.existingFiles",
+                "title": "Import KB files",
+                "icon": {
+                    "light": "resources/light/search.svg",
+                    "dark": "resources/dark/search.svg"
+                }
+            },
             {
                 "command": "kbView.explore",
                 "title": "Explore KB Directory",
@@ -826,7 +834,7 @@
             },
             {
                 "command": "textView.existingFile",
-                "title": "Insert existing file",
+                "title": "Import file(s)",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -1750,6 +1758,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "kbView.existingFiles",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "kbView.explore",
                     "when": "view == kbView",
                     "group": "navigation"
@@ -1757,12 +1770,12 @@
                 {
                     "command": "kbView.mergeDicts",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "special"
                 },
                 {
                     "command": "kbView.generateMain",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "special"
                 },
                 {
                     "command": "kbView.deleteFile",
@@ -1787,17 +1800,17 @@
                 {
                     "command": "kbView.newKBBFile",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "new"
                 },
                 {
                     "command": "kbView.newKBFile",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "new"
                 },
                 {
                     "command": "kbView.newDictFile",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "new"
                 },
                 {
                     "command": "sequenceView.tokenize",
