@@ -206,6 +206,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
 		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
 		vscode.commands.registerCommand('kbView.explore', () => this.explore());
+		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -213,6 +214,35 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	existingFiles() {
+		if (visualText.hasWorkspaceFolder()) {
+			const options: vscode.OpenDialogOptions = {
+				canSelectMany: true,
+				openLabel: 'Import Existing File(s)',
+				defaultUri: visualText.getWorkspaceFolder(),
+				canSelectFiles: true,
+				canSelectFolders: false,
+				filters: {
+					'KB files': ['dict','kb','kbb'],
+					'All files': ['*']
+				}
+			};
+			
+			vscode.window.showOpenDialog(options).then(selections => {
+				if (!selections) {
+					return;
+				}
+				var kbdir = visualText.analyzer.getKBDirectory().fsPath;
+				for (let sel of selections) {
+					var filename = path.basename(sel.fsPath);
+					var newPath = vscode.Uri.file(path.join(kbdir,filename));
+					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
+				}
+				visualText.fileOps.startFileOps();
+			});	
+		}		
 	}
 
 	explore() {

@@ -120,7 +120,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: true,
-				openLabel: 'Add Existing File(s)',
+				openLabel: 'Import Existing File(s)',
 				defaultUri: visualText.getWorkspaceFolder(),
 				canSelectFiles: true,
 				canSelectFolders: false,
