@@ -159,35 +159,7 @@ export class NLPStatusBar {
     }
 
     openEngineVersionSettings() {
-        // Need to check the engine cmd version and repo version to compare
-
-        visualText.fetchExeVersion(visualText.engineDirectory().fsPath)?.then(msg => {
-            if (msg == 'no exe') {
-				vscode.window.showErrorMessage("NLP Engine executable missing", "Run Engine Updater").then(response => {
-					visualText.updateEngine();
-				}); 
-
-            } else if (visualText.cmdEngineVersion.length) {
-                let op: updateOp = visualText.emptyOp();
-                visualText.checkEngineVersion(op).then(newVersion => {
-                    if (visualText.versionCompare(visualText.repoEngineVersion,visualText.cmdEngineVersion)) {
-                        nlpStatusBar.updateEngineVersion(visualText.engineVersion);
-                        let items: vscode.QuickPickItem[] = [];
-                        items.push({label: 'Yes', description: 'Update NLP Engine to version ' + visualText.cmdEngineVersion});
-                        items.push({label: 'No', description: 'Cancel NLP Engine update'});
-
-                        vscode.window.showQuickPick(items).then(selection => {
-                            if (!selection || selection.label == 'No')
-                                return;
-                            visualText.updateEngine();
-                        });                    
-                    }
-                    else {
-                        vscode.window.showInformationMessage('NLP Engine verion ' + visualText.cmdEngineVersion + ' is the latest');
-                    }  
-                });
-            }
-        });
+        visualText.startUpdater();
     }
 
     chooseDev() {
@@ -271,18 +243,9 @@ export class NLPStatusBar {
     }
 
     updateEngineVersion(version: string) {
-        var cmdVersion = visualText.cmdEngineVersion;
-        if (version.length == 0) {
-            const config = vscode.workspace.getConfiguration('engine');
-            let currentVersion = config.get<string>('version');
-            if (currentVersion != undefined) {
-                version = currentVersion;
-            }       
-        }
-        if (version != undefined && version.length) {
-            if (visualText.versionCompare(cmdVersion,version) > 0)
-                version = version + '*';
-            nlpStatusBarEngineVersion.text = version;
+        var exeVersion = visualText.exeEngineVersion;
+        if (exeVersion != undefined && exeVersion.length) {
+            nlpStatusBarEngineVersion.text = exeVersion;
         } else {
             nlpStatusBarEngineVersion.text = '';
         }

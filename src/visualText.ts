@@ -69,7 +69,7 @@ export class VisualText {
     public nlp = new NLPFile();
     public version: string = '';
     public engineVersion: string = '';
-    public cmdEngineVersion: string = '';
+    public exeEngineVersion: string = '';
     public repoEngineVersion: string = '';
     public vtFilesVersion: string = '';
     public repoVTFilesVersion: string = ''
@@ -323,6 +323,7 @@ export class VisualText {
             else
                 visualText.debugMessage('UPDATE CHECK COMPLETE');
             visualText.stopAll = false;
+            vscode.commands.executeCommand('status.update');
             return;
         } else {
             vscode.commands.executeCommand('setContext', 'updating.running', true);
@@ -677,24 +678,6 @@ export class VisualText {
             config.update('directory',directory,vscode.ConfigurationTarget.Global);
     }
 
-    checkForEngineUpdate() {
-        var op: updateOp = visualText.emptyOp();
-        this.checkEngineVersion(op)
-        .then(newerVersion => {
-            if (newerVersion) {
-                visualText.setUpdateEngine();
-            } else {
-                visualText.setEngineVersion(visualText.repoEngineVersion);
-                visualText.debugMessage('NLP Engine version ' + visualText.repoEngineVersion);
-            }
-            if (nlpStatusBar !== undefined) {
-                nlpStatusBar.updateEngineVersion(visualText.engineVersion);     
-            }
-        }).catch(err => {
-            this.debugMessage(err);
-        });
-    }
-
     checkEngineVersion(op: updateOp) {
         return new Promise((resolve,reject) => {
 
@@ -706,12 +689,12 @@ export class VisualText {
                     if (op.status != updateStatus.DONE) {
                         let url = res.responseUrl;
                         visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
-                        let cmdVersion = visualText.cmdEngineVersion;
+                        let exeVersion = visualText.exeEngineVersion;
                         let repoVersion = visualText.repoEngineVersion;
-                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + cmdVersion + ' == ' + repoVersion);
-
-                        if (cmdVersion && repoVersion) {
-                            if (visualText.versionCompare(repoVersion,cmdVersion) > 0) {
+                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion);
+                        
+                        if (exeVersion && repoVersion) {
+                            if (visualText.versionCompare(repoVersion,exeVersion) > 0) {
                                 newer = true;
                             }
                         } else {
@@ -733,23 +716,7 @@ export class VisualText {
             logView.downloadHelp();
         });
     }
-
-    getVersions() {
-        let engVersion = visualText.getEngineVersion();
-        if (engVersion?.startsWith('[command arg:'))
-            engVersion = '';
-        if (engVersion)
-            visualText.engineVersion = engVersion;
-        else
-            visualText.engineVersion = '';
-
-        let vtVersion = visualText.getVTFilesVersion();
-        if (vtVersion)
-            visualText.vtFilesVersion = vtVersion;
-        else
-            visualText.vtFilesVersion = '';
-    }
-
+    
     findExtensionIndex(engDir: string): number {
         var index = 0;
         for (let ext of this.extensionItems) {visualText.stopAll
@@ -815,7 +782,7 @@ export class VisualText {
     }
   
     fetchExeVersion(nlpExePath: string = '', debug: boolean=false) {
-        visualText.cmdEngineVersion = '';
+        visualText.exeEngineVersion = '';
 		const cp = require('child_process');
         return new Promise((resolve,reject) => {
             const child = cp.spawn(nlpExePath, ['--version']);
@@ -827,12 +794,12 @@ export class VisualText {
                 let tokens = versionStr.split('\r\n');
                 if (tokens.length) {
                     if (tokens.length == 1)
-                        visualText.cmdEngineVersion = versionStr;
+                        visualText.exeEngineVersion = versionStr;
                     else
-                        visualText.cmdEngineVersion = tokens[tokens.length - 2];
-                    if (debug) visualText.debugMessage('version found: ' + visualText.cmdEngineVersion);
+                        visualText.exeEngineVersion = tokens[tokens.length - 2];
+                    if (debug) visualText.debugMessage('version found: ' + visualText.exeEngineVersion);
                 }
-                resolve(visualText.cmdEngineVersion);
+                resolve(visualText.exeEngineVersion);
             });
         }).catch(err => {
             visualText.debugMessage(err);
@@ -872,17 +839,6 @@ export class VisualText {
         if (this.latestExtIndex >= 0) {
             this.extensionItems[this.latestExtIndex].latest = true; 
         }
-    }
-
-    setEngineVersion(version: string) {
-        this.engineVersion = version;
-        const config = vscode.workspace.getConfiguration('engine');
-        config.update('version',version,vscode.ConfigurationTarget.Global);
-    }
-
-    getEngineVersion(): string | undefined {
-        const config = vscode.workspace.getConfiguration('engine');
-        return config.get<string>('version');
     }
     
     setVTFilesVersion(version: string) {
