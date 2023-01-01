@@ -1363,8 +1363,7 @@
     "KB Global": {
         "prefix": ["KB Global"],
         "body": [
-            "G(\"${1:con}\") = findconcept(findroot(),\"$1\");",
-            "if (!G(\"$1\")) G(\"$1\") = makeconcept(findroot(),\"$1\");",
+            "G(\"${1:con}\") = makeconcept(findroot(),\"$1\");",
             "rmchildren(G(\"$1\"));"
         ],
         "description": "KB Global"
