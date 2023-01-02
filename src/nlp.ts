@@ -80,7 +80,7 @@ export class NLPFile extends TextFile {
 			var typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
 			logView.addMessage('Analyzing '+typeStr+': '+filename,filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
-			outputView.setType(outputFileType.TXT);
+			outputView.setType(outputFileType.ALL);
 	
 			var pos = filestr.search('input');
 			var anapath = filestr.substring(0,pos);

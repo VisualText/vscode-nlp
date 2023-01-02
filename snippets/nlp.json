@@ -1351,6 +1351,7 @@
         "body": [
             "@POST",
             "single();",
+            "",
             "@RULES",
             "_xNIL <-\t",
             "\t_xWILD [match=()]\t### 1",
