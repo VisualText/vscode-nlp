@@ -7,7 +7,7 @@ import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { fileOpRefresh, fileOperation } from './fileOps';
 
-export enum outputFileType { TXT, TXXT, TREE, KB, NLP }
+export enum outputFileType { ALL, TXXT, TREE, KB, NLP }
 
 interface OutputItem {
 	uri: vscode.Uri;
@@ -85,13 +85,13 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
-		vscode.commands.registerCommand('outputView.txt', () => this.loadTxt());
+		vscode.commands.registerCommand('outputView.all', () => this.loadAll());
 		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
 
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
-		this.type = outputFileType.TXT;
+		this.type = outputFileType.ALL;
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -140,8 +140,8 @@ export class OutputView {
 		return this.type;
 	}
 
-	private loadTxt() {
-		this.clearOutput(outputFileType.TXT);
+	private loadAll() {
+		this.clearOutput(outputFileType.ALL);
 	}
 
 	private loadTxxt() {
@@ -219,7 +219,7 @@ export class OutputView {
 					var candidates = dirfuncs.getFiles(this.logDirectory);
 					for (let cand of candidates) {
 						let ext = path.parse(cand.fsPath).ext;
-						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.kbb') != 0 && ext.localeCompare('.txxt') != 0)
+						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.txxt') != 0)
 							this.outputFiles.push(cand);
 					}
 				}					

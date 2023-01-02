@@ -264,19 +264,21 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
-				canSelectMany: false,
-				openLabel: 'Open',
+				canSelectFiles: true,
+				canSelectFolders: false,
+				canSelectMany: true,
+				openLabel: 'Import Pass(es)',
 				defaultUri: seqFile.getSpecDirectory(),
 				filters: {
 					'Text files': ['pat','nlp'],
 					'All files': ['*']
 				}
 			};
-			vscode.window.showOpenDialog(options).then(selection => {
-				if (!selection) {
+			vscode.window.showOpenDialog(options).then(selections => {
+				if (!selections) {
 					return;
 				}
-				for (let select of selection.reverse()) {
+				for (let select of selections.reverse()) {
 					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
 					seqFile.insertPass(seqItem,newfile);
 				}
