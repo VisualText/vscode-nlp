@@ -34,7 +34,7 @@
             ]
         },
         "word-first-attr": {
-            "match": "^([\\w\\d\\s]+)(\\s)([\\w\\d]+)(=)",
+            "match": "^([^=]+)(\\s)([\\w\\d]+)(=)",
             "captures": {
                 "1": {
                     "name": "comment.line.dict"
