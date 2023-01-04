@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.3.0
+Added move file from output to kb directory.
+
 ### 2.2.2
 Added the ability to copy files to the KB directory.
 

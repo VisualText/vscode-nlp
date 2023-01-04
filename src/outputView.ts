@@ -103,32 +103,19 @@ export class OutputView {
 
 	addKB(resource: OutputItem) {
 		if (visualText.hasWorkspaceFolder()) {
-			var seqFile = visualText.analyzer.seqFile;
-			const options: vscode.OpenDialogOptions = {
-				canSelectMany: false,
-				openLabel: 'Add KB File',
-				defaultUri: visualText.getWorkspaceFolder(),
-				canSelectFiles: true,
-				canSelectFolders: true,
-				filters: {
-					'Text files': ['kb'],
-					'All files': ['*']
-				}
-			};
-			vscode.window.showOpenDialog(options).then(selection => {
-				if (!selection) {
+			let items: vscode.QuickPickItem[] = [];
+			var moveDescr = '';
+			moveDescr = moveDescr.concat('Copy file \'',path.basename(resource.uri.fsPath),'\' to kb directory');
+			items.push({label: 'Yes', description: moveDescr});
+			items.push({label: 'No', description: 'Do not move file'});
+
+			vscode.window.showQuickPick(items).then(selection => {
+				if (!selection || selection.label == 'No')
 					return;
-				}
-				var oldPath = selection[0].fsPath;
-				var filename = path.basename(oldPath);
-				var dir = visualText.analyzer.getAnalyzerDirectory('kb').fsPath;
-				var newPath = path.join(dir,filename);
-				fs.copyFileSync(oldPath,newPath);
-				outputView.setType(outputFileType.KB);
-				logView.addMessage('KB File copied: '+filename,vscode.Uri.file(oldPath));
-				vscode.commands.executeCommand('logView.refreshAll');	
-				vscode.commands.executeCommand('outputView.refreshAll');	
-			});	
+				let newFile = path.join(visualText.analyzer.getKBDirectory().fsPath,path.basename(resource.uri.fsPath));
+				visualText.fileOps.addFileOperation(resource.uri,vscode.Uri.file(newFile),[fileOpRefresh.OUTPUT,fileOpRefresh.KB],fileOperation.COPY);
+				visualText.fileOps.startFileOps();
+			});
 		}
 	}
 
