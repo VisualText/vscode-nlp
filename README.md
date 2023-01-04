@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.3.0
+Added move file from output to kb directory.
+
 ### 2.2.2
 Added the ability to copy files to the KB directory.
 
@@ -189,21 +192,6 @@ Added cross reference context menu items in nlp files, tree files, and txxt file
 
 ### v1.40.0
 Lexer improvements
-
-### v1.39.7
-Added duplicate analyzer in the same folder. Fixed delete messages, generate exact rule, deleting analyzer logs, and comments that were removing $ variables.
-
-### v1.38.0
-Added fold and unfold recursively in trees and kbb displays
-
-### v1.37.1
-Added chartok tokenize which breaks apart all characters
-
-### v1.36.0
-Added windows Help.chm file in context menu for windows only
-
-### v1.35.0
-Added cancel analyzer during processing
 
 # Development
 
