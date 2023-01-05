@@ -458,6 +458,12 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.dicttokz', (seqItem) => treeDataProvider.dicttokz(seqItem));
 		vscode.commands.registerCommand('sequenceView.chartok', (seqItem) => treeDataProvider.chartok(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
+		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
+	}
+
+	explore() {
+		let dir = visualText.analyzer.getSpecDirectory();
+		visualText.openFileManager(dir.fsPath);
 	}
 
 	passTree(nlpFilePath: string) {
