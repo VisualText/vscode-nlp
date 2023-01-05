@@ -538,14 +538,14 @@ export class TextView {
 		
 		if (count) {
 			for (let dir of logDirs) {
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 			};
 		}
 	}
 
 	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
-		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 	}
 
 	public deleteAnalyzerLogs(): void {
