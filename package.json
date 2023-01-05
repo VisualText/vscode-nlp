@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -593,6 +593,10 @@
                 "description": "View the tree for the selected text"
             },
             {
+                "command": "sequenceView.explore",
+                "title": "Explore Sequence Directory"
+            },
+            {
                 "command": "sequenceView.tokenize",
                 "title": "Tokenizer"
             },
@@ -750,7 +754,7 @@
             },
             {
                 "command": "sequenceView.libraryWhiteSpaces",
-                "title": "White Space",
+                "title": "Remove White Space",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -1835,6 +1839,11 @@
                 {
                     "command": "sequenceView.search",
                     "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
+                    "group": "display"
+                },
+                {
+                    "command": "sequenceView.explore",
+                    "when": "view == sequenceView",
                     "group": "display"
                 },
                 {

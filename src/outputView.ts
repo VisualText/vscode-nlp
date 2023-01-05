@@ -36,6 +36,8 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 			icon = 'kb.svg';
 		} else if (element.uri.fsPath.endsWith('.txxt')) {
 			icon = 'symbol-keyword.svg';
+		} else if (element.uri.fsPath.endsWith('.dict')) {
+			icon = 'dict.svg';
 		}
 		return {
 			resourceUri: element.uri,

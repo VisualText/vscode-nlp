@@ -58,12 +58,14 @@ export class HelpView {
 
     getTerm(editor: vscode.TextEditor, wordRange: vscode.Range): string {
         let term = editor.document.getText(wordRange);
-        var startPos = new vscode.Position(wordRange.start.line,wordRange.start.character-1);
-        var endPos = new vscode.Position(wordRange.end.line,wordRange.end.character);
-        var dollarRange = new vscode.Range(startPos, endPos);
-        let dollarWord = editor.document.getText(dollarRange);
-        if (dollarWord[0] == '$')
-            term = dollarWord;
+        if (wordRange.start.character > 0) {
+            var startPos = new vscode.Position(wordRange.start.line,wordRange.start.character-1);
+            var endPos = new vscode.Position(wordRange.end.line,wordRange.end.character);
+            var dollarRange = new vscode.Range(startPos, endPos);
+            let dollarWord = editor.document.getText(dollarRange);
+            if (dollarWord[0] == '$')
+                term = dollarWord;            
+        }
         return term;
     }
 
