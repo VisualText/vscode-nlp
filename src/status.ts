@@ -243,9 +243,10 @@ export class NLPStatusBar {
     }
 
     updateEngineVersion(version: string) {
-        var exeVersion = visualText.exeEngineVersion;
-        if (exeVersion != undefined && exeVersion.length) {
-            nlpStatusBarEngineVersion.text = exeVersion;
+         if (version != undefined && version.length) {
+            nlpStatusBarEngineVersion.text = version;
+        } else if (visualText.exeEngineVersion.length) {
+            nlpStatusBarEngineVersion.text = visualText.exeEngineVersion;
         } else {
             nlpStatusBarEngineVersion.text = '';
         }
@@ -262,36 +263,20 @@ export class NLPStatusBar {
     }
 
     updateFilesVersion(version: string) {
-        var repoVersion = visualText.repoVTFilesVersion;
-        if (version.length == 0) {
-            const config = vscode.workspace.getConfiguration('engine');
-            let currentVersion = config.get<string>('visualtext');
-            if (currentVersion != undefined) {
-                version = currentVersion;
-            }       
-        }
         if (version != undefined && version.length) {
-            if (visualText.versionCompare(repoVersion,version) > 0)
-                version = version + '*';
             nlpStatusBarFilesVersion.text = version;
+        } else if (visualText.repoVTFilesVersion.length) {
+            nlpStatusBarFilesVersion.text = visualText.repoVTFilesVersion;
         } else {
             nlpStatusBarFilesVersion.text = '';
         }
     }
 
     updateAnalyzerssVersion(version: string) {
-        var repoVersion = visualText.repoAnalyzersVersion;
-        if (version.length == 0) {
-            const config = vscode.workspace.getConfiguration('engine');
-            let currentVersion = config.get<string>('analyzers');
-            if (currentVersion != undefined) {
-                version = currentVersion;
-            }       
-        }
         if (version != undefined && version.length) {
-            if (visualText.versionCompare(repoVersion,version) > 0)
-                version = version + '*';
             nlpStatusBarAnalyzersVersion.text = version;
+        } else if (visualText.repoAnalyzersVersion.length) {
+            nlpStatusBarAnalyzersVersion.text = visualText.repoAnalyzersVersion;
         } else {
             nlpStatusBarAnalyzersVersion.text = '';
         }

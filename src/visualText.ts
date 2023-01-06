@@ -10,20 +10,21 @@ import { logView } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
 
-export enum updateStatus { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
-export enum updateOperation { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
-export enum updateType { UNKNOWN, VERSION, DOWNLOAD, DELETE, UNZIP }
-export enum updateComponent { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
-export enum updatePush { FRONT, BACK }
+export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
+export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
+export enum upType { UNKNOWN, VERSION, DOWNLOAD, DELETE, UNZIP }
+export enum upComp { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
+export enum upPush { FRONT, BACK }
 
 export interface updateOp {
-    type: updateType;
-    status: updateStatus;
-    operation: updateOperation;
-    component: updateComponent;
+    type: upType;
+    status: upStat;
+    operation: upOp;
+    component: upComp;
     remote: string;
     local: string;
     folders: Array<string>;
+    version: string;
 }
 
 interface ExtensionItem {
@@ -143,8 +144,8 @@ export class VisualText {
     stopUpdater() {
         this.debugMessage('STOP requested by user');
         for (let o of visualText.opsQueue) {
-            if (o.status != updateStatus.RUNNING) {
-                o.status = updateStatus.DONE;
+            if (o.status != upStat.RUNNING) {
+                o.status = upStat.DONE;
             }
         }
         visualText.stopAll = true;
@@ -152,81 +153,81 @@ export class VisualText {
 
     pushCheckVersions() {
         visualText.pushCheckEngineFiles();
-        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.NLP_EXE);
         visualText.pushCheckVTFiles();
-        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.VT_FILES);
         visualText.pushCheckAnalyzerFiles();
-        visualText.addUpdateOperation(updatePush.BACK,updateType.VERSION,updateStatus.START,updateOperation.VERSION,updateComponent.ANALYZER_FILES);
     }
 
     pushCheckVTFiles() {
-        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.VT_FILES);
+        let op = visualText.emptyOp();
+        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.VT_FILES);
     }
 
     pushCheckAnalyzerFiles() {
-        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ANALYZER_FILES);
+        let op = visualText.emptyOp();
+        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.ANALYZER_FILES);
     }
 
     pushCheckEngineFiles() {
-        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU1);
-        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ICU2);
-        visualText.addUpdateOperation(updatePush.BACK,updateType.DOWNLOAD,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.NLP_EXE);
-        visualText.addUpdateOperation(updatePush.BACK,updateType.UNZIP,updateStatus.START,updateOperation.CHECK_EXISTS,updateComponent.ENGINE_FILES);
+        let op = visualText.emptyOp();
+        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU1);
+        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU2);
+        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.NLP_EXE);
+        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.ENGINE_FILES);
     }
 
-    pushDeleteEngineFiles(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ICU1);
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ICU2);
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.NLP_EXE);
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ENGINE_FILES);
+    pushDeleteEngineFiles(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU1);
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU2);
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.NLP_EXE);
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ENGINE_FILES);
     }
     
-    pushDeleteVTFiles(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.VT_FILES);
+    pushDeleteVTFiles(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.VT_FILES);
     }
 
-    pushDeleteAnalyzers(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DELETE,updateStatus.START,updateOperation.DELETE,updateComponent.ANALYZER_FILES);
+    pushDeleteAnalyzers(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ANALYZER_FILES);
     }
 
-    pushDownloadEngineFiles(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU1);
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ICU2);
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.NLP_EXE);
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ENGINE_FILES);
+    pushDownloadEngineFiles(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.NLP_EXE);
+        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ENGINE_FILES);
     }
 
-    pushDownloadVTFiles(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.VT_FILES);
+    pushDownloadVTFiles(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.VT_FILES);
     }
 
-    pushDownloadAnalyzers(push: updatePush) {
-        visualText.addUpdateOperation(push,updateType.DOWNLOAD,updateStatus.START,updateOperation.DOWNLOAD,updateComponent.ANALYZER_FILES);
+    pushDownloadAnalyzers(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ANALYZER_FILES);
     }
 
-    addUpdateOperation(push: updatePush, type: updateType, status: updateStatus, operation: updateOperation, component: updateComponent) {
-        var op = {type: type, status: status, operation: operation, component: component, remote: '', local: '', folders: []};
+    addUpdateOperation(opIn: updateOp, push: upPush, type: upType, status: upStat, operation: upOp, component: upComp) {
+        var op = {type: type, status: status, operation: operation, component: component, remote: '', local: '', folders: [], version: opIn.version};
 
         switch (component) {
-            case updateComponent.ICU1:
-            case updateComponent.ICU2:
+            case upComp.ICU1:
+            case upComp.ICU2:
                 visualText.libFilenames(op);
                 break;
-            case updateComponent.NLP_EXE:
+            case upComp.NLP_EXE:
                 visualText.nlpExe(op);
                 break;
-            case updateComponent.ENGINE_FILES:
+            case upComp.ENGINE_FILES:
                 visualText.zipFiles(op,visualText.NLPENGINE_REPO,'',visualText.NLPENGINE_FILES_ASSET,['data']);
                 break;
-            case updateComponent.VT_FILES:
-                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualtext',visualText.VISUALTEXT_FILES_ASSET,['visualtext']);
+            case upComp.VT_FILES:
+                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualtext',visualText.VISUALTEXT_FILES_ASSET,['spec','Help','analyzers']);
                 break;
-            case updateComponent.ANALYZER_FILES:
+            case upComp.ANALYZER_FILES:
                 visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['analyzers']);
                 break;
         }
 
-        if (push == updatePush.BACK)
+        if (push == upPush.BACK)
             this.opsQueue.push(op);
         else
             this.opsQueue.unshift(op);
@@ -259,7 +260,7 @@ export class VisualText {
     libFilenames(op: updateOp) {
         var libRelease = '';
         var lib = '';
-        var icu1 = op.component == updateComponent.ICU1 ? 1 : 0;
+        var icu1 = op.component == upComp.ICU1 ? 1 : 0;
         switch (visualText.platform) {
             case 'win32':
                 libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
@@ -297,18 +298,18 @@ export class VisualText {
 
         for (let o of visualText.opsQueue) {
             if (visualText.stopAll) {
-                if (o.status == updateStatus.RUNNING)
+                if (o.status == upStat.RUNNING)
                     allDone = false;
                 else
-                    o.status = updateStatus.DONE;
+                    o.status = upStat.DONE;
             }
             else {
-                if (o.status == updateStatus.UNKNOWN || o.status == updateStatus.START || o.status == updateStatus.RUNNING) {
+                if (o.status == upStat.UNKNOWN || o.status == upStat.START || o.status == upStat.RUNNING) {
                     op = o;
                     allDone = false;
                     break;
                 }
-                else if (o.status != updateStatus.FAILED && o.status != updateStatus.CANCEL && o.status != updateStatus.DONE) {
+                else if (o.status != upStat.FAILED && o.status != upStat.CANCEL && o.status != upStat.DONE) {
                     allDone = false;
                 }
             }
@@ -335,9 +336,9 @@ export class VisualText {
             visualText.debugMessage(visualText.statusStrs[op.status] + ' ' + visualText.opStrs[op.operation] + ' ' + visualText.compStrs[op.component]);
 
         switch (op.status) {
-            case updateStatus.START:
+            case upStat.START:
                 switch (op.operation) {
-                    case updateOperation.CHECK_EXISTS:
+                    case upOp.CHECK_EXISTS:
                         var endDir = path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO);
                         if (op.folders.length && endDir) {
                             var missingOne = false;
@@ -349,32 +350,38 @@ export class VisualText {
                                 }
                             }
                             if (!missingOne) {
-                                op.status = updateStatus.DONE;
+                                if (visualText.isCompZip(op))
+                                    op.operation = upOp.VERSION;
+                                else
+                                    op.status = upStat.DONE;
                             } else {
-                                op.operation = updateOperation.DOWNLOAD;
+                                op.operation = upOp.DOWNLOAD;
                             }
                         } else if (fs.existsSync(op.local)) {
-                            op.status = updateStatus.DONE;
+                            if (visualText.isCompZip(op))
+                                op.operation = upOp.VERSION;
+                            else
+                                op.status = upStat.DONE;
                         } else {
-                            op.operation = updateOperation.DOWNLOAD;
+                            op.operation = upOp.DOWNLOAD;
                         }
                         break;
 
-                    case updateOperation.DOWNLOAD:
+                    case upOp.DOWNLOAD:
                         if (fs.existsSync(op.local)) {
-                            if (op.type == updateType.UNZIP) {
-                                op.operation = updateOperation.UNZIP;
+                            if (op.type == upType.UNZIP) {
+                                op.operation = upOp.UNZIP;
                             } else {
-                                op.status = updateStatus.DONE;
+                                op.status = upStat.DONE;
                             }
                         }
                         else {
-                            op.status = updateStatus.RUNNING;
+                            op.status = upStat.RUNNING;
                             visualText.download(op);
                         }
                         break;
                         
-                    case updateOperation.DELETE:
+                    case upOp.DELETE:
                         if (fs.existsSync(op.local)) {
                             visualText.debugMessage('Deleting: ' + op.local);
                             fs.unlinkSync(op.local);
@@ -387,62 +394,83 @@ export class VisualText {
                                 }
                             }
                         }
-                        op.status = updateStatus.DONE;
+                        op.status = upStat.DONE;
                         break;
 
-                    case updateOperation.UNZIP:
-                        op.status = updateStatus.RUNNING;
+                    case upOp.UNZIP:
+                        op.status = upStat.RUNNING;
                         visualText.unzip(op);
                         break;
 
-                    case updateOperation.VERSION:
-
-                        switch(op.component) {
-                            case updateComponent.NLP_EXE:
-                                visualText.checkExeVersion(op);
-                                break;
-                            
-                            case updateComponent.VT_FILES:
-                                visualText.checkVTFilesVersion(op);
-                                break;
-                                                            
-                            case updateComponent.ANALYZER_FILES:
-                                if (visualText.debug) visualText.debugMessage('VERSION CHECK: Analyzers');
-                                visualText.checkAnalyzersVersion(op);
-                                break;
+                    case upOp.VERSION:
+                        if (op.version.length) {
+                            visualText.updateVersion(op);
+                        } else {
+                            switch(op.component) {
+                                case upComp.NLP_EXE:
+                                    visualText.checkExeVersion(op);
+                                    break;
+                                
+                                case upComp.VT_FILES:
+                                    visualText.checkVTFilesVersion(op);
+                                    break;
+                                                                
+                                case upComp.ANALYZER_FILES:
+                                    if (visualText.debug) visualText.debugMessage('VERSION CHECK: Analyzers');
+                                    visualText.checkAnalyzersVersion(op);
+                                    break;
+                            }
                         }
                     break;
                 }
                 break;
             
-            case updateStatus.RUNNING:
+            case upStat.RUNNING:
                 let donothing = 1;
                 break;
         }
     }
 
+    isCompZip(op: updateOp): boolean {
+        return op.component == upComp.NLP_EXE || op.component == upComp.VT_FILES || op.component == upComp.ANALYZER_FILES;
+    }
+
     emptyOp(): updateOp {
-        return {type: updateType.UNKNOWN, status: updateStatus.UNKNOWN, operation: updateOperation.UNKNOWN, component: updateComponent.UNKNOWN, remote: '', local: '', folders: []};
+        return {type: upType.UNKNOWN, status: upStat.UNKNOWN, operation: upOp.UNKNOWN, component: upComp.UNKNOWN, remote: '', local: '', folders: [], version: ''};
+    }
+
+    updateVersion(op: updateOp) {
+        switch (op.component) {
+            case upComp.NLP_EXE:
+                nlpStatusBar.updateEngineVersion(op.version);
+                break;
+            case upComp.VT_FILES:
+                nlpStatusBar.updateFilesVersion(op.version);
+                visualText.setVTFilesVersion(op.version);
+                break;
+            case upComp.ANALYZER_FILES:
+                nlpStatusBar.updateAnalyzerssVersion(op.version);
+                visualText.setAnalyzersVersion(op.version);
+                break;
+        }
     }
 
     checkExeVersion(op: updateOp) {
-        if (!fs.existsSync(op.local)) {
-            visualText.pushDownloadEngineFiles(updatePush.FRONT);
-        }
-        visualText.fetchExeVersion(op.local)?.then(version => {
+        visualText.fetchExeVersion(op)?.then(version => {
             visualText.checkEngineVersion(op)
             .then(newerVersion => {
                 if (newerVersion) {
-                    visualText.pushDownloadEngineFiles(updatePush.FRONT);
-                    visualText.pushDeleteEngineFiles(updatePush.FRONT);
+                    visualText.pushDownloadEngineFiles(op,upPush.FRONT);
+                    visualText.pushDeleteEngineFiles(op,upPush.FRONT);
                 }
-                op.status = updateStatus.DONE;
+                op.status = upStat.DONE;
+                visualText.updateVersion(op);
             })
         })
         .catch(error => {
-            op.status = updateStatus.FAILED;
+            op.status = upStat.FAILED;
         });
-        op.status = updateStatus.RUNNING;
+        op.status = upStat.RUNNING;
     }
 
     checkVTFilesVersion(op: updateOp): boolean {
@@ -451,11 +479,13 @@ export class VisualText {
         const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
             res.on('data', function (chunk) {
                 let newer = false;
-                if (op.status != updateStatus.DONE) {
+                if (op.status != upStat.DONE) {
                     let url = res.responseUrl;
                     visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
+                    op.version = visualText.repoVTFilesVersion;
                     let currentVersion = visualText.getVTFilesVersion();
-                    if (visualText.debug) visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion);
+                    if (visualText.debug)
+                        visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion);
 
                     if (currentVersion) {
                         visualText.vtFilesVersion = currentVersion;
@@ -467,19 +497,18 @@ export class VisualText {
                         newer = true;
                     }
                     if (newer) {
-                        visualText.setVTFilesVersion(visualText.repoVTFilesVersion);  
-                        visualText.pushDownloadVTFiles(updatePush.FRONT);
-                        visualText.pushDeleteVTFiles(updatePush.FRONT);
-
+                        visualText.pushDownloadVTFiles(op,upPush.FRONT);
+                        visualText.pushDeleteVTFiles(op,upPush.FRONT);
                     }
-                    op.status = updateStatus.DONE;
+                    op.status = upStat.DONE;
+                    visualText.updateVersion(op);
                 }
                 return newer;
             });
         }).on('error', function (err) {
-            op.status = updateStatus.FAILED;
+            op.status = upStat.FAILED;
         });
-        op.status = updateStatus.RUNNING;
+        op.status = upStat.RUNNING;
 
         return false;
     }
@@ -490,11 +519,13 @@ export class VisualText {
         const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
             res.on('data', function (chunk) {
                 let newer = false;
-                if (op.status != updateStatus.DONE) {
+                if (op.status != upStat.DONE) {
                     let url = res.responseUrl;
                     visualText.repoAnalyzersVersion = url.substring(url.lastIndexOf('/') + 1);
+                    op.version = visualText.repoAnalyzersVersion;
                     let currentVersion = visualText.getAnalyzersVersion();
-                    if (visualText.debug) visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion);
+                    if (visualText.debug)
+                        visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion);
                     if (currentVersion) {
                         visualText.analyzersVersion = currentVersion;
                         if (visualText.versionCompare(visualText.repoAnalyzersVersion,currentVersion) > 0) {
@@ -506,17 +537,18 @@ export class VisualText {
                     }
                     if (newer) {
                         visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);  
-                        visualText.pushDownloadAnalyzers(updatePush.FRONT);
-                        visualText.pushDeleteAnalyzers(updatePush.FRONT);
+                        visualText.pushDownloadAnalyzers(op,upPush.FRONT);
+                        visualText.pushDeleteAnalyzers(op,upPush.FRONT);
                     }
-                    op.status = updateStatus.DONE;                    
+                    op.status = upStat.DONE;
+                    visualText.updateVersion(op);                   
                 }
                 return newer;
             });
         }).on('error', function (err) {
-            op.status = updateStatus.FAILED;
+            op.status = upStat.FAILED;
         });
-        op.status = updateStatus.RUNNING;
+        op.status = upStat.RUNNING;
 
         return false;
     }
@@ -539,15 +571,18 @@ export class VisualText {
                 visualText.debugMessage('Downloading: ' + url);
                 await downloader.download();
                 visualText.debugMessage('DONE DOWNLOAD: ' + url);
-                if (op.type == updateType.UNZIP && !visualText.stopAll) {
-                    op.operation = updateOperation.UNZIP;
-                    op.status = updateStatus.START;
+                if (op.type == upType.UNZIP && !visualText.stopAll) {
+                    op.operation = upOp.UNZIP;
+                    op.status = upStat.START;
+                } else if (op.version.length == 0) {
+                    op.operation = upOp.VERSION;
+                    op.status = upStat.START;
                 } else {
-                    op.status = updateStatus.DONE;
+                    op.status = upStat.DONE;
                 }
             }
             catch (error) {
-                op.status = updateStatus.FAILED;
+                op.status = upStat.FAILED;
                 visualText.debugMessage('FAILED download: ' + url + '\n' + error);
             }
         })();  
@@ -563,12 +598,12 @@ export class VisualText {
                 this.debugMessage('Unzipping: ' + toPath);
                 await extract(toPath, { dir: vtFileDir });
                 this.debugMessage('UNZIPPED: ' + toPath);
-                op.status = updateStatus.DONE;
+                op.status = upStat.DONE;
                 dirfuncs.delFile(toPath);
             }
             catch (err) {
                 this.debugMessage('Could not unzip file: ' + toPath + '\n' + err);
-                op.status = updateStatus.FAILED;
+                op.status = upStat.FAILED;
             }
         })();
     }
@@ -686,11 +721,12 @@ export class VisualText {
             const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
                     var newer = false;
-                    if (op.status != updateStatus.DONE) {
+                    if (op.status != upStat.DONE) {
                         let url = res.responseUrl;
                         visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
                         let exeVersion = visualText.exeEngineVersion;
                         let repoVersion = visualText.repoEngineVersion;
+                        op.version = visualText.repoEngineVersion;
                         if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion);
                         
                         if (exeVersion && repoVersion) {
@@ -700,7 +736,7 @@ export class VisualText {
                         } else {
                             newer = true;
                         }
-                        op.status = updateStatus.DONE;           
+                        op.status = upStat.DONE;           
                     }
                     resolve(newer);
                 });
@@ -781,11 +817,11 @@ export class VisualText {
         return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_REPO));
     }
   
-    fetchExeVersion(nlpExePath: string = '', debug: boolean=false) {
+    fetchExeVersion(op: updateOp, debug: boolean=false) {
         visualText.exeEngineVersion = '';
 		const cp = require('child_process');
         return new Promise((resolve,reject) => {
-            const child = cp.spawn(nlpExePath, ['--version']);
+            const child = cp.spawn(op.local, ['--version']);
             let stdOut = "";
             let stdErr = "";
             child.stdout.on("data", (data) => {
@@ -840,7 +876,7 @@ export class VisualText {
             this.extensionItems[this.latestExtIndex].latest = true; 
         }
     }
-    
+
     setVTFilesVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
@@ -1005,20 +1041,20 @@ export class VisualText {
     }
     
     updateEngine() {
-        visualText.pushDownloadEngineFiles(updatePush.FRONT);
-        visualText.pushDeleteEngineFiles(updatePush.FRONT);
+        visualText.pushDownloadEngineFiles(visualText.emptyOp(),upPush.FRONT);
+        visualText.pushDeleteEngineFiles(visualText.emptyOp(),upPush.FRONT);
         visualText.startUpdater();          
     }
 
     updateVTFiles() {
-        visualText.pushDeleteVTFiles(updatePush.BACK);
-        visualText.pushDownloadVTFiles(updatePush.BACK);
+        visualText.pushDeleteVTFiles(visualText.emptyOp(),upPush.BACK);
+        visualText.pushDownloadVTFiles(visualText.emptyOp(),upPush.BACK);
         this.startUpdater(); 
     }
 
     updateAnalyzersFiles() {
-        visualText.pushDeleteAnalyzers(updatePush.BACK);
-        visualText.pushDownloadAnalyzers(updatePush.BACK);
+        visualText.pushDeleteAnalyzers(visualText.emptyOp(),upPush.BACK);
+        visualText.pushDownloadAnalyzers(visualText.emptyOp(),upPush.BACK);
         this.startUpdater(); 
     }
 
