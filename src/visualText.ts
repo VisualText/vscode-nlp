@@ -223,7 +223,7 @@ export class VisualText {
                 visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualtext',visualText.VISUALTEXT_FILES_ASSET,['spec','Help','analyzers']);
                 break;
             case upComp.ANALYZER_FILES:
-                visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['analyzers']);
+                visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['']);
                 break;
         }
 
@@ -237,7 +237,10 @@ export class VisualText {
         op.remote = visualText.GITHUB_REPOSITORY + repo + visualText.GITHUB_RELEASE_LATEST_DOWNLOAD + download;
         const engDir = visualText.engineDirectory().fsPath;
         op.local = path.join(engDir,folder,download);
-        op.folders = folders;
+        op.folders = [];
+        for (let f of folders) {
+            op.folders.push(path.join(folder,f));
+        }
     }
     
     nlpExe(op: updateOp) {
