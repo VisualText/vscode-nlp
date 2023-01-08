@@ -20,16 +20,16 @@
                     "include": "#top-concept"
                 },
                 {
-                    "include": "#concept-name1"
-                },
-                {
-                    "include": "#concept-name2"
+                    "include": "#concept-name"
                 },
                 {
                     "include": "#attribute-name"
                 },
                 {
                     "include": "#attributes"
+                },
+                {
+                    "include": "#qstring-double"
                 }                
             ]
         },
@@ -37,13 +37,9 @@
             "match": "^([\\w\\d]+)$",
             "name": "keyword.other.kbb"
         },
-        "concept-name1": {
+        "concept-name": {
             "name": "variable.parameter.nlp",
-            "match": "^\\s\\s[\\w\\d][^:^\\[]+:"
-        },
-        "concept-name2": {
-            "name": "keyword.node.tree",
-            "match": "^\\s\\s\\s\\s[\\w\\d][^:^\\[]+:"
+            "match": "^[\\s]+[\\w\\d][^:^\\[]+[:]?"
         },
         "attribute-name": {
             "name": "constant.numeric.tree",

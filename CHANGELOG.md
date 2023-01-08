@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.5.0
+Users can now quickly move an output file to sister analyzer's text or kb.
+
 ### 2.4.4
 Dict type in output view, explore in sequence view, and bug fixes.
 

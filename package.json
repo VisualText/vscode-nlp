@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.4.4",
+    "version": "2.5.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1157,16 +1157,24 @@
                 }
             },
             {
-                "command": "outputView.addKB",
-                "title": "Copy file to KB Directory",
+                "command": "outputView.copytoText",
+                "title": "Copy file to Analyzer Text",
                 "icon": {
-                    "light": "resources/light/kb-new.svg",
-                    "dark": "resources/dark/kb-new.svg"
+                    "light": "resources/light/text-copyto.svg",
+                    "dark": "resources/dark/text-copyto.svg"
+                }
+            },
+            {
+                "command": "outputView.copytoKB",
+                "title": "Copy file to Analyzer KB",
+                "icon": {
+                    "light": "resources/light/kb-copyto.svg",
+                    "dark": "resources/dark/kb-copyto.svg"
                 }
             },
             {
                 "command": "logView.updateDebug",
-                "title": "Update Debugger",
+                "title": "Display Updater Details",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"
@@ -2197,14 +2205,19 @@
                     "group": "inline"
                 },
                 {
-                    "command": "outputView.addKB",
+                    "command": "outputView.copytoText",
                     "when": "view == outputView",
                     "group": "inline@0"
                 },
                 {
-                    "command": "outputView.deleteOutput",
+                    "command": "outputView.copytoKB",
                     "when": "view == outputView",
                     "group": "inline@1"
+                },
+                {
+                    "command": "outputView.deleteOutput",
+                    "when": "view == outputView",
+                    "group": "inline@2"
                 }
             ]
         },

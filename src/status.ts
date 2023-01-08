@@ -133,7 +133,7 @@ export class NLPStatusBar {
             items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.repoVTFilesVersion});
             items.push({label: 'No', description: 'Cancel VisualText files update'});
 
-            vscode.window.showQuickPick(items).then(selection => {
+            vscode.window.showQuickPick(items, {title: 'Update VisualText Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
                 if (!selection || selection.label == 'No')
                     return;
                 visualText.updateVTFiles();     
@@ -149,7 +149,7 @@ export class NLPStatusBar {
             items.push({label: 'Yes', description: 'Update Analyzers to version ' + visualText.repoVTFilesVersion});
             items.push({label: 'No', description: 'Cancel Analyzers update'});
 
-            vscode.window.showQuickPick(items).then(selection => {
+            vscode.window.showQuickPick(items, {title: 'Update Analyzers', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
                 if (!selection || selection.label == 'No')
                     return;
                 visualText.updateAnalyzersFiles();     
@@ -166,7 +166,7 @@ export class NLPStatusBar {
         let items: vscode.QuickPickItem[] = [];
         items.push({label: 'Turn ON log files', description: 'generate log files when analyzing'});
         items.push({label: 'Turn OFF log files', description: 'do not generate log files when analyzing'});
-        vscode.window.showQuickPick(items).then(selection => {
+        vscode.window.showQuickPick(items, {title: 'Log Files Toggle', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
             if (!selection) {
                 return;
             }
@@ -179,7 +179,7 @@ export class NLPStatusBar {
         let items: vscode.QuickPickItem[] = [];
         items.push({label: 'Display Built Only', description: 'Display only built rules matched'});
         items.push({label: 'Display All Matches', description: 'Display all fired rules matched'});
-        vscode.window.showQuickPick(items).then(selection => {
+        vscode.window.showQuickPick(items, {title: 'Display Type', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
             if (!selection) {
                 return;
             }

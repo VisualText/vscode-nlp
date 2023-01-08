@@ -293,7 +293,7 @@ export class KBView {
 			items.push({label: 'Yes', description: 'Merge all the dictionary files into all.dict?'});
 			items.push({label: 'No', description: 'Do not merge dictionary files' });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Dict Files Merge', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				var kbDir = visualText.analyzer.getKBDirectory();
@@ -312,7 +312,7 @@ export class KBView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not generate main.kb' });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Generate main.kb', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				var kbPath = visualText.analyzer.getKBDirectory();
@@ -364,7 +364,7 @@ export class KBView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete '+filename });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(KBItem.uri,KBItem.uri,[fileOpRefresh.KB],fileOperation.DELETE);

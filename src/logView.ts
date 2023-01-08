@@ -97,7 +97,7 @@ export class LogView {
 		let arfirm = 'Turn ON update debugging';
         items.push({label: arfirm, description: 'display extra details of updating for debugging purposes'});
         items.push({label: 'Turn OFF update debugging', description: 'do not display debugging info for updating'});
-        vscode.window.showQuickPick(items).then(selection => {
+        vscode.window.showQuickPick(items, {title: 'Debugging Output', canPickMany: false, placeHolder: 'Choose ON or Off'}).then(selection => {
             if (!selection) {
                 return;
             }

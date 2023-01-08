@@ -199,7 +199,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: deleteDescr, canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (seqItem.type.localeCompare('missing') == 0) {
 					seqFile.deletePassInSeqFile(seqItem.type, seqItem.name);
 				} else {
@@ -501,7 +501,7 @@ export class SequenceView {
 			items.push({label: 'Yes', description: 'Convert all the .pat files to .nlp'});
 			items.push({label: 'No', description: 'Do not convert'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Convert PAT Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.convertPatFiles(visualText.analyzer.getAnalyzerDirectory());
