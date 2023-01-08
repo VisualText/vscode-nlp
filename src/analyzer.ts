@@ -84,7 +84,7 @@ export class Analyzer {
     }
 
     askToCreateNewAnalyzer() {
-        vscode.window.showInputBox({ value: 'newanalyzer', prompt: 'Enter new analyzer name' }).then(newname => {
+        vscode.window.showInputBox({ value: 'name', prompt: 'Enter new analyzer name' }).then(newname => {
             if (newname) {
                 this.createNewAnalyzer(newname);
                 return newname;
@@ -123,7 +123,7 @@ export class Analyzer {
                         items.push({label: path.basename(file.fsPath), description: ' (analyzer template)'});
                     }
                 }
-                vscode.window.showQuickPick(items).then(selection => {
+                vscode.window.showQuickPick(items, {title: 'Creating New Analzyer', canPickMany: false, placeHolder: 'Choose analyzer template'}).then(selection => {
                     if (!selection) {
                     return false;
                     }

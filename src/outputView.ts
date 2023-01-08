@@ -81,7 +81,8 @@ export class OutputView {
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
 		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
 
-		vscode.commands.registerCommand('outputView.addKB', (resource) => this.addKB(resource));
+		vscode.commands.registerCommand('outputView.copytoKB', (resource) => this.copytoKB(resource));
+		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
@@ -103,23 +104,23 @@ export class OutputView {
         return outputView;
 	}
 
-	addKB(resource: OutputItem) {
-		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var moveDescr = '';
-			moveDescr = moveDescr.concat('Copy file \'',path.basename(resource.uri.fsPath),'\' to kb directory');
-			items.push({label: 'Yes', description: moveDescr});
-			items.push({label: 'No', description: 'Do not move file'});
+	// copytoKB(resource: OutputItem) {
+	// 	if (visualText.hasWorkspaceFolder()) {
+	// 		let items: vscode.QuickPickItem[] = [];
+	// 		var moveDescr = '';
+	// 		moveDescr = moveDescr.concat('Copy file \'',path.basename(resource.uri.fsPath),'\' to kb directory');
+	// 		items.push({label: 'Yes', description: moveDescr});
+	// 		items.push({label: 'No', description: 'Do not move file'});
 
-			vscode.window.showQuickPick(items).then(selection => {
-				if (!selection || selection.label == 'No')
-					return;
-				let newFile = path.join(visualText.analyzer.getKBDirectory().fsPath,path.basename(resource.uri.fsPath));
-				visualText.fileOps.addFileOperation(resource.uri,vscode.Uri.file(newFile),[fileOpRefresh.OUTPUT,fileOpRefresh.KB],fileOperation.COPY);
-				visualText.fileOps.startFileOps();
-			});
-		}
-	}
+	// 		vscode.window.showQuickPick(items).then(selection => {
+	// 			if (!selection || selection.label == 'No')
+	// 				return;
+	// 			let newFile = path.join(visualText.analyzer.getKBDirectory().fsPath,path.basename(resource.uri.fsPath));
+	// 			visualText.fileOps.addFileOperation(resource.uri,vscode.Uri.file(newFile),[fileOpRefresh.OUTPUT,fileOpRefresh.KB],fileOperation.COPY);
+	// 			visualText.fileOps.startFileOps();
+	// 		});
+	// 	}
+	// }
 
 	public setType(type: outputFileType) {
 		this.type = type;
@@ -232,10 +233,36 @@ export class OutputView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete file'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete File', placeHolder: 'Select Yes or No?'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(resource.uri,resource.uri,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				visualText.fileOps.startFileOps();
+			});
+		}
+	}
+
+	copytoKB(outputItem: OutputItem) {
+		this.moveFileToAnalyzer(outputItem,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+	}
+
+	copytoText(outputItem: OutputItem) {
+		this.moveFileToAnalyzer(outputItem,'input','Copy file to another analyzer','Copy file to input directory of:');
+	}
+
+	moveFileToAnalyzer(outputItem: OutputItem, subdir: string, title: string, placeHolder: string) {
+		if (visualText.getWorkspaceFolder()) {
+			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+			let items: vscode.QuickPickItem[] = [];
+			for (let dir of dirs) {
+				items.push({label: path.basename(dir.fsPath), description: dir.fsPath});
+			}
+
+			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
+				if (!selection || !selection.description)
+					return;
+				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(outputItem.uri.fsPath)));
+				visualText.fileOps.addFileOperation(outputItem.uri,newFile,[],fileOperation.COPY);
 				visualText.fileOps.startFileOps();
 			});
 		}

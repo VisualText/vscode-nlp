@@ -383,7 +383,7 @@ export class TextView {
 					items.push({label: 'Turn Off Logs', description: fileCount + ' files will be analyzed, each will generate logs'});
 					items.push({label: 'Leave Logs On', description: 'please generate all the logs'});
 		
-					vscode.window.showQuickPick(items).then(selection => {
+					vscode.window.showQuickPick(items, {title: 'Logs Toggle', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 						if (!selection || selection.label == 'No') {
 							textView.askAnalyzeFolder(textItem);
 							return;
@@ -409,7 +409,7 @@ export class TextView {
 		items.push({label: 'Yes', description: msg});
 		items.push({label: 'No', description: 'Do not analyze folder \''+foldername+'\''});
 
-		vscode.window.showQuickPick(items).then(selection => {
+		vscode.window.showQuickPick(items, {title: 'Analyzer Folders', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 			if (!selection || selection.label == 'No')
 				return;
 			visualText.nlp.addAnalyzer(textItem.uri,analyzerType.DIRECTORY);
@@ -474,7 +474,7 @@ export class TextView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete '+filename });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(textItem.uri,textItem.uri,[fileOpRefresh.TEXT],fileOperation.DELETE);
@@ -503,7 +503,7 @@ export class TextView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete logs for '+filename });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete File Logs', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				this.deleteFileOrFolderLogs(textItem);
@@ -521,7 +521,7 @@ export class TextView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete logs for '+filename });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete Folder File Logs', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				this.deleteFolderLogs(textItem.uri);
@@ -556,7 +556,7 @@ export class TextView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete all logs for this Analyzer' });
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete Analyzer Logs', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				var inputPath = visualText.analyzer.getInputDirectory();

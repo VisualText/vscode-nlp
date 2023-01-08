@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.5.0
+Users can now quickly move an output file to sister analyzer's text or kb.
+
 ### 2.4.4
 Dict type in output view, explore in sequence view, and bug fixes.
 
@@ -186,15 +189,6 @@ Unicode fixes for colorizing
 
 ### v1.42.1
 Major fixes to the textview conext menu
-
-### v1.42.0
-Check for older pat files more obvious and clean, misc fixes.
-
-### v1.41.7
-Added cross reference context menu items in nlp files, tree files, and txxt files
-
-### v1.40.0
-Lexer improvements
 
 # Development
 

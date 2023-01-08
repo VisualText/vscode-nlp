@@ -189,7 +189,7 @@ export class AnalyzerView {
 			items.push({label: 'Yes', description: 'Delete README.md?'});
 			items.push({label: 'No', description: 'Do not delete README.md'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'README.md File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				dirfuncs.delFile(readMe.fsPath);
@@ -347,7 +347,7 @@ export class AnalyzerView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
@@ -375,7 +375,7 @@ export class AnalyzerView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzers log files'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete ALL Analyzer Logs', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				this.deleteAllAnalyzerLogDirs();
@@ -393,7 +393,7 @@ export class AnalyzerView {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer log files'});
 
-			vscode.window.showQuickPick(items).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 
