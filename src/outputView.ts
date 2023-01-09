@@ -104,24 +104,6 @@ export class OutputView {
         return outputView;
 	}
 
-	// copytoKB(resource: OutputItem) {
-	// 	if (visualText.hasWorkspaceFolder()) {
-	// 		let items: vscode.QuickPickItem[] = [];
-	// 		var moveDescr = '';
-	// 		moveDescr = moveDescr.concat('Copy file \'',path.basename(resource.uri.fsPath),'\' to kb directory');
-	// 		items.push({label: 'Yes', description: moveDescr});
-	// 		items.push({label: 'No', description: 'Do not move file'});
-
-	// 		vscode.window.showQuickPick(items).then(selection => {
-	// 			if (!selection || selection.label == 'No')
-	// 				return;
-	// 			let newFile = path.join(visualText.analyzer.getKBDirectory().fsPath,path.basename(resource.uri.fsPath));
-	// 			visualText.fileOps.addFileOperation(resource.uri,vscode.Uri.file(newFile),[fileOpRefresh.OUTPUT,fileOpRefresh.KB],fileOperation.COPY);
-	// 			visualText.fileOps.startFileOps();
-	// 		});
-	// 	}
-	// }
-
 	public setType(type: outputFileType) {
 		this.type = type;
 	}
@@ -262,7 +244,7 @@ export class OutputView {
 				if (!selection || !selection.description)
 					return;
 				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(outputItem.uri.fsPath)));
-				visualText.fileOps.addFileOperation(outputItem.uri,newFile,[],fileOperation.COPY);
+				visualText.fileOps.addFileOperation(outputItem.uri,newFile,[fileOpRefresh.KB,fileOpRefresh.TEXT],fileOperation.COPY);
 				visualText.fileOps.startFileOps();
 			});
 		}
