@@ -95,12 +95,18 @@ export class NLPFile extends TextFile {
 			return new Promise(resolve => {
 				nlpStatusBar.analyzerButton(false);
 				visualText.processID = cp.exec(cmd, (err, stdout, stderr) => {
+					let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
+					let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
+					let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
+					dirfuncs.writeFile(outFile.fsPath,stdout);
+					dirfuncs.writeFile(errFile.fsPath,stderr);
+					logView.loadAnalyzerOuts();
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
 					if (err) {
 						logView.addMessage(err.message,vscode.Uri.file(filestr));
+						logView.loadMakeAna();
 						vscode.commands.executeCommand('outputView.refreshAll');
-						//vscode.commands.executeCommand('logView.refreshAll');
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Failed');

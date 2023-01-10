@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.5.1",
+    "version": "2.6.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1173,6 +1173,14 @@
                 }
             },
             {
+                "command": "logView.analyzerOuts",
+                "title": "Display Analyzer Output Files",
+                "icon": {
+                    "light": "resources/light/log.svg",
+                    "dark": "resources/dark/log.svg"
+                }
+            },
+            {
                 "command": "logView.updateDebug",
                 "title": "Display Updater Details",
                 "icon": {
@@ -1234,14 +1242,6 @@
                 "icon": {
                     "light": "resources/light/cancel-button.svg",
                     "dark": "resources/dark/cancel-button.svg"
-                }
-            },
-            {
-                "command": "logView.refreshAll",
-                "title": "Refresh",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
                 }
             },
             {
@@ -1628,37 +1628,37 @@
                 {
                     "command": "logView.stopUpdater",
                     "when": "view == logView && updating.running",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "logView.stopFileOps",
                     "when": "view == logView && fileOps.running",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
-                    "command": "logView.refreshAll",
+                    "command": "logView.analyzerOuts",
                     "when": "view == logView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "logView.conceptualGrammar",
-                    "when": "view == logView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "logView.timing",
-                    "when": "view == logView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "logView.clear",
-                    "when": "view == logView",
-                    "group": "navigation"
+                    "group": "navigation@3"
                 },
                 {
                     "command": "logView.makeAna",
                     "when": "view == logView",
-                    "group": "navigation"
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "logView.conceptualGrammar",
+                    "when": "view == logView",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "logView.timing",
+                    "when": "view == logView",
+                    "group": "navigation@6"
+                },
+                {
+                    "command": "logView.clear",
+                    "when": "view == logView",
+                    "group": "navigation@7"
                 },
                 {
                     "command": "logView.updateDebug",
