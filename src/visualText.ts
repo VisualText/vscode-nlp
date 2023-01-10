@@ -1148,4 +1148,32 @@ export class VisualText {
 			panel.webview.html = html;
 		}
 	}
+
+    fileIconFromExt(filepath: string): string {
+        let filename = path.basename(filepath);
+
+        let icon = 'file.svg';
+        if (filename.endsWith('.tree')) {
+            icon = 'tree.svg';
+        } else if (filename.endsWith('.log')) {
+            icon = 'log.svg';
+        } else if (filename.endsWith('.nlp') || filename.endsWith('.pat')) {
+            icon = 'nlp.svg';
+        } else if (filename.endsWith('.dict')) {
+            icon = 'dict.svg';
+        } else if (filename == 'main.kb') {
+            icon = 'kb-main.svg';
+        } else if (filename.endsWith('.kbb')) {
+            icon = 'kbb.svg';
+        } else if (filename.endsWith('.kb')) {
+            icon = 'kb.svg';
+        } else if (filename.endsWith('.txxt')) {
+            icon = 'symbol-keyword.svg';
+        } else if (filename.endsWith('.dict')) {
+            icon = 'dict.svg';
+        }
+
+        return icon;
+    }
+
 }

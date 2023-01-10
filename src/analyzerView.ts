@@ -139,6 +139,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
+		vscode.commands.registerCommand('analyzerView.importAnalyzers', () => this.importAnalyzers());
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -150,6 +151,37 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	importAnalyzers() {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			const options: vscode.OpenDialogOptions = {
+				canSelectFiles: false,
+				canSelectFolders: true,
+				canSelectMany: true,
+				openLabel: 'Import Analyzers(s)',
+				defaultUri: seqFile.getSpecDirectory()
+			};
+			vscode.window.showOpenDialog(options).then(selections => {
+				if (!selections) {
+					return;
+				}
+				let analyzerDirExists = false;
+				var analyzerFolder = visualText.getAnalyzerDir();
+				for (let select of selections) {
+					if (visualText.isAnalyzerDirectory(select)) {
+						var dirname = path.basename(select.fsPath);
+						visualText.fileOps.addFileOperation(select,vscode.Uri.file(path.join(analyzerFolder.fsPath,dirname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
+						analyzerDirExists = true;
+					}
+				}
+				if (analyzerDirExists)
+					visualText.fileOps.startFileOps();
+				else
+					vscode.window.showWarningMessage('No analyzers were selected');
+			});
+		}
 	}
 
 	newFolder(analyzerItem: AnalyzerItem) {

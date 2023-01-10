@@ -459,6 +459,37 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.chartok', (seqItem) => treeDataProvider.chartok(seqItem));
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
+		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
+	}
+
+	insertOrphan(seqItem: SequenceItem) {
+		if (visualText.getWorkspaceFolder()) {
+			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+			let items: vscode.QuickPickItem[] = [];
+
+			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+			for (let nlpFile of nlpFiles) {
+				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
+					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
+					items.push({label: path.basename(nlpFile.fsPath), description: nlpFile.fsPath});
+				}
+			}
+
+			if (items.length == 0) {
+				vscode.window.showWarningMessage('No orphan files for this analyzer');
+				return;
+			}
+
+			vscode.window.showQuickPick(items, {title: 'Choose Orphan', canPickMany: false, placeHolder: 'Choose orphan pass to insert'}).then(selection => {
+				if (!selection)
+					return;
+				if (selection.description) {
+					var newfile: vscode.Uri = vscode.Uri.file(selection.description);
+					visualText.analyzer.seqFile.insertPass(seqItem,newfile);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+				}	
+			});
+		}
 	}
 
 	explore() {

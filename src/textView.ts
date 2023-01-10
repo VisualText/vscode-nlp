@@ -5,7 +5,7 @@ import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { nlpStatusBar, DevMode } from './status';
+import { nlpStatusBar, DevMode, FiredMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 
@@ -380,15 +380,16 @@ export class TextView {
 				let fileCount = dirfuncs.fileCount(textItem.uri);
 				if (fileCount > 10) {
 					let items: vscode.QuickPickItem[] = [];
-					items.push({label: 'Turn Off Logs', description: fileCount + ' files will be analyzed, each will generate logs'});
+					let offMsg = 'Turn Off Logs';
+					items.push({label: offMsg, description: fileCount + ' files will be analyzed, each will generate logs'});
 					items.push({label: 'Leave Logs On', description: 'please generate all the logs'});
 		
 					vscode.window.showQuickPick(items, {title: 'Logs Toggle', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
-						if (!selection || selection.label == 'No') {
+						if (!selection) {
 							textView.askAnalyzeFolder(textItem);
 							return;
 						}
-						nlpStatusBar.setDevState(DevMode.NORMAL);
+						nlpStatusBar.setDevState(selection.label == offMsg ? DevMode.NORMAL : DevMode.DEV);
 						nlpStatusBar.updateFiredState();
 						textView.askAnalyzeFolder(textItem);
 					});

@@ -97,7 +97,10 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.6.1
+### 2.7.0
+Insert and delete orphan(s), icon variety in KB, duplidate line shortcut in dict and kbb, explore output directory, import analyzer
+
+### 2.6.2
 NLP Engine couts are now displayed in the logview after the run.
 
 ### 2.5.1

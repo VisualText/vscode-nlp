@@ -25,20 +25,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	constructor() { }
 
 	public getTreeItem(element: OutputItem): vscode.TreeItem {
-		var icon = 'file.svg';
-		if (element.uri.fsPath.endsWith('.tree')) {
-			icon = 'tree.svg';
-		} else if (element.uri.fsPath.endsWith('.log')) {
-			icon = 'log.svg';
-		} else if (element.uri.fsPath.endsWith('.nlp') || element.uri.fsPath.endsWith('.pat')) {
-			icon = 'nlp.svg';
-		} else if (element.uri.fsPath.endsWith('.kb') || element.uri.fsPath.endsWith('.kbb')) {
-			icon = 'kb.svg';
-		} else if (element.uri.fsPath.endsWith('.txxt')) {
-			icon = 'symbol-keyword.svg';
-		} else if (element.uri.fsPath.endsWith('.dict')) {
-			icon = 'dict.svg';
-		}
+		var icon = visualText.fileIconFromExt(element.uri.fsPath);
 		return {
 			resourceUri: element.uri,
 			collapsibleState: void 0,
@@ -90,7 +77,8 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
 		vscode.commands.registerCommand('outputView.all', () => this.loadAll());
 		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
-
+		vscode.commands.registerCommand('outputView.deleteOrphans', () => this.deleteOrphans());
+		vscode.commands.registerCommand('outputView.explore', () => this.explore());
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
@@ -102,6 +90,39 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	explore() {
+		let dir = visualText.analyzer.getOutputDirectory();
+		visualText.openFileManager(dir.fsPath);
+	}
+
+	deleteOrphans(): void {
+		if (visualText.hasWorkspaceFolder()) {
+			let files: vscode.Uri[] = [];
+			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+			for (let nlpFile of nlpFiles) {
+				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
+					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
+					files.push(nlpFile);
+				}
+			}
+
+			let count = files.length;
+
+			let items: vscode.QuickPickItem[] = [];
+			items.push({label: 'Yes', description: 'Delete all orphan passes'});
+			items.push({label: 'No', description: 'Do not delete file'});
+
+			vscode.window.showQuickPick(items, {title: 'Delete Orphan Files', placeHolder: 'Delete all '+count.toString()+' file(s)'}).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				for (let file of files) {
+					visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				}
+				visualText.fileOps.startFileOps();
+			});
+		}
 	}
 
 	public setType(type: outputFileType) {
