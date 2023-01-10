@@ -381,7 +381,7 @@ export class NLPFile extends TextFile {
 
 	duplicateLine(editor: vscode.TextEditor) {
 		this.setDocument(editor);
-		if (this.getFileType() == nlpFileType.NLP) {
+		if (this.getFileType() == nlpFileType.NLP || this.getFileType() == nlpFileType.NLP || this.getFileType() == nlpFileType.KBB) {
 			var rulestr = '';
 			var position = editor.selection.active;
 			var lines = this.getLines(true);

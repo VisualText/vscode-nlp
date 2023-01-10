@@ -39,15 +39,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
         let name = path.basename(KBItem.uri.fsPath);
         treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [KBItem], };
         treeItem.contextValue = 'kb';
-
-		var icon = 'kb.svg';
-		if (name == 'main.kb') {
-			icon = 'kb-main.svg';
-		} else if (KBItem.uri.fsPath.endsWith('.dict')) {
-			icon = 'dict.svg';
-		} else if (KBItem.uri.fsPath.endsWith('.kbb')) {
-			icon = 'kbb.svg';
-		}
+		var icon = visualText.fileIconFromExt(KBItem.uri.fsPath);
 
 		treeItem.iconPath = {
 			light: path.join(__filename, '..', '..', 'resources', 'light', icon),
