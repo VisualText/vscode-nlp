@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.6.0
+NLP Engine couts are now displayed in the logview after the run.
+
 ### 2.5.1
 Users can now quickly move an output file to sister analyzer's text or kb.
 
@@ -180,15 +183,6 @@ Added .dict files to be text files for dictionaries where each meaning for each 
 
 ### v1.44.0
 Added webitekb function
-
-### v1.43.4
-Added a KB View List
-
-### v1.42.2
-Unicode fixes for colorizing
-
-### v1.42.1
-Major fixes to the textview conext menu
 
 # Development
 
