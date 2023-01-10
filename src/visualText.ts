@@ -353,7 +353,7 @@ export class VisualText {
                                 }
                             }
                             if (!missingOne) {
-                                if (visualText.isCompZip(op))
+                                if (visualText.isCompVersion(op))
                                     op.operation = upOp.VERSION;
                                 else
                                     op.status = upStat.DONE;
@@ -361,7 +361,7 @@ export class VisualText {
                                 op.operation = upOp.DOWNLOAD;
                             }
                         } else if (fs.existsSync(op.local)) {
-                            if (visualText.isCompZip(op))
+                            if (visualText.isCompVersion(op))
                                 op.operation = upOp.VERSION;
                             else
                                 op.status = upStat.DONE;
@@ -434,7 +434,7 @@ export class VisualText {
         }
     }
 
-    isCompZip(op: updateOp): boolean {
+    isCompVersion(op: updateOp): boolean {
         return op.component == upComp.NLP_EXE || op.component == upComp.VT_FILES || op.component == upComp.ANALYZER_FILES;
     }
 
@@ -577,7 +577,7 @@ export class VisualText {
                 if (op.type == upType.UNZIP && !visualText.stopAll) {
                     op.operation = upOp.UNZIP;
                     op.status = upStat.START;
-                } else if (op.version.length == 0) {
+                } else if (visualText.isCompVersion(op)) {
                     op.operation = upOp.VERSION;
                     op.status = upStat.START;
                 } else {
