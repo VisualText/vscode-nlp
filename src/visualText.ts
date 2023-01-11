@@ -191,10 +191,10 @@ export class VisualText {
     }
 
     pushDownloadEngineFiles(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.NLP_EXE);
         visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.NLP_EXE);
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
+        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);
     }
 
     pushDownloadVTFiles(op: updateOp, push: upPush) {
