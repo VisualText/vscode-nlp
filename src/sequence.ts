@@ -404,13 +404,13 @@ export class SequenceFile extends TextFile {
 
 			case newPassType.CODE:
 				newpass = newpass.concat('@CODE\n\n');
-				newpass = newpass.concat('G("this") = 1;\n');
+				newpass = newpass.concat('G("kb") = getconcept(findroot(),G("kb"));\n');
 				newpass = newpass.concat('\n@@CODE');
 				break;
 
 			case newPassType.DECL:
 				newpass = newpass.concat('@DECL\n\n');
-				newpass = newpass.concat('myfunction(L("var")) {\n');
+				newpass = newpass.concat('MyFunction(L("var")) {\n');
 				newpass = newpass.concat('\n');
 				newpass = newpass.concat('}\n');
 				newpass = newpass.concat('\n@@DECL');
