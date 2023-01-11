@@ -23,6 +23,12 @@
                     "include": "#concept-name"
                 },
                 {
+                    "include": "#concept-name1"
+                },
+                {
+                    "include": "#concept-name2"
+                },
+                {
                     "include": "#attribute-name"
                 },
                 {
@@ -38,8 +44,16 @@
             "name": "keyword.other.kbb"
         },
         "concept-name": {
-            "name": "variable.parameter.nlp",
-            "match": "^[\\s]+[\\w\\d][^:^\\[]+[:]?"
+            "name": "keyword.concept.kbb",
+            "match": "^[\\s][\\s][\\w\\d][^:^\\[]+[:]?"
+        },
+        "concept-name1": {
+            "name": "keyword.concept.kbb1",
+            "match": "^[\\s][\\s][\\s][\\s][\\w\\d][^:^\\[]+[:]?"
+        },
+        "concept-name2": {
+            "name": "keyword.concept.kbb2",
+            "match": "^[\\s][\\s][\\s][\\s][\\s][\\s][\\w\\d][^:^\\[]+[:]?"
         },
         "attribute-name": {
             "name": "constant.numeric.tree",
