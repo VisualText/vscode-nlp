@@ -46,6 +46,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 			dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
 		}
 
+		if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
+			treeItem.contextValue = 'toggle';
+
 		return treeItem;
 	}
 
@@ -199,6 +202,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
 		vscode.commands.registerCommand('kbView.explore', () => this.explore());
 		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
+		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -206,6 +210,31 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	private toggleActive(KBItem: KBItem): void {
+		var filepath = KBItem.uri.fsPath;
+		if (KBItem && filepath.length) {
+			var filename = path.basename(filepath);
+			var parsed = path.parse(filename);
+			let ext = '.kbb';
+			if (filename.endsWith('.kbb')) {
+				ext = '.kbbb';
+			}
+			else if (filename.endsWith('.kbbb')) {
+				ext = '.kbb';
+			}
+			else if (filename.endsWith('.dict')) {
+				ext = '.dictt';
+			}
+			else if (filename.endsWith('.dictt')) {
+				ext = '.dict';
+			}
+			var newFilename = path.join(path.dirname(filepath),parsed.name + ext);
+			visualText.fileOps.addFileOperation(KBItem.uri,vscode.Uri.file(newFilename),[fileOpRefresh.KB],fileOperation.RENAME);
+			visualText.fileOps.startFileOps();
+		}
+		this.kbView.title = 'KB';
 	}
 
 	existingFiles() {
