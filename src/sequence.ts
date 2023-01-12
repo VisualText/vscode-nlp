@@ -404,7 +404,7 @@ export class SequenceFile extends TextFile {
 
 			case newPassType.CODE:
 				newpass = newpass.concat('@CODE\n\n');
-				newpass = newpass.concat('G("kb") = getconcept(findroot(),G("kb"));\n');
+				newpass = newpass.concat('G("kb") = getconcept(findroot(),"kb");\n');
 				newpass = newpass.concat('\n@@CODE');
 				break;
 
