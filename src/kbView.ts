@@ -404,7 +404,7 @@ export class KBView {
 					var filepath = path.join(dirPath,newname+'.kbb');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"topconcept\n\tchild attr=[value,value2]\n\t\tgrandchild one\n\t\tgrandchild two\n");
+					dirfuncs.writeFile(filepath,"topconcept\n  child: attr=[value,value2]\n    grandchild one\n    grandchild two\n");
 					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
@@ -440,7 +440,7 @@ export class KBView {
 					var filepath = path.join(dirPath,newname+'.dict');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"word attr=value");
+					dirfuncs.writeFile(filepath,"word s=suggestedNode attr=value");
 					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
