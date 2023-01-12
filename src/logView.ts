@@ -127,10 +127,10 @@ export class LogView {
 		let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
 		let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
 		let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
-		this.addMessage('ERROR FILE: ' + errFile.fsPath, errFile);
-		this.addLogFile(errFile,'   ');
 		this.addMessage('STD OUT FILE: ' + errFile.fsPath, errFile);
 		this.addLogFile(outFile,'   ');
+		this.addMessage('ERROR FILE: ' + errFile.fsPath, errFile);
+		this.addLogFile(errFile,'   ');
 	}
 
 	private loadTimingLog() {

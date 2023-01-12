@@ -1072,7 +1072,7 @@ export class VisualText {
         visualText.fileOps.stopAll();
     }
 
-	colorizeAnalyzer() {
+	colorizeAnalyzer(overwrite: boolean=false) {
 		if (vscode.workspace.workspaceFolders) {
             let add = false;
             var toDir = vscode.workspace.workspaceFolders[0].uri;
@@ -1096,7 +1096,7 @@ export class VisualText {
 			} else
                 add = true;
 
-            if (add) {
+            if (add || overwrite) {
 				dirfuncs.copyFile(fromFile,toFile);
                 this.debugMessage('Copying settings file with colorization: ' + fromFile + ' => ' + toFile); 
             }

@@ -140,6 +140,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', () => this.importAnalyzers());
+		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -151,6 +152,10 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	updateColorizer() {
+		visualText.colorizeAnalyzer(true);
 	}
 
 	importAnalyzers() {
