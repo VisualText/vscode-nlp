@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.7.2",
+    "version": "2.8.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,14 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.toggleActive",
+                "title": "Toggle Active/Inactive",
+                "icon": {
+                    "light": "resources/light/toggle.svg",
+                    "dark": "resources/dark/toggle.svg"
+                }
+            },
             {
                 "command": "kbView.existingFiles",
                 "title": "Import KB files",
@@ -1844,6 +1852,11 @@
                 {
                     "command": "kbView.rename",
                     "when": "view == kbView",
+                    "group": "inline"
+                },
+                {
+                    "command": "kbView.toggleActive",
+                    "when": "view == kbView && viewItem == toggle",
                     "group": "inline"
                 },
                 {

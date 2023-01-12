@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.8.0
+Added toggle active / inactive for kbb and dict files. Added attr and val while loops in snipper.
+
 ### 2.7.2
 Insert and delete orphan(s), icon variety in KB, duplidate line shortcut in dict and kbb, explore output directory, import analyzer
 
@@ -180,12 +183,6 @@ Added struniquechars to NLP++ and snippets
 
 ### v1.46.3
 Added refresh treeviews array to fileops
-
-### v1.45.0
-Added .dict files to be text files for dictionaries where each meaning for each word occupies one line
-
-### v1.44.0
-Added webitekb function
 
 # Development
 

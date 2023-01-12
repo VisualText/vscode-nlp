@@ -1396,6 +1396,26 @@
         ],
         "description": "While loop."
     },
+    "While Loop Attr": {
+        "prefix": ["while Attr"],
+        "body": [
+            "while (L(\"${1:node}\")) {",
+            "\t$0",
+            "\tL(\"$1\") = nextattr(L(\"$1\"));", 
+            "}"
+        ],
+        "description": "While loop."
+    },
+    "While Loop Val": {
+        "prefix": ["while Val"],
+        "body": [
+            "while (L(\"${1:node}\")) {",
+            "\t$0",
+            "\tL(\"$1\") = nextval(L(\"$1\"));", 
+            "}"
+        ],
+        "description": "While loop."
+    },
     "word list": {
         "prefix": ["word list"],
         "body": [
