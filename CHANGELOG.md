@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.8.1
+### 2.8.2
 Added toggle active / inactive for kbb and dict files. Added attr and val while loops in snipper.
 
 ### 2.7.2
