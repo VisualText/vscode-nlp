@@ -3,6 +3,7 @@ import * as path from 'path';
 import { visualText } from './visualText';
 import { FindFile } from './findFile';
 import { findView } from './findView';
+import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
@@ -203,6 +204,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.explore', () => this.explore());
 		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
 		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
+		vscode.commands.registerCommand('kbView.copyToAnalyzer', (KBItem) => this.copyToAnalyzer(KBItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -211,6 +213,11 @@ export class KBView {
         }
         return kbView;
 	}
+
+	copyToAnalyzer(KBItem: KBItem) {
+		outputView.moveFileToAnalyzer(KBItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+	}
+
 
 	private toggleActive(KBItem: KBItem): void {
 		var filepath = KBItem.uri.fsPath;

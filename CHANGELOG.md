@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.9.0
+Copy kb files to a sister analyzer.
+
 ### 2.8.2
 Added toggle active / inactive for kbb and dict files. Added attr and val while loops in snipper.
 

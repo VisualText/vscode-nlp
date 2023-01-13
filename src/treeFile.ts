@@ -237,8 +237,8 @@ export class TreeFile extends TextFile {
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
 		this.selectedTreeStr = '';
+		let type: nlpFileType = this.getFileType();
 		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
-
 			if (this.getFileType() == nlpFileType.TXT) {
 				this.setFilesNames(visualText.analyzer.getTreeFile().fsPath);
 				this.absoluteRangeFromSelection(this.getUri().fsPath, editor.selection);	
@@ -253,62 +253,114 @@ export class TreeFile extends TextFile {
 
 	generateRule(editor: vscode.TextEditor, genType: generateType) {
 		if (visualText.analyzer.hasText()) {
-			let passFilePath = visualText.analyzer.getPassPath();
-			let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
-			let passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
-			this.treeFile = this.anaFile(passItem.passNum).fsPath;
+			let ruleStr = '';
+			let type = this.getFileType();
+			let nlp = new NLPFile();
 
-			if (this.findSelectedTreeStr(editor)) {
-				let num = 1;
-				let ruleStr = '';
-				let lastend = 0;
-				let indent = -1;
+			if (type == nlpFileType.NLP || type == nlpFileType.UNKNOWN) {
+				var range = new vscode.Range(editor.selection.start, editor.selection.end);
+				let str = editor.document.getText(range);
+				let ruleStr = this.generateRuleFromStr(str, genType);
+				ruleStr = this.ruleStrOutput(ruleStr);
+				var snippet = new vscode.SnippetString(ruleStr);
+				editor.insertSnippet(snippet,range);
 
-				for (let line of this.selectedLines) {
-					if (line.node.localeCompare('_ROOT') == 0)
-						continue;
-					let node = line.node;
-					if (indent == -1 || line.indent < indent) indent = line.indent;
-					if (line.end > lastend && line.indent <= indent) {
-						if (genType == generateType.GENERAL) {
-							if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
-								node = '_xCAP';
-							else if (line.type.localeCompare('alpha') == 0)
-								node = '_xALPHA';
-							else if (line.type.localeCompare('white') == 0)
-								node = '_xWHITE';
-							else if (line.type.localeCompare('num') == 0)
-								node = '_xNUM';
-							else if (line.type.localeCompare('punct') == 0 || node.length == 1)
-								node = `\\${node}`;
-						} else if (node.length == 1) {
-							node = `\\${node}`;
-						}
-						let newRuleStr = `\t${node}\t### (${num})`;
-						ruleStr = ruleStr + '\n' + newRuleStr;
-						num++;						
-					}
-					lastend = line.end;
+			} else {
+				let passFilePath = visualText.analyzer.getPassPath();
+				let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
+				let passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
+				this.treeFile = this.anaFile(passItem.passNum).fsPath;
+	
+				if (this.findSelectedTreeStr(editor)) {
+					let ruleStr = this.ruleFromLines(genType);
+					nlp.setStr(ruleStr);
+					ruleStr = nlp.formatRule(ruleStr);
+					let ruleStrFinal = this.ruleStrOutput(ruleStr);
+					nlp.setFile(passFilePath);
+					nlp.insertRule(ruleStrFinal);
 				}
+			}
+		}
+		else {
+			vscode.window.showInformationMessage('No text selected');
+		}
+	}
 
-				let nlp = new NLPFile();
-				nlp.setStr(ruleStr);
-				ruleStr = nlp.formatRule(ruleStr);
-
-				let ruleStrFinal = `
-				
+	ruleStrOutput(ruleStr: string): string {
+		return `
 @RULES
 _newNode <-
 ${ruleStr}
 \t@@
-`;
-				nlp.setFile(passFilePath);
-				nlp.insertRule(ruleStrFinal);
+		`;
+	}
+
+	ruleFromLines(genType: generateType) {
+		let num = 1;
+		let ruleStr = '';
+		let lastend = 0;
+		let indent = -1;
+
+		for (let line of this.selectedLines) {
+			if (line.node.localeCompare('_ROOT') == 0)
+				continue;
+			let node = line.node;
+			if (indent == -1 || line.indent < indent) indent = line.indent;
+			if (line.end > lastend && line.indent <= indent) {
+				if (genType == generateType.GENERAL) {
+					if (line.type.localeCompare('alpha') == 0 && node.charAt(0) === node.charAt(0).toUpperCase())
+						node = '_xCAP';
+					else if (line.type.localeCompare('alpha') == 0)
+						node = '_xALPHA';
+					else if (line.type.localeCompare('white') == 0)
+						node = '_xWHITE';
+					else if (line.type.localeCompare('num') == 0)
+						node = '_xNUM';
+					else if (line.type.localeCompare('punct') == 0 || node.length == 1)
+						node = `\\${node}`;
+				} else if (node.length == 1) {
+					node = `\\${node}`;
+				}
+				let newRuleStr = `\t${node}\t### (${num})`;
+				if (ruleStr.length)
+					ruleStr += '\n';
+				ruleStr += newRuleStr;
+				num++;						
 			}
-			else {
-				vscode.window.showInformationMessage('No text selected');
-			}
+			lastend = line.end;
 		}
+		return ruleStr;
+	}
+
+	generateRuleFromStr(str: string, genType: generateType): string {
+		let ruleStr = '';
+		let node = '';
+		var tokens = str.toLowerCase().split(' ');
+		let num = 1;
+		for (let token of tokens) {
+			node = token;
+			let isint = !isNaN(parseInt(token));
+			if (genType == generateType.GENERAL) {
+				if (isint) {
+					node = '_xNUM';
+				} else if (token == ' ') {
+					node = '_xWHITE';
+				} else if (token.length == 1 && !isint) {
+					node = '\\' + token;
+				} else {
+					node = '_xALPHA';
+				}
+			} else if (token.length == 1 && !isint) {
+				node = '\\' + token;
+			}
+
+			let nodeStr = `\t${node}\t### (${num})`;
+			if (ruleStr.length)
+				ruleStr += '\n';
+			ruleStr += nodeStr;
+			num++;
+		}
+		return ruleStr;
 	}
 
 	parseTreeLine(line: string): TreeLine {
