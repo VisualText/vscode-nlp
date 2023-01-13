@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.9.0
+Copy kb files to a sister analyzer.
+
 ### 2.8.2
 Added toggle active / inactive for kbb and dict files. Added attr and val while loops in snipper.
 
@@ -174,15 +177,6 @@ Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfo
 
 ### v1.49.3
 Added descriptive tooltip to tokenizer path in the analyzer sequence. Fixed renaming.
-
-### v1.48.0
-Add properties to files and folders. Sped up file operations, fixed log deletion bugs, added cancel file operations, added file operation counts display.
-
-### v1.47.5
-Added struniquechars to NLP++ and snippets
-
-### v1.46.3
-Added refresh treeviews array to fileops
 
 # Development
 

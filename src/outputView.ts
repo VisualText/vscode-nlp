@@ -246,14 +246,14 @@ export class OutputView {
 	}
 
 	copytoKB(outputItem: OutputItem) {
-		this.moveFileToAnalyzer(outputItem,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+		this.moveFileToAnalyzer(outputItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
 
 	copytoText(outputItem: OutputItem) {
-		this.moveFileToAnalyzer(outputItem,'input','Copy file to another analyzer','Copy file to input directory of:');
+		this.moveFileToAnalyzer(outputItem.uri,'input','Copy file to another analyzer','Copy file to input directory of:');
 	}
 
-	moveFileToAnalyzer(outputItem: OutputItem, subdir: string, title: string, placeHolder: string) {
+	moveFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {
 		if (visualText.getWorkspaceFolder()) {
 			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
 			let items: vscode.QuickPickItem[] = [];
@@ -264,8 +264,8 @@ export class OutputView {
 			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
 				if (!selection || !selection.description)
 					return;
-				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(outputItem.uri.fsPath)));
-				visualText.fileOps.addFileOperation(outputItem.uri,newFile,[fileOpRefresh.KB,fileOpRefresh.TEXT],fileOperation.COPY);
+				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(uri.fsPath)));
+				visualText.fileOps.addFileOperation(uri,newFile,[fileOpRefresh.KB,fileOpRefresh.TEXT],fileOperation.COPY);
 				visualText.fileOps.startFileOps();
 			});
 		}

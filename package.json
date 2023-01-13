@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.8.2",
+    "version": "2.9.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -250,6 +250,14 @@
         ],
         "commands": [
             {
+                "command": "kbView.copyToAnalyzer",
+                "title": "Copy file to Another Analyzer",
+                "icon": {
+                    "light": "resources/light/kb-copyto.svg",
+                    "dark": "resources/dark/kb-copyto.svg"
+                }
+            },
+            {
                 "command": "kbView.toggleActive",
                 "title": "Toggle Active/Inactive",
                 "icon": {
@@ -349,6 +357,11 @@
                 "command": "nlp.sortText",
                 "title": "Sort & Unique text lines",
                 "description": "Sort and unique text lines"
+            },
+            {
+                "command": "nlp.lowerCase",
+                "title": "Change to Lowercase",
+                "description": "Change the selected text to lower case"
             },
             {
                 "command": "helpView.windowCHMHelp",
@@ -1407,6 +1420,11 @@
                     "group": "nlp"
                 },
                 {
+                    "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict || resourceExtname == .kbb",
+                    "command": "nlp.lowerCase",
+                    "group": "nlp"
+                },
+                {
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.ruleFired",
                     "group": "nlp"
@@ -1417,12 +1435,12 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
                     "command": "nlp.generateRule",
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
                     "command": "nlp.generateExactRule",
                     "group": "nlp"
                 },
@@ -1870,6 +1888,11 @@
                 {
                     "command": "kbView.toggleActive",
                     "when": "view == kbView && viewItem == toggle",
+                    "group": "inline"
+                },
+                {
+                    "command": "kbView.copyToAnalyzer",
+                    "when": "view == kbView",
                     "group": "inline"
                 },
                 {
