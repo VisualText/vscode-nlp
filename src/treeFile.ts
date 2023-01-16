@@ -335,7 +335,7 @@ ${ruleStr}
 	generateRuleFromStr(str: string, genType: generateType): string {
 		let ruleStr = '';
 		let node = '';
-		var tokens = str.toLowerCase().split(' ');
+		var tokens = this.nlpppSplitter(str.toLowerCase());
 		let num = 1;
 		for (let token of tokens) {
 			node = token;
@@ -361,6 +361,45 @@ ${ruleStr}
 			num++;
 		}
 		return ruleStr;
+	}
+
+	nlpppSplitter(str: string): string[] {
+		let len = str.length;
+		let i = 0;
+		let tokens: string[] = [];
+		let tok = '';
+		let isDigit: boolean = false;
+		enum charType { UNKNOWN, ALPHA, DIGIT, SPACE, SPECIAL }
+		let type: charType = charType.UNKNOWN;
+		let lastType: charType = charType.UNKNOWN;
+
+		while (i < len) {
+			let c = str[i++];
+			if (c >= '0' && c <= '9') {
+				type = charType.DIGIT;
+			} else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+				type = charType.ALPHA;
+			} else if (c == ' ') {
+				type = charType.SPACE;
+			} else {
+				type = charType.SPECIAL;
+			}
+			if (type != lastType && lastType != charType.UNKNOWN && lastType != charType.SPACE) {
+				tokens.push(tok);
+				if (type == charType.SPACE)
+					tok = '';
+				else
+					tok = c;
+				lastType = charType.UNKNOWN;
+			} else if (type != charType.SPACE) {
+				tok = tok + c;
+			}
+			lastType = type;
+		}
+		if (tok.length)
+			tokens.push(tok);
+
+		return tokens;
 	}
 
 	parseTreeLine(line: string): TreeLine {
