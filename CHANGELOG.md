@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.11.0
+Can now move the VisualText editor up or down in the analyzer view.
+
 ### 2.10.0
 Added library files for dictionaires and KBs.
 

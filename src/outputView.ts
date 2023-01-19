@@ -258,7 +258,17 @@ export class OutputView {
 			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
 			let items: vscode.QuickPickItem[] = [];
 			for (let dir of dirs) {
-				items.push({label: path.basename(dir.fsPath), description: dir.fsPath});
+				if (visualText.isAnalyzerDirectory(dir))
+					items.push({label: path.basename(dir.fsPath), description: dir.fsPath});
+				else {
+					items.push({label: path.basename(dir.fsPath), description: '(FOLDER - choose analyzer below'});
+					let subanas = dirfuncs.getDirectories(dir);
+					for (let subana of subanas) {
+						if (visualText.isAnalyzerDirectory(subana)) {
+							items.push({label: '-  ' + path.basename(subana.fsPath), description: subana.fsPath});
+						}
+					}
+				}
 			}
 
 			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {

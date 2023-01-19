@@ -69,7 +69,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		if (analyzerItem.type === analyzerFolderType.ANALYZER) {
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
-			treeItem.contextValue = conVal + hasLogs;
+			treeItem.contextValue = conVal + hasLogs + 'isAnalyzer';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
@@ -137,6 +137,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.readMe', resource => this.readMe(resource));
 		vscode.commands.registerCommand('analyzerView.editReadMe', resource => this.editReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
+		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
+		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', () => this.importAnalyzers());
@@ -152,6 +154,20 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	moveDownFolder(analyzerItem: AnalyzerItem) {
+		this.openFolder(analyzerItem.uri);
+	}
+
+	moveToParent(analyzerItem: AnalyzerItem) {
+		var parent = vscode.Uri.file(path.dirname(path.dirname(analyzerItem.uri.fsPath)));
+		this.openFolder(parent);
+	}
+
+	openFolder(dir: vscode.Uri) {
+		vscode.commands.executeCommand("vscode.openFolder",dir);
+		vscode.commands.executeCommand('workbench.action.openPanel');
 	}
 
 	updateColorizer() {
@@ -394,9 +410,7 @@ export class AnalyzerView {
 	}
 
 	private loadExampleAnalyzers() {
-		var examples = visualText.getExampleAnalyzersPath();
-		vscode.commands.executeCommand("vscode.openFolder",examples);
-		vscode.commands.executeCommand('workbench.action.openPanel');
+		this.openFolder(visualText.getExampleAnalyzersPath());
 	}
 	
 	private newAnalyzer() {
