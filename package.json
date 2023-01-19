@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.9.2",
+    "version": "2.10.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,30 @@
             }
         ],
         "commands": [
+            {
+                "command": "kbView.libraryKB",
+                "title": "Library KB",
+                "icon": {
+                    "light": "resources/light/kbb.svg",
+                    "dark": "resources/dark/kbb.svg"
+                }
+            },
+            {
+                "command": "kbView.dictEnglish",
+                "title": "English Dictionary",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
+                "command": "kbView.dictStopWords",
+                "title": "Stop Words",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
             {
                 "command": "kbView.copyToAnalyzer",
                 "title": "Copy file to Another Analyzer",
@@ -1275,7 +1299,7 @@
             },
             {
                 "command": "logView.exploreEngineDir",
-                "title": "Open Engine Directory",
+                "title": "Explore Engine Folder",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"
@@ -1387,14 +1411,18 @@
         ],
         "submenus": [
             {
-              "id": "sequencetype",
-              "label": "New Pass"
+                "id": "sequencetype",
+                "label": "New Pass"
             },
             {
                 "id": "librarypass",
                 "label": "Library Pass"
+            },
+            {
+                "id": "librarydict",
+                "label": "Library Dictionary"
             }
-          ],
+        ],
         "menus": {
             "explorer/context": [
                 {
@@ -1802,7 +1830,7 @@
                     "group": "navigation"
                 }
             ],
-            "sequencetype":[
+            "sequencetype": [
                 {
                     "command": "sequenceView.insertNew",
                     "group": "edit@1"
@@ -1816,22 +1844,32 @@
                     "group": "edit@3"
                 }
             ],
-            "librarypass":[
+            "librarypass": [
                 {
-                    "command": "sequenceView.insertLibrary",
+                    "command": "sequenceView.libraryKBFuncs",
                     "group": "edit@1"
                 },
                 {
-                    "command": "sequenceView.libraryKBFuncs",
+                    "command": "sequenceView.libraryLines",
                     "group": "edit@2"
                 },
                 {
-                    "command": "sequenceView.libraryLines",
+                    "command": "sequenceView.libraryWhiteSpaces",
                     "group": "edit@3"
                 },
                 {
-                    "command": "sequenceView.libraryWhiteSpaces",
+                    "command": "sequenceView.insertLibrary",
                     "group": "edit@4"
+                }
+            ],
+            "librarydict": [
+                {
+                    "command": "kbView.dictEnglish",
+                    "group": "edit@1"
+                },
+                {
+                    "command": "kbView.dictStopWords",
+                    "group": "edit@3"
                 }
             ],
             "view/item/context": [
@@ -1844,6 +1882,16 @@
                     "command": "outputView.explore",
                     "when": "view == outputView",
                     "group": "navigation"
+                },
+                {
+                    "submenu": "librarydict",
+                    "when": "view == kbView",
+                    "group": "atop@1"
+                },
+                {
+                    "command": "kbView.libraryKB",
+                    "when": "view == kbView",
+                    "group": "atop@2"
                 },
                 {
                     "command": "kbView.existingFiles",
@@ -2365,6 +2413,7 @@
         "latest-version": "^6.0.0",
         "nodejs-file-downloader": "^4.7.3",
         "os": "^0.1.2",
+        "readline": "^1.3.0",
         "rimraf": "^3.0.2",
         "tslib": "^2.3.1",
         "vsce": "^2.10.0"

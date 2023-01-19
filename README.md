@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.10.0
+Added library files for dictionaires and KBs.
+
 ### 2.9.2
 Copy kb files to a sister analyzer.
 
@@ -174,9 +177,6 @@ Added "Split directory" to textview to split large directories into smaller subd
 
 ### 1.50.1
 Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
-
-### v1.49.3
-Added descriptive tooltip to tokenizer path in the analyzer sequence. Fixed renaming.
 
 # Development
 
