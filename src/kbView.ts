@@ -205,6 +205,9 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
 		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
 		vscode.commands.registerCommand('kbView.copyToAnalyzer', (KBItem) => this.copyToAnalyzer(KBItem));
+		vscode.commands.registerCommand('kbView.libraryKB', () => this.libraryKB());
+		vscode.commands.registerCommand('kbView.dictEnglish', () => this.dictEnglish());
+		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -214,10 +217,93 @@ export class KBView {
         return kbView;
 	}
 
+	private libraryKB(): void {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),'kb');
+		let items: vscode.QuickPickItem[] = [];
+
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),['.kbb'],true);
+		for (let dictFile of dictFiles) {
+			let descr = "";
+
+			let firstLine = this.readFirstLine(dictFile.fsPath);
+			if (firstLine[0] == '#') {
+				descr = firstLine.substring(1).trim();
+			}
+			items.push({label: path.basename(dictFile.fsPath), description: descr});
+		}
+
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('No Knowledge Bases in the library as of yet.');
+			return;
+		}
+
+		vscode.window.showQuickPick(items, {title: 'Choose Knowledge Base', canPickMany: false, placeHolder: 'Choose KB File to insert'}).then(selection => {
+			if (!selection)
+				return;
+			if (selection.description) {
+				this.insertLibraryFile(path.join('kb'),selection.label);
+			}	
+		});
+	}
+
+	private dictEnglish(): void {
+		this.chooseDictFiles('en');
+	}
+		
+	private dictStopWords() {
+		this.chooseDictFiles('stop');
+	}
+
+	private chooseDictFiles(dirName: string) {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),'dict',dirName);
+		let items: vscode.QuickPickItem[] = [];
+
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),['.dict'],true);
+		for (let dictFile of dictFiles) {
+			let descr = "";
+
+			let firstLine = this.readFirstLine(dictFile.fsPath);
+			if (firstLine[0] == '#') {
+				descr = firstLine.substring(1);
+			}
+			items.push({label: path.basename(dictFile.fsPath), description: descr});
+		}
+
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('Not created yet and you can help!');
+			return;
+		}
+
+		vscode.window.showQuickPick(items, {title: 'Choose Dictionary', canPickMany: false, placeHolder: 'Choose Dictionary to insert'}).then(selection => {
+			if (!selection)
+				return;
+			if (selection.description) {
+				this.insertLibraryFile(path.join('dict',dirName),selection.label);
+			}	
+		});
+	}
+
+	insertLibraryFile(dir: string, filename: string) {
+		var filepath = path.join(visualText.getVisualTextDirectory(),dir,filename);
+		var newfile = path.join(visualText.analyzer.getKBDirectory().fsPath,filename);
+		if (!fs.existsSync(filepath)) {
+			vscode.window.showWarningMessage("Not created yet and YOU can help: " + filename);
+		} else {
+			visualText.fileOps.addFileOperation(vscode.Uri.file(filepath),vscode.Uri.file(newfile),[fileOpRefresh.KB],fileOperation.COPY);
+			visualText.fileOps.startFileOps();
+		}
+	}
+
+	readFirstLine(filepath: string): string {
+		let text = fs.readFileSync(filepath, 'utf8');
+		let i = text.indexOf('\n');
+		let line = text.substring(0,i);
+		return line.trim();
+	}
+
 	copyToAnalyzer(KBItem: KBItem) {
 		outputView.moveFileToAnalyzer(KBItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
-
 
 	private toggleActive(KBItem: KBItem): void {
 		var filepath = KBItem.uri.fsPath;

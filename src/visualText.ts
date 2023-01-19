@@ -980,6 +980,15 @@ export class VisualText {
             for (let ana of anas) {
                 if (visualText.isAnalyzerDirectory(ana))
                     this.analyzers.push(ana);
+                else {
+                    let subanas = dirfuncs.getDirectories(ana);
+                    for (let subana of subanas) {
+                        if (visualText.isAnalyzerDirectory(subana)) {
+                            this.analyzers.push(ana);
+                            break;
+                        }
+                    }
+                }
             }
         }
         return this.analyzers;
