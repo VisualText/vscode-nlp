@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.10.0",
+    "version": "2.11.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -959,6 +959,22 @@
                 "icon": {
                     "light": "resources/light/left.svg",
                     "dark": "resources/dark/left.svg"
+                }
+            },
+            {
+                "command": "analyzerView.moveToParent",
+                "title": "Edit Parent Folder with VisualText",
+                "icon": {
+                    "light": "resources/light/left.svg",
+                    "dark": "resources/dark/left.svg"
+                }
+            },
+            {
+                "command": "analyzerView.moveDownFolder",
+                "title": "Edit this Folder with VisualText",
+                "icon": {
+                    "light": "resources/light/right.svg",
+                    "dark": "resources/dark/right.svg"
                 }
             },
             {
@@ -2197,6 +2213,16 @@
                     "command": "analyzerView.readMe",
                     "when": "view == analyzerView && viewItem =~ /.*readMe.*/",
                     "group": "inline"
+                },
+                {
+                    "command": "analyzerView.moveDownFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isFolder.*/",
+                    "group": "movefolder"
+                },
+                {
+                    "command": "analyzerView.moveToParent",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "movefolder"
                 },
                 {
                     "command": "analyzerView.deleteReadMe",
