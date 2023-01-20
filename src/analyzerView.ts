@@ -6,11 +6,11 @@ import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 
-export enum analyzerFolderType { ANALYZER, FOLDER }
+export enum analyzerItemType { ANALYZER, FOLDER }
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
-	type: analyzerFolderType;
+	type: analyzerItemType;
 	hasLogs: boolean;
 	hasPats: boolean;
 	hasReadme: boolean;
@@ -48,7 +48,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		if (parent != anaDir) {
 			analyzerItem.moveUp = true;
 		}
-		if (analyzerItem.type == analyzerFolderType.FOLDER) {
+		if (analyzerItem.type == analyzerItemType.FOLDER) {
 			if (dirfuncs.parentHasOtherDirs(analyzerItem.uri)) {
 				analyzerItem.moveDown = true;
 			}
@@ -66,7 +66,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		if (analyzerItem.hasReadme)
 			conVal = conVal + 'readMe';
 
-		if (analyzerItem.type === analyzerFolderType.ANALYZER) {
+		if (analyzerItem.type === analyzerItemType.ANALYZER) {
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs + 'isAnalyzer';
@@ -91,11 +91,11 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
 		var hasAllLogs = false;
-		var type: analyzerFolderType = analyzerFolderType.ANALYZER;
+		var type: analyzerItemType = analyzerItemType.ANALYZER;
 
 		for (let entry of entries) {
 			if (entry.type == vscode.FileType.Directory) {
-				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerFolderType.ANALYZER : analyzerFolderType.FOLDER;
+				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
 				var hasLogs = dirfuncs.analyzerHasLogDirs(entry.uri,true);
 				if (hasLogs) hasAllLogs = true;
 				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
@@ -121,7 +121,7 @@ export class AnalyzerView {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
 		this.analyzerView = vscode.window.createTreeView('analyzerView', { treeDataProvider: analyzerViewProvider });
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
-		vscode.commands.registerCommand('analyzerView.newAnalyzer', () => this.newAnalyzer());
+		vscode.commands.registerCommand('analyzerView.newAnalyzer', (resource) => this.newAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', resource => this.loadExampleAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
@@ -212,7 +212,7 @@ export class AnalyzerView {
 					var dirPath = '';
 					if (!analyzerItem) {
 						dirPath = visualText.getAnalyzerDir().fsPath;
-					} else if (analyzerItem.type == analyzerFolderType.FOLDER) {
+					} else if (analyzerItem.type == analyzerItemType.FOLDER) {
 						dirPath = analyzerItem.uri.fsPath;
 					} else {
 						dirPath = path.dirname(analyzerItem.uri.fsPath);
@@ -384,7 +384,7 @@ export class AnalyzerView {
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
 		visualText.colorizeAnalyzer();
-		if (analyzerItem.type == analyzerFolderType.ANALYZER) {
+		if (analyzerItem.type == analyzerItemType.ANALYZER) {
 			visualText.loadAnalyzer(analyzerItem.uri);
 			this.folderUri = undefined;
 		} else {
@@ -413,8 +413,11 @@ export class AnalyzerView {
 		this.openFolder(visualText.getExampleAnalyzersPath());
 	}
 	
-	private newAnalyzer() {
-		visualText.analyzer.newAnalyzer();
+	private newAnalyzer(analyzerItem: AnalyzerItem) {
+		let uri = analyzerItem.uri;
+		if (analyzerItem.type == analyzerItemType.ANALYZER)
+			uri = vscode.Uri.file(path.dirname(uri.fsPath));
+		visualText.analyzer.newAnalyzer(uri);
 	}
 
 	public deleteAllAnalyzerLogs() {

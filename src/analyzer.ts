@@ -64,7 +64,7 @@ export class Analyzer {
         return this.currentTextFile.fsPath.length ? true : false;
     }
 
-    newAnalyzer(): string {
+    newAnalyzer(dir: vscode.Uri): string {
         if (visualText.hasWorkspaceFolder()) {
             var exampleDir = visualText.getExampleAnalyzersPath().fsPath;
             var workDir = visualText.getWorkspaceFolder().fsPath;
@@ -73,20 +73,20 @@ export class Analyzer {
                 var button = "Create analyzer reguardless";
                 vscode.window.showInformationMessage("Any analyzer in the example analyzers folder will be lost when updated.", button).then(response => {
                     if (button === response) {
-                        this.askToCreateNewAnalyzer();
+                        this.askToCreateNewAnalyzer(dir);
                     }
                 });
             } else {
-                this.askToCreateNewAnalyzer();
+                this.askToCreateNewAnalyzer(dir);
             }
         }
         return '';
     }
 
-    askToCreateNewAnalyzer() {
+    askToCreateNewAnalyzer(dir: vscode.Uri) {
         vscode.window.showInputBox({ value: 'name', prompt: 'Enter new analyzer name' }).then(newname => {
             if (newname) {
-                this.createNewAnalyzer(newname);
+                this.createNewAnalyzer(dir,newname);
                 return newname;
             }
         });
@@ -104,11 +104,11 @@ export class Analyzer {
         this.loaded = false;
     }
 
-    createNewAnalyzer(analyzerName: string): boolean {
+    createNewAnalyzer(dir: vscode.Uri, analyzerName: string): boolean {
         visualText.readState();
-        this.analyzerDir = vscode.Uri.file(path.join(visualText.getWorkspaceFolder().fsPath,analyzerName));
+        this.analyzerDir = vscode.Uri.file(path.join(dir.fsPath,analyzerName));
         if (fs.existsSync(this.analyzerDir.fsPath)) {
-            vscode.window.showWarningMessage('Analyzer folder already exists');
+            vscode.window.showWarningMessage('Analyzer already exists');
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
             vscode.window.showWarningMessage('Template analyzer files missing');
