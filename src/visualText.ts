@@ -619,6 +619,7 @@ export class VisualText {
 	readState(): boolean {
         if (vscode.workspace.workspaceFolders) {
             this.analyzerDir = this.workspaceFold;
+            this.getAnalyzers();
             if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
                 var saveit = false;
                 var parse = this.jsonState.json.visualText[0];
@@ -679,7 +680,6 @@ export class VisualText {
     readConfig() {
         this.configFindUsername();
         this.configAnalzyerDirectory();
-        this.getAnalyzers();
         this.configCurrentAnalzyer();
     }
 
@@ -975,6 +975,9 @@ export class VisualText {
     getAnalyzers(): vscode.Uri[] {
         if (this.analyzerDir.fsPath.length) {
             var anas: vscode.Uri[] = [];
+            if (!fs.existsSync(this.analyzerDir.fsPath)) {
+                this.analyzerDir = this.workspaceFold;
+            }
             anas = dirfuncs.getDirectories(this.analyzerDir);
             this.analyzers = [];
             for (let ana of anas) {
