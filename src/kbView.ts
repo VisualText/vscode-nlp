@@ -221,6 +221,11 @@ export class KBView {
 		var fileDir = path.join(visualText.getVisualTextDirectory(),'kb');
 		let items: vscode.QuickPickItem[] = [];
 
+		if (!fs.existsSync(fileDir)) {
+			vscode.window.showWarningMessage('No KB Library is found');
+			return;
+		}
+
 		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),['.kbb'],true);
 		for (let dictFile of dictFiles) {
 			let descr = "";
