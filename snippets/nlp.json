@@ -742,6 +742,13 @@
         ],
         "description": "Fetch attribute's name."
     },
+    "attrtype": {
+        "prefix": ["attrtype"],
+        "body": [
+            "attrtype(${1:concept},${1:attr})"
+        ],
+        "description": "Fetch attribute's type where 0=str, 1=num, 2=concept, 3=float"
+    },
     "attrvals": {
         "prefix": ["attrvals"],
         "body": [
