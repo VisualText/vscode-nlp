@@ -62,16 +62,18 @@ export class FileOps {
         if (type == fileOpType.DIRECTORY && (operation == fileOperation.RENAME || operation == fileOperation.BREAK || operation == fileOperation.APPEND)) {
             let files = dirfuncs.getFiles(uri1);
             if (operation == fileOperation.RENAME) {
-                for (let file of files) {
-                    if (extension1.length && extension2.length) {
-                        if (!file.fsPath.endsWith(extension2) && file.fsPath.endsWith(extension1)) {
-                            let u1 = vscode.Uri.file(path.join(uri1.fsPath,path.basename(file.fsPath)));
-                            let u2 = vscode.Uri.file(path.join(uri2.fsPath,path.parse(file.fsPath).name+'.'+extension2));
-                            this.opsQueue.push({uriFile1: u1, uriFile2: u2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
+                if (extension1.length && extension2.length) {
+                    for (let file of files) {
+                        if (extension1.length && extension2.length) {
+                            if (!file.fsPath.endsWith(extension2) && file.fsPath.endsWith(extension1)) {
+                                let u1 = vscode.Uri.file(path.join(uri1.fsPath,path.basename(file.fsPath)));
+                                let u2 = vscode.Uri.file(path.join(uri2.fsPath,path.parse(file.fsPath).name+'.'+extension2));
+                                this.opsQueue.push({uriFile1: u1, uriFile2: u2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
+                            }
                         }
-                    } else {
-                        this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
                     }
+                } else {
+                    this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
                 }
             } else if (operation == fileOperation.BREAK) {
                 let filesPerDir: number = +extension1;
