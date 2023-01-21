@@ -139,9 +139,10 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
+		vscode.commands.registerCommand('analyzerView.rename', resource => this.rename(resource));
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
-		vscode.commands.registerCommand('analyzerView.importAnalyzers', () => this.importAnalyzers());
+		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 
 		visualText.colorizeAnalyzer();
@@ -154,6 +155,21 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	rename(analyzerItem: AnalyzerItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
+				if (newname) {
+					var original = analyzerItem.uri;
+					if (path.extname(newname).length == 0)
+						newname = newname+path.extname(analyzerItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+					visualText.fileOps.startFileOps();
+				}
+			});
+		}
 	}
 
 	moveDownFolder(analyzerItem: AnalyzerItem) {
@@ -174,7 +190,7 @@ export class AnalyzerView {
 		visualText.colorizeAnalyzer(true);
 	}
 
-	importAnalyzers() {
+	importAnalyzers(analyzerItem: AnalyzerItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			const options: vscode.OpenDialogOptions = {
@@ -189,11 +205,13 @@ export class AnalyzerView {
 					return;
 				}
 				let analyzerDirExists = false;
-				var analyzerFolder = visualText.getAnalyzerDir();
+				let analyzerPath = analyzerItem.uri.fsPath;
+				if (visualText.isAnalyzerDirectory(analyzerItem.uri))
+					analyzerPath = path.dirname(analyzerPath);
 				for (let select of selections) {
 					if (visualText.isAnalyzerDirectory(select)) {
 						var dirname = path.basename(select.fsPath);
-						visualText.fileOps.addFileOperation(select,vscode.Uri.file(path.join(analyzerFolder.fsPath,dirname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
+						visualText.fileOps.addFileOperation(select,vscode.Uri.file(path.join(analyzerPath,dirname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
 						analyzerDirExists = true;
 					}
 				}

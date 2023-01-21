@@ -97,7 +97,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.11.3
+### 2.11.4
 Can now move the VisualText editor up or down in the analyzer view.
 
 ### 2.10.0

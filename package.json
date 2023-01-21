@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.11.3",
+    "version": "2.11.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -290,7 +290,7 @@
                 }
             },
             {
-                "command": "kbView.existingFiles",
+                "command": "kbView.importFiless",
                 "title": "Import KB files",
                 "icon": {
                     "light": "resources/light/search.svg",
@@ -906,7 +906,7 @@
                 }
             },
             {
-                "command": "textView.existingFile",
+                "command": "textView.importFiles",
                 "title": "Import file(s)",
                 "icon": {
                     "light": "resources/light/new-file.svg",
@@ -959,6 +959,14 @@
                 "icon": {
                     "light": "resources/light/left.svg",
                     "dark": "resources/dark/left.svg"
+                }
+            },
+            {
+                "command": "analyzerView.rename",
+                "title": "Rename Analyzer",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
                 }
             },
             {
@@ -1661,7 +1669,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "textView.existingFile",
+                    "command": "textView.importFiles",
                     "when": "view == textView",
                     "group": "secondary"
                 },
@@ -1910,7 +1918,7 @@
                     "group": "atop@2"
                 },
                 {
-                    "command": "kbView.existingFiles",
+                    "command": "kbView.importFiless",
                     "when": "view == kbView",
                     "group": "navigation"
                 },
@@ -2190,7 +2198,7 @@
                     "group": "file"
                 },
                 {
-                    "command": "textView.existingFile",
+                    "command": "textView.importFiles",
                     "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "file"
                 },
@@ -2208,6 +2216,11 @@
                     "command": "textView.moveUp",
                     "when": "view == textView",
                     "group": "folder"
+                },
+                {
+                    "command": "analyzerView.rename",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "inline"
                 },
                 {
                     "command": "analyzerView.readMe",
@@ -2258,6 +2271,11 @@
                     "command": "analyzerView.explore",
                     "when": "view == analyzerView",
                     "group": "folder"
+                },
+                {
+                    "command": "analyzerView.rename",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "edit"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzer",

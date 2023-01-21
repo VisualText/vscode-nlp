@@ -945,12 +945,19 @@
         ],
         "description": "Fetch the string value from a KB value object."
     },
+    "getfltval": {
+        "prefix": ["getfltval"],
+        "body": [
+            "getfltval(${1:val})"
+        ],
+        "description": "Fetch float from value."
+    },
     "getnumval": {
         "prefix": ["getnumval"],
         "body": [
             "getnumval(${1:val})"
         ],
-        "description": "Fetch number from numeric VAL."
+        "description": "Fetch number from value."
     },
     "getconval": {
         "prefix": ["getconval"],

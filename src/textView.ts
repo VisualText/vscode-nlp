@@ -116,7 +116,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		return false;
 	}
 
-	existingFile(textItem: TextItem) {
+	importFiles(textItem: TextItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: true,
@@ -228,7 +228,7 @@ export class TextView {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
 		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
-		vscode.commands.registerCommand('textView.existingFile', (textItem) => treeDataProvider.existingFile(textItem));
+		vscode.commands.registerCommand('textView.importFiles', (textItem) => treeDataProvider.importFiles(textItem));
 		vscode.commands.registerCommand('textView.existingFolder', (textItem) => treeDataProvider.existingFolder(textItem));
 		vscode.commands.registerCommand('textView.rename', (textItem) => treeDataProvider.rename(textItem));
 		vscode.commands.registerCommand('textView.renameDir', (textItem) => treeDataProvider.renameDir(textItem));
