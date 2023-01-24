@@ -223,38 +223,60 @@ export class KBView {
 		let items: vscode.QuickPickItem[] = [];
 		let files: vscode.Uri[] = [];
 		let allStr = 'ALL FILES BELOW';
+		let allButValidStr = 'ALL BUT VALID KB FILES';
 
-		items.push({label: allStr, description: 'All the files listed below'});
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],true);
+		if (dictFiles.length == 0) {
+			vscode.window.showWarningMessage('No KB files to delete');
+			return;
+		}
+		items.push({label: allStr, description: 'All the files listed below (non .KB files)'});
+		items.push({label: allButValidStr, description: 'All files except .KB, .KBB, and .DICT files'});
 
 		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],true);
 		for (let dictFile of dictFiles) {
-			if (path.extname(dictFile.fsPath) == '.dict' || path.extname(dictFile.fsPath) == '.kbb' || path.extname(dictFile.fsPath) == '.kb')
+			if (path.extname(dictFile.fsPath) == '.kb')
 				continue;
 			items.push({label: path.basename(dictFile.fsPath), description: dictFile.fsPath});
 			files.push(dictFile);
 		}
 
 		if (items.length <= 1) {
-			vscode.window.showWarningMessage('No files to clean (non dict and kbb files)!');
+			vscode.window.showWarningMessage('No files to clean');
 			return;
 		}
 
 		vscode.window.showQuickPick(items, {title: 'Clean Dictionary', canPickMany: true, placeHolder: 'Choose files to delete'}).then(selections => {
 			if (!selections)
 				return;
+			let found = false;
 			if (selections[0].label == allStr) {
 				for (let file of files) {
+					found = true;
 					visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.KB],fileOperation.DELETE);
+				}
+			} else if (selections[0].label == allButValidStr) {
+				for (let file of files) {
+					let ext = path.extname(file.fsPath);
+					if (ext != '.kb' && ext != '.kbb' && ext != '.dict') {
+						found = true;
+						visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.KB],fileOperation.DELETE);
+					}
 				}
 			} else {
 				for (let selection of selections) {
 					if (selection.description) {
 						let uri = vscode.Uri.file(selection.description);
+						found = true;
 						visualText.fileOps.addFileOperation(uri,uri,[fileOpRefresh.KB],fileOperation.DELETE);							
 					}
 				}
 			}
-			visualText.fileOps.startFileOps();
+			if (!found) {
+				vscode.window.showWarningMessage('No files to clean');
+			} else {
+				visualText.fileOps.startFileOps();
+			}
 		});
 	}
 
