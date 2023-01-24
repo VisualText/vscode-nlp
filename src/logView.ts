@@ -246,7 +246,7 @@ export class LogView {
 			case logLineType.LOGFILE:
 				icon = 'log.svg';
 				break;
-			case logLineType.LOGFILE:
+			case logLineType.FILE_OP:
 				icon = 'file.svg';
 				break;
 			case logLineType.JSON_ERROR:
