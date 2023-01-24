@@ -278,6 +278,10 @@ export class TextView {
 			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
 				if (!selection || !selection.description)
 					return;
+				if (selection.description.startsWith('(FOLDER')) {
+					vscode.window.showWarningMessage('You must select an analyzer directory not a folder');
+					return;
+				}
 				if (dirfuncs.isDir(textItem.uri.fsPath)) {
 					let newFolder = vscode.Uri.file(path.join(selection.description,'input',path.basename(textItem.uri.fsPath)));
 					visualText.fileOps.addFileOperation(textItem.uri,newFolder,[fileOpRefresh.TEXT],fileOperation.COPY);						
