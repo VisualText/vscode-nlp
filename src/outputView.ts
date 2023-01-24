@@ -260,6 +260,10 @@ export class OutputView {
 			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
 				if (!selection || !selection.description)
 					return;
+				if (selection.description.startsWith('(FOLDER')) {
+					vscode.window.showWarningMessage('You must select an analyzer directory not a folder');
+					return;
+				}
 				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(uri.fsPath)));
 				visualText.fileOps.addFileOperation(uri,newFile,[fileOpRefresh.KB,fileOpRefresh.TEXT],fileOperation.COPY);
 				visualText.fileOps.startFileOps();

@@ -1221,17 +1221,24 @@ export class VisualText {
     analyzerFolderList(): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
         let items: vscode.QuickPickItem[] = [];
+        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0);
+    }
+    
+    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number): vscode.QuickPickItem[] {
+        let dirs = dirfuncs.getDirectories(dir);
+        let indent = '';
+        for (var i = 0; i < level; i++) {
+            indent = indent + '   ';
+        }
+        if (indent.length > 0) indent = '-' + indent;
         for (let dir of dirs) {
-            if (visualText.isAnalyzerDirectory(dir))
-                items.push({label: path.basename(dir.fsPath), description: dir.fsPath});
-            else {
-                items.push({label: path.basename(dir.fsPath), description: '(FOLDER - choose analyzer below'});
-                let subanas = dirfuncs.getDirectories(dir);
-                for (let subana of subanas) {
-                    if (visualText.isAnalyzerDirectory(subana)) {
-                        items.push({label: '-  ' + path.basename(subana.fsPath), description: subana.fsPath});
-                    }
-                }
+            let basename = path.basename(dir.fsPath);
+            let baseUpper = basename.toUpperCase();
+            if (visualText.isAnalyzerDirectory(dir)) {
+                items.push({label: indent + basename, description: dir.fsPath, });
+            } else {
+                items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
+                this.analyzerFolderListRecurse(dir,items,level+1);
             }
         }
         return items;
