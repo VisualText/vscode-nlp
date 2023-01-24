@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.11.5",
+    "version": "2.12.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -430,6 +430,14 @@
                 "category": "NLP",
                 "title": "Lookup Word in Browser",
                 "description": "Lookup a term in the help in Browser"
+            },
+            {
+                "command": "textView.copyToAnalyzer",
+                "title": "Copy file/folder to Another Analyzer",
+                "icon": {
+                    "light": "resources/light/text-copyto.svg",
+                    "dark": "resources/dark/text-copyto.svg"
+                }
             },
             {
                 "command": "textView.exploreAll",
@@ -1657,24 +1665,34 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "textView.deleteAnalyzerLogs",
+                    "when": "view == textView && text.hasLogs",
+                    "group": "navigation@0"
+                },
+                {
                     "command": "textView.search",
                     "when": "view == textView",
-                    "group": "navigation"
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "textView.newDirTop",
+                    "when": "view == textView",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "textView.newTextTop",
+                    "when": "view == textView",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "textView.refreshAll",
+                    "when": "view == textView",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "textView.analyzerCurrent",
                     "when": "view == textView",
                     "group": "secondary"
-                },
-                {
-                    "command": "textView.newDirTop",
-                    "when": "view == textView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "textView.newTextTop",
-                    "when": "view == textView",
-                    "group": "navigation"
                 },
                 {
                     "command": "textView.importFiles",
@@ -1685,16 +1703,6 @@
                     "command": "textView.existingFolder",
                     "when": "view == textView",
                     "group": "secondary"
-                },
-                {
-                    "command": "textView.refreshAll",
-                    "when": "view == textView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "textView.deleteAnalyzerLogs",
-                    "when": "view == textView && text.hasLogs",
-                    "group": "navigation"
                 },
                 {
                     "command": "sequenceView.convert",
@@ -1812,19 +1820,29 @@
                     "group": "secondary"
                 },
                 {
+                    "command": "analyzerView.deleteAllAnalyzerLogs",
+                    "when": "view == analyzerView && analyzers.hasLogs",
+                    "group": "navigation@0"
+                },
+                {
                     "command": "analyzerView.newFolder",
                     "when": "view == analyzerView",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "analyzerView.newAnalyzer",
                     "when": "view == analyzerView",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "analyzerView.refreshAll",
                     "when": "view == analyzerView",
-                    "group": "navigation"
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "analyzerView.loadExampleAnalyzers",
+                    "when": "view == analyzerView",
+                    "group": "navigation@4"
                 },
                 {
                     "command": "analyzerView.copyAll",
@@ -1834,16 +1852,6 @@
                 {
                     "command": "analyzerView.updateColorizer",
                     "when": "view == analyzerView",
-                    "group": "secondary"
-                },
-                {
-                    "command": "analyzerView.loadExampleAnalyzers",
-                    "when": "view == analyzerView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "analyzerView.deleteAllAnalyzerLogs",
-                    "when": "view == analyzerView && analyzers.hasLogs",
                     "group": "secondary"
                 },
                 {
@@ -2326,24 +2334,29 @@
                     "group": "edit"
                 },
                 {
-                    "command": "analyzerView.deleteAnalyzer",
-                    "when": "view == analyzerView",
-                    "group": "inline"
+                    "command": "analyzerView.deleteAnalyzerLogs",
+                    "when": "view == analyzerView && viewItem =~ /.*hasLogs.*/",
+                    "group": "inline@0"
                 },
                 {
                     "command": "analyzerView.dupeAnalyzer",
                     "when": "view == analyzerView && viewItem != isFolder",
-                    "group": "inline"
+                    "group": "inline@1"
                 },
                 {
                     "command": "analyzerView.moveToFolder",
                     "when": "view == analyzerView && viewItem =~ /moveDown/",
-                    "group": "inline"
+                    "group": "inline@2"
                 },
                 {
                     "command": "analyzerView.moveUp",
                     "when": "view == analyzerView && viewItem =~ /moveUp/",
-                    "group": "inline"
+                    "group": "inline@3"
+                },
+                {
+                    "command": "analyzerView.deleteAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "inline@4"
                 },
                 {
                     "command": "sequenceView.insertNew",
@@ -2376,44 +2389,54 @@
                     "group": "inline"
                 },
                 {
-                    "command": "textView.deleteFileLogs",
-                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.moveToFolder",
-                    "when": "view == textView && viewItem =~ /moveDown/",
-                    "group": "inline"
-                },
-                {
-                    "command": "textView.moveUp",
-                    "when": "view == textView && viewItem =~ /moveUp/",
-                    "group": "inline"
-                },
-                {
                     "command": "textView.analyzeDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "inline@01"
                 },
                 {
                     "command": "textView.analyze",
-                    "when": "view == textView && viewItem =~ /file/",
-                    "group": "inline"
+                    "when": "view == textView && viewItem =~ /.*file.*/",
+                    "group": "inline@02"
+                },
+                {
+                    "command": "textView.deleteFileLogs",
+                    "when": "view == textView && viewItem =~ /.*HasLogs.*/",
+                    "group": "inline@03"
+                },
+                {
+                    "command": "textView.copyToAnalyzer",
+                    "when": "view == textView",
+                    "group": "inline@04"
                 },
                 {
                     "command": "textView.newDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "inline@05"
                 },
                 {
                     "command": "textView.newText",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "inline@06"
                 },
                 {
                     "command": "textView.deleteDir",
-                    "when": "view == textView && viewItem =~ /dir/",
-                    "group": "inline"
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "inline@07"
+                },
+                {
+                    "command": "textView.deleteFile",
+                    "when": "view == textView && viewItem =~ /.*file.*/",
+                    "group": "inline@08"
+                },
+                {
+                    "command": "textView.moveUp",
+                    "when": "view == textView && viewItem =~ /.*moveUp.*/",
+                    "group": "inline@09"
+                },
+                {
+                    "command": "textView.moveToFolder",
+                    "when": "view == textView && viewItem =~ /.*moveDown.*/",
+                    "group": "inline@10"
                 },
                 {
                     "command": "outputView.copytoText",

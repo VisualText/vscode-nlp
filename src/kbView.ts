@@ -348,7 +348,7 @@ export class KBView {
 	}
 
 	copyToAnalyzer(KBItem: KBItem) {
-		outputView.moveFileToAnalyzer(KBItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+		outputView.copyFileToAnalyzer(KBItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
 
 	private toggleActive(KBItem: KBItem): void {

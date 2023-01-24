@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
-import { logView } from './logView';
+import { logView,logLineType } from './logView';
 import { analyzerView } from './analyzerView';
 
 export enum fileQueueStatus { UNKNOWN, RUNNING, DONE }
@@ -43,7 +43,7 @@ export class FileOps {
     public startFileOps(mils: number=100) {
         if (this.timerID == 0) {
             this.timerCounter = 0;
-            visualText.debugMessage('Starting file operations...');
+            visualText.debugMessage('Starting file operations...',logLineType.FILE_OP);
             this.timerID = +setInterval(this.fileTimer,mils);
         }
     }
@@ -172,25 +172,25 @@ export class FileOps {
                                     visualText.fileOps.timerStatus = fileQueueStatus.DONE;
                             }
                             if (op.type == fileOpType.DIRECTORY) {
-                                visualText.debugMessage('Copying directory: ' + op.uriFile1.fsPath);
+                                visualText.debugMessage('Copying directory: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
                                 var copydir = require('copy-dir');
                                 copydir(op.uriFile1.fsPath,op.uriFile2.fsPath, function(err) {
                                     if (err) {
                                         op.status = fileOpStatus.FAILED;
-                                        if (op.display) visualText.debugMessage('DIRECTORY COPY FAILED: ' + op.uriFile2.fsPath);
+                                        if (op.display) visualText.debugMessage('DIRECTORY COPY FAILED: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                     }
                                     op.status = fileOpStatus.DONE;
-                                    if (op.display) visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY COPIED TO: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                 });
                             }
                             else {
                                 if (dirfuncs.copyFile(op.uriFile1.fsPath,op.uriFile2.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    if (op.display) visualText.debugMessage('FILE COPIED TO: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE COPIED TO: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    if (op.display) visualText.debugMessage('FILE COPY FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE COPY FAILED: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                 }
                             }
                         }
@@ -201,21 +201,21 @@ export class FileOps {
                             if (op.type == fileOpType.DIRECTORY) {
                                 if (dirfuncs.delDir(op.uriFile1.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    if (op.display) visualText.debugMessage('DIRECTORY DELETED: ' + op.uriFile1.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY DELETED: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    if (op.display) visualText.debugMessage('DIRECTORY DELETE FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('DIRECTORY DELETE FAILED: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                 }
                             }
                             else {
                                 if (dirfuncs.delFile(op.uriFile1.fsPath)) {
                                     op.status = fileOpStatus.DONE;
-                                    if (op.display) visualText.debugMessage('FILE DELETED: ' + op.uriFile1.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE DELETED: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
                                 }
                                 else {
                                     op.status = fileOpStatus.FAILED;
-                                    if (op.display) visualText.debugMessage('FILE DELETE FAILED: ' + op.uriFile2.fsPath);
+                                    if (op.display) visualText.debugMessage('FILE DELETE FAILED: ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                                 }
                             }
                         }
@@ -224,26 +224,26 @@ export class FileOps {
                     case fileOperation.RENAME: {
                         fs.renameSync(op.uriFile1.fsPath,op.uriFile2.fsPath);
                         op.status = fileOpStatus.DONE;
-                        if (op.display) visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath);
+                        if (op.display) visualText.debugMessage('RENAMED: ' + op.uriFile1.fsPath + ' to ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                         break;
                     }
                     case fileOperation.MKDIR: {
                         fs.mkdirSync(op.uriFile1.fsPath);
                         op.status = fileOpStatus.DONE;
-                        if (op.display) visualText.debugMessage('NEW DIR: ' + op.uriFile1.fsPath);
+                        if (op.display) visualText.debugMessage('NEW DIR: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
                         break;
                     }
                     case fileOperation.NEWFILE: {
                         fs.writeFileSync(op.uriFile1.fsPath,op.extension1);
                         op.status = fileOpStatus.DONE;
-                        if (op.display) visualText.debugMessage('NEW FILE: ' + op.uriFile1.fsPath);
+                        if (op.display) visualText.debugMessage('NEW FILE: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
                         break;
                     }
                     case fileOperation.APPEND: {
                         let content = fs.readFileSync(op.uriFile1.fsPath,'utf8');
                         fs.appendFileSync(op.uriFile2.fsPath,content);
                         op.status = fileOpStatus.DONE;
-                        if (op.display) visualText.debugMessage('APPEND: ' + op.uriFile1.fsPath + ' => ' + op.uriFile2.fsPath);
+                        if (op.display) visualText.debugMessage('APPEND: ' + op.uriFile1.fsPath + ' => ' + op.uriFile2.fsPath,logLineType.FILE_OP);
                         break;
                     }
                 }
@@ -255,9 +255,9 @@ export class FileOps {
                 visualText.fileOps.opsQueue = [];
                 logView.updateTitle('');
                 if (visualText.fileOps.stopAllFlag)
-                    visualText.debugMessage('FILE PROCESSING CANCELED BY USER');
+                    visualText.debugMessage('FILE PROCESSING CANCELED BY USER',logLineType.FILE_OP);
                 else
-                    visualText.debugMessage('FILE PROCESSING COMPLETE');
+                    visualText.debugMessage('FILE PROCESSING COMPLETE',logLineType.FILE_OP);
                 if (op.refreshes.includes(fileOpRefresh.TEXT))
                     vscode.commands.executeCommand('textView.refreshAll');
                 if (op.refreshes.includes(fileOpRefresh.ANALYZERS))

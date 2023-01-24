@@ -265,13 +265,24 @@ export namespace dirfuncs {
         return false;
     }
 
-    export function analyzerHasLogDirs(dir: vscode.Uri, first: boolean): boolean {
-		var inputDir = first ? vscode.Uri.file(path.join(dir.fsPath,'input')) : dir;
+    export function analyzerHasLogFiles(dir: vscode.Uri): boolean {
+        var outputDir = vscode.Uri.file(path.join(dir.fsPath,'output'));
+        if (fs.existsSync(outputDir.fsPath) && dirfuncs.directoryHasFiles(outputDir))
+            return true;
+        var logsDir = vscode.Uri.file(path.join(dir.fsPath,'logs'));
+        if (fs.existsSync(logsDir.fsPath) && dirfuncs.directoryHasFiles(logsDir))
+            return true;
+        var inputDir = vscode.Uri.file(path.join(dir.fsPath,'input'));
         if (fs.existsSync(inputDir.fsPath)) {
             return dirfuncs.hasLogDirs(inputDir,false);
         }
 		return false;
 	}
+
+    export function directoryHasFiles(dir: vscode.Uri) {
+        const filenames = fs.readdirSync(dir.fsPath);
+        return filenames.length ? true : false;
+    }
 
     export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
         if (dirfuncs.isDir(dir.fsPath)) {
@@ -279,6 +290,8 @@ export namespace dirfuncs {
 
             for (let entry of entries) {
                 if (entry.type == vscode.FileType.Directory) {
+                    if (visualText.isAnalyzerDirectory(entry.uri) && dirfuncs.analyzerHasLogFiles(entry.uri))
+                        return true;
                     if (dirfuncs.directoryIsLog(entry.uri.fsPath))
                         return true;
                     else {
@@ -302,6 +315,16 @@ export namespace dirfuncs {
                 if (file.name == filename)
                     return true;
             }                  
+        }
+
+		return false;
+	}
+
+    export function hasFiles(dir: vscode.Uri): boolean {
+        if (dirfuncs.isDir(dir.fsPath)) {
+            const files = fs.readdirSync(dir.fsPath, { withFileTypes: true });
+            if (files && files.length > 0)
+                return true;                 
         }
 
 		return false;

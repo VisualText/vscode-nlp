@@ -9,7 +9,7 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
-import { logView } from './logView';
+import { logView, logLineType } from './logView';
 import { analyzer } from './analyzer';
 
 export interface SequenceItem extends vscode.TreeItem {
@@ -508,9 +508,9 @@ export class SequenceView {
 		var seqName = path.basename(seqName,'.nlp');
 		var passItem: PassItem = seqFile.findPass('nlp',seqName);
 		if (passItem.passNum) {
-			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),passItem.uri);
+			logView.addMessage(seqName + ': ' + passItem.passNum.toString(),logLineType.SEQUENCE,passItem.uri);
 		} else {
-			logView.addMessage(seqName + ': could not find this file in the sequence',vscode.Uri.file(nlpFilePath));
+			logView.addMessage(seqName + ': could not find this file in the sequence',logLineType.SEQUENCE,vscode.Uri.file(nlpFilePath));
 		}
 		return passItem;
 	}
