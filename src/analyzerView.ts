@@ -90,20 +90,18 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	getKeepers(dir: vscode.Uri): AnalyzerItem[] {
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
-		var hasAllLogs = false;
 		var type: analyzerItemType = analyzerItemType.ANALYZER;
 
 		for (let entry of entries) {
 			if (entry.type == vscode.FileType.Directory) {
 				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
-				var hasLogs = dirfuncs.analyzerHasLogDirs(entry.uri,true);
-				if (hasLogs) hasAllLogs = true;
+				var hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
 				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
                 keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
 			}
 		}
 
-		var hasAllLogs = dirfuncs.hasLogDirs(dir,true);
+		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getWorkspaceFolder(),true);
 		vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
 		return keepers;
 	}
@@ -343,7 +341,7 @@ export class AnalyzerView {
 				if (!selection) {
 					return;
 				}
-				const analyzers = visualText.getAnalyzers();
+				const analyzers = visualText.getAnalyzers(false);
 				var toFolder = vscode.Uri.file(selection[0].fsPath);
 				for (let analyzer of analyzers) {
 					var folder = path.basename(analyzer.fsPath);
@@ -475,24 +473,27 @@ export class AnalyzerView {
 		}
 	}
 
-	public deleteAllAnalyzerLogDirs() {
-		vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,
-			title: "Deleting all log directories",
-			cancellable: true
-		}, async (progress, token) => {
-			token.onCancellationRequested(() => {
-				console.log("User canceled the long running operation");
-			});
+	public deleteLogDirs(dir: vscode.Uri) {
+		let outputDir = vscode.Uri.file(path.join(dir.fsPath,"output"));
+		this.deleteDirFiles(outputDir);
+		let logDir = vscode.Uri.file(path.join(dir.fsPath,"logs"));
+		this.deleteDirFiles(logDir);
+	}
 
-			if (vscode.workspace.workspaceFolders) {
-				var analyzerUris = visualText.getAnalyzers();
-				for (let analyzerUri of analyzerUris) {
-					var analyzerName = path.basename(analyzerUri.fsPath);
-					progress.report({ increment: 10, message: analyzerName });
-					textView.deleteFolderLogs(analyzerUri);
-				}
+	public deleteDirFiles(dir: vscode.Uri) {
+		let files = dirfuncs.getFiles(dir);
+		for (let file of files) {
+			visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+		}
+	}
+
+	public deleteAllAnalyzerLogDirs() {
+		if (vscode.workspace.workspaceFolders) {
+			var analyzerUris = visualText.getAnalyzers(true);
+			for (let analyzerUri of analyzerUris) {
+				var analyzerName = path.basename(analyzerUri.fsPath);
+				textView.deleteFolderLogs(analyzerUri);
 			}
-		});
+		}
 	}
 }

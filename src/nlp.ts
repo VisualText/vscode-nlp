@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
-import { logView } from './logView';
+import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
 import { sequenceView } from './sequenceView';
 import { nlpStatusBar, DevMode } from './status';
@@ -78,7 +78,7 @@ export class NLPFile extends TextFile {
 
 			var filename = path.basename(filepath.fsPath);
 			var typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
-			logView.addMessage('Analyzing '+typeStr+': '+filename,filepath);
+			logView.addMessage('Analyzing '+typeStr+': '+filename, logLineType.ANALYER_OUTPUT, filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
 			outputView.setType(outputFileType.ALL);
 	
@@ -104,7 +104,7 @@ export class NLPFile extends TextFile {
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
 					if (err) {
-						logView.addMessage(err.message,vscode.Uri.file(filestr));
+						logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
 						logView.loadMakeAna();
 						vscode.commands.executeCommand('outputView.refreshAll');
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
@@ -112,7 +112,7 @@ export class NLPFile extends TextFile {
 						resolve('Failed');
 					} else {
 						var typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
-						logView.addMessage('Done analyzing '+typeStr+': '+filename,vscode.Uri.file(filestr));
+						logView.addMessage('Done analyzing '+typeStr+': '+filename,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
 						//vscode.commands.executeCommand('logView.refreshAll');
 						//logView.loadMakeAna();
 						visualText.analyzer.saveCurrentFile(filepath);
@@ -166,7 +166,7 @@ export class NLPFile extends TextFile {
     public startAnalyzer(mils: number=100) {
         if (visualText.nlp.timerID == 0) {
 			vscode.commands.executeCommand('logView.clear');
-            visualText.debugMessage('Analyzing...');
+            visualText.debugMessage('Analyzing...',logLineType.ANALYER_OUTPUT);
             visualText.nlp.timerID = +setInterval(this.analyzerTimer,mils);
         }
     }
@@ -225,7 +225,7 @@ export class NLPFile extends TextFile {
 
 	shutDown() {
 		clearInterval(visualText.nlp.timerID);
-		visualText.debugMessage('Analyzing done');
+		visualText.debugMessage('Analyzing done',logLineType.ANALYER_OUTPUT);
 		visualText.nlp.stopAllFlag = false;
 		visualText.nlp.timerID = 0;
 		visualText.nlp.anaQueue = [];

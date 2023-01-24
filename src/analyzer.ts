@@ -24,7 +24,8 @@ export class Analyzer {
     private currentPassFile: vscode.Uri = vscode.Uri.file('');
     private passNum: number = 0;;
     private loaded: boolean = false;
-
+    
+    public hasLogs: boolean = false;
     public timerCounter: number = 0;
     public timerID: number = 0;
     public analyzerCopyUri: vscode.Uri = vscode.Uri.file('');

@@ -246,30 +246,16 @@ export class OutputView {
 	}
 
 	copytoKB(outputItem: OutputItem) {
-		this.moveFileToAnalyzer(outputItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+		this.copyFileToAnalyzer(outputItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
 
 	copytoText(outputItem: OutputItem) {
-		this.moveFileToAnalyzer(outputItem.uri,'input','Copy file to another analyzer','Copy file to input directory of:');
+		this.copyFileToAnalyzer(outputItem.uri,'input','Copy file to another analyzer','Copy file to input directory of:');
 	}
 
-	moveFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {
+	copyFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {
 		if (visualText.getWorkspaceFolder()) {
-			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
-			let items: vscode.QuickPickItem[] = [];
-			for (let dir of dirs) {
-				if (visualText.isAnalyzerDirectory(dir))
-					items.push({label: path.basename(dir.fsPath), description: dir.fsPath});
-				else {
-					items.push({label: path.basename(dir.fsPath), description: '(FOLDER - choose analyzer below'});
-					let subanas = dirfuncs.getDirectories(dir);
-					for (let subana of subanas) {
-						if (visualText.isAnalyzerDirectory(subana)) {
-							items.push({label: '-  ' + path.basename(subana.fsPath), description: subana.fsPath});
-						}
-					}
-				}
-			}
+			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList();
 
 			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
 				if (!selection || !selection.description)

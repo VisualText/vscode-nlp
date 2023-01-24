@@ -256,6 +256,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.exploreAll', (textItem) => this.exploreAll(textItem));
 		vscode.commands.registerCommand('textView.moveToFolder', (textItem) => this.moveToFolder(textItem));
 		vscode.commands.registerCommand('textView.moveUp', (textItem) => this.moveUp(textItem));
+		vscode.commands.registerCommand('textView.copyToAnalyzer', (textItem) => this.copyToAnalyzer(textItem));
 
 		this.folderUri = undefined;
     }
@@ -265,6 +266,28 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	copyToAnalyzer(textItem: TextItem) {
+		if (visualText.getWorkspaceFolder()) {
+			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList();
+			let title = 'Copy to Analyzer';
+			let placeHolder = 'Choose analyzer to copy to';
+
+			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
+				if (!selection || !selection.description)
+					return;
+				if (dirfuncs.isDir(textItem.uri.fsPath)) {
+					let newFolder = vscode.Uri.file(path.join(selection.description,'input',path.basename(textItem.uri.fsPath)));
+					visualText.fileOps.addFileOperation(textItem.uri,newFolder,[fileOpRefresh.TEXT],fileOperation.COPY);						
+				} else {
+					let newFile = vscode.Uri.file(path.join(selection.description,'input',path.basename(textItem.uri.fsPath)));
+					visualText.fileOps.addFileOperation(textItem.uri,newFile,[fileOpRefresh.TEXT],fileOperation.COPY);
+				}
+				visualText.fileOps.startFileOps();
+			});
+		}
 	}
 
 	moveToFolder(textItem: TextItem) {
@@ -533,14 +556,14 @@ export class TextView {
 		
 		if (count) {
 			for (let dir of logDirs) {
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 			};
 		}
 	}
 
 	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
-		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 	}
 
 	public deleteAnalyzerLogs(): void {

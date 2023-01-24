@@ -5,7 +5,7 @@ import { visualText } from './visualText';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 
-export enum logLineType { INFO, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR }
+export enum logLineType { INFO, UPDATER, FILE_OP, ANALYER_OUTPUT, LOGFILE, SEQUENCE, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR }
 
 interface LogItem {
 	uri?: vscode.Uri | undefined;
@@ -67,7 +67,7 @@ export class LogView {
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
 		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
 		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('logView.addMessage', (message,uri) => this.addMessage(message,uri));
+		vscode.commands.registerCommand('logView.addMessage', (message,type,uri) => this.addMessage(message,type,uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
 		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
@@ -127,28 +127,28 @@ export class LogView {
 		let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
 		let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
 		let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
-		this.addMessage('STD OUT FILE: ' + errFile.fsPath, errFile);
-		this.addLogFile(outFile,'   ');
-		this.addMessage('ERROR FILE: ' + errFile.fsPath, errFile);
-		this.addLogFile(errFile,'   ');
+		this.addMessage('STD OUT FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
+		this.addLogFile(outFile, logLineType.ANALYER_OUTPUT,'   ');
+		this.addMessage('ERROR FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
+		this.addLogFile(errFile, logLineType.ANALYER_OUTPUT,'   ');
 	}
 
 	private loadTimingLog() {
 		this.clearLogs();
 		var cgFile = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'dbg.log'));
-		this.addLogFile(cgFile);
+		this.addLogFile(cgFile,logLineType.LOGFILE);
 	}
 
 	private loadCGLog() {
 		this.clearLogs();
-		this.addLogFile(visualText.analyzer.treeFile('cgerr'));
+		this.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE);
 	}
 	
 	public loadMakeAna() {
 		this.clearLogs();
 		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
-		this.addLogFile(errorLog);
-		this.addLogFile(visualText.analyzer.treeFile('make_ana'));
+		this.addLogFile(errorLog,logLineType.LOGFILE);
+		this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
 	}
 
 	public clearLogs() {
@@ -156,17 +156,17 @@ export class LogView {
 		vscode.commands.executeCommand('logView.refreshAll');			
 	}
 
-	public addMessage(message: string, uri: vscode.Uri | undefined) {
-		this.logs.push(this.parseLogLine(message, uri));
+	public addMessage(message: string, type: logLineType = logLineType.INFO, uri: vscode.Uri | undefined) {
+		this.logs.push(this.parseLogLine(message, type, uri));
 	}
 
-	public addLogFile(logFileName: vscode.Uri, spaces: string='') {
+	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='') {
 		if (fs.existsSync(logFileName.fsPath)) {
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
 				line = line.substring(0,line.length);
 				if (line.length)
-					this.logs.push(this.parseLogLine(spaces+line,undefined));
+					this.logs.push(this.parseLogLine(spaces+line,type,undefined));
 			}
 		}		
 	}
@@ -175,11 +175,10 @@ export class LogView {
 		return this.logs;
 	}
 
-	private parseLogLine(line: string, uri: vscode.Uri | undefined): LogItem {
+	private parseLogLine(line: string, type: logLineType, uri: vscode.Uri | undefined): LogItem {
 		var passNum = 0;
 		var lineNum = -1;
-		var type = logLineType.INFO;
-		var icon = 'dot.svg';
+		var icon = this.typeIcon(type);
 		var firstTwoNumbers = false;
 		if (uri)
 			type = logLineType.OPEN_PATH;
@@ -225,14 +224,38 @@ export class LogView {
 				}
 			}
 		}
-		if (uri) {
-			icon = 'right-blue.svg'; 
-		}
-		if (type == logLineType.JSON_ERROR || type == logLineType.SYNTAX_ERROR) {
-			icon = 'error.svg';
-		}
-
+		// if (uri) {
+		// 	icon = 'right-blue.svg'; 
+		// }
 		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
+	}
+
+	// INFO, UPDATER, FILE_OP, ANALYER_OUTPUT, LOGFILE, SEQUENCE, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR
+	private typeIcon(type: logLineType) {
+		var icon = 'dot.svg';
+		switch (type) {
+			case logLineType.UPDATER:
+				icon = 'update.svg';
+				break;
+			case logLineType.ANALYER_OUTPUT:
+				icon = 'gear.svg';
+				break;
+			case logLineType.SEQUENCE:
+				icon = 'dna.svg';
+				break;
+			case logLineType.LOGFILE:
+				icon = 'log.svg';
+				break;
+			case logLineType.LOGFILE:
+				icon = 'file.svg';
+				break;
+			case logLineType.JSON_ERROR:
+			case logLineType.SYNTAX_ERROR:
+			case logLineType.DOWNLOAD_ERROR:
+				icon = 'error.svg';
+				break;
+		}
+		return icon;
 	}
 
 	private openFile(logItem: LogItem): void {
