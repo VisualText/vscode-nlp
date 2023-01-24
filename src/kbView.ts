@@ -208,6 +208,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.libraryKB', () => this.libraryKB());
 		vscode.commands.registerCommand('kbView.dictEnglish', () => this.dictEnglish());
 		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
+		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -215,6 +216,46 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	cleanFiles() {
+		var fileDir = visualText.analyzer.getKBDirectory().fsPath;
+		let items: vscode.QuickPickItem[] = [];
+		let files: vscode.Uri[] = [];
+		let allStr = 'ALL FILES BELOW';
+
+		items.push({label: allStr, description: 'All the files listed below'});
+
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],true);
+		for (let dictFile of dictFiles) {
+			if (path.extname(dictFile.fsPath) == '.dict' || path.extname(dictFile.fsPath) == '.kbb' || path.extname(dictFile.fsPath) == '.kb')
+				continue;
+			items.push({label: path.basename(dictFile.fsPath), description: dictFile.fsPath});
+			files.push(dictFile);
+		}
+
+		if (items.length <= 1) {
+			vscode.window.showWarningMessage('No files to clean (non dict and kbb files)!');
+			return;
+		}
+
+		vscode.window.showQuickPick(items, {title: 'Clean Dictionary', canPickMany: true, placeHolder: 'Choose files to delete'}).then(selections => {
+			if (!selections)
+				return;
+			if (selections[0].label == allStr) {
+				for (let file of files) {
+					visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.KB],fileOperation.DELETE);
+				}
+			} else {
+				for (let selection of selections) {
+					if (selection.description) {
+						let uri = vscode.Uri.file(selection.description);
+						visualText.fileOps.addFileOperation(uri,uri,[fileOpRefresh.KB],fileOperation.DELETE);							
+					}
+				}
+			}
+			visualText.fileOps.startFileOps();
+		});
 	}
 
 	private libraryKB(): void {
