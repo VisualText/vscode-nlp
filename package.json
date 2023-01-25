@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.12.3",
+    "version": "2.12.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1043,7 +1043,7 @@
             },
             {
                 "command": "analyzerView.newFolder",
-                "title": "Create new folder",
+                "title": "New folder",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"

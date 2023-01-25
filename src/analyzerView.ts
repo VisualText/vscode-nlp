@@ -430,9 +430,14 @@ export class AnalyzerView {
 	}
 	
 	private newAnalyzer(analyzerItem: AnalyzerItem) {
-		let uri = analyzerItem.uri;
-		if (analyzerItem.type == analyzerItemType.ANALYZER)
-			uri = vscode.Uri.file(path.dirname(uri.fsPath));
+		let uri: vscode.Uri;
+		if (analyzerItem == undefined) {
+			uri = visualText.getAnalyzerDir();
+		} else {
+			uri = analyzerItem.uri;
+			if (analyzerItem.type == analyzerItemType.ANALYZER)
+				uri = vscode.Uri.file(path.dirname(uri.fsPath));
+		}
 		visualText.analyzer.newAnalyzer(uri);
 	}
 
