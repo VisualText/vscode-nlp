@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.12.5",
+    "version": "2.13.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -249,6 +249,46 @@
             }
         ],
         "commands": [
+            {
+                "command": "nlp.video",
+                "title": "Help Video VisualText Version 2",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
+            {
+                "command": "sequenceView.video",
+                "title": "Help Video Analyzer Sequence Viewer",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
+            {
+                "command": "outputView.video",
+                "title": "Help Video for Output File Viewer",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
+            {
+                "command": "analyzerView.video",
+                "title": "Help Video for Analyzer Viewer",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
+            {
+                "command": "kbView.video",
+                "title": "Help Video for KB Viewer",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
             {
                 "command": "kbView.libraryKB",
                 "title": "Library KB",
@@ -1471,6 +1511,12 @@
                     "group": "sequence"
                 }
             ],
+            "editor/title": [
+                {
+                    "command": "nlp.video",
+                    "group": "navigation"
+                }
+            ],
             "editor/context": [
                 {
                     "when": "resourceExtname == .txt",
@@ -1635,34 +1681,34 @@
             ],
             "view/title": [
                 {
-                    "command": "kbView.search",
-                    "when": "view == kbView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "kbView.refreshAll",
-                    "when": "view == kbView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "kbView.newKBBFile",
-                    "when": "view == kbView",
-                    "group": "navigation"
-                },
-                {
-                    "command": "kbView.newKBFile",
-                    "when": "view == kbView",
-                    "group": "navigation"
-                },
-                {
                     "command": "kbView.cleanFiles",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "navigation@0"
                 },
                 {
                     "command": "kbView.newDictFile",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "kbView.newKBBFile",
+                    "when": "view == kbView",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "kbView.search",
+                    "when": "view == kbView",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "kbView.refreshAll",
+                    "when": "view == kbView",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "kbView.video",
+                    "when": "view == kbView",
+                    "group": "navigation@5"
                 },
                 {
                     "command": "textView.deleteAnalyzerLogs",
@@ -1707,27 +1753,32 @@
                 {
                     "command": "sequenceView.convert",
                     "when": "view == sequenceView && sequence.hasPat",
-                    "group": "navigation"
+                    "group": "navigation@0"
                 },
                 {
                     "command": "textView.openText",
                     "when": "view == sequenceView",
-                    "group": "navigation"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "sequenceView.finalTree",
                     "when": "view == sequenceView",
-                    "group": "navigation"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "sequenceView.search",
                     "when": "view == sequenceView",
-                    "group": "navigation"
+                    "group": "navigation@3"
                 },
                 {
                     "command": "sequenceView.refreshAll",
                     "when": "view == sequenceView",
-                    "group": "navigation"
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "sequenceView.video",
+                    "when": "view == sequenceView",
+                    "group": "navigation@5"
                 },
                 {
                     "command": "outputView.all",
@@ -1756,6 +1807,11 @@
                 },
                 {
                     "command": "outputView.refreshAll",
+                    "when": "view == outputView",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "outputView.video",
                     "when": "view == outputView",
                     "group": "navigation@5"
                 },
@@ -1841,6 +1897,11 @@
                 },
                 {
                     "command": "analyzerView.loadExampleAnalyzers",
+                    "when": "view == analyzerView",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "analyzerView.video",
                     "when": "view == analyzerView",
                     "group": "navigation@4"
                 },

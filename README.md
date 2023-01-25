@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.13.0
+Added icon buttons to directly open tutorial videos.
+
 ### 2.12.5
 Can copy input files and folders to another analyzer. Fixed delete log files bug in the analyzerView. Added icons to the log output lines.
 
@@ -168,21 +171,6 @@ Colorization of NLP++ folders added automatically
 
 ### 1.55.3
 Added merge .dict files to the KB View context menu
-
-### 1.54.11
-Added generate main.kb
-
-### 1.53.1
-Added help for special variables with dollar signs
-
-### 1.52.0
-Added analyzer processing queue for running multiple folders
-
-### 1.51.2
-Added "Split directory" to textview to split large directories into smaller subdirectories
-
-### 1.50.1
-Added keybindings for reformat rule, final tree, and pass tree for .nlp and unfold all for .tree
 
 # Development
 

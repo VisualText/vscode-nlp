@@ -209,6 +209,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.dictEnglish', () => this.dictEnglish());
 		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
+		vscode.commands.registerCommand('kbView.video', () => this.video());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -216,6 +217,11 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	video() {
+		var url = 'http://vscodekbviewer.visualtext.org';
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	cleanFiles() {

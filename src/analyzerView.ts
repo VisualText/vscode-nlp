@@ -142,6 +142,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
+		vscode.commands.registerCommand('analyzerView.video', () => this.video());
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -153,6 +154,11 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	video() {
+		var url = 'http://vscodeanaviewer.visualtext.org';
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	rename(analyzerItem: AnalyzerItem): void {
