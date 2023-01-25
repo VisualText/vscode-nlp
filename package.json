@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.13.0",
+    "version": "2.13.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -13,6 +13,11 @@
         "Programming Languages",
         "Snippets",
         "Linters"
+    ],
+    "keywords": [
+        "NLP++",
+        "nlp",
+        "VisualText"
     ],
     "activationEvents": [
         "onLanguage:nlp",
@@ -106,58 +111,42 @@
             {
                 "id": "nlp",
                 "extensions": [
-                    ".nlp",
-                    ".nlppp",
-                    ".pat"
+                    "nlp",
+                    "pat"
                 ],
                 "aliases": [
-                    "NLP++",
-                    ".NLP",
                     "NLP",
-                    "nlp",
-                    ".nlp"
+                    "nlp"
                 ],
                 "configuration": "./nlp-configuration.json"
             },
             {
                 "id": "seq",
                 "extensions": [
-                    ".seq"
+                    "seq"
                 ],
                 "aliases": [
-                    "SEQ",
-                    ".SEQ",
-                    "seq",
-                    ".seq"
+                    "seq"
                 ],
                 "configuration": "./seq-configuration.json"
             },
             {
                 "id": "txxt",
                 "extensions": [
-                    ".txxt"
+                    "txxt"
                 ],
                 "aliases": [
-                    "TXXT",
-                    ".TXXT",
-                    "txxt",
-                    ".txxt"
+                    "txxt"
                 ],
                 "configuration": "./txxt-configuration.json"
             },
             {
                 "id": "tree",
                 "extensions": [
-                    ".log",
-                    ".tree"
+                    "tree"
                 ],
                 "aliases": [
-                    "LOG",
-                    "log",
-                    ".TREE",
-                    "TREE",
-                    "tree",
-                    ".tree"
+                    "tree"
                 ],
                 "configuration": "./tree-configuration.json"
             },
@@ -167,11 +156,7 @@
                     ".kb"
                 ],
                 "aliases": [
-                    "KB",
-                    ".KB",
-                    "Kb",
-                    "kb",
-                    ".kb"
+                    "kb"
                 ],
                 "configuration": "./kb-configuration.json"
             },
@@ -181,11 +166,7 @@
                     ".kbb"
                 ],
                 "aliases": [
-                    "KBB",
-                    ".KBB",
-                    "Kbb",
-                    "kbb",
-                    ".kbb"
+                    "kbb"
                 ],
                 "configuration": "./kbb-configuration.json"
             },
@@ -195,11 +176,7 @@
                     ".dict"
                 ],
                 "aliases": [
-                    "DICT",
-                    ".DICT",
-                    "Dict",
-                    "dict",
-                    ".dict"
+                    "dict"
                 ],
                 "configuration": "./dict-configuration.json"
             }
