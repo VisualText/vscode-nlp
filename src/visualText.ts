@@ -974,27 +974,28 @@ export class VisualText {
 
     getAnalyzers(testForLogs: boolean): vscode.Uri[] {
         if (this.analyzerDir.fsPath.length) {
-            var anas: vscode.Uri[] = [];
-            if (!fs.existsSync(this.analyzerDir.fsPath)) {
-                this.analyzerDir = this.workspaceFold;
-            }
-            anas = dirfuncs.getDirectories(this.analyzerDir);
             this.analyzers = [];
+            this.getAnalyzersRecursive(testForLogs,this.analyzerDir);
+        }
+        return this.analyzers;
+    }
+
+    getAnalyzersRecursive(testForLogs: boolean, dir: vscode.Uri) {
+        if (dir.fsPath.length) {
+            var anas: vscode.Uri[] = [];
+            if (!fs.existsSync(dir.fsPath)) {
+                dir = this.workspaceFold;
+            }
+            anas = dirfuncs.getDirectories(dir);
             for (let ana of anas) {
-                if (visualText.isAnalyzerDirectory(ana))
-                    this.analyzers.push(ana);
-                else {
-                    let subanas = dirfuncs.getDirectories(ana);
-                    for (let subana of subanas) {
-                        if (visualText.isAnalyzerDirectory(subana)) {
-                            if (!testForLogs || dirfuncs.analyzerHasLogFiles(subana))
-                                this.analyzers.push(subana);
-                        }
-                    }
+                if (visualText.isAnalyzerDirectory(ana)) {
+                    if (!testForLogs || dirfuncs.analyzerHasLogFiles(ana))
+                        this.analyzers.push(ana);
+                } else {
+                    this.getAnalyzersRecursive(testForLogs,ana);
                 }
             }
         }
-        return this.analyzers;
     }
 
 	hasWorkspaceFolder(): boolean {
