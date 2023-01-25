@@ -460,6 +460,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
+		vscode.commands.registerCommand('sequenceView.video', () => this.video());
 	}
 
 	insertOrphan(seqItem: SequenceItem) {
@@ -490,6 +491,11 @@ export class SequenceView {
 				}	
 			});
 		}
+	}
+
+	video() {
+		var url = 'http://vscodeanaseq.visualtext.org';
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	explore() {

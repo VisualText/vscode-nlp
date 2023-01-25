@@ -36,6 +36,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('log.generatePath', this.generatePath));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.openPassFile', this.openPassFile));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.displayMatchedRules', this.displayMatchedRulesNLP));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.video', this.video));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPCommands {
@@ -44,6 +45,11 @@ export class NLPCommands {
         }
         return nlpCommands;
     }
+
+    video() {
+		var url = 'http://vscode2.visualtext.org';
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+	}
     
     sortText() {
         if (vscode.window.activeTextEditor) {
