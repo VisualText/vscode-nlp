@@ -408,6 +408,7 @@ export class VisualText {
                     case upOp.VERSION:
                         if (op.version.length) {
                             visualText.updateVersion(op);
+                            op.status = upStat.DONE;
                         } else {
                             switch(op.component) {
                                 case upComp.NLP_EXE:
