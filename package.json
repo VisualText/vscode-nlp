@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.13.1",
+    "version": "2.13.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -13,11 +13,6 @@
         "Programming Languages",
         "Snippets",
         "Linters"
-    ],
-    "keywords": [
-        "NLP++",
-        "nlp",
-        "VisualText"
     ],
     "activationEvents": [
         "onLanguage:nlp",
@@ -121,16 +116,6 @@
                 "configuration": "./nlp-configuration.json"
             },
             {
-                "id": "seq",
-                "extensions": [
-                    "seq"
-                ],
-                "aliases": [
-                    "seq"
-                ],
-                "configuration": "./seq-configuration.json"
-            },
-            {
                 "id": "txxt",
                 "extensions": [
                     "txxt"
@@ -151,19 +136,9 @@
                 "configuration": "./tree-configuration.json"
             },
             {
-                "id": "kb",
-                "extensions": [
-                    ".kb"
-                ],
-                "aliases": [
-                    "kb"
-                ],
-                "configuration": "./kb-configuration.json"
-            },
-            {
                 "id": "kbb",
                 "extensions": [
-                    ".kbb"
+                    "kbb"
                 ],
                 "aliases": [
                     "kbb"
@@ -173,7 +148,7 @@
             {
                 "id": "dict",
                 "extensions": [
-                    ".dict"
+                    "dict"
                 ],
                 "aliases": [
                     "dict"
@@ -188,11 +163,6 @@
                 "path": "./syntaxes/nlp.tmLanguage.json"
             },
             {
-                "language": "seq",
-                "scopeName": "source.seq",
-                "path": "./syntaxes/seq.tmLanguage.json"
-            },
-            {
                 "language": "txxt",
                 "scopeName": "source.txxt",
                 "path": "./syntaxes/txxt.tmLanguage.json"
@@ -201,11 +171,6 @@
                 "language": "tree",
                 "scopeName": "source.tree",
                 "path": "./syntaxes/tree.tmLanguage.json"
-            },
-            {
-                "language": "kb",
-                "scopeName": "source.kb",
-                "path": "./syntaxes/kb.tmLanguage.json"
             },
             {
                 "language": "kbb",
@@ -1790,7 +1755,7 @@
                 {
                     "command": "outputView.video",
                     "when": "view == outputView",
-                    "group": "navigation@5"
+                    "group": "navigation@6"
                 },
                 {
                     "command": "logView.stopUpdater",
@@ -1880,7 +1845,7 @@
                 {
                     "command": "analyzerView.video",
                     "when": "view == analyzerView",
-                    "group": "navigation@4"
+                    "group": "navigation@5"
                 },
                 {
                     "command": "analyzerView.copyAll",

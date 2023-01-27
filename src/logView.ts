@@ -151,6 +151,17 @@ export class LogView {
 		this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
 	}
 
+	public syntaxErrors(): boolean {
+		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
+		const logFile = new TextFile(errorLog.fsPath);
+		for (let line of logFile.getLines()) {
+			let parse = this.parseLogLine(line,logLineType.INFO,undefined);
+			if (parse.type == logLineType.SYNTAX_ERROR)
+				return true;
+		}
+		return false;
+	}
+
 	public clearLogs() {
 		this.logs = [];
 		vscode.commands.executeCommand('logView.refreshAll');			
@@ -204,6 +215,7 @@ export class LogView {
 					var seqFile = visualText.analyzer.seqFile;
 					uri = seqFile.getUriByPassNumber(passNum);
 					type = logLineType.SYNTAX_ERROR;
+					icon = this.typeIcon(logLineType.SYNTAX_ERROR);
 				}
 			} else if (line.startsWith('FAILED download')) {
 				type = logLineType.DOWNLOAD_ERROR;
