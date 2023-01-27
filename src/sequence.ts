@@ -616,6 +616,7 @@ export class SequenceFile extends TextFile {
 		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
+		toItem.active = fromItem.active;
 	}
 
 	swapAuxFiles(itemOne: PassItem, itemTwo: PassItem, type: nlpFileType) {
