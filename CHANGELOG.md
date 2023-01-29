@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.13.7
+### 2.13.8
 Added icon buttons to directly open tutorial videos.
 
 ### 2.12.5
