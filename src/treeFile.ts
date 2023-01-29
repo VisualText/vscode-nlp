@@ -635,7 +635,7 @@ ${ruleStr}
 					fired.from = +tts[1];
 					fired.to = lastTo = +tts[2];
 					fired.ufrom = +tts[3];
-					fired.uto = lastTo = +tts[4];
+					fired.uto = +tts[4];
 					fired.rulenum = +tts[5];
 					fired.ruleline = +tts[6];
 					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || fired.built)
