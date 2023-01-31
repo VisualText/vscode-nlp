@@ -1269,11 +1269,16 @@ export class VisualText {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
-                items.push({label: indent + basename, description: dir.fsPath, });
-                let specDir = vscode.Uri.file(path.join(dir.fsPath,'spec'));
-                let specs = dirfuncs.getFiles(specDir,['.nlp','.pat']);
-                for (let spec of specs) {
-                    items.push({label: indent + '-    ' + path.basename(spec.fsPath), description: spec.fsPath});
+                if (specFlag) {
+                    items.push({label: indent + basename, description: path.join(dir.fsPath,'spec'), });
+                    let specDir = vscode.Uri.file(path.join(dir.fsPath,'spec'));
+                    let specs = dirfuncs.getFiles(specDir,['.nlp','.pat']);
+                    for (let spec of specs) {
+                        items.push({label: indent + '-    ' + path.basename(spec.fsPath), description: spec.fsPath});
+                    }
+                } else {
+                    items.push({label: indent + basename, description: dir.fsPath, });
+
                 }
             } else {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});

@@ -105,7 +105,7 @@ export class FindView {
 
 	private openFile(findItem: FindItem): void {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(findItem.uri).then(editor => 
+		vscode.window.showTextDocument(findItem.uri, { viewColumn: vscode.ViewColumn.Beside }).then(editor => 
 			{
 				var pos = new vscode.Position(findItem.line,findItem.pos);
 				var posEnd = new vscode.Position(findItem.line,findItem.pos+this.searchWord.length);
