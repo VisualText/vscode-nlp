@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.14.0
+Renaming now changes header comment. Dupliation intelligently increments end number.
+
 ### 2.13.8
 Added icon buttons to directly open tutorial videos.
 

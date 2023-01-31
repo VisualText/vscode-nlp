@@ -35,6 +35,16 @@ export class TextFile {
         fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
     }
 
+    saveFileLines() {
+        let text = '';
+        for (let line of this.lines) {
+            if (text.length)
+                text += this.sep;
+            text += line;
+        }
+        fs.writeFileSync(this.uri.fsPath,text,{flag:'w+'});
+    }
+
     linesToText(editor: vscode.TextEditor, selFlag: boolean=false) {
         if (selFlag) {
             if (this.selLines.length) {
