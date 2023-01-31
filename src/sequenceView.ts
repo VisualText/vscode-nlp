@@ -302,7 +302,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	insertNew(seqItem: SequenceItem, type: newPassType): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new pass name' }).then(newname => {
+			let newPass = 'newpass';
+			if (type == newPassType.DECL)
+				newPass = 'funcs';
+			else if (type == newPassType.CODE)
+				newPass = 'init';
+			vscode.window.showInputBox({ value: newPass, prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
 					if (seqItem && (seqItem.uri || seqFile.getPasses().length > 1))
 						seqFile.insertNewPass(seqItem,newname,type);
@@ -311,6 +316,19 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
+		}
+	}
+
+	renameTopComment(passFile: vscode.Uri) {
+		let textFile = new TextFile();
+		textFile.setFile(passFile);
+		let lines = textFile.getLines();
+		let newName = path.parse(passFile.fsPath).name;
+		if (lines.length >= 7) {
+			let fileLine = lines[1];
+			let newLine = "# FILE: " + newName;
+			lines[1] = newLine;
+			textFile.saveFileLines();
 		}
 	}
 	
@@ -323,7 +341,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					seqFile.renamePass(seqItem,newname);
 					if (seqItem.type.localeCompare('nlp') == 0 || seqItem.type.localeCompare('rec') == 0) {
 						var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath,newname.concat(path.extname(original.fsPath))));
-						dirfuncs.rename(original.fsPath,newfile.fsPath);						
+						dirfuncs.rename(original.fsPath,newfile.fsPath);
+						this.renameTopComment(newfile);				
 					}
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
@@ -334,7 +353,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	duplicatePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			var seedName = seqItem.name + '1';
+			var seedName = this.incrementEndNumber(seqItem.name);
 			vscode.window.showInputBox({ value: seedName, prompt: 'Enter name for duplicate pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
@@ -343,6 +362,17 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 			});
 		}
+	}
+
+	incrementEndNumber(word: string): string {
+		let neword = word;
+		let tokens = word.split(/([0-9]+)/);
+		if (tokens.length > 1) {
+			neword = tokens[0] + (Number(tokens[1]) + 1).toString();
+		} else {
+			neword = neword + '1';
+		}
+		return neword;
 	}
 
 	newFolder(seqItem: SequenceItem) {
@@ -668,4 +698,5 @@ export class SequenceView {
 			}
 		}
 	}
+
 }

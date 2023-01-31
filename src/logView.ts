@@ -236,9 +236,9 @@ export class LogView {
 				}
 			}
 		}
-		// if (uri) {
-		// 	icon = 'right-blue.svg'; 
-		// }
+		if (line.indexOf("Warning") > 0) {
+			icon = 'yield.svg'; 
+		}
 		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
 	}
 
