@@ -1252,13 +1252,13 @@ export class VisualText {
         return icon;
     }
 
-    analyzerFolderList(): vscode.QuickPickItem[] {
+    analyzerFolderList(specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
         let items: vscode.QuickPickItem[] = [];
-        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0);
+        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0,specFlag);
     }
     
-    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number): vscode.QuickPickItem[] {
+    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number, specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(dir);
         let indent = '';
         for (var i = 0; i < level; i++) {
@@ -1269,10 +1269,20 @@ export class VisualText {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
-                items.push({label: indent + basename, description: dir.fsPath, });
+                if (specFlag) {
+                    items.push({label: indent + basename, description: path.join(dir.fsPath,'spec'), });
+                    let specDir = vscode.Uri.file(path.join(dir.fsPath,'spec'));
+                    let specs = dirfuncs.getFiles(specDir,['.nlp','.pat']);
+                    for (let spec of specs) {
+                        items.push({label: indent + '-    ' + path.basename(spec.fsPath), description: spec.fsPath});
+                    }
+                } else {
+                    items.push({label: indent + basename, description: dir.fsPath, });
+
+                }
             } else {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
-                this.analyzerFolderListRecurse(dir,items,level+1);
+                this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
             }
         }
         return items;
