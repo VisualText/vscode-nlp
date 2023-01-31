@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.14.0",
+    "version": "2.14.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -272,7 +272,7 @@
                 }
             },
             {
-                "command": "kbView.importFiless",
+                "command": "kbView.existingFiles",
                 "title": "Import KB files",
                 "icon": {
                     "light": "resources/light/search.svg",
@@ -829,7 +829,15 @@
             },
             {
                 "command": "sequenceView.insert",
-                "title": "Import Existing Pass(es)",
+                "title": "Insert Existing Pass(es)",
+                "icon": {
+                    "light": "resources/light/file-code.svg",
+                    "dark": "resources/dark/file-code.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertSister",
+                "title": "Insert Existing Sister Pass(es)",
                 "icon": {
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
@@ -1937,7 +1945,7 @@
                     "group": "atop@2"
                 },
                 {
-                    "command": "kbView.importFiless",
+                    "command": "kbView.existingFiles",
                     "when": "view == kbView",
                     "group": "navigation"
                 },
@@ -2022,14 +2030,19 @@
                     "group": "atop@2"
                 },
                 {
-                    "command": "sequenceView.insertOrphan",
+                    "command": "sequenceView.insertSister",
                     "when": "view == sequenceView",
                     "group": "atop@3"
                 },
                 {
+                    "command": "sequenceView.insertOrphan",
+                    "when": "view == sequenceView",
+                    "group": "atop@4"
+                },
+                {
                     "command": "sequenceView.newFolder",
                     "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
-                    "group": "atop@4"
+                    "group": "atop@5"
                 },
                 {
                     "command": "sequenceView.openFile",
