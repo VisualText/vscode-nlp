@@ -9,6 +9,7 @@ import { nlpStatusBar } from './status';
 import { logView,logLineType } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
+import { SequenceFile } from './sequence';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -1265,20 +1266,23 @@ export class VisualText {
             indent = indent + '   ';
         }
         if (indent.length > 0) indent = '-' + indent;
+        let seq = new SequenceFile;
         for (let dir of dirs) {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
                 if (specFlag) {
-                    items.push({label: indent + basename, description: path.join(dir.fsPath,'spec'), });
-                    let specDir = vscode.Uri.file(path.join(dir.fsPath,'spec'));
-                    let specs = dirfuncs.getFiles(specDir,['.nlp','.pat']);
-                    for (let spec of specs) {
-                        items.push({label: indent + '-    ' + path.basename(spec.fsPath), description: spec.fsPath});
+                    let specDir = path.join(dir.fsPath,'spec');
+                    seq.setSpecDir(specDir);
+                    seq.getPassFiles(specDir);
+                    items.push({label: indent + basename, description: specDir, });
+                    for (let pass of seq.getPassItems()) {
+                        let uri = seq.passItemUri(pass);
+                        if (fs.existsSync(uri.fsPath))
+                            items.push({label: indent + '-    ' + path.basename(uri.fsPath), description: uri.fsPath});
                     }
                 } else {
                     items.push({label: indent + basename, description: dir.fsPath, });
-
                 }
             } else {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});

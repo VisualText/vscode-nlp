@@ -94,32 +94,44 @@ export class SequenceFile extends TextFile {
 	init() {
 		if (visualText.analyzer.isLoaded()) {
 			this.specDir = visualText.analyzer.getSpecDirectory();
-			super.setFile(vscode.Uri.file(path.join(this.specDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE)),true);
-			let passNum = 1;
-			this.passItems = [];
-			var folder = '';
-			var order = 0;
+			this.getPassFiles(this.specDir.fsPath);
+		}
+	}
 
-			for (let passStr of this.getLines()) {
-				var passItem = this.setPass(passStr,passNum);
-				if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
-					folder = passItem.name;
-				} else if (folder.length) {
-					if (passItem.typeStr == 'end' &&  passItem.name.localeCompare(folder) == 0) {
-						folder = '';
-					} else {
-						passItem.inFolder = true;
-						passNum++;
-					}
-				} else if (passItem.exists())
+	public setSpecDir(specDir: string) {
+		this.specDir = vscode.Uri.file(specDir);
+	}
+
+	public getPassFiles(specDir: string) {
+		super.setFile(vscode.Uri.file(path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE)),true);
+		let passNum = 1;
+		this.passItems = [];
+		var folder = '';
+		var order = 0;
+
+		for (let passStr of this.getLines()) {
+			var passItem = this.setPass(passStr,passNum);
+			if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
+				folder = passItem.name;
+			} else if (folder.length) {
+				if (passItem.typeStr == 'end' &&  passItem.name.localeCompare(folder) == 0) {
+					folder = '';
+				} else {
+					passItem.inFolder = true;
 					passNum++;
-
-				if (passItem.text.length) {
-					passItem.order = order++;
-					this.passItems.push(passItem);
 				}
+			} else if (passItem.exists())
+				passNum++;
+
+			if (passItem.text.length) {
+				passItem.order = order++;
+				this.passItems.push(passItem);
 			}
 		}
+	}
+
+	public getPassItems() {
+		return this.passItems;
 	}
 
 	isOrphan(nlpFileName: string): boolean {
