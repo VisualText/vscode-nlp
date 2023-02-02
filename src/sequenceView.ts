@@ -383,8 +383,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			vscode.window.showInputBox({ value: seqItem.name, prompt: 'Enter new name for pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
-					if (fs.existsSync(seqItem.uri.fsPath)) {
-						vscode.window.showWarningMessage('This pass name already exists: ' + path.basename(seqItem.uri.fsPath));
+					let newFile = path.join(path.dirname(seqItem.uri.fsPath),newname+'.nlp');
+					if (fs.existsSync(newFile)) {
+						vscode.window.showWarningMessage('This pass name already exists: ' + newname);
 						vscode.commands.executeCommand('sequenceView.rename',seqItem);	
 					} else {
 						seqFile.renamePass(seqItem,newname);
