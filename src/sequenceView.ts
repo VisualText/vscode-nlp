@@ -392,7 +392,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						if (seqItem.type.localeCompare('nlp') == 0 || seqItem.type.localeCompare('rec') == 0) {
 							var newfile = vscode.Uri.file(path.join(seqFile.getSpecDirectory().fsPath,newname.concat(path.extname(original.fsPath))));
 							dirfuncs.rename(original.fsPath,newfile.fsPath);
-							this.renameTopComment(newfile);				
+							this.renameTopComment(newfile);	
+							vscode.window.showTextDocument(newfile);		
 						}
 						vscode.commands.executeCommand('sequenceView.refreshAll');						
 					}
