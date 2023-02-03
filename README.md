@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.15.0
+Now opening files to the side that are modified or called by a context menu.
+
 ### 2.14.6
 Renaming now changes header comment. Dupliation intelligently increments end number.
 
@@ -162,18 +165,6 @@ Enhanced error reporting in log view
 
 ### 1.59.3
 Added move folders to the text view
-
-### 1.58.0
-Added folders to the analyzer view
-
-### 1.57.1
-Advises on NLP-ENGINE update fail. Also opens file browser for any file or directory on all three platforms.
-
-### 1.56.1
-Colorization of NLP++ folders added automatically
-
-### 1.55.3
-Added merge .dict files to the KB View context menu
 
 # Development
 

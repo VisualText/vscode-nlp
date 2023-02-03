@@ -231,7 +231,7 @@ export class NLPFile extends TextFile {
 
 	insertRule(ruleStr: string) {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(this.getUri()).then(editor => {
+		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
 			let len = this.getText().length
 			let pos = editor.document.positionAt(len);
 			editor.edit(edit => {
@@ -242,7 +242,7 @@ export class NLPFile extends TextFile {
 
 	replaceContext(newContextStr: string) {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(this.getUri()).then(editor => {
+		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
 			let contextSel = this.findLineStartsWith('@NODES');
 			if (contextSel.isEmpty)
 				contextSel = this.findLineStartsWith('@PATH');

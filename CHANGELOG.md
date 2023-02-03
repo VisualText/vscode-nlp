@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.15.0
+Now opening files to the side that are modified or called by a context menu.
+
 ### 2.14.6
 Renaming now changes header comment. Dupliation intelligently increments end number.
 
