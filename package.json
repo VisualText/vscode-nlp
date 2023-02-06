@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.15.0",
+    "version": "2.16.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -658,6 +658,14 @@
             {
                 "command": "sequenceView.cmltok",
                 "title": "CML Tokenizer"
+            },
+            {
+                "command": "sequenceView.toggleActive",
+                "title": "Toggle Active/Inactive",
+                "icon": {
+                    "light": "resources/light/toggle.svg",
+                    "dark": "resources/dark/toggle.svg"
+                }
             },
             {
                 "command": "sequenceView.convert",
@@ -2402,6 +2410,11 @@
                 {
                     "command": "sequenceView.moveDown",
                     "when": "view == sequenceView",
+                    "group": "inline"
+                },
+                {
+                    "command": "sequenceView.toggleActive",
+                    "when": "view == sequenceView && viewItem =~ /hasKB|hasLoghasKB|hasLog|file/",
                     "group": "inline"
                 },
                 {

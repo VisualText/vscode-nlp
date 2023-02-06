@@ -62,7 +62,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
-			var hasPats = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
 
 			if (passItem.isFolder()) {
 				folder = passItem.name;
@@ -543,7 +542,14 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.cmltok', (seqItem) => treeDataProvider.cmltok(seqItem));
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
-		vscode.commands.registerCommand('sequenceView.video', () => this.video());
+		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
+	}
+
+	private toggleActive(seqItem: SequenceItem): void {
+		if (seqItem) {
+			visualText.analyzer.seqFile.saveActive(seqItem.passNum,!seqItem.active);
+			vscode.commands.executeCommand('sequenceView.refreshAll');
+		}
 	}
 
 	insertOrphan(seqItem: SequenceItem) {
