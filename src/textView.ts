@@ -134,12 +134,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 				if (!selections) {
 					return;
 				}
+				var dir = visualText.analyzer.getInputDirectory().fsPath;
+				if (textItem) {
+					dir = textItem.uri.fsPath;
+				}
 				for (let sel of selections) {
 					var filename = path.basename(sel.fsPath);
-					var dir = visualText.analyzer.getInputDirectory().fsPath;
-					if (textItem) {
-						dir = path.dirname(textItem.uri.fsPath);
-					}
 					var newPath = vscode.Uri.file(path.join(dir,filename));
 					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.TEXT],fileOperation.COPY);
 				}
@@ -560,14 +560,14 @@ export class TextView {
 		
 		if (count) {
 			for (let dir of logDirs) {
-				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(dir.uri,dir.uri,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 			};
 		}
 	}
 
 	public deleteFileLogDir(dirPath: string): void {
 		var logPath = vscode.Uri.file(dirPath + visualText.LOG_SUFFIX);
-		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+		visualText.fileOps.addFileOperation(logPath,logPath,[fileOpRefresh.TEXT,fileOpRefresh.ANALYZER,fileOpRefresh.ANALYZERS,fileOpRefresh.OUTPUT],fileOperation.DELETE);
 	}
 
 	public deleteAnalyzerLogs(): void {

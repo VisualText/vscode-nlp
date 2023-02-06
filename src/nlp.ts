@@ -103,8 +103,9 @@ export class NLPFile extends TextFile {
 					logView.loadAnalyzerOuts();
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
-					if (err) {
-						logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
+					if (err || logView.syntaxErrors()) {
+						if (err)
+							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
 						logView.loadMakeAna();
 						vscode.commands.executeCommand('outputView.refreshAll');
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
@@ -113,15 +114,12 @@ export class NLPFile extends TextFile {
 					} else {
 						var typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
 						logView.addMessage('Done analyzing '+typeStr+': '+filename,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
-						//vscode.commands.executeCommand('logView.refreshAll');
-						//logView.loadMakeAna();
 						visualText.analyzer.saveCurrentFile(filepath);
 						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('sequenceView.refreshAll');
 						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('kbView.refreshAll');
-						//vscode.commands.executeCommand('logView.makeAna');
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.DONE);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Processed');
@@ -233,7 +231,7 @@ export class NLPFile extends TextFile {
 
 	insertRule(ruleStr: string) {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(this.getUri()).then(editor => {
+		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
 			let len = this.getText().length
 			let pos = editor.document.positionAt(len);
 			editor.edit(edit => {
@@ -244,7 +242,7 @@ export class NLPFile extends TextFile {
 
 	replaceContext(newContextStr: string) {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(this.getUri()).then(editor => {
+		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
 			let contextSel = this.findLineStartsWith('@NODES');
 			if (contextSel.isEmpty)
 				contextSel = this.findLineStartsWith('@PATH');

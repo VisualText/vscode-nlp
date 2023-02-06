@@ -94,32 +94,44 @@ export class SequenceFile extends TextFile {
 	init() {
 		if (visualText.analyzer.isLoaded()) {
 			this.specDir = visualText.analyzer.getSpecDirectory();
-			super.setFile(vscode.Uri.file(path.join(this.specDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE)),true);
-			let passNum = 1;
-			this.passItems = [];
-			var folder = '';
-			var order = 0;
+			this.getPassFiles(this.specDir.fsPath);
+		}
+	}
 
-			for (let passStr of this.getLines()) {
-				var passItem = this.setPass(passStr,passNum);
-				if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
-					folder = passItem.name;
-				} else if (folder.length) {
-					if (passItem.typeStr == 'end' &&  passItem.name.localeCompare(folder) == 0) {
-						folder = '';
-					} else {
-						passItem.inFolder = true;
-						passNum++;
-					}
-				} else if (passItem.exists())
+	public setSpecDir(specDir: string) {
+		this.specDir = vscode.Uri.file(specDir);
+	}
+
+	public getPassFiles(specDir: string) {
+		super.setFile(vscode.Uri.file(path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE)),true);
+		let passNum = 1;
+		this.passItems = [];
+		var folder = '';
+		var order = 0;
+
+		for (let passStr of this.getLines()) {
+			var passItem = this.setPass(passStr,passNum);
+			if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
+				folder = passItem.name;
+			} else if (folder.length) {
+				if (passItem.typeStr == 'end' &&  passItem.name.localeCompare(folder) == 0) {
+					folder = '';
+				} else {
+					passItem.inFolder = true;
 					passNum++;
-
-				if (passItem.text.length) {
-					passItem.order = order++;
-					this.passItems.push(passItem);
 				}
+			} else if (passItem.exists())
+				passNum++;
+
+			if (passItem.text.length) {
+				passItem.order = order++;
+				this.passItems.push(passItem);
 			}
 		}
+	}
+
+	public getPassItems() {
+		return this.passItems;
 	}
 
 	isOrphan(nlpFileName: string): boolean {
@@ -405,6 +417,7 @@ export class SequenceFile extends TextFile {
 			case newPassType.CODE:
 				newpass = newpass.concat('@CODE\n\n');
 				newpass = newpass.concat('G("kb") = getconcept(findroot(),"kb");\n');
+				newpass = newpass.concat('SaveKB("mykb.kbb",G("kb"),2);\n');
 				newpass = newpass.concat('\n@@CODE');
 				break;
 
@@ -616,6 +629,7 @@ export class SequenceFile extends TextFile {
 		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
+		toItem.active = fromItem.active;
 	}
 
 	swapAuxFiles(itemOne: PassItem, itemTwo: PassItem, type: nlpFileType) {

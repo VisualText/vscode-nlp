@@ -127,35 +127,11 @@ export class NLPStatusBar {
     }
 
     openFilesVersionSettings() {
-        if (visualText.checkVTFilesVersion(visualText.emptyOp())) {
-            nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
-            let items: vscode.QuickPickItem[] = [];
-            items.push({label: 'Yes', description: 'Update VisualText files to version ' + visualText.repoVTFilesVersion});
-            items.push({label: 'No', description: 'Cancel VisualText files update'});
-
-            vscode.window.showQuickPick(items, {title: 'Update VisualText Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
-                if (!selection || selection.label == 'No')
-                    return;
-                visualText.updateVTFiles();     
-            });
-        }
-        vscode.window.showInformationMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
+        visualText.checkVTFilesVersion(visualText.emptyOp())
     }
 
     openAnalyzersVersionSettings() {
-        if (visualText.checkVTFilesVersion(visualText.emptyOp())) {
-            nlpStatusBar.updateFilesVersion(visualText.vtFilesVersion);
-            let items: vscode.QuickPickItem[] = [];
-            items.push({label: 'Yes', description: 'Update Analyzers to version ' + visualText.repoVTFilesVersion});
-            items.push({label: 'No', description: 'Cancel Analyzers update'});
-
-            vscode.window.showQuickPick(items, {title: 'Update Analyzers', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
-                if (!selection || selection.label == 'No')
-                    return;
-                visualText.updateAnalyzersFiles();     
-            });
-        }
-        vscode.window.showInformationMessage('Analyzers verion ' + visualText.repoVTFilesVersion + ' is the latest');
+        visualText.checkAnalyzersVersion(visualText.emptyOp());
     }
 
     openEngineVersionSettings() {

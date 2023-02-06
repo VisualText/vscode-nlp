@@ -71,7 +71,7 @@ export class TreeFile extends TextFile {
 				if (passNum) {
 					var passFile = seqFile.getUriByPassNumber(passNum);
 					visualText.colorizeAnalyzer();
-					vscode.window.showTextDocument(passFile).then(edit => 
+					vscode.window.showTextDocument(passFile, { viewColumn: vscode.ViewColumn.Beside }).then(edit => 
 						{
 							var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
 							var range = new vscode.Range(pos,pos);
@@ -89,7 +89,7 @@ export class TreeFile extends TextFile {
 			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
 				visualText.colorizeAnalyzer();
-				vscode.window.showTextDocument(visualText.analyzer.getTextPath()).then(edit => 
+				vscode.window.showTextDocument(visualText.analyzer.getTextPath(), { viewColumn: vscode.ViewColumn.Beside }).then(edit => 
 					{
 						var txt = new TextFile(visualText.analyzer.getTextPath().fsPath);
 						var posStart = txt.positionAt(this.selStart-1);
@@ -181,7 +181,7 @@ export class TreeFile extends TextFile {
 						if (chosen.rulenum > 0) {
 							var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rulenum);
 							visualText.colorizeAnalyzer();
-							vscode.window.showTextDocument(ruleFileUri).then(editor => 
+							vscode.window.showTextDocument(ruleFileUri, { viewColumn: vscode.ViewColumn.Beside }).then(editor => 
 							{
 								var pos = new vscode.Position(chosen.ruleline-1,0);
 								editor.selections = [new vscode.Selection(pos,pos)]; 
@@ -458,7 +458,7 @@ ${ruleStr}
 		fs.writeFileSync(filePath.fsPath, content);
 		vscode.workspace.openTextDocument(filePath).then(document => {
 			visualText.colorizeAnalyzer();
-			vscode.window.showTextDocument(document);
+			vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Beside });
 		});
 	}
 
@@ -635,7 +635,7 @@ ${ruleStr}
 					fired.from = +tts[1];
 					fired.to = lastTo = +tts[2];
 					fired.ufrom = +tts[3];
-					fired.uto = lastTo = +tts[4];
+					fired.uto = +tts[4];
 					fired.rulenum = +tts[5];
 					fired.ruleline = +tts[6];
 					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || fired.built)

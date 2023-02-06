@@ -79,6 +79,7 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
 		vscode.commands.registerCommand('outputView.deleteOrphans', () => this.deleteOrphans());
 		vscode.commands.registerCommand('outputView.explore', () => this.explore());
+		vscode.commands.registerCommand('outputView.video', () => this.video());
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
@@ -90,6 +91,11 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	video() {
+		var url = 'http://vscodeoutviewer.visualtext.org';
+		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	explore() {

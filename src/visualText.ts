@@ -9,6 +9,7 @@ import { nlpStatusBar } from './status';
 import { logView,logLineType } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
+import { SequenceFile } from './sequence';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -137,8 +138,13 @@ export class VisualText {
 
             this.debugMessage('Checking for updates or repairs...',logLineType.UPDATER);
             this.pushCheckVersions();
-            this.updaterID = +setInterval(this.updaterTimer,1000);
+            this.startTimer();
         }
+    }
+
+    startTimer() {
+        if (this.updaterID == 0)
+            this.updaterID = +setInterval(this.updaterTimer,1000);
     }
 
     stopUpdater() {
@@ -408,6 +414,7 @@ export class VisualText {
                     case upOp.VERSION:
                         if (op.version.length) {
                             visualText.updateVersion(op);
+                            op.status = upStat.DONE;
                         } else {
                             switch(op.component) {
                                 case upComp.NLP_EXE:
@@ -460,7 +467,7 @@ export class VisualText {
 
     checkExeVersion(op: updateOp) {
         visualText.fetchExeVersion(op)?.then(version => {
-            visualText.checkEngineVersion(op)
+            visualText.checkEngineVersionRepo(op)
             .then(newerVersion => {
                 if (newerVersion) {
                     visualText.pushDownloadEngineFiles(op,upPush.FRONT);
@@ -475,85 +482,146 @@ export class VisualText {
         });
         op.status = upStat.RUNNING;
     }
+    
+    checkEngineVersionRepo(op: updateOp) {
+        return new Promise((resolve,reject) => {
 
-    checkVTFilesVersion(op: updateOp): boolean {
-        const https = require('follow-redirects').https;
+            const https = require('follow-redirects').https;
 
-        const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
-            res.on('data', function (chunk) {
-                let newer = false;
-                if (op.status != upStat.DONE) {
-                    let url = res.responseUrl;
-                    visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
-                    op.version = visualText.repoVTFilesVersion;
-                    let currentVersion = visualText.getVTFilesVersion();
-                    if (visualText.debug)
-                        visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion,logLineType.UPDATER);
-
-                    if (currentVersion) {
-                        visualText.vtFilesVersion = currentVersion;
-                        if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
+            const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
+                res.on('data', function (chunk) {
+                    var newer = false;
+                    if (op.status != upStat.DONE) {
+                        let url = res.responseUrl;
+                        visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
+                        let exeVersion = visualText.exeEngineVersion;
+                        let repoVersion = visualText.repoEngineVersion;
+                        op.version = visualText.repoEngineVersion;
+                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion,logLineType.UPDATER);
+                        
+                        if (exeVersion && repoVersion) {
+                            if (visualText.versionCompare(repoVersion,exeVersion) > 0) {
+                                newer = true;
+                            }
+                        } else {
                             newer = true;
-                        }                       
+                        }
+                        op.status = upStat.DONE;           
                     }
-                    else {
-                        newer = true;
-                    }
-                    if (newer) {
-                        visualText.pushDownloadVTFiles(op,upPush.FRONT);
-                        visualText.pushDeleteVTFiles(op,upPush.FRONT);
-                    }
-                    op.status = upStat.DONE;
-                    visualText.updateVersion(op);
-                }
-                return newer;
+                    resolve(newer);
+                });
+            }).on('error', function (err) {
+                reject(err);
             });
-        }).on('error', function (err) {
-            op.status = upStat.FAILED;
+            request.end();
         });
-        op.status = upStat.RUNNING;
-
-        return false;
     }
 
-    checkAnalyzersVersion(op: updateOp): boolean {
-        const https = require('follow-redirects').https;
-
-        const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
-            res.on('data', function (chunk) {
-                let newer = false;
-                if (op.status != upStat.DONE) {
-                    let url = res.responseUrl;
-                    visualText.repoAnalyzersVersion = url.substring(url.lastIndexOf('/') + 1);
-                    op.version = visualText.repoAnalyzersVersion;
-                    let currentVersion = visualText.getAnalyzersVersion();
-                    if (visualText.debug)
-                        visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion,logLineType.UPDATER);
-                    if (currentVersion) {
-                        visualText.analyzersVersion = currentVersion;
-                        if (visualText.versionCompare(visualText.repoAnalyzersVersion,currentVersion) > 0) {
-                            newer = true;
-                        }                       
+    checkVTFilesVersion(op: updateOp) {
+        let statusFlag = op.status == upStat.UNKNOWN ? true : false;
+        visualText.checkVTFilesVersionRepo(op)
+            .then(newerVersion => {
+                if (newerVersion) {
+                    visualText.pushDownloadVTFiles(op,upPush.FRONT);
+                    visualText.pushDeleteVTFiles(op,upPush.FRONT);
+                    if (statusFlag) {
+                        op.component = upComp.VT_FILES;
+                        visualText.startTimer();
                     }
-                    else {
-                        newer = true;
-                    }
-                    if (newer) {
-                        visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);  
-                        visualText.pushDownloadAnalyzers(op,upPush.FRONT);
-                        visualText.pushDeleteAnalyzers(op,upPush.FRONT);
-                    }
-                    op.status = upStat.DONE;
-                    visualText.updateVersion(op);                   
+                } else if (statusFlag) {
+                    vscode.window.showInformationMessage('VisualText files verion ' + visualText.repoVTFilesVersion + ' is the latest');
                 }
-                return newer;
-            });
-        }).on('error', function (err) {
-            op.status = upStat.FAILED;
-        });
-        op.status = upStat.RUNNING;
+                op.status = upStat.DONE;
+                visualText.updateVersion(op);
+            })
+    }
 
-        return false;
+    checkVTFilesVersionRepo(op: updateOp) {
+        return new Promise((resolve,reject) => {
+
+            const https = require('follow-redirects').https;
+
+            const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
+                res.on('data', function (chunk) {
+                    let newer = false;
+                    if (op.status != upStat.DONE) {
+                        let url = res.responseUrl;
+                        visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
+                        op.version = visualText.repoVTFilesVersion;
+                        let currentVersion = visualText.getVTFilesVersion();
+                        if (visualText.debug)
+                            visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion,logLineType.UPDATER);
+
+                        if (currentVersion) {
+                            visualText.vtFilesVersion = currentVersion;
+                            if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
+                                newer = true;
+                            }                       
+                        }
+                        else {
+                            newer = true;
+                        }
+                        op.status = upStat.DONE;
+                    }
+                    resolve(newer);
+                });
+            }).on('error', function (err) {
+                reject(err);
+            });
+            request.end();
+        });
+    }
+
+    checkAnalyzersVersion(op: updateOp) {
+        let statusFlag = op.status == upStat.UNKNOWN ? true : false;
+        visualText.checkAnalyzersVersionRepo(op)
+            .then(newerVersion => {
+                if (newerVersion) {
+                    visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);  
+                    visualText.pushDownloadAnalyzers(op,upPush.FRONT);
+                    visualText.pushDeleteAnalyzers(op,upPush.FRONT);
+                    op.status = upStat.DONE;
+                    visualText.updateVersion(op);       
+                } else if (statusFlag) {
+                    vscode.window.showInformationMessage('Analyzers verion ' + visualText.repoAnalyzersVersion + ' is the latest');
+                }
+                op.status = upStat.DONE;
+                visualText.updateVersion(op);
+            })
+    }
+
+    checkAnalyzersVersionRepo(op: updateOp) {
+        return new Promise((resolve,reject) => {
+            const https = require('follow-redirects').https;
+
+            const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
+                res.on('data', function (chunk) {
+                    let newer = false;
+                    if (op.status != upStat.DONE) {
+                        let url = res.responseUrl;
+                        visualText.repoAnalyzersVersion = url.substring(url.lastIndexOf('/') + 1);
+                        op.version = visualText.repoAnalyzersVersion;
+                        let currentVersion = visualText.getAnalyzersVersion();
+                        if (visualText.debug)
+                            visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion,logLineType.UPDATER);
+                        if (currentVersion) {
+                            visualText.analyzersVersion = currentVersion;
+                            if (visualText.versionCompare(visualText.repoAnalyzersVersion,currentVersion) > 0) {
+                                newer = true;
+                            }                       
+                        }
+                        else {
+                            newer = true;
+                        }
+                        op.status = upStat.DONE;             
+                    }
+                    resolve(newer);
+                });
+            }).on('error', function (err) {
+                reject(err);
+            });
+            request.end();
+        });
     }
 
     download(op: updateOp) {
@@ -714,40 +782,6 @@ export class VisualText {
         this.analyzerDir = vscode.Uri.file(directory);    
         if (directory.length > 1)
             config.update('directory',directory,vscode.ConfigurationTarget.Global);
-    }
-
-    checkEngineVersion(op: updateOp) {
-        return new Promise((resolve,reject) => {
-
-            const https = require('follow-redirects').https;
-
-            const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
-                res.on('data', function (chunk) {
-                    var newer = false;
-                    if (op.status != upStat.DONE) {
-                        let url = res.responseUrl;
-                        visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
-                        let exeVersion = visualText.exeEngineVersion;
-                        let repoVersion = visualText.repoEngineVersion;
-                        op.version = visualText.repoEngineVersion;
-                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion,logLineType.UPDATER);
-                        
-                        if (exeVersion && repoVersion) {
-                            if (visualText.versionCompare(repoVersion,exeVersion) > 0) {
-                                newer = true;
-                            }
-                        } else {
-                            newer = true;
-                        }
-                        op.status = upStat.DONE;           
-                    }
-                    resolve(newer);
-                });
-            }).on('error', function (err) {
-                reject(err);
-            });
-            request.end();
-        });
     }
 
     failedWarning() {
@@ -1219,27 +1253,40 @@ export class VisualText {
         return icon;
     }
 
-    analyzerFolderList(): vscode.QuickPickItem[] {
+    analyzerFolderList(specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
         let items: vscode.QuickPickItem[] = [];
-        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0);
+        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0,specFlag);
     }
     
-    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number): vscode.QuickPickItem[] {
+    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number, specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(dir);
         let indent = '';
         for (var i = 0; i < level; i++) {
             indent = indent + '   ';
         }
         if (indent.length > 0) indent = '-' + indent;
+        let seq = new SequenceFile;
         for (let dir of dirs) {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
-                items.push({label: indent + basename, description: dir.fsPath, });
+                if (specFlag) {
+                    let specDir = path.join(dir.fsPath,'spec');
+                    seq.setSpecDir(specDir);
+                    seq.getPassFiles(specDir);
+                    items.push({label: indent + basename, description: specDir, });
+                    for (let pass of seq.getPassItems()) {
+                        let uri = seq.passItemUri(pass);
+                        if (fs.existsSync(uri.fsPath))
+                            items.push({label: indent + '-    ' + path.basename(uri.fsPath), description: uri.fsPath});
+                    }
+                } else {
+                    items.push({label: indent + basename, description: dir.fsPath, });
+                }
             } else {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
-                this.analyzerFolderListRecurse(dir,items,level+1);
+                this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
             }
         }
         return items;
