@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.16.0
+### 2.16.1
 Put active toggle on sequence passes.
 
 ### 2.15.0
