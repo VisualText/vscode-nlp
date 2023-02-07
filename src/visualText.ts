@@ -34,6 +34,16 @@ interface ExtensionItem {
     latest: boolean;
 }
 
+// HOW TO CALL IT
+//(async() => { await closeFileIfOpen(original); })();
+export async function closeFileIfOpen(file:vscode.Uri) : Promise<void> {
+    const tabs: vscode.Tab[] = vscode.window.tabGroups.all.map(tg => tg.tabs).flat();
+    const index = tabs.findIndex(tab => tab.input instanceof vscode.TabInputText && tab.input.uri.path === file.path);
+    if (index !== -1) {
+        await vscode.window.tabGroups.close(tabs[index]);
+    }
+}
+
 export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
@@ -1291,5 +1301,4 @@ export class VisualText {
         }
         return items;
     }
-
 }
