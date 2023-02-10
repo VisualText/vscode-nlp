@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
+import { treeFile } from './treeFile';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
@@ -30,9 +31,13 @@ export class NLPFile extends TextFile {
 	private timerID = 0;
 	private stopAllFlag: boolean = false;
 
-	constructor() {
-        super();
-	}
+	constructor(filepath: string = '', separateLines: boolean = true, text: string = '') {
+		super();
+        if (text.length)
+            this.setText(text, separateLines);
+        else if (filepath.length)
+            this.setFile(vscode.Uri.file(filepath),separateLines);
+    }
 
 	analyze(filepath: vscode.Uri) {
 		
@@ -240,19 +245,29 @@ export class NLPFile extends TextFile {
 		});
 	}
 
-	replaceContext(newContextStr: string) {
+	replaceContext(newContextStr: string, beside: boolean=true) {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
-			let contextSel = this.findLineStartsWith('@NODES');
-			if (contextSel.isEmpty)
-				contextSel = this.findLineStartsWith('@PATH');
-			if (contextSel.isEmpty)
-				contextSel = this.findLineStartsWith('@MULTI');
-			if (!contextSel.isEmpty) {
-				var snippet = new vscode.SnippetString(newContextStr);
-				editor.insertSnippet(snippet,contextSel);
-			}
-		});
+		if (beside) {
+			vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
+				this.replaceContextLine(newContextStr,editor);
+			});
+		} else {
+			vscode.window.showTextDocument(this.getUri()).then(editor => {
+				this.replaceContextLine(newContextStr,editor);
+			});
+		}
+	}
+
+	replaceContextLine(newContextStr: string, editor: vscode.TextEditor) {
+		let contextSel = this.findLineStartsWith('@NODES');
+		if (contextSel.isEmpty)
+			contextSel = this.findLineStartsWith('@PATH');
+		if (contextSel.isEmpty)
+			contextSel = this.findLineStartsWith('@MULTI');
+		if (!contextSel.isEmpty) {
+			var snippet = new vscode.SnippetString(newContextStr);
+			editor.insertSnippet(snippet,contextSel);
+		}
 	}
 	
     searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
@@ -528,5 +543,12 @@ export class NLPFile extends TextFile {
 		formattedRule = rulelinesFinal.join(this.getSeparator());
 
 		return formattedRule;
+	}
+
+	copyContext(editor: vscode.TextEditor) {
+		this.setDocument(editor);
+		if (this.getFileType() == nlpFileType.NLP) {
+			sequenceView.replaceContext(editor.document.fileName);
+		}
 	}
 }

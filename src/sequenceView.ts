@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { visualText } from './visualText';
 import { PassItem, moveDirection, newPassType } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
+import { NLPFile } from './nlp';
 import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
 import { fileOpRefresh,fileOperation } from './fileOps';
@@ -619,6 +620,28 @@ export class SequenceView {
 		type: 'nlp', passNum: passItem.passNum, order: passItem.order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active};
 		this.sequenceView.reveal(seqItem, {select: true, focus: true, expand: false});
 		*/
+	}
+
+	replaceContext(nlpFilePath: string) {
+		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		var seqFile = visualText.analyzer.seqFile;
+		var prevItem = seqFile.prevTop(passItem);
+		var uri = prevItem.uri;
+
+		var nlpFile = new NLPFile(uri.fsPath);
+		var contextLine = '';
+		for (let line of nlpFile.getLines()) {
+			if (line.startsWith('@NODES') || line.startsWith('@PATH') || line.startsWith('@MULTI')) {
+				contextLine = line;
+				break;
+			}
+		}
+
+		if (contextLine.length) {
+			let nlp = new NLPFile();
+			nlp.setFile(passItem.uri);
+			nlp.replaceContext(contextLine,false);
+		}
 	}
 
 	convertPatToNLP() {

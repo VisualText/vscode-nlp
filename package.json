@@ -3,11 +3,11 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.16.1",
+    "version": "2.16.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
-        "vscode": "^1.65.0"
+        "vscode": "^1.65.1"
     },
     "categories": [
         "Programming Languages",
@@ -628,6 +628,12 @@
                 "category": "Tree",
                 "title": "Open Pass File",
                 "description": "Opens pass file associated with tree"
+            },
+            {
+                "command": "nlp.copyContext",
+                "category": "Tree",
+                "title": "Copy Context from Pass Above",
+                "description": "Copies the context from the pass above this one"
             },
             {
                 "command": "nlp.openSelTree",
@@ -1499,6 +1505,11 @@
                 {
                     "when": "resourceExtname == .txxt",
                     "command": "nlp.ruleFired",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .nlp || resourceExtname == .pat",
+                    "command": "nlp.copyContext",
                     "group": "nlp"
                 },
                 {

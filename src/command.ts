@@ -18,6 +18,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openSelTree', this.openSelTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateRule', this.generateRule));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.generateExactRule', this.generateExactRule));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.copyContext', this.copyContext));
 
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.openPassFile', this.openPassFile));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.duplicateLine', this.duplicateLine));
@@ -152,6 +153,13 @@ export class NLPCommands {
         if (vscode.window.activeTextEditor) {
             var logFile = new TreeFile();
             logFile.findSelectedTree(vscode.window.activeTextEditor);
+        }
+    }
+
+    copyContext() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.copyContext(vscode.window.activeTextEditor);
         }
     }
         
