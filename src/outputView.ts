@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { logView } from './logView';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { fileOpRefresh, fileOperation } from './fileOps';
@@ -72,6 +71,7 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.modAdd', (resource) => this.modAdd(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
@@ -91,6 +91,11 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	modAdd(outputItem: OutputItem): void {
+		visualText.mod.addFile(outputItem.uri);
+		vscode.window.showTextDocument(visualText.mod.getUri());
 	}
 
 	video() {

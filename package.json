@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.16.3",
+    "version": "2.17.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -191,6 +191,46 @@
             }
         ],
         "commands": [
+            {
+                "command": "analyzerView.modCreate",
+                "title": "Create Mod File",
+                "icon": {
+                    "light": "resources/light/mod.svg",
+                    "dark": "resources/dark/mod.svg"
+                }
+            },
+            {
+                "command": "sequenceView.modAdd",
+                "title": "Add to Mod File",
+                "icon": {
+                    "light": "resources/light/mod.svg",
+                    "dark": "resources/dark/mod.svg"
+                }
+            },
+            {
+                "command": "kbView.modAdd",
+                "title": "Add to Mod File",
+                "icon": {
+                    "light": "resources/light/mod.svg",
+                    "dark": "resources/dark/mod.svg"
+                }
+            },
+            {
+                "command": "textView.modAdd",
+                "title": "Add to Mod File",
+                "icon": {
+                    "light": "resources/light/mod.svg",
+                    "dark": "resources/dark/mod.svg"
+                }
+            },
+            {
+                "command": "outputView.modAdd",
+                "title": "Add to Mod File",
+                "icon": {
+                    "light": "resources/light/mod.svg",
+                    "dark": "resources/dark/mod.svg"
+                }
+            },
             {
                 "command": "nlp.video",
                 "title": "Help Video VisualText Version 2",
@@ -1875,6 +1915,11 @@
                     "group": "navigation@5"
                 },
                 {
+                    "command": "analyzerView.modCreate",
+                    "when": "view == analyzerView",
+                    "group": "navigation@5"
+                },
+                {
                     "command": "analyzerView.copyAll",
                     "when": "view == analyzerView",
                     "group": "secondary"
@@ -1944,6 +1989,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "outputView.modAdd",
+                    "when": "view == outputView",
+                    "group": "navigation"
+                },
+                {
                     "command": "outputView.deleteOrphans",
                     "when": "view == outputView",
                     "group": "navigation"
@@ -1994,6 +2044,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "kbView.modAdd",
+                    "when": "view == kbView",
+                    "group": "navigation"
+                },
+                {
                     "command": "kbView.deleteFile",
                     "when": "view == kbView",
                     "group": "inline"
@@ -2001,10 +2056,10 @@
                 {
                     "command": "kbView.rename",
                     "when": "view == kbView",
-                    "group": "navigation"
+                    "group": "inline"
                 },
                 {
-                    "command": "kbView.rename",
+                    "command": "kbView.modAdd",
                     "when": "view == kbView",
                     "group": "inline"
                 },
@@ -2059,9 +2114,14 @@
                     "group": "atop@4"
                 },
                 {
-                    "command": "sequenceView.newFolder",
-                    "when": "view == sequenceView && viewItem =~ /file|fileHasLogs/",
+                    "command": "sequenceView.modAdd",
+                    "when": "view == sequenceView",
                     "group": "atop@5"
+                },
+                {
+                    "command": "sequenceView.newFolder",
+                    "when": "view == sequenceView",
+                    "group": "atop@6"
                 },
                 {
                     "command": "sequenceView.openFile",
@@ -2210,6 +2270,11 @@
                 },
                 {
                     "command": "textView.rename",
+                    "when": "view == textView && viewItem =~ /file/",
+                    "group": "file"
+                },
+                {
+                    "command": "textView.modAdd",
                     "when": "view == textView && viewItem =~ /file/",
                     "group": "file"
                 },
@@ -2489,9 +2554,14 @@
                     "group": "inline@1"
                 },
                 {
-                    "command": "outputView.deleteOutput",
+                    "command": "outputView.modAdd",
                     "when": "view == outputView",
                     "group": "inline@2"
+                },
+                {
+                    "command": "outputView.deleteOutput",
+                    "when": "view == outputView",
+                    "group": "inline@3"
                 }
             ]
         },

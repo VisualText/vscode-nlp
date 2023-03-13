@@ -544,6 +544,11 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
+		vscode.commands.registerCommand('sequenceView.modAdd', (seqItem) => this.modAdd(seqItem));
+	}
+
+	modAdd(seqItem: SequenceItem): void {
+		visualText.mod.addFile(seqItem.uri);
 	}
 
 	private toggleActive(seqItem: SequenceItem): void {
