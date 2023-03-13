@@ -116,7 +116,7 @@ export namespace dirfuncs {
     
     export function getDirectories(folder: vscode.Uri): vscode.Uri[] {
         const dirUris: vscode.Uri[] = new Array();
-        if (fs.existsSync(folder.fsPath)) {
+        if (dirfuncs.isDir(folder.fsPath)) {
             const filenames = fs.readdirSync(folder.fsPath);
             for (let filename of filenames) {
                 if (!filename.startsWith('.')) {

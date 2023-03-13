@@ -31,6 +31,10 @@ export class TextFile {
             this.setFile(vscode.Uri.file(filepath),separateLines);
     }
 
+    appendText(text: string) {
+        this.text = this.text.concat(text);
+    }
+
     saveFile() {
         fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
     }

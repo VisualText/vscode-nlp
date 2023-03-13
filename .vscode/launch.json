@@ -12,6 +12,10 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/**/*.ts",
+                "!**/node_modules/**"
             ]
         }
     ]

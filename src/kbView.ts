@@ -210,6 +210,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
 		vscode.commands.registerCommand('kbView.video', () => this.video());
+		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -217,6 +218,10 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	modAdd(kbItem: KBItem): void {
+		visualText.mod.addFile(kbItem.uri);
 	}
 
 	video() {
