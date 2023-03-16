@@ -71,7 +71,6 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('outputView.modAdd', (resource) => this.modAdd(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
@@ -91,11 +90,6 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
-	}
-
-	modAdd(outputItem: OutputItem): void {
-		visualText.mod.addFile(outputItem.uri);
-		vscode.window.showTextDocument(visualText.mod.getUri());
 	}
 
 	video() {

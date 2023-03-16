@@ -6,7 +6,7 @@ import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 
-export enum analyzerItemType { ANALYZER, FOLDER, MODFILE }
+export enum analyzerItemType { ANALYZER, FOLDER }
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -52,7 +52,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			if (dirfuncs.parentHasOtherDirs(analyzerItem.uri)) {
 				analyzerItem.moveDown = true;
 			}
-		} else if (analyzerItem.type == analyzerItemType.ANALYZER && dirfuncs.parentHasOtherDirs(vscode.Uri.file(itemPath))) {
+		} else if (dirfuncs.parentHasOtherDirs(vscode.Uri.file(itemPath))) {
 			analyzerItem.moveDown = true;
 		}
 	}
@@ -74,15 +74,6 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			treeItem.iconPath = {
 				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
-			}
-		} else if (analyzerItem.type === analyzerItemType.MODFILE) {
-			treeItem.contextValue = conVal + 'isMod';
-			treeItem.tooltip = analyzerItem.uri.fsPath;
-			treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Mod File", arguments: [analyzerItem] };
-			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'mod.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'mod.svg'),
 			}
 		} else {
 			treeItem.contextValue = conVal + 'isFolder';
@@ -107,9 +98,6 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 				var hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
 				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
                 keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
-			}
-			else if (entry.uri.fsPath.endsWith('.mod')) {
-				keepers.push({uri: entry.uri, type: analyzerItemType.MODFILE, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false});
 			}
 		}
 
@@ -155,7 +143,6 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 		vscode.commands.registerCommand('analyzerView.video', () => this.video());
-		vscode.commands.registerCommand('analyzerView.modCreate', () => this.modCreate());
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -167,20 +154,6 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
-	}
-
-	modCreate() {
-		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
-				if (newname) {
-					var dirPath = visualText.analyzer.getAnalyzerDirectory().fsPath;
-					var filepath = path.join(path.dirname(dirPath),newname+'.mod');
-					dirfuncs.writeFile(filepath,' ');
-					visualText.setModFile(vscode.Uri.file(filepath));
-					vscode.commands.executeCommand('analyzerView.refreshAll');
-				}
-			});
-		}
 	}
 
 	video() {
@@ -432,17 +405,12 @@ export class AnalyzerView {
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
-		if (analyzerItem.type == analyzerItemType.MODFILE) {
-			visualText.mod.setFile(analyzerItem.uri);
-			vscode.window.showTextDocument(analyzerItem.uri);		
+		visualText.colorizeAnalyzer();
+		if (analyzerItem.type == analyzerItemType.ANALYZER) {
+			visualText.loadAnalyzer(analyzerItem.uri);
+			this.folderUri = undefined;
 		} else {
-			visualText.colorizeAnalyzer();
-			if (analyzerItem.type == analyzerItemType.ANALYZER) {
-				visualText.loadAnalyzer(analyzerItem.uri);
-				this.folderUri = undefined;
-			} else {
-				this.folderUri = analyzerItem.uri;
-			}
+			this.folderUri = analyzerItem.uri;
 		}
 	}
 
@@ -450,7 +418,7 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analyzer?');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' Analyzer');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer'});
 

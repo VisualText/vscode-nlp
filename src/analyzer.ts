@@ -60,6 +60,21 @@ export class Analyzer {
             }
         }
     }
+
+	modCreate(uri: vscode.Uri, addFlag: boolean) {
+        vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
+            if (newname) {
+                var dirPath = uri.fsPath
+                var filepath = path.join(dirPath,newname+'.mod');
+                dirfuncs.writeFile(filepath,' ');
+                visualText.setModFile(vscode.Uri.file(filepath));
+                if (addFlag) {
+                    visualText.mod.addFile(uri);
+                }
+                vscode.commands.executeCommand('kbView.refreshAll');
+            }
+        });
+	}
     
     hasText(): boolean {
         return this.currentTextFile.fsPath.length ? true : false;

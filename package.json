@@ -192,7 +192,15 @@
         ],
         "commands": [
             {
-                "command": "analyzerView.modCreate",
+                "command": "kbView.modLoad",
+                "title": "Load Mod File",
+                "icon": {
+                    "light": "resources/light/load.svg",
+                    "dark": "resources/dark/load.svg"
+                }
+            },
+            {
+                "command": "kbView.modCreate",
                 "title": "Create Mod File",
                 "icon": {
                     "light": "resources/light/mod.svg",
@@ -217,14 +225,6 @@
             },
             {
                 "command": "textView.modAdd",
-                "title": "Add to Mod File",
-                "icon": {
-                    "light": "resources/light/mod.svg",
-                    "dark": "resources/dark/mod.svg"
-                }
-            },
-            {
-                "command": "outputView.modAdd",
                 "title": "Add to Mod File",
                 "icon": {
                     "light": "resources/light/mod.svg",
@@ -1715,9 +1715,14 @@
                     "group": "navigation@4"
                 },
                 {
-                    "command": "kbView.video",
+                    "command": "kbView.modCreate",
                     "when": "view == kbView",
                     "group": "navigation@5"
+                },
+                {
+                    "command": "kbView.video",
+                    "when": "view == kbView",
+                    "group": "navigation@6"
                 },
                 {
                     "command": "textView.deleteAnalyzerLogs",
@@ -1915,11 +1920,6 @@
                     "group": "navigation@5"
                 },
                 {
-                    "command": "analyzerView.modCreate",
-                    "when": "view == analyzerView",
-                    "group": "navigation@5"
-                },
-                {
                     "command": "analyzerView.copyAll",
                     "when": "view == analyzerView",
                     "group": "secondary"
@@ -1989,11 +1989,6 @@
             ],
             "view/item/context": [
                 {
-                    "command": "outputView.modAdd",
-                    "when": "view == outputView",
-                    "group": "navigation"
-                },
-                {
                     "command": "outputView.deleteOrphans",
                     "when": "view == outputView",
                     "group": "navigation"
@@ -2045,33 +2040,43 @@
                 },
                 {
                     "command": "kbView.modAdd",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem =~ /.*nomo.*/",
                     "group": "navigation"
                 },
                 {
-                    "command": "kbView.deleteFile",
-                    "when": "view == kbView",
-                    "group": "inline"
-                },
-                {
-                    "command": "kbView.rename",
-                    "when": "view == kbView",
-                    "group": "inline"
-                },
-                {
-                    "command": "kbView.modAdd",
-                    "when": "view == kbView",
-                    "group": "inline"
-                },
-                {
-                    "command": "kbView.toggleActive",
-                    "when": "view == kbView && viewItem == toggle",
-                    "group": "inline"
+                    "command": "kbView.modLoad",
+                    "when": "view == kbView && viewItem =~ /.*mod.*/",
+                    "group": "navigation"
                 },
                 {
                     "command": "kbView.copyToAnalyzer",
                     "when": "view == kbView",
-                    "group": "inline"
+                    "group": "inline@0"
+                },
+                {
+                    "command": "kbView.modAdd",
+                    "when": "view == kbView && viewItem =~ /.*nomo.*/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "kbView.modLoad",
+                    "when": "view == kbView && viewItem =~ /.*mod.*/",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "kbView.rename",
+                    "when": "view == kbView",
+                    "group": "inline@3"
+                },
+                {
+                    "command": "kbView.deleteFile",
+                    "when": "view == kbView",
+                    "group": "inline@4"
+                },
+                {
+                    "command": "kbView.toggleActive",
+                    "when": "view == kbView && viewItem =~ /.*toggle.*/",
+                    "group": "inline@5"
                 },
                 {
                     "command": "kbView.newKBBFile",
@@ -2552,11 +2557,6 @@
                     "command": "outputView.copytoKB",
                     "when": "view == outputView",
                     "group": "inline@1"
-                },
-                {
-                    "command": "outputView.modAdd",
-                    "when": "view == outputView",
-                    "group": "inline@2"
                 },
                 {
                     "command": "outputView.deleteOutput",

@@ -5,7 +5,7 @@ import { visualText } from './visualText';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 
-export enum logLineType { INFO, UPDATER, FILE_OP, ANALYER_OUTPUT, LOGFILE, SEQUENCE, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR }
+export enum logLineType { UNKNOWN, INFO, UPDATER, FILE_OP, ANALYER_OUTPUT, LOGFILE, SEQUENCE, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR, WARNING, FAILURE }
 
 interface LogItem {
 	uri?: vscode.Uri | undefined;
@@ -186,12 +186,12 @@ export class LogView {
 		return this.logs;
 	}
 
-	private parseLogLine(line: string, type: logLineType, uri: vscode.Uri | undefined): LogItem {
+	private parseLogLine(line: string, type: logLineType=logLineType.UNKNOWN, uri: vscode.Uri | undefined): LogItem {
 		var passNum = 0;
 		var lineNum = -1;
 		var icon = this.typeIcon(type);
 		var firstTwoNumbers = false;
-		if (uri)
+		if (uri && type == logLineType.UNKNOWN)
 			type = logLineType.OPEN_PATH;
 
 		var lineTrimmed = line.trim();
@@ -236,7 +236,7 @@ export class LogView {
 				}
 			}
 		}
-		if (line.indexOf("Warning") > 0) {
+		if (line.indexOf("Warning") > 0 || type == logLineType.WARNING) {
 			icon = 'yield.svg'; 
 		}
 		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
@@ -314,6 +314,10 @@ export class LogView {
 					vscode.window.showTextDocument(vscode.Uri.file(filepath));
 				});
 				break;
+			default:
+				if (logItem.uri) {
+					vscode.window.showTextDocument(logItem.uri);
+				}
 		}
 	}
 

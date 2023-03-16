@@ -81,6 +81,7 @@ export class VisualText {
     public fileOps = new FileOps();
     public nlp = new NLPFile();
     public mod = new ModFile();
+    public modFiles: vscode.Uri[] = new Array();
     public version: string = '';
     public engineVersion: string = '';
     public exeEngineVersion: string = '';
@@ -135,7 +136,7 @@ export class VisualText {
     }
 
     setModFile(filePath: vscode.Uri) {
-        this.modFile = filePath;
+        this.mod.setFile(filePath);
     }
 
     startUpdater(preInfoFlag: boolean = true) {
@@ -1265,6 +1266,8 @@ export class VisualText {
             icon = 'symbol-keyword.svg';
         } else if (filename.endsWith('.dict')) {
             icon = 'dict.svg';
+        } else if (filename.endsWith('.mod')) {
+            icon = 'mod.svg';
         }
 
         return icon;
@@ -1305,6 +1308,15 @@ export class VisualText {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
                 this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
             }
+        }
+        return items;
+    }
+
+    modFileList(): vscode.QuickPickItem[] {
+        let items: vscode.QuickPickItem[] = [];
+        for (let uri of this.modFiles) {
+            let basename = path.basename(uri.fsPath);
+            items.push({label: basename, description: uri.fsPath});
         }
         return items;
     }
