@@ -274,9 +274,8 @@ export class SequenceFile extends TextFile {
 		}
 	}
 	
-	insertPass(seqItem: SequenceItem, newpass: vscode.Uri) {
+	insertPass(row: number, newpass: vscode.Uri) {
 		if (this.passItems.length) {
-			var row = seqItem.passNum;
 
 			if (row >= 0) {
 				var passes = new Array();
@@ -445,7 +444,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	passFileName(passName: string): string {
-		return passName.concat('.pat');
+		return passName.concat('.nlp');
 	}
 
 	getFolderPasses(type: string, name: string, includeStubs: boolean = false): PassItem[]  {
@@ -657,6 +656,16 @@ export class SequenceFile extends TextFile {
 		var found = false;
 		for (let passItem of this.passItems) {
 			if (type.localeCompare(passItem.typeStr) == 0 && name.localeCompare(passItem.name) == 0) {
+				return passItem;
+			}
+		}
+		return new PassItem();
+	}
+
+	findPassFromUri(uri: vscode.Uri): PassItem {
+		var found = false;
+		for (let passItem of this.passItems) {
+			if (uri.fsPath == passItem.uri.fsPath) {
 				return passItem;
 			}
 		}

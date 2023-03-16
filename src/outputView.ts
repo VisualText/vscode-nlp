@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { logView } from './logView';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { fileOpRefresh, fileOperation } from './fileOps';

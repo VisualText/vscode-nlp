@@ -80,7 +80,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+				light: path.join(__filename, '..', '..', 'resources', 'light', 'folder.svg'),
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
 			}
 		}
@@ -418,7 +418,7 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' analyzer?');
+			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' Analyzer');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete analyzer'});
 

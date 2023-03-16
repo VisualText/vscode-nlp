@@ -31,6 +31,10 @@ export class TextFile {
             this.setFile(vscode.Uri.file(filepath),separateLines);
     }
 
+    appendText(text: string) {
+        this.text = this.text.concat(text);
+    }
+
     saveFile() {
         fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
     }
@@ -174,17 +178,21 @@ export class TextFile {
     setFile(file: vscode.Uri, separateLines: boolean = true): boolean {
         this.exists = false;
         this.clear();
+        this.uri = file;
+        this.filepath = file.fsPath;
+        this.setFileType(this.filepath);
 
         if (file.fsPath.length && fs.existsSync(file.fsPath)) {
-            this.uri = file;
-            this.filepath = file.fsPath;
             this.text = fs.readFileSync(this.filepath, 'utf8');
-            this.setFileType(this.filepath);
             if (this.text.length)
                 this.separation(separateLines);
             this.exists = true;
         }
         return this.exists;
+    }
+
+    isEmpty(): boolean {
+        return this.filepath.length > 0 ? false : true;
     }
 
     setText(text: string, separateLines: boolean = true) {

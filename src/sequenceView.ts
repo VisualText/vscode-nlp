@@ -230,7 +230,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var filepath = path.join(visualText.getVisualTextDirectory('spec'),dir,filename);
 		var newfile: vscode.Uri = vscode.Uri.file(filepath);
 		var seqFile = visualText.analyzer.seqFile;
-		seqFile.insertPass(seqItem,newfile);
+		seqFile.insertPass(seqItem.passNum,newfile);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
@@ -254,7 +254,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				for (let select of selection.reverse()) {
 					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
-					seqFile.insertPass(seqItem,newfile);
+					seqFile.insertPass(seqItem.passNum,newfile);
 				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
@@ -281,7 +281,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				for (let select of selections.reverse()) {
 					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
-					seqFile.insertPass(seqItem,newfile);
+					seqFile.insertPass(seqItem.passNum,newfile);
 				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
@@ -313,13 +313,13 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 							for (let file of files) {
 								let toUri = vscode.Uri.file(path.join(fromDir,path.basename(file.fsPath)));
 								let fromUri = vscode.Uri.file(path.join(uri.fsPath,path.basename(file.fsPath)));
-								seqFile.insertPass(seqItem,toUri);
+								seqFile.insertPass(seqItem.passNum,toUri);
 								visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 								found = true;
 							}
 						} else {
 							let toUri = vscode.Uri.file(path.join(fromDir,path.basename(uri.fsPath)));
-							seqFile.insertPass(seqItem,toUri);
+							seqFile.insertPass(seqItem.passNum,toUri);
 							visualText.fileOps.addFileOperation(uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 							found = true;	
 						}
@@ -544,6 +544,11 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
+		vscode.commands.registerCommand('sequenceView.modAdd', (seqItem) => this.modAdd(seqItem));
+	}
+
+	modAdd(seqItem: SequenceItem): void {
+		visualText.mod.addFile(seqItem.uri);
 	}
 
 	private toggleActive(seqItem: SequenceItem): void {
@@ -576,7 +581,7 @@ export class SequenceView {
 					return;
 				if (selection.description) {
 					var newfile: vscode.Uri = vscode.Uri.file(selection.description);
-					visualText.analyzer.seqFile.insertPass(seqItem,newfile);
+					visualText.analyzer.seqFile.insertPass(seqItem.passNum,newfile);
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}	
 			});

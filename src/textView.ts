@@ -259,6 +259,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.moveToFolder', (textItem) => this.moveToFolder(textItem));
 		vscode.commands.registerCommand('textView.moveUp', (textItem) => this.moveUp(textItem));
 		vscode.commands.registerCommand('textView.copyToAnalyzer', (textItem) => this.copyToAnalyzer(textItem));
+		vscode.commands.registerCommand('textView.modAdd', (textItem) => this.modAdd(textItem));
 
 		this.folderUri = undefined;
     }
@@ -268,6 +269,10 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	modAdd(textItem: TextItem): void {
+		visualText.mod.addFile(textItem.uri);
 	}
 
 	copyToAnalyzer(textItem: TextItem) {

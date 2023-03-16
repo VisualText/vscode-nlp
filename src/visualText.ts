@@ -9,6 +9,7 @@ import { nlpStatusBar } from './status';
 import { logView,logLineType } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
+import { ModFile } from './modfile';
 import { SequenceFile } from './sequence';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
@@ -79,6 +80,8 @@ export class VisualText {
     public analyzer = new Analyzer();
     public fileOps = new FileOps();
     public nlp = new NLPFile();
+    public mod = new ModFile();
+    public modFiles: vscode.Uri[] = new Array();
     public version: string = '';
     public engineVersion: string = '';
     public exeEngineVersion: string = '';
@@ -103,6 +106,7 @@ export class VisualText {
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
     private currentAnalyzer: vscode.Uri = vscode.Uri.file('');
     private workspaceFold: vscode.Uri = vscode.Uri.file('');
+    private modFile: vscode.Uri = vscode.Uri.file('');
 
     private extensionItems: ExtensionItem[] = new Array();
     private latestExtIndex: number = 0;
@@ -129,6 +133,10 @@ export class VisualText {
             visualText.initSettings();
         }
         return visualText;
+    }
+
+    setModFile(filePath: vscode.Uri) {
+        this.mod.setFile(filePath);
     }
 
     startUpdater(preInfoFlag: boolean = true) {
@@ -1258,6 +1266,8 @@ export class VisualText {
             icon = 'symbol-keyword.svg';
         } else if (filename.endsWith('.dict')) {
             icon = 'dict.svg';
+        } else if (filename.endsWith('.mod')) {
+            icon = 'mod.svg';
         }
 
         return icon;
@@ -1298,6 +1308,15 @@ export class VisualText {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
                 this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
             }
+        }
+        return items;
+    }
+
+    modFileList(): vscode.QuickPickItem[] {
+        let items: vscode.QuickPickItem[] = [];
+        for (let uri of this.modFiles) {
+            let basename = path.basename(uri.fsPath);
+            items.push({label: basename, description: uri.fsPath});
         }
         return items;
     }

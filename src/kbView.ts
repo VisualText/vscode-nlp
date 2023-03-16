@@ -40,6 +40,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
         let name = path.basename(KBItem.uri.fsPath);
         treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [KBItem], };
         treeItem.contextValue = 'kb';
+
 		var icon = visualText.fileIconFromExt(KBItem.uri.fsPath);
 
 		treeItem.iconPath = {
@@ -50,16 +51,25 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
 			treeItem.contextValue = 'toggle';
 
+		if (!name.endsWith('.mod'))
+			treeItem.contextValue = treeItem.contextValue + 'nomo';
+		else
+			treeItem.contextValue = treeItem.contextValue + 'mod';
+
 		return treeItem;
 	}
 
 	getKBFiles(dir: vscode.Uri): KBItem[] {
 		var files = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
+		visualText.mod.clear();
+		visualText.modFiles = [];
 
 		for (let entry of entries) {
 			if (!(entry.type == vscode.FileType.Directory)) {
 				files.push({uri: entry.uri, type: entry.type});
+				if (entry.uri.fsPath.endsWith('.mod'))
+					visualText.modFiles.push(entry.uri);
 			}
 		}
 
@@ -210,6 +220,9 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
 		vscode.commands.registerCommand('kbView.video', () => this.video());
+		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
+		vscode.commands.registerCommand('kbView.modCreate', (KBItem) => this.modCreate(KBItem));
+		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -217,6 +230,22 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	modLoad(kbItem: KBItem) {
+		visualText.mod.load(kbItem.uri);
+	}
+
+	modCreate(kbItem: KBItem) {
+		var uri = visualText.analyzer.getKBDirectory();
+		if (typeof kbItem !== undefined) {
+			uri = kbItem.uri;
+		}
+		visualText.analyzer.modCreate(uri, false);
+	}
+
+	modAdd(kbItem: KBItem): void {
+		visualText.mod.addFile(kbItem.uri);
 	}
 
 	video() {
@@ -531,8 +560,10 @@ export class KBView {
 		}
 	}
 
-	private openKBFile(KBItem: KBItem): void {
-		this.openFile(KBItem.uri);
+	private openKBFile(kbItem: KBItem): void {
+		if (kbItem.uri.fsPath.endsWith('.mod'))
+			visualText.setModFile(kbItem.uri);
+		this.openFile(kbItem.uri);
 	}
 
 	private openFile(uri: vscode.Uri): void {
@@ -543,11 +574,11 @@ export class KBView {
 		vscode.commands.executeCommand('status.update');
 	}
 
-	private deleteFile(KBItem: KBItem): void {
+	private deleteFile(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			var filename = path.basename(KBItem.uri.fsPath);
+			var filename = path.basename(kbItem.uri.fsPath);
 			deleteDescr = deleteDescr.concat('Delete \'',filename,'\'?');
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete '+filename });
@@ -555,19 +586,19 @@ export class KBView {
 			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(KBItem.uri,KBItem.uri,[fileOpRefresh.KB],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(kbItem.uri,kbItem.uri,[fileOpRefresh.KB],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
 	}
 	
-	private newKBBFile(KBItem: KBItem, top: boolean) {
+	private newKBBFile(kbItem: KBItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter KBB file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
-					if (KBItem && !top)
-						dirPath = dirfuncs.getDirPath(KBItem.uri.fsPath);
+					if (kbItem && !top)
+						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
 					var filepath = path.join(dirPath,newname+'.kbb');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
@@ -579,13 +610,13 @@ export class KBView {
 		}
 	}
 
-	private newKBFile(KBItem: KBItem, top: boolean) {
+	private newKBFile(kbItem: KBItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter KB file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
-					if (KBItem && !top)
-						dirPath = dirfuncs.getDirPath(KBItem.uri.fsPath);
+					if (kbItem && !top)
+						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
 					var filepath = path.join(dirPath,newname+'.kb');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
@@ -597,13 +628,13 @@ export class KBView {
 		}
 	}
 
-	private newDictFile(KBItem: KBItem, top: boolean) {
+	private newDictFile(kbItem: KBItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter Dictionary file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
-					if (KBItem && !top)
-						dirPath = dirfuncs.getDirPath(KBItem.uri.fsPath);
+					if (kbItem && !top)
+						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
 					var filepath = path.join(dirPath,newname+'.dict');
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
