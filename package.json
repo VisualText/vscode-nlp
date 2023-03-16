@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.17.0",
+    "version": "2.17.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1770,22 +1770,22 @@
                     "group": "navigation@0"
                 },
                 {
-                    "command": "textView.openText",
+                    "command": "sequenceView.finalTree",
                     "when": "view == sequenceView",
                     "group": "navigation@1"
                 },
                 {
-                    "command": "sequenceView.finalTree",
+                    "command": "sequenceView.search",
                     "when": "view == sequenceView",
                     "group": "navigation@2"
                 },
                 {
-                    "command": "sequenceView.search",
+                    "command": "sequenceView.refreshAll",
                     "when": "view == sequenceView",
                     "group": "navigation@3"
                 },
                 {
-                    "command": "sequenceView.refreshAll",
+                    "command": "sequenceView.modAdd",
                     "when": "view == sequenceView",
                     "group": "navigation@4"
                 },
@@ -2119,14 +2119,9 @@
                     "group": "atop@4"
                 },
                 {
-                    "command": "sequenceView.modAdd",
-                    "when": "view == sequenceView",
-                    "group": "atop@5"
-                },
-                {
                     "command": "sequenceView.newFolder",
                     "when": "view == sequenceView",
-                    "group": "atop@6"
+                    "group": "atop@5"
                 },
                 {
                     "command": "sequenceView.openFile",
@@ -2561,7 +2556,7 @@
                 {
                     "command": "outputView.deleteOutput",
                     "when": "view == outputView",
-                    "group": "inline@3"
+                    "group": "inline@2"
                 }
             ]
         },

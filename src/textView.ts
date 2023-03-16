@@ -3,6 +3,7 @@ import * as path from 'path';
 import { visualText, closeFileIfOpen } from './visualText';
 import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
+import { modType } from './modFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 import { nlpStatusBar, DevMode, FiredMode } from './status';
@@ -272,7 +273,7 @@ export class TextView {
 	}
 
 	modAdd(textItem: TextItem): void {
-		visualText.mod.addFile(textItem.uri);
+		visualText.mod.addFile(textItem.uri,true);
 	}
 
 	copyToAnalyzer(textItem: TextItem) {

@@ -139,6 +139,10 @@ export class VisualText {
         this.mod.setFile(filePath);
     }
 
+    modExists() {
+        return this.mod.fileExists();
+    }
+
     startUpdater(preInfoFlag: boolean = true) {
         if (this.updaterID == 0) {
             this.platform = os.platform();
@@ -1292,15 +1296,7 @@ export class VisualText {
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
                 if (specFlag) {
-                    let specDir = path.join(dir.fsPath,'spec');
-                    seq.setSpecDir(specDir);
-                    seq.getPassFiles(specDir);
-                    items.push({label: indent + basename, description: specDir, });
-                    for (let pass of seq.getPassItems()) {
-                        let uri = seq.passItemUri(pass);
-                        if (fs.existsSync(uri.fsPath))
-                            items.push({label: indent + '-    ' + path.basename(uri.fsPath), description: uri.fsPath});
-                    }
+                    seq.choicePasses(dir.fsPath,items);
                 } else {
                     items.push({label: indent + basename, description: dir.fsPath, });
                 }

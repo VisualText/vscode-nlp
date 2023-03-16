@@ -7,12 +7,13 @@ import { TextFile, nlpFileType } from './textFile';
 import { NLPFile } from './nlp';
 import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
+import { modType } from './modFile';
 import { fileOpRefresh,fileOperation } from './fileOps';
 import { findView } from './findView';
 import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView, logLineType } from './logView';
-import { analyzer } from './analyzer';
+import { SequenceFile } from './sequence';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -544,11 +545,28 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.explore', () => this.explore());
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
-		vscode.commands.registerCommand('sequenceView.modAdd', (seqItem) => this.modAdd(seqItem));
+		vscode.commands.registerCommand('sequenceView.modAdd', () => this.modAdd());
 	}
 
-	modAdd(seqItem: SequenceItem): void {
-		visualText.mod.addFile(seqItem.uri);
+	modAdd() {
+		visualText.mod.getMod().then(retVal => {
+			if (!retVal)
+				return;
+			let seq = new SequenceFile;
+			let items: vscode.QuickPickItem[] = [];
+			seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items);
+			vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: true, placeHolder: 'Choose pass to insert after'}).then(selections => {
+				if (!selections) {
+					return;
+				} else {
+					for (let selection of selections) {
+						if (selection.description)
+							visualText.mod.appendFile(vscode.Uri.file(selection.description));
+					}
+					vscode.window.showTextDocument(visualText.mod.getUri());	
+				}
+			});	
+		});
 	}
 
 	private toggleActive(seqItem: SequenceItem): void {

@@ -24,9 +24,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 	constructor() {}
 
-	async getChildren(KBItem?: KBItem): Promise<KBItem[]> {
-		if (KBItem) {
-			return this.getKBFiles(KBItem.uri); 
+	async getChildren(kbItem?: KBItem): Promise<KBItem[]> {
+		if (kbItem) {
+			return this.getKBFiles(kbItem.uri); 
 		}
 		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers() && visualText.analyzer.isLoaded()) {
 			return this.getKBFiles(visualText.analyzer.getKBDirectory());  
@@ -34,14 +34,14 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		return [];
 	}
 
-	getTreeItem(KBItem: KBItem): vscode.TreeItem {
-		const treeItem = new vscode.TreeItem(KBItem.uri, KBItem.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+	getTreeItem(kbItem: KBItem): vscode.TreeItem {
+		const treeItem = new vscode.TreeItem(kbItem.uri, kbItem.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
 
-        let name = path.basename(KBItem.uri.fsPath);
-        treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [KBItem], };
+        let name = path.basename(kbItem.uri.fsPath);
+        treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
         treeItem.contextValue = 'kb';
 
-		var icon = visualText.fileIconFromExt(KBItem.uri.fsPath);
+		var icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
 
 		treeItem.iconPath = {
 			light: path.join(__filename, '..', '..', 'resources', 'light', icon),
@@ -51,7 +51,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
 			treeItem.contextValue = 'toggle';
 
-		if (!name.endsWith('.mod'))
+		if (name.endsWith('.kb'))
+			treeItem.contextValue = 'old';
+		else if (!name.endsWith('.mod'))
 			treeItem.contextValue = treeItem.contextValue + 'nomo';
 		else
 			treeItem.contextValue = treeItem.contextValue + 'mod';
@@ -64,12 +66,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 		visualText.mod.clear();
 		visualText.modFiles = [];
+		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.mod', '.kb'];
 
-		for (let entry of entries) {
-			if (!(entry.type == vscode.FileType.Directory)) {
-				files.push({uri: entry.uri, type: entry.type});
-				if (entry.uri.fsPath.endsWith('.mod'))
-					visualText.modFiles.push(entry.uri);
+		for (let ext of order) {
+			for (let entry of entries) {
+				if (!(entry.type == vscode.FileType.Directory) && entry.uri.fsPath.endsWith(ext)) {
+					files.push({uri: entry.uri, type: entry.type});
+					if (entry.uri.fsPath.endsWith('.mod'))
+						visualText.modFiles.push(entry.uri);
+				}
 			}
 		}
 
@@ -85,7 +90,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		return false;
 	}
 
-	existingFile(KBItem: KBItem) {
+	existingFile(kbItem: KBItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: true,
@@ -106,8 +111,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				for (let sel of selections) {
 					var filename = path.basename(sel.fsPath);
 					var dir = visualText.analyzer.getInputDirectory().fsPath;
-					if (KBItem) {
-						dir = path.dirname(KBItem.uri.fsPath);
+					if (kbItem) {
+						dir = path.dirname(kbItem.uri.fsPath);
 					} else if (visualText.analyzer.getTextPath()) {
 						var textPath = visualText.analyzer.getTextPath().fsPath;
 						if (fs.existsSync(textPath))
@@ -123,7 +128,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		}
 	}
 
-	existingFolder(KBItem: KBItem) {
+	existingFolder(kbItem: KBItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			const options: vscode.OpenDialogOptions = {
 				canSelectMany: true,
@@ -140,8 +145,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				for (let sel of selections) {
 					var dirname = path.basename(sel.fsPath);
 					var dir = visualText.analyzer.getInputDirectory().fsPath;
-					if (KBItem) {
-						dir = path.dirname(KBItem.uri.fsPath);
+					if (kbItem) {
+						dir = path.dirname(kbItem.uri.fsPath);
 					}
 					var newPath = vscode.Uri.file(path.join(dir,dirname));
 					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
@@ -151,18 +156,18 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		}
 	}
 	
-	rename(KBItem: KBItem): void {
+	rename(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: path.basename(KBItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
+			vscode.window.showInputBox({ value: path.basename(kbItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
 				if (newname) {
-					var original = KBItem.uri;
+					var original = kbItem.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(KBItem.uri.fsPath);
-					var newfile = vscode.Uri.file(path.join(path.dirname(KBItem.uri.fsPath),newname));
+						newname = newname+path.extname(kbItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname));
 					dirfuncs.rename(original.fsPath,newfile.fsPath);	
 					var logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
 					if (dirfuncs.isDir(logFolderOrig.fsPath)) {
-						var logFolderNew = vscode.Uri.file(path.join(path.dirname(KBItem.uri.fsPath),newname + visualText.LOG_SUFFIX));
+						var logFolderNew = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname + visualText.LOG_SUFFIX));
 						dirfuncs.rename(logFolderOrig.fsPath,logFolderNew.fsPath);
 					}
 					vscode.commands.executeCommand('kbView.refreshAll');	
@@ -171,12 +176,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		}
 	}
 		
-	renameDir(KBItem: KBItem): void {
+	renameDir(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: path.basename(KBItem.uri.fsPath), prompt: 'Enter new name for directory' }).then(newname => {
+			vscode.window.showInputBox({ value: path.basename(kbItem.uri.fsPath), prompt: 'Enter new name for directory' }).then(newname => {
 				if (newname) {
-					var original = KBItem.uri;
-					var newfile = vscode.Uri.file(path.join(path.dirname(KBItem.uri.fsPath),newname));
+					var original = kbItem.uri;
+					var newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname));
 					dirfuncs.rename(original.fsPath,newfile.fsPath);						
 					vscode.commands.executeCommand('kbView.refreshAll');	
 				}
@@ -221,7 +226,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
 		vscode.commands.registerCommand('kbView.video', () => this.video());
 		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
-		vscode.commands.registerCommand('kbView.modCreate', (KBItem) => this.modCreate(KBItem));
+		vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate());
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
     }
     
@@ -236,16 +241,13 @@ export class KBView {
 		visualText.mod.load(kbItem.uri);
 	}
 
-	modCreate(kbItem: KBItem) {
+	modCreate() {
 		var uri = visualText.analyzer.getKBDirectory();
-		if (typeof kbItem !== undefined) {
-			uri = kbItem.uri;
-		}
-		visualText.analyzer.modCreate(uri, false);
+		visualText.analyzer.modCreate(uri);
 	}
 
 	modAdd(kbItem: KBItem): void {
-		visualText.mod.addFile(kbItem.uri);
+		visualText.mod.addFile(kbItem.uri,true);
 	}
 
 	video() {

@@ -671,4 +671,14 @@ export class SequenceFile extends TextFile {
 		}
 		return new PassItem();
 	}
+
+	choicePasses(specDir: string, items: vscode.QuickPickItem[]) {
+		this.setSpecDir(specDir);
+		this.getPassFiles(specDir);
+		for (let pass of this.getPassItems()) {
+			let uri = this.passItemUri(pass);
+			if (fs.existsSync(uri.fsPath))
+				items.push({label: path.basename(uri.fsPath), description: uri.fsPath});
+		}
+	}
 }
