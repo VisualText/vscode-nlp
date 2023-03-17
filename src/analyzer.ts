@@ -61,17 +61,20 @@ export class Analyzer {
         }
     }
 
-	modCreate(uri: vscode.Uri, addFlag: boolean) {
-        vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
+	async modCreate(uri: vscode.Uri) {
+        await vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
             if (newname) {
-                var dirPath = uri.fsPath
-                var filepath = path.join(dirPath,newname+'.mod');
-                dirfuncs.writeFile(filepath,' ');
-                visualText.setModFile(vscode.Uri.file(filepath));
-                if (addFlag) {
-                    visualText.mod.addFile(uri);
+                var filepath = path.join(uri.fsPath,newname+'.mod');
+                if (fs.existsSync(filepath)) {
+                    vscode.window.showWarningMessage("Mod file: " + filepath + ' already exists');
+                    return false;
                 }
+                var modUri = vscode.Uri.file(filepath);
+                visualText.modFiles.push(modUri);
+                dirfuncs.writeFile(filepath,' ');
+                visualText.setModFile(modUri);
                 vscode.commands.executeCommand('kbView.refreshAll');
+                return true;
             }
         });
 	}

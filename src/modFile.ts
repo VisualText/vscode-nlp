@@ -31,30 +31,42 @@ export class ModFile extends TextFile {
 		super();
 	}
 
-    addFile(uri: vscode.Uri) {
+    async getMod(): Promise<boolean> {
+        var retVal = false;
         if (visualText.modFiles.length == 0) {
             let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
 			items.push({label: 'Create', description: 'Create a new mod file'});
-			items.push({label: 'Abort', description: 'Do not ask to create a mod file' });
+			items.push({label: 'Abort', description: 'Abort this attempt' });
 
-			vscode.window.showQuickPick(items, {title: 'Mod File', canPickMany: false, placeHolder: 'Choose create or abort'}).then(selection => {
-				if (!selection || selection.label == 'Abort')
-					return;
-				visualText.analyzer.modCreate(uri,true);
+			await vscode.window.showQuickPick(items, {title: 'Mod File', canPickMany: false, placeHolder: 'Choose create or abort'}).then(selection => {
+				if (typeof selection === undefined || !selection || selection.label == 'Abort')
+                    retVal = false;
+                else {
+                    visualText.analyzer.modCreate(visualText.analyzer.getKBDirectory());
+                    retVal = true;                    
+                }
 			});
         } else {
             let items: vscode.QuickPickItem[] = visualText.modFileList();
-
-            vscode.window.showQuickPick(items, {title: 'Add to Mod File', canPickMany: false, placeHolder: 'choose mod file'}).then(selection => {
+            await vscode.window.showQuickPick(items, {title: 'Add to Mod File', canPickMany: false, placeHolder: 'choose mod file'}).then(selection => {
                 if (!selection || !selection.description)
-                    return;
+                    return false;
                 let modUri = vscode.Uri.file(selection.description);
                 visualText.setModFile(modUri);
-                visualText.mod.appendFile(uri);
-                vscode.window.showTextDocument(this.getUri());
+                retVal = true;
             });
         }
+        return retVal;
+    }
+
+    addFile(uri: vscode.Uri, showFile: boolean=false) {
+        visualText.mod.getMod().then(retVal => {
+			if (retVal) {
+                visualText.mod.appendFile(uri);
+                if (showFile)
+                    vscode.window.showTextDocument(this.getUri());                
+            }
+		});
     }
 
     async load(filePath: vscode.Uri) {
@@ -180,18 +192,11 @@ export class ModFile extends TextFile {
                 var tokens = line.split(/[\<\t\s\>]/);
                 var relFilePath = tokens[2];
                 filepath = path.join(visualText.getAnalyzerDir().fsPath,relFilePath);
-                if (filepath.includes('\\spec\\')) {
+                if (filepath.includes(this.MODFILE_SPEC)) {
                     let seq = new SequenceFile;
                     let items: vscode.QuickPickItem[] = [];
-                    let specDir = visualText.analyzer.getSpecDirectory().fsPath;
-                    seq.setSpecDir(specDir);
-                    seq.getPassFiles(specDir);
-                    for (let pass of seq.getPassItems()) {
-                        let uri = seq.passItemUri(pass);
-                        if (fs.existsSync(uri.fsPath))
-                            items.push({label: path.basename(uri.fsPath), description: uri.fsPath});
-                    }
-                    const selectedItem = await vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: false, placeHolder: 'Choose pass to insert after'}).then(selection => {
+                    seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items);
+                    await vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: false, placeHolder: 'Choose pass to insert after'}).then(selection => {
                         if (typeof selection === undefined || !selection) {
                             this.seqInsertPoint = 'abort';
                         } else {
