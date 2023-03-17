@@ -53,7 +53,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 		if (name.endsWith('.kb'))
 			treeItem.contextValue = 'old';
-		else if (!name.endsWith('.mod'))
+		else if (!name.endsWith('.nlm'))
 			treeItem.contextValue = treeItem.contextValue + 'nomo';
 		else
 			treeItem.contextValue = treeItem.contextValue + 'mod';
@@ -66,13 +66,13 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 		visualText.mod.clear();
 		visualText.modFiles = [];
-		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.mod', '.kb'];
+		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.kb'];
 
 		for (let ext of order) {
 			for (let entry of entries) {
-				if (!(entry.type == vscode.FileType.Directory) && entry.uri.fsPath.endsWith(ext)) {
+				if (entry.type != vscode.FileType.Directory && entry.uri.fsPath.endsWith(ext)) {
 					files.push({uri: entry.uri, type: entry.type});
-					if (entry.uri.fsPath.endsWith('.mod'))
+					if (entry.uri.fsPath.endsWith('.nlm'))
 						visualText.modFiles.push(entry.uri);
 				}
 			}
@@ -228,6 +228,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
 		vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate());
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
+		vscode.commands.registerCommand('kbView.libraryMods', (KBItem) => this.libraryMods(KBItem));
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -235,6 +236,10 @@ export class KBView {
             kbView = new KBView(ctx);
         }
         return kbView;
+	}
+
+	libraryMods(kbItem: KBItem) {
+		this.chooseLibFiles('Mod Files','mods','en','.nlm');
 	}
 
 	modLoad(kbItem: KBItem) {
@@ -352,18 +357,20 @@ export class KBView {
 	}
 
 	private dictEnglish(): void {
-		this.chooseDictFiles('en');
+		this.chooseLibFiles('Dictionary','dict','en','.dict');
 	}
 		
 	private dictStopWords() {
-		this.chooseDictFiles('stop');
+		this.chooseLibFiles('Dictionary','dict','stop','.dict');
 	}
 
-	private chooseDictFiles(dirName: string) {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),'dict',dirName);
+	private chooseLibFiles(prompt: string, dirName: string, subDirName: string, ext: string) {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),dirName,subDirName);
 		let items: vscode.QuickPickItem[] = [];
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),['.dict'],true);
+		var exts: string[] = [];
+		exts.push(ext);
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts,true);
 		for (let dictFile of dictFiles) {
 			let descr = "";
 
@@ -379,11 +386,15 @@ export class KBView {
 			return;
 		}
 
-		vscode.window.showQuickPick(items, {title: 'Choose Dictionary', canPickMany: false, placeHolder: 'Choose Dictionary to insert'}).then(selection => {
+		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, canPickMany: false, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selection => {
 			if (!selection)
 				return;
 			if (selection.description) {
-				this.insertLibraryFile(path.join('dict',dirName),selection.label);
+				if (ext == '.nlm') {
+					var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDirName,selection.label);
+					visualText.mod.load(vscode.Uri.file(filepath));
+				} else
+					this.insertLibraryFile(path.join(dirName,subDirName),selection.label);
 			}	
 		});
 	}
@@ -563,7 +574,7 @@ export class KBView {
 	}
 
 	private openKBFile(kbItem: KBItem): void {
-		if (kbItem.uri.fsPath.endsWith('.mod'))
+		if (kbItem.uri.fsPath.endsWith('.nlm'))
 			visualText.setModFile(kbItem.uri);
 		this.openFile(kbItem.uri);
 	}
