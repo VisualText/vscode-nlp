@@ -64,14 +64,14 @@ export class Analyzer {
 	async modCreate(uri: vscode.Uri) {
         await vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
             if (newname) {
-                var filepath = path.join(uri.fsPath,newname+'.mod');
+                var filepath = path.join(uri.fsPath,newname+'.nlm');
                 if (fs.existsSync(filepath)) {
                     vscode.window.showWarningMessage("Mod file: " + filepath + ' already exists');
                     return false;
                 }
                 var modUri = vscode.Uri.file(filepath);
                 visualText.modFiles.push(modUri);
-                dirfuncs.writeFile(filepath,' ');
+                dirfuncs.writeFile(filepath,'# Description goes here');
                 visualText.setModFile(modUri);
                 vscode.commands.executeCommand('kbView.refreshAll');
                 return true;

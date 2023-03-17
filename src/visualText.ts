@@ -1270,7 +1270,7 @@ export class VisualText {
             icon = 'symbol-keyword.svg';
         } else if (filename.endsWith('.dict')) {
             icon = 'dict.svg';
-        } else if (filename.endsWith('.mod')) {
+        } else if (filename.endsWith('.nlm')) {
             icon = 'mod.svg';
         }
 
