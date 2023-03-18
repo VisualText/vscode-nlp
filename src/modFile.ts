@@ -94,7 +94,7 @@ export class ModFile extends TextFile {
                 if (mod.type == modType.SPEC) spec = true;
         
                 if (mod.type == modType.SPEC) {
-                    var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(vscode.Uri.file(this.seqInsertPoint));
+                    var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(this.seqInsertPoint);
                     visualText.analyzer.seqFile.insertPass(seqItem.passNum,mod.uri);
                 }
             }
@@ -116,7 +116,7 @@ export class ModFile extends TextFile {
         textFile.saveFile();
 
         if (filepath.includes('\\spec\\')) {
-            var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(uri);
+            var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(filepath);
             visualText.analyzer.seqFile.insertPass(seqItem.passNum,uri);
         }
     }
