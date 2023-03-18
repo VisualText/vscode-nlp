@@ -662,10 +662,10 @@ export class SequenceFile extends TextFile {
 		return new PassItem();
 	}
 
-	findPassFromUri(uri: vscode.Uri): PassItem {
+	findPassFromUri(filepath: string): PassItem {
 		var found = false;
 		for (let passItem of this.passItems) {
-			if (uri.fsPath == passItem.uri.fsPath) {
+			if (filepath == 'tokenizer pass' || filepath == passItem.uri.fsPath) {
 				return passItem;
 			}
 		}
@@ -676,9 +676,13 @@ export class SequenceFile extends TextFile {
 		this.setSpecDir(specDir);
 		this.getPassFiles(specDir);
 		for (let pass of this.getPassItems()) {
-			let uri = this.passItemUri(pass);
-			if (fs.existsSync(uri.fsPath))
-				items.push({label: path.basename(uri.fsPath), description: uri.fsPath});
+			if (pass.tokenizer) {
+				items.push({label: pass.typeStr, description: 'tokenizer pass'});
+			} else {
+				let uri = this.passItemUri(pass);
+				if (fs.existsSync(uri.fsPath))
+					items.push({label: path.basename(uri.fsPath), description: uri.fsPath});				
+			}
 		}
 	}
 }
