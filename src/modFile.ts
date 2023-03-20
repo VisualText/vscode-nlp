@@ -101,8 +101,6 @@ export class ModFile extends TextFile {
             if (filepath.length > 0 && content.length > 0)
                 this.saveSection(filepath,content);
 
-            this.files = [];
-
             if (input) vscode.commands.executeCommand('textView.refreshAll');
             if (spec) vscode.commands.executeCommand('sequenceView.refreshAll');
             if (kb) vscode.commands.executeCommand('kbView.refreshAll');  
@@ -138,6 +136,7 @@ export class ModFile extends TextFile {
         var content = '';
         var started = false;
         var modItem: ModItem = {uri: vscode.Uri.file(''), parentDir: '', filename: '', type: modType.UNKNOWN, content: '', exists: false};
+        this.files = [];
 
         for (let line of this.getLines()) {
             if (line.indexOf(this.MODFILE_HEADER) == 0) {
