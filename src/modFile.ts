@@ -101,6 +101,8 @@ export class ModFile extends TextFile {
             if (filepath.length > 0 && content.length > 0)
                 this.saveSection(filepath,content);
 
+            this.files = [];
+
             if (input) vscode.commands.executeCommand('textView.refreshAll');
             if (spec) vscode.commands.executeCommand('sequenceView.refreshAll');
             if (kb) vscode.commands.executeCommand('kbView.refreshAll');  

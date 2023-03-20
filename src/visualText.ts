@@ -1296,7 +1296,7 @@ export class VisualText {
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
                 if (specFlag) {
-                    seq.choicePasses(dir.fsPath,items);
+                    seq.choicePasses(dir.fsPath,items,false);
                 } else {
                     items.push({label: indent + basename, description: dir.fsPath, });
                 }
