@@ -672,11 +672,11 @@ export class SequenceFile extends TextFile {
 		return new PassItem();
 	}
 
-	choicePasses(specDir: string, items: vscode.QuickPickItem[]) {
+	choicePasses(specDir: string, items: vscode.QuickPickItem[], includeTokFlag: boolean=true) {
 		this.setSpecDir(specDir);
 		this.getPassFiles(specDir);
 		for (let pass of this.getPassItems()) {
-			if (pass.tokenizer) {
+			if (pass.tokenizer && includeTokFlag) {
 				items.push({label: pass.typeStr, description: 'tokenizer pass'});
 			} else {
 				let uri = this.passItemUri(pass);
