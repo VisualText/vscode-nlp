@@ -90,7 +90,7 @@ export class NLPFile extends TextFile {
 			var anapath = filestr.substring(0,pos);
 	
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
-			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
+			var args: string[] = ['-ANA','"'+anapath+'"','-WORK','"'+engineDir+'"','"'+filestr+'"',devFlagStr];
 
 			visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.ANALYZING);
 
@@ -98,7 +98,7 @@ export class NLPFile extends TextFile {
 
 			return new Promise(resolve => {
 				nlpStatusBar.analyzerButton(false);
-				visualText.processID = cp.exec(cmd, (err, stdout, stderr) => {
+				visualText.processID = cp.execFile(exe, args, (err, stdout, stderr) => {
 					let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
 					let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
 					let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
@@ -110,7 +110,6 @@ export class NLPFile extends TextFile {
 					if (err || logView.syntaxErrors()) {
 						if (err)
 							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
-						outputView.loadAll();
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						vscode.commands.executeCommand('outputView.refreshAll');
