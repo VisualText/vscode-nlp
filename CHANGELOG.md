@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.17.6
+### 2.17.7
 Added mod files allowing for saving and loading multiple files together in one file.
 
 ### 2.16.3
