@@ -192,8 +192,18 @@ export namespace dirfuncs {
     }
 
     export function writeFile(filePath: string, content: string): boolean {
+        var dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) {
+            try {
+                fs.mkdirSync(dir);
+                return true;
+            } catch (err: any) {
+                vscode.window.showInformationMessage('Error creating directory ' + dir + ': ' + err.message);
+                return false;
+            }
+        }
         try {
-            fs.writeFileSync(filePath,content,{flag:'w'});
+            fs.writeFileSync(filePath,content,'utf-8');
             return true;
         } catch (err: any) {
             vscode.window.showInformationMessage('Error writing file ' + filePath + ': ' + err.message);
