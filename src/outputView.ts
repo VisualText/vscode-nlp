@@ -138,7 +138,7 @@ export class OutputView {
 		return this.type;
 	}
 
-	private loadAll() {
+	public loadAll() {
 		this.clearOutput(outputFileType.ALL);
 	}
 

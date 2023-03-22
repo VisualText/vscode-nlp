@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
-import { treeFile } from './treeFile';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
@@ -91,7 +90,7 @@ export class NLPFile extends TextFile {
 			var anapath = filestr.substring(0,pos);
 	
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
-			var cmd = `${exe} -ANA "${anapath}" -WORK "${engineDir}" "${filestr}" ${devFlagStr}`;
+			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
 
 			visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.ANALYZING);
 
@@ -111,10 +110,11 @@ export class NLPFile extends TextFile {
 					if (err || logView.syntaxErrors()) {
 						if (err)
 							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
-						logView.loadMakeAna();
-						vscode.commands.executeCommand('outputView.refreshAll');
+						outputView.loadAll();
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
+						vscode.commands.executeCommand('outputView.refreshAll');
+						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
 					} else {
 						var typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
