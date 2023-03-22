@@ -196,7 +196,6 @@ export namespace dirfuncs {
         if (!fs.existsSync(dir)) {
             try {
                 fs.mkdirSync(dir);
-                return true;
             } catch (err: any) {
                 vscode.window.showInformationMessage('Error creating directory ' + dir + ': ' + err.message);
                 return false;
