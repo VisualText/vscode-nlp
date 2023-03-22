@@ -91,7 +91,7 @@ export class NLPFile extends TextFile {
 			var anapath = filestr.substring(0,pos);
 	
 			var devFlagStr = nlpStatusBar.getDevMode() == DevMode.DEV ? '-DEV' : '-SILENT';
-			var cmd = `${exe} -ANA ${anapath} -WORK ${engineDir} ${filestr} ${devFlagStr}`;
+			var cmd = `${exe} -ANA "${anapath}" -WORK "${engineDir}" "${filestr}" ${devFlagStr}`;
 
 			visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.ANALYZING);
 
