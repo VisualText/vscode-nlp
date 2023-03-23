@@ -97,7 +97,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.17.11
+### 2.17.12
 Added mod files allowing for saving and loading multiple files together in one file.
 
 ### 2.16.3

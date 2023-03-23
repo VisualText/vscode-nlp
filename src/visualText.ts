@@ -1286,8 +1286,9 @@ export class VisualText {
     analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number, specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(dir);
         let indent = '';
+        let spacer = '   ';
         for (var i = 0; i < level; i++) {
-            indent = indent + '   ';
+            indent = indent + spacer;
         }
         if (indent.length > 0) indent = '-' + indent;
         let seq = new SequenceFile;
@@ -1295,10 +1296,12 @@ export class VisualText {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
+
                 if (specFlag) {
-                    seq.choicePasses(dir.fsPath,items,false);
+                    items.push({label: indent + basename, description: '======================='});
+                    seq.choicePasses(path.join(dir.fsPath,'spec'),items,'-' + indent + spacer,false);
                 } else {
-                    items.push({label: indent + basename, description: dir.fsPath, });
+                    items.push({label: indent + basename, description: dir.fsPath});
                 }
             } else {
                 items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});

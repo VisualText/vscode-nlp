@@ -554,7 +554,7 @@ export class SequenceView {
 				return;
 			let seq = new SequenceFile;
 			let items: vscode.QuickPickItem[] = [];
-			seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,false);
+			seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,'',false);
 			vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: true, placeHolder: 'Choose pass to insert after'}).then(selections => {
 				if (!selections) {
 					return;
