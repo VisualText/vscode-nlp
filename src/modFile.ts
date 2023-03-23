@@ -196,7 +196,7 @@ export class ModFile extends TextFile {
                 if (filepath.includes(this.MODFILE_SPEC)) {
                     let seq = new SequenceFile;
                     let items: vscode.QuickPickItem[] = [];
-                    seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items);
+                    seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,'');
                     await vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: false, placeHolder: 'Choose pass to insert after'}).then(selection => {
                         if (typeof selection === undefined || !selection) {
                             this.seqInsertPoint = 'abort';

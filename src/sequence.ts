@@ -672,7 +672,7 @@ export class SequenceFile extends TextFile {
 		return new PassItem();
 	}
 
-	choicePasses(specDir: string, items: vscode.QuickPickItem[], includeTokFlag: boolean=true) {
+	choicePasses(specDir: string, items: vscode.QuickPickItem[], indent: string='', includeTokFlag: boolean=true) {
 		this.setSpecDir(specDir);
 		this.getPassFiles(specDir);
 		for (let pass of this.getPassItems()) {
@@ -681,7 +681,7 @@ export class SequenceFile extends TextFile {
 			} else {
 				let uri = this.passItemUri(pass);
 				if (fs.existsSync(uri.fsPath))
-					items.push({label: path.basename(uri.fsPath), description: uri.fsPath});				
+					items.push({label: indent + path.basename(uri.fsPath), description: uri.fsPath});				
 			}
 		}
 	}
