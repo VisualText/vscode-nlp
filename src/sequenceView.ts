@@ -231,7 +231,17 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		var filepath = path.join(visualText.getVisualTextDirectory('spec'),dir,filename);
 		var newfile: vscode.Uri = vscode.Uri.file(filepath);
 		var seqFile = visualText.analyzer.seqFile;
-		seqFile.insertPass(seqItem.passNum,newfile);
+		var passNum = seqFile.findPassByFilename(filename);
+		// If the pass exists, replace it
+		if (passNum) {
+			var currentFile = vscode.Uri.file(path.join(visualText.analyzer.getSpecDirectory().fsPath,filename));
+			visualText.fileOps.addFileOperation(currentFile,currentFile,[fileOpRefresh.ANALYZER],fileOperation.DELETE);
+			visualText.fileOps.addFileOperation(newfile,currentFile,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+			visualText.fileOps.startFileOps();
+		} else {
+			seqFile.insertPass(seqItem.passNum,newfile);
+		}
+
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 

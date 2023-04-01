@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.18.0
+If a pass exists, replace it when inserting a library pass. This in effect "updates" the file which is often the case with KBFuncs.nlp.
+
 ### 2.17.13
 Added mod files allowing for saving and loading multiple files together in one file.
 
@@ -159,18 +162,6 @@ Added download of the boost file system library
 
 ### 1.63.3
 Added new and library pass submenus
-
-### 1.62.4
-Added README files to analyzer view
-
-### 1.61.4
-Complete overhaul of updater
-
-### 1.60.5
-Enhanced error reporting in log view
-
-### 1.59.3
-Added move folders to the text view
 
 # Development
 

@@ -303,6 +303,17 @@ export class SequenceFile extends TextFile {
 			}
 		}	
 	}
+
+	findPassByFilename(filename: string): number {
+		var passes = this.getPasses();
+		var name = path.parse(filename).name;
+		for (let pass of passes) {
+			if (pass.name == name) {
+				return pass.passNum;
+			}
+		}
+		return 0;
+	}
 		
 	insertNewPass(seqItem: SequenceItem, newPass: string, type: newPassType) {
 		if (this.passItems.length && newPass.length) {
