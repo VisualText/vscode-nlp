@@ -46,6 +46,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		var itemPath = textItem.uri.fsPath;
 		var parent = path.dirname(itemPath);
 		var inputPath = visualText.analyzer.getInputDirectory().fsPath;
+
 		if (parent != inputPath) {
 			textItem.moveUp = true;
 		}
@@ -64,27 +65,35 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		var conVal = textItem.moveDown ? 'moveDown' : '';
 		if (textItem.moveUp)
 			conVal = conVal + 'moveUp';
+		var hasLogs = textItem.hasLogs ? 'HasLogs' : '';
+		var hasTest = '';
 
 		if (textItem.type === vscode.FileType.File) {
-			var hasLogs = textItem.hasLogs ? 'HasLogs' : '';
+			var testFolder = visualText.analyzer.testFolder(textItem.uri).fsPath;
+			if (fs.existsSync(testFolder))
+				hasTest = 'test';
+
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
-			treeItem.contextValue = 'file' + conVal + hasLogs;
+			treeItem.contextValue = 'file' + conVal + hasLogs + hasTest;
 			//treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
-				light: textItem.hasLogs ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :  
-									path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
-				dark: textItem.hasLogs ? path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') : 
-									path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
+				light: textItem.hasLogs ?
+					hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg') :
+					hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
+				dark: textItem.hasLogs ?
+					hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :
+					hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
 			}
 		} else {
+			if (visualText.analyzer.folderHasTests(textItem.uri))
+				hasTest = 'test';
 			var hasNonText = textItem.hasNonText ? 'HasNonText' : '';
-			var hasLogs = textItem.hasLogs ? 'HasLogs' : '';
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
-			treeItem.contextValue = 'dir' + conVal + hasNonText + hasLogs ;
+			treeItem.contextValue = 'dir' + conVal + hasNonText + hasLogs + hasTest;
 			//treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+				light: hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'folder-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
+				dark: hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'folder-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
 			}
 		}
 
@@ -96,7 +105,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
 		for (let entry of entries) {
-			if (!(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
+			if (!entry.uri.fsPath.endsWith(visualText.TEST_SUFFIX) && !(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
 				var hasLogs =  dirfuncs.hasLogDirs(entry.uri,false);
 				var hasNonText = entry.type == vscode.FileType.Directory && this.dirHasNonText(entry.uri) ? true : false;
 				keepers.push({uri: entry.uri, type: entry.type, hasLogs: hasLogs, hasNonText: hasNonText, moveUp: false, moveDown: false});
@@ -261,6 +270,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.moveUp', (textItem) => this.moveUp(textItem));
 		vscode.commands.registerCommand('textView.copyToAnalyzer', (textItem) => this.copyToAnalyzer(textItem));
 		vscode.commands.registerCommand('textView.modAdd', (textItem) => this.modAdd(textItem));
+		vscode.commands.registerCommand('textView.runTest', (textItem) => this.runTest(textItem));
+		vscode.commands.registerCommand('textView.deleteTest', (textItem) => this.deleteTest(textItem));
 
 		this.folderUri = undefined;
     }
@@ -270,6 +281,39 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	deleteTest(textItem: TextItem) {
+		let items: vscode.QuickPickItem[] = [];
+		items.push({label: 'Yes', description: 'Delete all the test files associated with this test'});
+		items.push({label: 'No', description: 'Do not delete the test files'});
+
+		vscode.window.showQuickPick(items, {title: 'Delete Test Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			if (!selection || selection.label == 'No')
+				return;
+			var testFolder = visualText.analyzer.testFolder(textItem.uri);
+			visualText.fileOps.addFileOperation(testFolder,testFolder,[fileOpRefresh.TEXT,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+			visualText.fileOps.startFileOps();
+		});
+	}
+
+	runTest(textItem: TextItem) {
+		visualText.testInit();
+		if (dirfuncs.isDir(textItem.uri.fsPath)) {
+			var files = dirfuncs.getFiles(textItem.uri);
+			if (files.length)
+				dirfuncs.delFile(visualText.regressionTestFile());
+			for (let file of files) {
+				if (visualText.analyzer.fileHasTests(file))
+					visualText.runTest(file);
+			}
+		} else {
+			dirfuncs.delFile(visualText.regressionTestFile());
+			visualText.runTest(textItem.uri);
+		}
+		visualText.closeTest();
+		vscode.window.showTextDocument(vscode.Uri.file(visualText.regressionTestFile()));
+		vscode.commands.executeCommand('kbView.refreshAll');
 	}
 
 	modAdd(textItem: TextItem): void {
@@ -305,7 +349,7 @@ export class TextView {
 	moveToFolder(textItem: TextItem) {
 		if (this.folderUri) {
 			var to = path.join(this.folderUri.fsPath,path.basename(textItem.uri.fsPath));
-			dirfuncs.rename(textItem.uri.fsPath,to);
+			this.moveFileWithFolders(textItem.uri.fsPath,to);
 			vscode.commands.executeCommand('textView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('No folder selected');
@@ -318,10 +362,26 @@ export class TextView {
 		if (parent != analyzersFolder.fsPath) {
 			parent = path.dirname(parent);
 			var to = path.join(parent,path.basename(textItem.uri.fsPath));
-			dirfuncs.rename(textItem.uri.fsPath,to);
+			this.moveFileWithFolders(textItem.uri.fsPath,to);
 			vscode.commands.executeCommand('textView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('Already at the top');
+		}
+	}
+
+	moveFileWithFolders(from: string, to: string) {
+		dirfuncs.rename(from,to);
+		if (!dirfuncs.isDir(from)) {
+			var outputFolder = from + visualText.LOG_SUFFIX;
+			if (fs.existsSync(outputFolder)) {
+				var toFolder = to + visualText.LOG_SUFFIX;
+				dirfuncs.rename(outputFolder,toFolder);
+			}
+			var testFolder = from + visualText.TEST_SUFFIX;
+			if (fs.existsSync(testFolder)) {
+				var toFolder = to + visualText.TEST_SUFFIX;
+				dirfuncs.rename(testFolder,toFolder);
+			}
 		}
 	}
 	

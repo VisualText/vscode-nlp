@@ -25,6 +25,18 @@
 		"_kb_light": {
 			"iconPath": "./light/kb.svg"
 		},
+		"_dict_dark": {
+			"iconPath": "./dark/dict.svg"
+		},
+		"_dict_light": {
+			"iconPath": "./light/dict.svg"
+		},
+		"_test_dark": {
+			"iconPath": "./dark/test.svg"
+		},
+		"_test_light": {
+			"iconPath": "./light/test.svg"
+		},
 		"_tree_dark": {
 			"iconPath": "./dark/tree.svg"
 		},
@@ -36,12 +48,6 @@
 		},
 		"_log_light": {
 			"iconPath": "./light/symbol-property.svg"
-		},
-		"_dict_dark": {
-			"iconPath": "./dark/dict.svg"
-		},
-		"_dict_light": {
-			"iconPath": "./light/dict.svg"
 		},
 		"_markup_dark": {
 			"iconPath": "./dark/symbol-keyword.svg"
@@ -64,11 +70,12 @@
 		"nlp": "_nlp_dark",
 		"kb": "_kb_dark",
 		"kbb": "_kb_dark",
+		"dict": "_dict_dark",
+		"test": "_test_dark",
 		"seq": "_tree_dark",
 		"log": "_log_dark",
 		"tree": "_tree_dark",
 		"txxt": "_markup_dark",
-		"dict": "_dict_dark",
 		"stub": "_stub_dark",
 		"cpp": "_code_dark",
 		"h": "_code_dark"
@@ -81,11 +88,12 @@
 			"nlp": "_nlp_light",
 			"kb": "_kb_light",
 			"kbb": "_kb_light",
+			"dict": "_dict_light",
+			"test": "_test_light",
 			"seq": "_tree_light",
 			"log": "_log_light",
 			"tree": "_tree_light",
 			"txxt": "_markup_light",
-			"dict": "_dict_light",
 			"stub": "_stub_light",
 			"cpp": "_code_light",
 			"h": "_code_light"

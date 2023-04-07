@@ -4,11 +4,11 @@
 	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:#F6F6F6;fill-opacity:0;}
-	.st1{fill:#C5C5C5;}
+	.st1{fill:#F1EB59;}
 	.st2{fill:#F0EFF1;fill-opacity:0;}
 </style>
 <path id="canvas" class="st0" d="M16,16H0V0h16V16z"/>
-<path id="iconBg" class="st1" d="M14.5,2.1H6.4L5.3,4.2H1.5C1.2,4.2,1,4.5,1,4.8v8.6c0,0.3,0.2,0.5,0.5,0.5h12.9
-	c0.3,0,0.5-0.2,0.5-0.5V2.6C15,2.3,14.8,2.1,14.5,2.1z M13.9,4.2h-7l0.5-1.1h6.5V4.2z"/>
+<path id="iconBg" class="st1" d="M14.4,2.1h-8L5.3,4.3H1.6C1.3,4.3,1,4.5,1,4.8v8.6c0,0.3,0.2,0.5,0.5,0.5h12.8
+	c0.3,0,0.5-0.2,0.5-0.5V2.6C15,2.4,14.7,2.1,14.4,2.1z M13.9,4.3h-7l0.5-1.1h6.4V4.3z"/>
 <path id="iconFg" class="st2" d="M14,3v1H7.5L8,3H14z"/>
 </svg>
