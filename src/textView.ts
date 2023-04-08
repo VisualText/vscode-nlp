@@ -272,6 +272,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.modAdd', (textItem) => this.modAdd(textItem));
 		vscode.commands.registerCommand('textView.runTest', (textItem) => this.runTest(textItem));
 		vscode.commands.registerCommand('textView.deleteTest', (textItem) => this.deleteTest(textItem));
+		vscode.commands.registerCommand('textView.editTest', (textItem) => this.editTest(textItem));
 
 		this.folderUri = undefined;
     }
@@ -281,6 +282,12 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	editTest(textItem: TextItem) {
+		if (visualText.getWorkspaceFolder()) {
+			visualText.editTestFiles(textItem.uri);
+		}
 	}
 
 	deleteTest(textItem: TextItem) {

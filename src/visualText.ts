@@ -147,6 +147,31 @@ export class VisualText {
         return visualText;
     }
 
+    editTestFiles(uri: vscode.Uri, outputPathFlag: boolean=false) {
+		if (visualText.getWorkspaceFolder()) {
+            var testFolder = this.analyzer.testFolder(uri,outputPathFlag);
+			let files = dirfuncs.getFiles(testFolder);
+            if (files.length > 1) {
+                let items: vscode.QuickPickItem[] = [];
+                for (let file of files) {
+                    items.push({label: path.basename(file.fsPath), description: file.fsPath});
+                }
+            
+                let title = 'Edit Test Files';
+                let placeHolder = 'Choose test file to edit';
+
+                vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
+                    if (!selection || !selection.description)
+                        return;
+                    if (selection.description)
+                        vscode.window.showTextDocument(vscode.Uri.file(selection.description));
+                });
+            } else {
+                vscode.window.showTextDocument(vscode.Uri.file(files[0].fsPath));
+            }
+		}
+	}
+
     regressionTestFile(): string {
         return path.join(visualText.analyzer.getKBDirectory().fsPath,'regression.test');
     }

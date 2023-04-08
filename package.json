@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.19.0",
+    "version": "2.19.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -191,6 +191,22 @@
             }
         ],
         "commands": [
+            {
+                "command": "outputView.editTest",
+                "title": "Edit Test File",
+                "icon": {
+                    "light": "resources/light/test.svg",
+                    "dark": "resources/dark/test.svg"
+                }
+            },
+            {
+                "command": "textView.editTest",
+                "title": "Edit Test File",
+                "icon": {
+                    "light": "resources/light/test.svg",
+                    "dark": "resources/dark/test.svg"
+                }
+            },
             {
                 "command": "textView.deleteTest",
                 "title": "Delete Test Files",
@@ -2037,6 +2053,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "outputView.editTest",
+                    "when": "view == outputView && viewItem =~ /.*test.*/",
+                    "group": "navigation"
+                },    
+                {
                     "command": "outputView.deleteTest",
                     "when": "view == outputView && viewItem =~ /.*test.*/",
                     "group": "navigation"
@@ -2392,8 +2413,13 @@
                     "group": "test"
                 },
                 {
+                    "command": "textView.editTest",
+                    "when": "view == textView && viewItem =~ /.*test.*/ && viewItem =~ /.*file.*/",
+                    "group": "test"
+                },
+                {
                     "command": "textView.deleteTest",
-                    "when": "view == textView && viewItem =~ /.*test.*/",
+                    "when": "view == textView && viewItem =~ /.*test.*/ && viewItem =~ /.*file.*/",
                     "group": "test"
                 },
                 {

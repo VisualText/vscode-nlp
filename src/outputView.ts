@@ -81,6 +81,7 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.addTest', (resource) => this.addTest(resource));
 		vscode.commands.registerCommand('outputView.runTest', (resource) => this.runTest(resource));
 		vscode.commands.registerCommand('outputView.deleteTest', (resource) => this.deleteTest(resource));
+		vscode.commands.registerCommand('outputView.editTest', (resource) => this.editTest(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
@@ -101,6 +102,12 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+	
+	editTest(outputItem: OutputItem) {
+		if (visualText.getWorkspaceFolder()) {
+			visualText.editTestFiles(outputItem.uri,true);
+		}
 	}
 
 	deleteTest(outputItem: OutputItem) {
