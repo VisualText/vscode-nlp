@@ -323,6 +323,34 @@ export class Analyzer {
         return this.name;
     }
 
+    folderHasTests(folder: vscode.Uri): boolean {
+        var files = dirfuncs.getFiles(folder);
+        for (let testFile of files) {
+            if (testFile.fsPath.endsWith(visualText.TEST_SUFFIX))
+                return true;
+        }
+        return false;
+    }
+
+    fileHasTests(file: vscode.Uri): boolean {
+        var testFolder = file.fsPath + visualText.TEST_SUFFIX;
+        if (fs.existsSync(testFolder))
+            return true;
+        return false;
+    }
+
+	testFolder(uri: vscode.Uri, outputDirFlag: boolean=false): vscode.Uri {
+        var input = visualText.analyzer.getInputDirectory();
+		var relPath = uri.fsPath.substring(input.fsPath.length+1,uri.fsPath.length);
+        if (outputDirFlag) {
+            relPath = path.dirname(relPath);
+            relPath = relPath.substring(0,relPath.length-4);
+        }
+        var folderName = relPath + visualText.TEST_SUFFIX;
+		var testDir = path.join(input.fsPath, folderName);
+		return vscode.Uri.file(testDir);
+	}
+
 	setWorkingDir(directory: vscode.Uri) {
         this.analyzerDir = directory;
         if (fs.existsSync(directory.fsPath)) {

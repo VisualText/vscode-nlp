@@ -23,14 +23,20 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 
 	constructor() { }
 
-	public getTreeItem(element: OutputItem): vscode.TreeItem {
-		var icon = visualText.fileIconFromExt(element.uri.fsPath);
+	public getTreeItem(outputItem: OutputItem): vscode.TreeItem {
+		var icon = visualText.fileIconFromExt(outputItem.uri.fsPath);
+
+		var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
+		var testFile = path.join(testFolder.fsPath,path.basename(outputItem.uri.fsPath));
+		var value = fs.existsSync(testFile) ? 'test' : '';
+
 		return {
-			resourceUri: element.uri,
+			resourceUri: outputItem.uri,
 			collapsibleState: void 0,
+			contextValue: value,
 			command: {
 				command: 'outputView.openFile',
-				arguments: [element.uri],
+				arguments: [outputItem.uri],
 				title: 'Open Output File'
 			},
 			
@@ -41,7 +47,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 		};
 	}
 
-	public getChildren(element?: OutputItem): OutputItem[] {
+	public getChildren(outputItem?: OutputItem): OutputItem[] {
         if (visualText.hasWorkspaceFolder()) {
 			const children: OutputItem[] = new Array();
             for (let folder of outputView.getOutputFiles()) {
@@ -60,6 +66,7 @@ export class OutputView {
 	public outputView: vscode.TreeView<OutputItem>;
 	private outputFiles: vscode.Uri[];
 	private logDirectory: vscode.Uri;
+	private testDirectory: vscode.Uri;
 	private type: outputFileType;
 
 	constructor(context: vscode.ExtensionContext) {
@@ -71,6 +78,9 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.addTest', (resource) => this.addTest(resource));
+		vscode.commands.registerCommand('outputView.runTest', (resource) => this.runTest(resource));
+		vscode.commands.registerCommand('outputView.deleteTest', (resource) => this.deleteTest(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
@@ -82,6 +92,7 @@ export class OutputView {
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');
+		this.testDirectory = vscode.Uri.file('');
 		this.type = outputFileType.ALL;
     }
     
@@ -90,6 +101,66 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	deleteTest(outputItem: OutputItem) {
+		let items: vscode.QuickPickItem[] = [];
+		items.push({label: 'Yes', description: 'Delete all the test files associated with this test'});
+		items.push({label: 'No', description: 'Do not delete the test files'});
+
+		vscode.window.showQuickPick(items, {title: 'Delete Test Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			if (!selection || selection.label == 'No')
+				return;
+			var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
+			visualText.fileOps.addFileOperation(testFolder,testFolder,[fileOpRefresh.TEXT,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+			visualText.fileOps.startFileOps();
+		});
+	}
+
+	runTest(outputItem: OutputItem) {
+		var logDir = path.dirname(outputItem.uri.fsPath);
+		var textFile = path.basename(logDir);
+		textFile = textFile.substring(0,textFile.length-visualText.LOG_SUFFIX.length);
+		var textFilePath = path.join(path.dirname(logDir),textFile);
+		if (fs.existsSync(textFilePath)) {
+			visualText.testInit();
+			dirfuncs.delFile(visualText.regressionTestFile());
+			visualText.runTest(vscode.Uri.file(textFilePath));
+			visualText.closeTest();
+			vscode.window.showTextDocument(vscode.Uri.file(visualText.regressionTestFile()));
+			vscode.commands.executeCommand('kbView.refreshAll');
+		}
+	}
+
+	addTest(outputItem: OutputItem) {
+		var hasTestFile = true;
+		var parent = path.basename(path.dirname(outputItem.uri.fsPath));
+		var textName = parent.substring(0,parent.length-4);
+		var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
+
+		if (!fs.existsSync(testFolder.fsPath)) {
+			this.testDirectory = testFolder;
+			dirfuncs.makeDir(testFolder.fsPath);
+			hasTestFile = false;
+		}
+
+		var testFilePath = vscode.Uri.file(path.join(testFolder.fsPath,path.basename(outputItem.uri.fsPath)));
+
+		if (!hasTestFile || !fs.existsSync(outputItem.uri.fsPath)) {
+			visualText.fileOps.addFileOperation(outputItem.uri,testFilePath,[fileOpRefresh.OUTPUT,fileOpRefresh.TEXT],fileOperation.COPY);
+			visualText.fileOps.startFileOps();
+		} else {
+			let items: vscode.QuickPickItem[] = [];
+			items.push({label: 'Yes', description: 'Overwrite the current test file?'});
+			items.push({label: 'No', description: 'Do not overwrite'});
+	
+			vscode.window.showQuickPick(items, {title: 'Add Test File', placeHolder: 'Choose response'}).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+					visualText.fileOps.addFileOperation(outputItem.uri,testFilePath,[fileOpRefresh.OUTPUT,fileOpRefresh.TEXT],fileOperation.COPY);
+					visualText.fileOps.startFileOps();
+			});
+		}
 	}
 
 	video() {
@@ -164,14 +235,27 @@ export class OutputView {
 		vscode.commands.executeCommand('outputView.refreshAll');
 	}
 
-	public fileHasLog(path: string): boolean {
+	public fileHasLog(filepath: string): boolean {
 		this.logDirectory = vscode.Uri.file('');
-		if (path.length == 0)
+		if (filepath.length == 0)
 			return false;
-		this.logDirectory = vscode.Uri.file(path + visualText.LOG_SUFFIX);
+		this.logDirectory = vscode.Uri.file(filepath + visualText.LOG_SUFFIX);
 		if (!fs.existsSync(this.logDirectory.fsPath))
 			return false;
 		var stats = fs.lstatSync(this.logDirectory.fsPath);
+		if (!stats)
+			return false;
+		return stats.isDirectory();
+	}
+
+	public fileHasTest(filepath: string): boolean {
+		this.testDirectory = vscode.Uri.file('');
+		if (filepath.length == 0)
+			return false;
+		this.logDirectory = vscode.Uri.file(filepath + visualText.TEST_SUFFIX);
+		if (!fs.existsSync(this.testDirectory.fsPath))
+			return false;
+		var stats = fs.lstatSync(this.testDirectory.fsPath);
 		if (!stats)
 			return false;
 		return stats.isDirectory();

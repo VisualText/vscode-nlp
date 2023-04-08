@@ -11,6 +11,7 @@ import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
 import { ModFile } from './modfile';
 import { SequenceFile } from './sequence';
+import { TextFile } from './textFile';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -35,6 +36,14 @@ interface ExtensionItem {
     latest: boolean;
 }
 
+interface TestItem {
+    fileCount: number;
+    matchFiles: number;
+    matchLines: number;
+    misFiles: number;
+    misLines: number;
+}
+
 // HOW TO CALL IT
 //(async() => { await closeFileIfOpen(original); })();
 export async function closeFileIfOpen(file:vscode.Uri) : Promise<void> {
@@ -54,6 +63,7 @@ export class VisualText {
     public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES' ];
     
     public readonly LOG_SUFFIX = '_log';
+    public readonly TEST_SUFFIX = '_test';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt72.dll';
@@ -113,6 +123,8 @@ export class VisualText {
     private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
 
+    private testItem: TestItem = {fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0};
+
 	constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
     }
@@ -134,6 +146,78 @@ export class VisualText {
         }
         return visualText;
     }
+
+    regressionTestFile(): string {
+        return path.join(visualText.analyzer.getKBDirectory().fsPath,'regression.test');
+    }
+    
+    testInit() {
+        this.testItem = {fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0};
+    }
+
+    closeTest() {
+        var regressFile = this.regressionTestFile();
+        var content = fs.readFileSync(regressFile,'utf8');
+        var header = 'Files: ' + this.testItem.fileCount + '\n';
+        header += 'File matches: ' + this.testItem.matchFiles + '\n';
+        header += 'File mismatches: ' + this.testItem.misFiles + '\n';
+        header += 'Total line matches: ' + this.testItem.matchLines + '\n';
+        header += 'Total line mismatches: ' + this.testItem.misLines + '\n';
+        header += '\n\n';
+
+        content = header + content;
+        fs.writeFileSync(regressFile,content,'utf8');
+    }
+    
+    runTest(textFile: vscode.Uri) {
+        var inputDir = visualText.analyzer.getInputDirectory().fsPath;
+        var relPath = textFile.fsPath.substring(inputDir.length+1,textFile.fsPath.length);
+        var outputFolder = path.join(inputDir,relPath + visualText.LOG_SUFFIX);
+        var testFolder = path.join(inputDir,relPath + visualText.TEST_SUFFIX);
+        var files = dirfuncs.getFiles(vscode.Uri.file(testFolder));
+        for (let testFile of files) {
+            var outputFile = path.join(outputFolder,path.basename(testFile.fsPath));
+            if (fs.existsSync(outputFile)) {
+                this.testDiff(path.basename(textFile.fsPath),outputFile,testFile.fsPath);
+            }
+        }
+        // vscode.commands.executeCommand("vscode.diff", testFolder, uri);
+    }
+
+	testDiff(textFile: string, file: string, testFile: string) {
+		var testResults = this.regressionTestFile();
+		var fileText = new TextFile(file);
+		var testText = new TextFile(testFile);
+		var numLines = testText.getLines().length;
+		var match = 0;
+		var mismatch = 0;
+		var report = '';
+		var mismatches = '';
+
+		for (let i = 0; i < numLines; i++) {
+			var lineFile = fileText.getLines()[i];
+			var lineTest = testText.getLines()[i];
+			if (lineFile == lineTest) {
+				match++;
+			} else {
+				mismatch++;
+				mismatches += lineFile + '\n' + lineTest + '\n\n';
+			}
+		}
+		report = textFile + ' Linesss: ' + numLines + ' ' + 'Matches: ' + match + ' ' + 'Mismatches: ' + mismatch + '\n';
+		if (mismatches.length)
+			report += mismatches + '\n';
+
+        this.testItem.fileCount++;
+        this.testItem.matchLines += match;
+        this.testItem.misLines += mismatch;
+        if (mismatch) {
+            this.testItem.misFiles++;
+        } else {
+            this.testItem.matchFiles++;
+        }
+		fs.appendFileSync(testResults,report);
+	}
 
     setModFile(filePath: vscode.Uri) {
         this.mod.setFile(filePath);
@@ -1272,6 +1356,8 @@ export class VisualText {
             icon = 'dict.svg';
         } else if (filename.endsWith('.nlm')) {
             icon = 'mod.svg';
+        } else if (filename.endsWith('.test')) {
+            icon = 'test.svg';
         }
 
         return icon;
