@@ -71,6 +71,7 @@ export class OutputView {
 		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
 		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
 		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
+		vscode.commands.registerCommand('outputView.rename', (resource) => this.rename(resource));
 		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
 		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
 		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
@@ -90,6 +91,28 @@ export class OutputView {
             outputView = new OutputView(ctx);
         }
         return outputView;
+	}
+
+	rename(outputItem: OutputItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(outputItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
+				if (newname) {
+					var original = outputItem.uri;
+					if (path.extname(newname).length == 0)
+						newname = newname+path.extname(outputItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath),newname));
+					dirfuncs.rename(original.fsPath,newfile.fsPath);
+					vscode.window.showTextDocument(newfile);
+
+					var logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
+					if (dirfuncs.isDir(logFolderOrig.fsPath)) {
+						var logFolderNew = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath),newname + visualText.LOG_SUFFIX));
+						dirfuncs.rename(logFolderOrig.fsPath,logFolderNew.fsPath);
+					}
+					vscode.commands.executeCommand('outputView.refreshAll');	
+				}
+			});
+		}
 	}
 
 	video() {
