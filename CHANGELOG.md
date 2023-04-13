@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.19.1
+### 2.19.2
 Adding testing files for regression testing.
 
 ### 2.18.0
