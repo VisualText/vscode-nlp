@@ -97,7 +97,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.19.2
+### 2.19.4
 Adding testing files for regression testing.
 
 ### 2.18.0
