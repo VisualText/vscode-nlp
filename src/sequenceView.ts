@@ -14,6 +14,7 @@ import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
+import { debug } from 'console';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -53,36 +54,61 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	getPasses(passes: PassItem[]): SequenceItem[] {
-		var folder = '';
+		var len = passes.length;
 		const seqItems = new Array();
+		if (len == 0)
+			return seqItems;
+
+		var seqFile = visualText.analyzer.seqFile;
 		const treeFile = new TreeFile();
 		var collapse = vscode.TreeItemCollapsibleState.None;
-		var order = 0;
+		var openingFolder = seqFile.inFolder(passes[0]);
 
 		var hasPat: boolean = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat']).length ? true : false;
 		vscode.commands.executeCommand('setContext', 'sequence.hasPat', hasPat);
 
+		var pnum = 0;
+		var order = 0;
+		var debugConVal = false;
+
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
 
-			if (passItem.isFolder()) {
-				folder = passItem.name;
+			var conVal = '';
+			var inFolder = seqFile.inFolder(passItem);
+
+			if (pnum > 1 || inFolder)
+				conVal = conVal + 'mvup';
+			if (pnum < len-1 || inFolder)
+				conVal = conVal + 'mvdown';				
+
+			if (inFolder)
+				conVal = conVal + 'inside';
+			else
+				conVal = conVal + 'outside';
+
+			pnum++;
+
+			if (passItem.isEnd(passItem.name) || (inFolder && !openingFolder)) {
+				var donothing = true;
+
+			} else if (passItem.isFolder()) {
+				conVal = conVal + 'foldernotok';
 				label = passItem.name;
-				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'folder', inFolder: passItem.inFolder,
+				if (debugConVal) label = label + ' ' + conVal;
+				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
 			
-			} else if (folder.length) {
-				if (passItem.isEnd(folder))
-					folder = '';
-			
+			} else if (passItem.isEnd(passItem.name)) {
+				var donothing = true;
+				
 			} else if (passItem.isRuleFile()) {
-				var conVal = '';
+				conVal = conVal + 'filenotok';
 				if (treeFile.hasFileType(passItem.uri,passItem.passNum,nlpFileType.TREE))
-					conVal = 'hasLog';
+					conVal = conVal + 'hasLog';
 				if (treeFile.hasFileType(passItem.uri,passItem.passNum,nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
-				if (conVal.length == 0)
-					conVal = 'file';
+				if (debugConVal) label = label + ' ' + conVal;
 				if (passItem.fileExists())
 					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal,
 						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
@@ -95,11 +121,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (passItem.tokenizer) {
 					label = '1 ' + passItem.typeStr;
 					tooltip = passItem.fetchTooltip();
-					conVal = 'tokenize';
+					conVal = conVal + 'tokenize';
 				} else {
 					label = passItem.name;
-					conVal = 'stub';
+					conVal = conVal + 'stub';
 				}
+				if (debugConVal) label = label + ' ' + conVal;
 				seqItems.push({label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
@@ -192,6 +219,32 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	deleteFolder(seqItem: SequenceItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			let items: vscode.QuickPickItem[] = [];
+			items.push({label: 'DELETE FOLDER', description: 'Delete '+seqItem.name+' Folder and ALL ITS PASSES'});
+			items.push({label: 'Delete folder only', description: 'Delete '+seqItem.name+' Folder ONLY and keep all the passes'});
+			items.push({label: 'Abort', description: 'Do not delete folder'});
+
+			vscode.window.showQuickPick(items, {title: 'Delete Folder', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+				if (seqItem.type.localeCompare('missing') == 0) {
+					seqFile.deletePassInSeqFile(seqItem.type, seqItem.name);
+				} else {
+					if (!selection || selection.label == 'Abort')
+						return;
+					else if (selection.label == 'Delete folder only') {
+						var item = seqFile.findPass(seqItem.type,seqItem.name);
+						seqFile.deleteFolder(item,true);
+					} else
+						seqFile.deletePass(seqItem);
+					seqFile.saveFile();			
+				}
+				vscode.commands.executeCommand('sequenceView.refreshAll');
+			});
+		}
+	}
+
 	deletePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
@@ -201,7 +254,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			items.push({label: 'Yes', description: deleteDescr});
 			items.push({label: 'No', description: 'Do not delete pass'});
 
-			vscode.window.showQuickPick(items, {title: deleteDescr, canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (seqItem.type.localeCompare('missing') == 0) {
 					seqFile.deletePassInSeqFile(seqItem.type, seqItem.name);
 				} else {
@@ -363,7 +416,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				newPass = 'funcs';
 			else if (type == newPassType.CODE)
 				newPass = 'init';
-			vscode.window.showInputBox({ value: newPass, prompt: 'Enter new pass name' }).then(newname => {
+			vscode.window.showInputBox({ title: 'Insert Pass', value: newPass, prompt: 'Enter new pass name' }).then(newname => {
 				if (newname) {
 					if (seqItem && (seqItem.uri || seqFile.getPasses().length > 1))
 						seqFile.insertNewPass(seqItem,newname,type);
@@ -391,7 +444,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	renamePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			vscode.window.showInputBox({ value: seqItem.name, prompt: 'Enter new name for pass' }).then(newname => {
+			vscode.window.showInputBox({ title: 'Rename Pass', value: seqItem.name, prompt: 'Enter new name for pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
 					let newFile = path.join(path.dirname(seqItem.uri.fsPath),newname+'.nlp');
@@ -413,11 +466,30 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	renameFolder(seqItem: SequenceItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			var seqFile = visualText.analyzer.seqFile;
+			vscode.window.showInputBox({ title: 'Rename Folder', value: seqItem.name, prompt: 'Enter new name for folder' }).then(newname => {
+				var original = seqItem.uri;
+				if (newname) {
+					let exists = seqFile.findPass('folder',newname);
+					if (exists.name.length) {
+						vscode.window.showWarningMessage('This folder name already exists: ' + newname);
+						vscode.commands.executeCommand('sequenceView.rename',seqItem);	
+					} else {
+						seqFile.renamePass(seqItem,newname);
+						vscode.commands.executeCommand('sequenceView.refreshAll');						
+					}
+				}
+			});
+		}
+	}
+
 	duplicatePass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
 			var seedName = this.incrementEndNumber(seqItem.name);
-			vscode.window.showInputBox({ value: seedName, prompt: 'Enter name for duplicate pass' }).then(newname => {
+			vscode.window.showInputBox({ title: 'Duplicate Pass', value: seedName, prompt: 'Enter name for duplicate pass' }).then(newname => {
 				var original = seqItem.uri;
 				if (newname) {
 					seqFile.duplicatePass(seqItem,newname);
@@ -441,9 +513,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	newFolder(seqItem: SequenceItem) {
 		if (visualText.hasWorkspaceFolder()) {
 			var seqFile = visualText.analyzer.seqFile;
-			vscode.window.showInputBox({ value: 'newpass', prompt: 'Enter new folder name' }).then(newname => {
+			vscode.window.showInputBox({ title: 'Create New Folder', value: 'newpass', prompt: 'Enter new folder name' }).then(newname => {
 				if (newname) {
-					if (seqItem && seqItem.uri)
+					if (seqItem.order == 0 || (seqItem && seqItem.uri))
 						seqFile.insertNewFolder(seqItem,newname);
 					else
 						seqFile.insertNewFolderEnd(newname);
@@ -454,22 +526,22 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	typePat(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveType(seqItem.passNum,'nlp');
+		visualText.analyzer.seqFile.saveType(seqItem,'nlp');
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
 	typeRec(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveType(seqItem.passNum,'rec');
+		visualText.analyzer.seqFile.saveType(seqItem,'rec');
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeOn(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveActive(seqItem.passNum,true);
+		visualText.analyzer.seqFile.saveActive(seqItem,true);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 	
 	typeOff(seqItem: SequenceItem) {
-		visualText.analyzer.seqFile.saveActive(seqItem.passNum,false);
+		visualText.analyzer.seqFile.saveActive(seqItem,false);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
@@ -494,7 +566,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	renameToken(seqItem: SequenceItem, newname: string) {
-		visualText.analyzer.seqFile.saveType(seqItem.passNum,newname);
+		visualText.analyzer.seqFile.saveType(seqItem,newname);
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 }
@@ -540,8 +612,10 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryWhiteSpaces', (seqItem) => treeDataProvider.libraryWhiteSpaces(seqItem));
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.deleteFolder', (seqItem) => treeDataProvider.deleteFolder(seqItem));
 		vscode.commands.registerCommand('sequenceView.duplicate', (seqItem) => treeDataProvider.duplicatePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem));
+		vscode.commands.registerCommand('sequenceView.renameFolder', (seqItem) => treeDataProvider.renameFolder(seqItem));
 		vscode.commands.registerCommand('sequenceView.typePat', (seqItem) => treeDataProvider.typePat(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeRec', (seqItem) => treeDataProvider.typeRec(seqItem));
 		vscode.commands.registerCommand('sequenceView.typeOff', (seqItem) => treeDataProvider.typeOff(seqItem));
@@ -581,7 +655,7 @@ export class SequenceView {
 
 	private toggleActive(seqItem: SequenceItem): void {
 		if (seqItem) {
-			visualText.analyzer.seqFile.saveActive(seqItem.passNum,!seqItem.active);
+			visualText.analyzer.seqFile.saveActive(seqItem,!seqItem.active);
 			vscode.commands.executeCommand('sequenceView.refreshAll');
 		}
 	}
@@ -705,7 +779,7 @@ export class SequenceView {
 	public search(word: string='', functionFlag: boolean = false) {
 		if (visualText.hasWorkspaceFolder()) {
 			if (word.length == 0) {
-				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
+				vscode.window.showInputBox({ title: 'Find in Passes', value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord?.length)
 						this.findWord(searchWord,functionFlag);
 				});				
