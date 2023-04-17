@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.20.0
+One-level sequence folders should now be working.
+
 ### 2.19.4
 Adding testing files for regression testing.
 
@@ -156,15 +159,6 @@ Comments now follow VSCode standard of ctrl-/
 
 ### 2.0.2
 New version: KB Browser with .dict files and .kbb files which make dictionary and knowledge base building much easier. Is in conjunciton with version 2 of the NLP Engine.
-
-### 1.65.1
-Removed boost and used std::filesystem and std::regex
-
-### 1.64.5
-Added download of the boost file system library
-
-### 1.63.3
-Added new and library pass submenus
 
 # Development
 
