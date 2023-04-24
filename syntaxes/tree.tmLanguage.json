@@ -15,7 +15,7 @@
             "name": "meta.expression.tree",
             "patterns": [
                 {
-                    "include": "#comment"
+                    "include": "#comment-line"
                 },
                 {
                     "include": "#rewrites"
@@ -29,7 +29,7 @@
             ]
         },
         "node-name": {
-            "match": "\\b([\\w\\d]+)\\b",
+            "match": "^([\\s]+)([^_\\s]+)",
             "name": "keyword.node.tree"
         },
         "rewrites": {
@@ -48,16 +48,9 @@
                 },
                 {
                     "include": "#qstring-double"
-                },
-                {
-                    "include": "#comment"
                 }
             ],
             "name": "meta.attribute.tree"
-        },
-        "comment": {
-            "match": "\\*.*$\\n?",
-            "name": "comment.line.tree"
         },
         "qstring-double": {
             "begin": "\"",
@@ -96,8 +89,12 @@
             "name": "keyword.fired.tree"
         },
         "types": {
-            "match": "\\b(?i:(alpha|ctrl|emoji|node|num|punct))\\b",
+            "match": "\\b(?i:(alpha|ctrl|emoji|node|num|punct|white))\\b",
             "name": "keyword.attribute.tree"
+        },
+        "comment-line": {
+            "match": "\\s*#.*$\\n?",
+            "name": "comment.line.dict"
         }
     }
 }
