@@ -68,16 +68,9 @@
                 },
                 {
                     "include": "#qstring-double"
-                },
-                {
-                    "include": "#comment"
                 }
             ],
             "name": "meta.attribute.kbb"
-        },
-        "comment": {
-            "match": "\\*.*$\\n?",
-            "name": "comment.line.kbb"
         },
         "qstring-double": {
             "begin": "\"",
