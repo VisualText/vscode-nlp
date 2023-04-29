@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.20.2",
+    "version": "2.20.3",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -922,7 +922,7 @@
                 }
             },
                         {
-                "command": "sequenceView.libraryLinesDicTocZ",
+                "command": "sequenceView.libraryLinesDictTokZ",
                 "title": "Lines for DictTocZ",
                 "icon": {
                     "light": "resources/light/new-file.svg",
@@ -2065,7 +2065,7 @@
                     "group": "edit@2"
                 },
                                 {
-                    "command": "sequenceView.libraryLinesDicTocZ",
+                    "command": "sequenceView.libraryLinesDictTokZ",
                     "group": "edit@3"
                 },
                 {
