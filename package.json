@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.20.1",
+    "version": "2.20.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -916,6 +916,14 @@
             {
                 "command": "sequenceView.libraryLines",
                 "title": "Lines",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+                        {
+                "command": "sequenceView.libraryLinesDicTocZ",
+                "title": "Lines for DictTocZ",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -2056,13 +2064,17 @@
                     "command": "sequenceView.libraryLines",
                     "group": "edit@2"
                 },
-                {
-                    "command": "sequenceView.libraryWhiteSpaces",
+                                {
+                    "command": "sequenceView.libraryLinesDicTocZ",
                     "group": "edit@3"
                 },
                 {
-                    "command": "sequenceView.insertLibrary",
+                    "command": "sequenceView.libraryWhiteSpaces",
                     "group": "edit@4"
+                },
+                {
+                    "command": "sequenceView.insertLibrary",
+                    "group": "edit@5"
                 }
             ],
             "librarydict": [

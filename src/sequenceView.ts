@@ -276,6 +276,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		this.insertLibraryFile(seqItem,'Formatting','Lines.nlp');
 	}
 
+	libraryLinesDictTokZ(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'Formatting','LinesDictTokZ.nlp');
+	}
+
 	libraryWhiteSpaces(seqItem: SequenceItem): void {
 		this.insertLibraryFile(seqItem,'Formatting','RemoveWhiteSpace.nlp');
 	}
@@ -610,6 +614,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryLinesDictTokZ', (seqItem) => treeDataProvider.libraryLinesDictTokZ(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryWhiteSpaces', (seqItem) => treeDataProvider.libraryWhiteSpaces(seqItem));
 		vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem));
 		vscode.commands.registerCommand('sequenceView.deleteFolder', (seqItem) => treeDataProvider.deleteFolder(seqItem));
