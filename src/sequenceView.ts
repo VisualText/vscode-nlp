@@ -267,6 +267,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			});
 		}
 	}
+	
+	libraryUtilFuncs(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'','UtilFuncs.nlp');
+	}
 
 	libraryKBFuncs(seqItem: SequenceItem): void {
 		this.insertLibraryFile(seqItem,'','KBFuncs.nlp');
@@ -613,6 +617,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryUtilFuncs', (seqItem) => treeDataProvider.libraryUtilFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryLinesDictTokZ', (seqItem) => treeDataProvider.libraryLinesDictTokZ(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryWhiteSpaces', (seqItem) => treeDataProvider.libraryWhiteSpaces(seqItem));
