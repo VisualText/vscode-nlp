@@ -69,7 +69,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		var pnum = 0;
 		var order = 0;
-		var debugConVal = false;
+		var debugConVal = true;
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
@@ -121,7 +121,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (passItem.tokenizer) {
 					label = '1 ' + passItem.typeStr;
 					tooltip = passItem.fetchTooltip();
-					conVal = conVal + 'tokenize';
+					conVal = conVal + 'tokenize' + 'hasLog';
 				} else {
 					label = passItem.name;
 					conVal = conVal + 'stub';
@@ -832,13 +832,17 @@ export class SequenceView {
 	
 	private openTree(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
-			this.textFile.setFile(seqItem.uri);
-			if (!this.textFile.isFileType(nlpFileType.NLP)) {
-				vscode.window.showWarningMessage('Not editable');
-				return;
-			}
-			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
+			if (seqItem.passNum == 1) {
 				this.openTreeFile(seqItem.passNum);
+			} else {
+				this.textFile.setFile(seqItem.uri);
+				if (!this.textFile.isFileType(nlpFileType.NLP)) {
+					vscode.window.showWarningMessage('Not editable');
+					return;
+				}
+				if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
+					this.openTreeFile(seqItem.passNum);
+				}				
 			}
 		}
 	}
