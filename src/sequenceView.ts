@@ -69,7 +69,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		var pnum = 0;
 		var order = 0;
-		var debugConVal = true;
+		var debugConVal = false;
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
