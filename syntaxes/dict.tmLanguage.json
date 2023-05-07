@@ -34,7 +34,7 @@
             ]
         },
         "word-first-attr": {
-            "match": "^([^=]+)(\\s)([\\w\\d]+)(=)",
+            "match": "^([^=]+)(\\s)([\\w\\d]+)(\\s)*(=)",
             "captures": {
                 "1": {
                     "name": "comment.line.dict"
@@ -46,6 +46,9 @@
                     "name": "keyword.region.dict"
                 },
                 "4": {
+                    "name": "keyword.region.dict"
+                },
+                "5": {
                     "name": "keyword.operator.dict"
                 }
             }
@@ -55,12 +58,15 @@
             "name": "entity.name.function.dict"
         },
         "other-attrs": {
-            "match": "([\\w]+)(=)",
+            "match": "([\\w]+)(\\s)*(=)",
             "captures": {
                 "1": {
                     "name": "keyword.region.dict"
                 },
                 "2": {
+                    "name": "keyword.region.dict"
+                },
+                "3": {
                     "name": "keyword.operator.dict"
                 }
             }

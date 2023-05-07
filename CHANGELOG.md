@@ -3,7 +3,7 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.20.6
+### 2.20.7
 One-level sequence folders should now be working.
 
 ### 2.19.4

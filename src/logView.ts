@@ -70,7 +70,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.addMessage', (message,type,uri) => this.addMessage(message,type,uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
-		vscode.commands.registerCommand('logView.makeAna', () => this.loadMakeAna());
+		vscode.commands.registerCommand('logView.makeAna', () => this.makeAna());
 		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
 		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
 		vscode.commands.registerCommand('logView.stopUpdater', () => this.stopUpdater());
@@ -139,21 +139,36 @@ export class LogView {
 		this.addLogFile(cgFile,logLineType.LOGFILE);
 	}
 
-	private loadCGLog() {
+	public loadCGLog() {
 		this.clearLogs();
 		this.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE);
 	}
+
+	public makeAna() {
+		this.clearLogs();
+		if (logView.syntaxErrorsLog('cgerr'))
+			logView.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE,'',true);
+		this.loadMakeAna();
+	}
 	
 	public loadMakeAna() {
-		this.clearLogs();
 		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
 		this.addLogFile(errorLog,logLineType.LOGFILE);
 		this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
 	}
 
-	public syntaxErrors(): boolean {
-		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
-		const logFile = new TextFile(errorLog.fsPath);
+	public syntaxErrorsOutput(filename: string): boolean {
+		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
+		return this.syntaxErrors(errorLog);
+	}
+
+	public syntaxErrorsLog(filename: string): boolean {
+		var errorLog = visualText.analyzer.treeFile(filename);
+		return this.syntaxErrors(errorLog);
+	}
+
+	public syntaxErrors(filepath: vscode.Uri): boolean {
+		const logFile = new TextFile(filepath.fsPath);
 		for (let line of logFile.getLines()) {
 			let parse = this.parseLogLine(line,logLineType.INFO,undefined);
 			if (parse.type == logLineType.SYNTAX_ERROR)
@@ -171,13 +186,16 @@ export class LogView {
 		this.logs.push(this.parseLogLine(message, type, uri));
 	}
 
-	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='') {
+	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false) {
 		if (fs.existsSync(logFileName.fsPath)) {
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
 				line = line.substring(0,line.length);
-				if (line.length)
-					this.logs.push(this.parseLogLine(spaces+line,type,undefined));
+				if (line.length) {
+					let logItem = this.parseLogLine(spaces+line,type,undefined);
+					if (!onlySyntax || logItem.type == logLineType.SYNTAX_ERROR)
+						this.logs.push(logItem);
+				}
 			}
 		}		
 	}
@@ -211,7 +229,15 @@ export class LogView {
 
 		if (line.length) {
 			if (firstTwoNumbers) {
-				if (visualText.analyzer.isLoaded()) {
+				if (lineTrimmed.endsWith('.dict]')) {
+					tokens = line.split(/[\t\s\]]/);  
+					var filename = tokens[tokens.length - 2];
+					var filePath = path.join(visualText.analyzer.getKBDirectory().fsPath,filename);
+					uri = vscode.Uri.file(filePath);
+					type = logLineType.SYNTAX_ERROR;
+					icon = this.typeIcon(logLineType.SYNTAX_ERROR);
+				}
+				else if (visualText.analyzer.isLoaded()) {
 					var seqFile = visualText.analyzer.seqFile;
 					uri = seqFile.getUriByPassNumber(passNum);
 					type = logLineType.SYNTAX_ERROR;
