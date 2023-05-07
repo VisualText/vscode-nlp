@@ -38,6 +38,7 @@
 !node_modules/minimatch/**/*
 !node_modules/mkdirp/**/*
 !node_modules/ms/**/*
+!node_modules/n-readlines/**/*
 !node_modules/nodejs-file-downloader/**/*
 !node_modules/once/**/*
 !node_modules/os/**/*
