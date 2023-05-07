@@ -122,6 +122,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					label = '1 ' + passItem.typeStr;
 					tooltip = passItem.fetchTooltip();
 					conVal = conVal + 'tokenize' + 'hasLog';
+					conVal = conVal.replace('mvdown','');
 				} else {
 					label = passItem.name;
 					conVal = conVal + 'stub';
@@ -371,7 +372,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					return;
 				let found = false;
 				let fromDir = '';
-				if (seqItem.contextValue == 'tokenize') {
+				if (seqItem.contextValue?.indexOf('tokenize') != -1) {
 					fromDir = visualText.analyzer.getSpecDirectory().fsPath;
 				} else {
 					fromDir = path.dirname(seqItem.uri.fsPath);
@@ -835,7 +836,7 @@ export class SequenceView {
 			if (seqItem.passNum == 1) {
 				this.openTreeFile(seqItem.passNum);
 			} else {
-				this.textFile.setFile(seqItem.uri);
+				this.textFile.setFileType(seqItem.uri.fsPath);
 				if (!this.textFile.isFileType(nlpFileType.NLP)) {
 					vscode.window.showWarningMessage('Not editable');
 					return;
@@ -856,7 +857,10 @@ export class SequenceView {
 		var logfile = this.treeFile.anaFile(passNum,nlpFileType.TREE);
 		if (fs.existsSync(logfile.fsPath)) {
 			visualText.colorizeAnalyzer();
-			vscode.window.showTextDocument(logfile);
+			vscode.commands.executeCommand(
+				'vscode.open', 
+				vscode.Uri.file(logfile.fsPath)
+			);
 		}
 		else
 			vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));

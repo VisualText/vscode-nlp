@@ -5,6 +5,7 @@ import { FindFile } from './findFile';
 import { findView } from './findView';
 import { outputView } from './outputView';
 import { dirfuncs } from './dirfuncs';
+import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 
@@ -195,6 +196,7 @@ export class KBView {
 
 	private kbView: vscode.TreeView<KBItem>;
 	private findFile = new FindFile();
+	private textFile = new TextFile();
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
@@ -335,7 +337,7 @@ export class KBView {
 		for (let dictFile of dictFiles) {
 			let descr = "";
 
-			let firstLine = this.readFirstLine(dictFile.fsPath);
+			let firstLine = this.textFile.readFirstLine(dictFile.fsPath);
 			if (firstLine[0] == '#') {
 				descr = firstLine.substring(1).trim();
 			}
@@ -374,7 +376,7 @@ export class KBView {
 		for (let dictFile of dictFiles) {
 			let descr = "";
 
-			let firstLine = this.readFirstLine(dictFile.fsPath);
+			let firstLine = this.textFile.readFirstLine(dictFile.fsPath);
 			if (firstLine[0] == '#') {
 				descr = firstLine.substring(1);
 			}
@@ -408,13 +410,6 @@ export class KBView {
 			visualText.fileOps.addFileOperation(vscode.Uri.file(filepath),vscode.Uri.file(newfile),[fileOpRefresh.KB],fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		}
-	}
-
-	readFirstLine(filepath: string): string {
-		let text = fs.readFileSync(filepath, 'utf8');
-		let i = text.indexOf('\n');
-		let line = text.substring(0,i);
-		return line.trim();
 	}
 
 	copyToAnalyzer(KBItem: KBItem) {

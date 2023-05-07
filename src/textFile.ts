@@ -399,11 +399,41 @@ export class TextFile {
 	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
 		var anaFile = this.anaFile(pass,type);
 		if (type == nlpFileType.TREE) {
-			this.setFile(anaFile,true);
-			if (this.numberOfLines() > 6)
+			if (this.fileHasNLines(anaFile.fsPath,6))
 				return true;
 			return false;
 		}
 		return fs.existsSync(anaFile.fsPath);
+	}
+
+	fileHasNLines(filepath: string, max: number): boolean {
+        if (!fs.existsSync(filepath))
+            return false;
+        const lineByLine = require('n-readlines');
+        const liner = new lineByLine(filepath);
+         
+        let line;
+        let lineNumber = 0;
+         
+        while (line = liner.next()) {
+            if (lineNumber++ >= max)
+                return true;
+        }
+        return false;
+	}
+
+	public readFirstLine(filepath: string): string {
+        if (!fs.existsSync(filepath))
+            return '';
+        const lineByLine = require('n-readlines');
+        const liner = new lineByLine(filepath);
+         
+        let line = '';
+         
+        while (line = liner.next()) {
+            break;
+        }
+
+        return line;
 	}
 }
