@@ -107,12 +107,14 @@ export class NLPFile extends TextFile {
 					logView.loadAnalyzerOuts();
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
-					if (err || logView.syntaxErrors()) {
+					var syntaxError = logView.syntaxErrorsOutput('err.log');
+					if (err || syntaxError) {
 						if (err)
 							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
-						logView.loadMakeAna();
+						logView.makeAna();
+
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
