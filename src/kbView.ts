@@ -391,7 +391,7 @@ export class KBView {
 		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, canPickMany: false, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selection => {
 			if (!selection)
 				return;
-			if (selection.description) {
+			if (selection.label) {
 				if (ext == '.nlm') {
 					var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDirName,selection.label);
 					visualText.mod.load(vscode.Uri.file(filepath));
