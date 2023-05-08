@@ -397,6 +397,8 @@ export class TextFile {
     }
 
 	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
+        if (!fs.existsSync(uri.fsPath))
+            return false;
 		var anaFile = this.anaFile(pass,type);
 		if (type == nlpFileType.TREE) {
 			if (this.fileHasNLines(anaFile.fsPath,6))
@@ -414,12 +416,17 @@ export class TextFile {
          
         let line;
         let lineNumber = 0;
+        let found = false;
          
         while (line = liner.next()) {
-            if (lineNumber++ >= max)
-                return true;
+            if (lineNumber++ >= max) {
+                found = true;
+                break;
+            }
         }
-        return false;
+        if (liner.next())
+            liner.close();
+        return found;
 	}
 
 	public readFirstLine(filepath: string): string {
@@ -434,6 +441,9 @@ export class TextFile {
             break;
         }
 
+        if (liner.next())
+            liner.close();
+            
         return line;
 	}
 }
