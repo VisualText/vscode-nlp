@@ -14,7 +14,7 @@ let nlpStatusBarVisualTextVersion: vscode.StatusBarItem;
 let nlpStatusBarFilesVersion: vscode.StatusBarItem;
 let nlpStatusBarAnalyzersVersion: vscode.StatusBarItem;
 
-export enum DevMode { NORMAL, DEV }
+export enum DevMode { NORMAL, DEV, SILENT }
 export enum FiredMode { BUILT, FIRED }
 
 export let nlpStatusBar: NLPStatusBar;
@@ -140,13 +140,20 @@ export class NLPStatusBar {
 
     chooseDev() {
         let items: vscode.QuickPickItem[] = [];
-        items.push({label: 'Turn ON log files', description: 'generate log files when analyzing'});
-        items.push({label: 'Turn OFF log files', description: 'do not generate log files when analyzing'});
-        vscode.window.showQuickPick(items, {title: 'Log Files Toggle', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+        items.push({label: 'All logging on', description: 'generate all log files when analyzing'});
+        items.push({label: 'Final logs only', description: 'generate the final log files when analyzing'});
+        items.push({label: 'All logging off', description: 'do not generate any log files when analyzing'});
+        vscode.window.showQuickPick(items, {title: 'Log Files Mode', canPickMany: false, placeHolder: 'Choose a mode'}).then(selection => {
             if (!selection) {
                 return;
             }
-            var mode: DevMode = selection.label === 'Turn ON log files' ? DevMode.DEV : DevMode.NORMAL;
+            var mode: DevMode = DevMode.NORMAL;
+            if (selection.label === 'All logging on')
+                mode = DevMode.DEV
+            else if (selection.label === 'Final logs only')
+                mode = DevMode.NORMAL;
+            else
+                mode = DevMode.SILENT;
             nlpStatusBar.setDevState(mode);
         });	
     }
@@ -175,9 +182,11 @@ export class NLPStatusBar {
 
     updateDevState() {
         if (this.devMode == DevMode.DEV) {
-            nlpStatusBarDev.text = 'Log Files On';
+            nlpStatusBarDev.text = 'Logs All On';
+        } else if (this.devMode == DevMode.SILENT) {
+            nlpStatusBarDev.text = 'Logs All Off';
         } else {
-            nlpStatusBarDev.text = 'Log Files Off';
+            nlpStatusBarDev.text = 'Logs Final Only';
         }
     }
 

@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.21.0
+Can now choose log flag for all logs, final logs only, and completely silent.
+
 ### 2.20.10
 One-level sequence folders should now be working.
 
