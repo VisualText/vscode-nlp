@@ -106,6 +106,7 @@ export class VisualText {
     public stopAll: boolean = false;
     public debug: boolean = false;
 
+    private autoUpdateFlag: undefined | boolean = false;
     private platform: string = '';
     private homeDir: string = '';
     private username: string = '';
@@ -877,6 +878,7 @@ export class VisualText {
     }
 
     readConfig() {
+        this.configAutoUpdate();
         this.configFindUsername();
         this.configAnalzyerDirectory();
         this.configCurrentAnalzyer();
@@ -1043,6 +1045,22 @@ export class VisualText {
         if (this.latestExtIndex >= 0) {
             this.extensionItems[this.latestExtIndex].latest = true; 
         }
+    }
+
+    setAutoUpdate(autoUpdateFlag: boolean) {
+        this.autoUpdateFlag = autoUpdateFlag;
+        const config = vscode.workspace.getConfiguration('update');
+        config.update('auto',autoUpdateFlag,vscode.ConfigurationTarget.Global);
+    }
+
+    getAutoUpdate(): boolean | undefined {
+        const config = vscode.workspace.getConfiguration('update');
+        var version = config.get<string>('visualtext');
+        return config.get<boolean>('auto');
+    }
+
+    configAutoUpdate() {
+        this.autoUpdateFlag = this.getAutoUpdate();
     }
 
     setVTFilesVersion(version: string) {
