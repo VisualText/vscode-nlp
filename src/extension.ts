@@ -25,5 +25,8 @@ export function activate(ctx: vscode.ExtensionContext): void {
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
 
-    visualText.startUpdater();
+    if (visualText.getAutoUpdate())
+        visualText.startUpdater();
+    else
+        visualText.debugMessage("Auto update on reload is off");
 }

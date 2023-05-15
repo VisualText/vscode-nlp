@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.22.0
+Can now turn off auto updates.
+
 ### 2.21.0
 Can now choose log flag for all logs, final logs only, and completely silent.
 
