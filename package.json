@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.22.0",
+    "version": "2.22.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -346,6 +346,14 @@
             {
                 "command": "kbView.dictEnglish",
                 "title": "English Dictionary",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
+                "command": "kbView.dictOther",
+                "title": "Other Dictionaries",
                 "icon": {
                     "light": "resources/light/dict.svg",
                     "dark": "resources/dark/dict.svg"
@@ -2093,6 +2101,10 @@
                 {
                     "command": "kbView.dictEnglish",
                     "group": "edit@1"
+                },
+                {
+                    "command": "kbView.dictOther",
+                    "group": "edit@2"
                 },
                 {
                     "command": "kbView.dictStopWords",
