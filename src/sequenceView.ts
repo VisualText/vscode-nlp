@@ -641,6 +641,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertOrphan', (seqItem) => this.insertOrphan(seqItem));
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
 		vscode.commands.registerCommand('sequenceView.modAdd', () => this.modAdd());
+		vscode.commands.registerCommand('sequenceView.video', () => this.video());
 	}
 
 	modAdd() {
