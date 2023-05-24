@@ -514,6 +514,23 @@ export class SequenceFile extends TextFile {
 		return this.passItems;
 	}
 
+	getPassFileUris(topFlag: boolean): vscode.Uri[] {
+		let files: vscode.Uri[] = new Array();
+		let infolder: boolean = false;
+		for (let pass of this.getPasses()) {
+			if (topFlag) {
+				if (pass.typeStr == 'folder') {
+					infolder = true;
+				} else if (pass.typeStr == 'end') {
+					infolder = false;
+				}
+			}
+			if (!infolder && pass.typeStr == 'nlp' && pass.uri && pass.uri.fsPath.length > 4)
+				files.push(pass.uri);
+		}
+		return files;
+	}
+
 	getSequenceFile(): vscode.Uri {
 		var uri = visualText.analyzer.getSpecDirectory();
 		if (uri.fsPath.length)

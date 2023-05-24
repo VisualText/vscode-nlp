@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
+import { visualText } from './visualText';
 
 export interface FindItem {
 	uri: vscode.Uri;
@@ -26,10 +27,24 @@ export class FindFile {
 	getMatches(): FindItem[] {
 		return this.finds;
 	}
+
+	searchSequenceFiles(searchTerm: string, topFlag: boolean): boolean {
+		this.finds = [];
+		const fileUris = visualText.analyzer.seqFile.getPassFileUris(topFlag);
+		var context: number = 60;
+		var escaped = this.escapeRegExp(searchTerm);
+
+		for (let uri of fileUris) {
+			this.searchFile(uri, searchTerm, escaped, context, false);
+		}
+
+		return false;
+	}
     
 	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0, functionFlag: boolean = false): boolean {
 		if (level == 0)
 			this.finds = [];
+
 		const files = dirfuncs.getFiles(dir);
 		var context: number = 60;
 		var escaped = this.escapeRegExp(searchTerm);
@@ -45,38 +60,11 @@ export class FindFile {
 				}
 				if (!found)
 					continue;
-			} 
-
-			this.textFile.setFile(file);
-
-			if (this.textFile.getText().search(escaped) >= 0) {
-				let num = 0;
-				for (let line of this.textFile.getLines()) {
-					var pos = line.search(escaped);
-					var lineOrig = line;
-					if (pos >= 0) {
-						var filename = path.basename(file.fsPath);
-						var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
-						if (line.length + escaped.length > context) {
-							let half = context / 2;
-							if (line.length - pos < half) {
-								line = line.substring(line.length-context-1,context);
-							} else if (pos > half) {
-								line = line.substring(pos-half,context+escaped.length);								
-							} else {
-								line = line.substring(0,context);
-							}
-						}
-						line = line.replace(searchTerm,` <<${searchTerm}>> `);
-						var label = `${filename} [${num} ${pos}] ${line}`;
-						var trimmed = line.trim();
-						if (!functionFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
-							this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
-						}
-					}
-					num++;
-				}				
 			}
+
+			var filename = path.basename(file.fsPath);
+			var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
+			this.searchFile(uri, searchTerm, escaped, context, functionFlag);
 		}
 
 		const dirs = dirfuncs.getDirectories(dir);
@@ -87,6 +75,40 @@ export class FindFile {
 		}
 
 		return this.finds.length ? true : false;
+	}
+
+	searchFile(uri: vscode.Uri, searchTerm: string, escaped: string, context: number, functionFlag: boolean) {
+		if (dirfuncs.isDir(uri.fsPath))
+			return;
+		this.textFile.setFile(uri);
+		let filename = path.basename(uri.fsPath);
+
+		if (this.textFile.getText().search(escaped) >= 0) {
+			let num = 0;
+			for (let line of this.textFile.getLines()) {
+				var pos = line.search(escaped);
+				var lineOrig = line;
+				if (pos >= 0) {
+					if (line.length + escaped.length > context) {
+						let half = context / 2;
+						if (line.length - pos < half) {
+							line = line.substring(line.length-context-1,context);
+						} else if (pos > half) {
+							line = line.substring(pos-half,context+escaped.length);								
+						} else {
+							line = line.substring(0,context);
+						}
+					}
+					line = line.replace(searchTerm,` <<${searchTerm}>> `);
+					var label = `${filename} [${num} ${pos}] ${line}`;
+					var trimmed = line.trim();
+					if (!functionFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
+						this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
+					}
+				}
+				num++;
+			}				
+		}
 	}
 
 	escapeRegExp(str: string): string {

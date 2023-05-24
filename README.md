@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.23.0
+Enhanced search for sequence files.
+
 ### 2.22.2
 Can now turn off auto updates.
 
@@ -153,18 +156,6 @@ Users can now quickly move an output file to sister analyzer's text or kb.
 
 ### 2.4.4
 Dict type in output view, explore in sequence view, and bug fixes.
-
-### 2.3.1
-Added move file from output to kb directory.
-
-### 2.2.2
-Added the ability to copy files to the KB directory.
-
-### 2.1.2
-Comments now follow VSCode standard of ctrl-/
-
-### 2.0.2
-New version: KB Browser with .dict files and .kbb files which make dictionary and knowledge base building much easier. Is in conjunciton with version 2 of the NLP Engine.
 
 # Development
 

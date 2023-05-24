@@ -605,6 +605,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.displayMatchedRules', (seqItem) => this.displayMatchedRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
 		vscode.commands.registerCommand('sequenceView.search', () => this.search());
+		vscode.commands.registerCommand('sequenceView.searchTop', () => this.searchTop());
 		vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree());
 		vscode.commands.registerCommand('sequenceView.convert', () => this.convertPatToNLP());
 
@@ -801,9 +802,22 @@ export class SequenceView {
 		}
 	}
 
-	private findWord(word: string, functionFlag: boolean = false) {
+	public searchTop(word: string='', functionFlag: boolean = false) {
+		if (visualText.hasWorkspaceFolder()) {
+			if (word.length == 0) {
+				vscode.window.showInputBox({ title: 'Find in Top Level Passes', value: 'searchword', prompt: 'Enter term to search at the top level' }).then(searchWord => {
+					if (searchWord?.length)
+						this.findWord(searchWord,functionFlag,true);
+				});				
+			} else {
+				this.findWord(word,functionFlag,true);
+			}
+		}
+	}
+
+	private findWord(word: string, functionFlag: boolean = false, topFlag: boolean = false) {
 		if (word.length) {
-			this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,['.nlp','.pat'],0,functionFlag);
+			this.findFile.searchSequenceFiles(word,topFlag);
 			findView.loadFinds(word,this.findFile.getMatches());
 			findView.setSearchWord(word);
 			vscode.commands.executeCommand('findView.updateTitle');

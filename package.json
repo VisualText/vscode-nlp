@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.22.2",
+    "version": "2.23.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1025,6 +1025,14 @@
                 "command": "sequenceView.search",
                 "title": "Search",
                 "icon": {
+                    "light": "resources/light/searchAll.svg",
+                    "dark": "resources/dark/searchAll.svg"
+                }
+            },
+            {
+                "command": "sequenceView.searchTop",
+                "title": "Search Top Level Only",
+                "icon": {
                     "light": "resources/light/search.svg",
                     "dark": "resources/dark/search.svg"
                 }
@@ -1892,19 +1900,24 @@
                     "group": "navigation@2"
                 },
                 {
-                    "command": "sequenceView.refreshAll",
+                    "command": "sequenceView.searchTop",
                     "when": "view == sequenceView",
                     "group": "navigation@3"
                 },
                 {
-                    "command": "sequenceView.modAdd",
+                    "command": "sequenceView.refreshAll",
                     "when": "view == sequenceView",
                     "group": "navigation@4"
                 },
                 {
-                    "command": "sequenceView.video",
+                    "command": "sequenceView.modAdd",
                     "when": "view == sequenceView",
                     "group": "navigation@5"
+                },
+                {
+                    "command": "sequenceView.video",
+                    "when": "view == sequenceView",
+                    "group": "navigation@6"
                 },
                 {
                     "command": "outputView.all",
@@ -2279,6 +2292,11 @@
                 },
                 {
                     "command": "sequenceView.search",
+                    "when": "view == sequenceView && viewItem =~ /.*file.*/",
+                    "group": "display"
+                },
+                {
+                    "command": "sequenceView.searchTop",
                     "when": "view == sequenceView && viewItem =~ /.*file.*/",
                     "group": "display"
                 },
