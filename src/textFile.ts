@@ -21,8 +21,8 @@ export class TextFile {
     private nlpFileExts = new Array('unknown', 'seq', 'txt', 'nlp', 'txxt', 'tree', 'log', 'kb', 'kbb', 'dict', 'nlm');
     private exists: boolean = false;
     private selLines: string[] = [];
-    private selStartLine: number = 0;
-    private selEndLine: number = 0;
+    public selStartLine: number = 0;
+    public selEndLine: number = 0;
 
     constructor(filepath: string = '', separateLines: boolean = true, text: string = '') {
         if (text.length)
