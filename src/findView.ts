@@ -103,7 +103,7 @@ export class FindView {
 		this.searchWord = searchWord;
 	}
 
-	private openFile(findItem: FindItem): void {
+	public openFile(findItem: FindItem): void {
 		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(findItem.uri).then(editor => 
 			{

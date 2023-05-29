@@ -3,6 +3,9 @@ All notable changes to the "nlp" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.24.0
+Can now display fired rules from dictionaries.
+
 ### 2.23.0
 Enhanced search for sequence files.
 

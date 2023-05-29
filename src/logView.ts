@@ -262,7 +262,7 @@ export class LogView {
 				}
 			}
 		}
-		if (line.indexOf("Warning") > 0 || type == logLineType.WARNING) {
+		if (line.indexOf("Warning") >= 0 || line.indexOf("Unhandled") >= 0 ||type == logLineType.WARNING) {
 			icon = 'yield.svg'; 
 		}
 		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});

@@ -6,6 +6,8 @@ import { TextFile, nlpFileType } from './textFile';
 import { NLPFile } from './nlp';
 import { nlpStatusBar, FiredMode } from './status';
 import { SequenceFile } from './sequence';
+import { FindFile, FindItem } from './findFile';
+import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 import * as os from 'os';
 
@@ -55,6 +57,7 @@ export class TreeFile extends TextFile {
 	private HighlightFile = '';
 	private inputFile = '';
 	private selectedLines: TreeLine[] = [];
+	private findFile = new FindFile();
 
 	constructor() {
 		super();
@@ -65,10 +68,11 @@ export class TreeFile extends TextFile {
 			this.setFile(editor.document.uri);
 			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
-				var seqFile = new SequenceFile();
-				seqFile.init();
-				var passNum = this.selectedLines[0].passNum;
+				var tline = this.selectedLines[0];
+				var passNum = tline.passNum;
 				if (passNum) {
+					var seqFile = new SequenceFile();
+					seqFile.init();
 					var passFile = seqFile.getUriByPassNumber(passNum);
 					visualText.colorizeAnalyzer();
 					vscode.window.showTextDocument(passFile, { viewColumn: vscode.ViewColumn.Beside }).then(edit => 
@@ -78,9 +82,59 @@ export class TreeFile extends TextFile {
 							edit.selections = [new vscode.Selection(pos,pos)]; 
 							edit.revealRange(range);
 						});
+
+				// If 0,0, then search inside dictionary files
+				} else if (tline.ruleLine == 0 && tline.node.startsWith('_')) {
+					let searchWord = tline.node.substring(1);
+					var str = this.gatherChildrenText();
+					if (searchWord == 'phrase') {
+						searchWord = str;
+					} else {
+						searchWord = 's=' + tline.node.substring(1);
+					}
+					this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict']);
+					var matches = this.findFile.getMatches();
+					var finalMatches: FindItem[] = [];
+
+					// Need to eventually add attributes to match to narrow choices down. Lots of parsing to do for that idea.
+					for (let match of matches) {
+						let text = match.text.replace('<<','');
+						text = text.replace('>>','').trim();
+						if (text.startsWith(str)) {
+							finalMatches.push(match);
+						}
+					}
+					if (finalMatches.length == 1) {
+						findView.openFile(finalMatches[0]);
+					} else {
+						findView.loadFinds(searchWord,finalMatches);
+						findView.setSearchWord(searchWord);
+						vscode.commands.executeCommand('findView.updateTitle');
+						vscode.commands.executeCommand('findView.refreshAll');						
+					}
 				}
 			}
 		}
+	}
+
+	gatherChildrenText(): string {
+		var str = '';
+		var lines = this.getLines();
+		if (lines.length > this.selStartLine) {
+			var i = this.selStartLine+1;
+			var indent = this.selectedLines[0].indent;
+			while (i < lines.length) {
+				var line = lines[i++];
+				var treeLine = this.parseTreeLine(line);
+				if (treeLine.indent > indent) {
+					str += ' ' + treeLine.node;
+				} else {
+					break;
+				}
+			}
+		}
+		str = str.toLocaleLowerCase().trim();
+		return str;
 	}
 
 	highlightText(editor: vscode.TextEditor) {
@@ -153,13 +207,17 @@ export class TreeFile extends TextFile {
 		this.selectedLines = [];
 		this.selStart = -1;
 		this.selEnd = -1;
+		let lineCount = 0;
 
 		for (let line of lines) {
+			lineCount++;
 			let treeLine = this.parseTreeLine(line);
-			if (this.selStart < 0 || treeLine.ustart < this.selStart)
+			if (this.selStart < 0 || treeLine.ustart < this.selStart) {
 				this.selStart = treeLine.ustart;
-			if (this.selEnd < 0 || treeLine.uend > this.selEnd)
+			}
+			if (this.selEnd < 0 || treeLine.uend > this.selEnd) {
 				this.selEnd = treeLine.uend;
+			}
 			this.selectedLines.push(treeLine);
 		}
 	}
