@@ -218,7 +218,7 @@ export class LogView {
 			line = line.replace(']','');
 		}
 
-		let tokens = line.split(/[\t\s]/,2);  
+		let tokens = lineTrimmed.split(/[\t\s]/,5);  
 		if (tokens.length >= 2) {
 			passNum = +tokens[0];
 			lineNum = +tokens[1];
