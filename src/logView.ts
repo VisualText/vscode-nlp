@@ -158,7 +158,7 @@ export class LogView {
 	}
 
 	public syntaxErrorsOutput(filename: string): boolean {
-		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
+		var errorLog = visualText.analyzer.treeFile('make_ana');
 		return this.syntaxErrors(errorLog);
 	}
 
