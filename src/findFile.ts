@@ -41,7 +41,7 @@ export class FindFile {
 		return false;
 	}
     
-	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0, functionFlag: boolean = false): boolean {
+	searchFiles(dir: vscode.Uri, searchTerm: string, extensions: string[] = [], level: number = 0, functionFlag: boolean = false, bracketsFlag: boolean = true): boolean {
 		if (level == 0)
 			this.finds = [];
 
@@ -64,7 +64,7 @@ export class FindFile {
 
 			var filename = path.basename(file.fsPath);
 			var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
-			this.searchFile(uri, searchTerm, escaped, context, functionFlag);
+			this.searchFile(uri, searchTerm, escaped, context, functionFlag, bracketsFlag);
 		}
 
 		const dirs = dirfuncs.getDirectories(dir);
@@ -77,7 +77,7 @@ export class FindFile {
 		return this.finds.length ? true : false;
 	}
 
-	searchFile(uri: vscode.Uri, searchTerm: string, escaped: string, context: number, functionFlag: boolean) {
+	searchFile(uri: vscode.Uri, searchTerm: string, escaped: string, context: number, functionFlag: boolean, bracketsFlag: boolean = true) {
 		if (dirfuncs.isDir(uri.fsPath))
 			return;
 		this.textFile.setFile(uri);
@@ -99,10 +99,11 @@ export class FindFile {
 							line = line.substring(0,context);
 						}
 					}
-					line = line.replace(searchTerm,` <<${searchTerm}>> `);
+					if (bracketsFlag)
+						line = line.replace(searchTerm,` <<${searchTerm}>> `);
 					var label = `${filename} [${num} ${pos}] ${line}`;
 					var trimmed = line.trim();
-					if (!functionFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
+					if (!functionFlag || bracketsFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
 						this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
 					}
 				}

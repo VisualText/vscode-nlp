@@ -84,26 +84,34 @@ export class TreeFile extends TextFile {
 						});
 
 				// If 0,0, then search inside dictionary files
-				} else if (tline.ruleLine == 0 && tline.node.startsWith('_')) {
-					let searchWord = tline.node.substring(1);
-					var str = this.gatherChildrenText();
-					if (searchWord == 'phrase') {
-						searchWord = str;
-					} else {
-						searchWord = 's=' + tline.node.substring(1);
-					}
-					this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict']);
-					var matches = this.findFile.getMatches();
+				} else if (tline.ruleLine == 0) {
 					var finalMatches: FindItem[] = [];
+					var searchWord = tline.node.toLowerCase();
+					var str = searchWord;
+
+					if (searchWord.startsWith('_')) {
+						searchWord = tline.node.substring(1);
+						str = this.gatherChildrenText();
+						if (searchWord == 'phrase') {
+							searchWord = str;
+						} else {
+							searchWord = 's=' + tline.node.substring(1);
+						}
+					}
+
+					this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict'],0,false,false);
+					var matches = this.findFile.getMatches();
 
 					// Need to eventually add attributes to match to narrow choices down. Lots of parsing to do for that idea.
+					str = str + ' ';  // The space eliminates substrings, won't work if space is a tab in the dictionary
 					for (let match of matches) {
-						let text = match.text.replace('<<','');
-						text = text.replace('>>','').trim();
+						let text = match.text;
 						if (text.startsWith(str)) {
 							finalMatches.push(match);
 						}
 					}
+
+					// Display the find(s)
 					if (finalMatches.length == 1) {
 						findView.openFile(finalMatches[0]);
 					} else {
