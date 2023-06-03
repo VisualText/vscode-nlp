@@ -1047,6 +1047,19 @@ export class VisualText {
         }
     }
 
+    setTextFastLoad(fastFlag: boolean) {
+        this.autoUpdateFlag = fastFlag;
+        const config = vscode.workspace.getConfiguration('textView');
+        config.update('fast',fastFlag,vscode.ConfigurationTarget.Global);
+        vscode.commands.executeCommand('setContext', 'textView.fastload', fastFlag);
+    }
+
+    getTextFastLoad(): boolean | undefined {
+        const config = vscode.workspace.getConfiguration('textView');
+        var version = config.get<string>('visualtext');
+        return config.get<boolean>('fast');
+    }
+
     setAutoUpdate(autoUpdateFlag: boolean) {
         this.autoUpdateFlag = autoUpdateFlag;
         const config = vscode.workspace.getConfiguration('update');

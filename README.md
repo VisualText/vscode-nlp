@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.25.0
+Added fast load option for the TextView for large number of files
+
 ### 2.24.4
 Can now display fired rules from dictionaries.
 
@@ -150,15 +153,6 @@ Added toggle active / inactive for kbb and dict files. Added attr and val while 
 
 ### 2.7.2
 Insert and delete orphan(s), icon variety in KB, duplidate line shortcut in dict and kbb, explore output directory, import analyzer
-
-### 2.6.2
-NLP Engine couts are now displayed in the logview after the run.
-
-### 2.5.1
-Users can now quickly move an output file to sister analyzer's text or kb.
-
-### 2.4.4
-Dict type in output view, explore in sequence view, and bug fixes.
 
 # Development
 
