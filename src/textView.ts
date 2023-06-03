@@ -140,7 +140,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 
 	checkFileCount(dir: string) {
 		var count = dirfuncs.fileCount(visualText.analyzer.getInputDirectory());
-		if (count > 100 && !visualText.getTextFastLoad()) {
+		if (!visualText.fastAnswered && count > 100 && !visualText.getTextFastLoad()) {
 			let items: vscode.QuickPickItem[] = [];
 			let offMsg = 'Turn On Fast Text Load';
 			items.push({label: offMsg, description: 'files will not have attributes such as \'has log files\''});
@@ -152,6 +152,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 						visualText.setTextFastLoad(true);
 				}
 			});
+			visualText.fastAnswered = true;
 		}
 	}
 
