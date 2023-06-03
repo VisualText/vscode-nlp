@@ -105,6 +105,7 @@ export class VisualText {
     public processID: number = 0;
     public stopAll: boolean = false;
     public debug: boolean = false;
+    public fastAnswered: boolean = false;
 
     private autoUpdateFlag: undefined | boolean = false;
     private platform: string = '';
