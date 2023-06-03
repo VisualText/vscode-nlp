@@ -13,10 +13,10 @@ import { NLPStatusBar } from './status';
 import { visualText } from './visualText';
 
 export function activate(ctx: vscode.ExtensionContext): void {
+    TextView.attach(ctx);
     LogView.attach(ctx);
     VisualText.attach(ctx);
     AnalyzerView.attach(ctx);
-    TextView.attach(ctx);
     OutputView.attach(ctx);
     SequenceView.attach(ctx);
     KBView.attach(ctx);
@@ -25,6 +25,8 @@ export function activate(ctx: vscode.ExtensionContext): void {
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
 
+    vscode.commands.executeCommand('setContext', 'textView.fastload', visualText.getTextFastLoad());
+      
     if (visualText.getAutoUpdate())
         visualText.startUpdater();
     else

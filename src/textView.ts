@@ -61,7 +61,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 
 	getTreeItem(textItem: TextItem): vscode.TreeItem {
 		const treeItem = new vscode.TreeItem(textItem.uri, textItem.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-		this.getMovement(textItem);
+		if (!visualText.getTextFastLoad())
+			this.getMovement(textItem);
 		var conVal = textItem.moveDown ? 'moveDown' : '';
 		if (textItem.moveUp)
 			conVal = conVal + 'moveUp';
@@ -85,8 +86,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 					hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
 			}
 		} else {
-			if (visualText.analyzer.folderHasTests(textItem.uri))
-				hasTest = 'test';
+			if (!visualText.getAutoUpdate()) {
+				if (visualText.analyzer.folderHasTests(textItem.uri))
+					hasTest = 'test';
+			}
+
 			var hasNonText = textItem.hasNonText ? 'HasNonText' : '';
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
 			treeItem.contextValue = 'dir' + conVal + hasNonText + hasLogs + hasTest;
@@ -101,20 +105,54 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 	}
 
 	getKeepers(dir: vscode.Uri): TextItem[] {
+		this.checkFileCount(dir.fsPath);
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
+		var moment = require('moment');
+        require("moment-duration-format");
+        var startTime = moment();
+        var keepers = Array();
+
 		for (let entry of entries) {
 			if (!entry.uri.fsPath.endsWith(visualText.TEST_SUFFIX) && !(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
-				var hasLogs =  dirfuncs.hasLogDirs(entry.uri,false);
-				var hasNonText = entry.type == vscode.FileType.Directory && this.dirHasNonText(entry.uri) ? true : false;
-				keepers.push({uri: entry.uri, type: entry.type, hasLogs: hasLogs, hasNonText: hasNonText, moveUp: false, moveDown: false});
+				var hasLogs = false;
+				var hasNonText = false;
+				if (!visualText.getTextFastLoad()) {
+					hasLogs = dirfuncs.hasLogDirs(entry.uri,false);
+					hasNonText = entry.type == vscode.FileType.Directory && this.dirHasNonText(entry.uri) ? true : false;
+				}
+				keepers.push({uri: entry.uri, type: entry.type, hasLogs: false, hasNonText: false, moveUp: false, moveDown: false});
 			}
 		}
 
-		var hasAllLogs = dirfuncs.hasLogDirs(dir,true);
-		vscode.commands.executeCommand('setContext', 'text.hasLogs', hasAllLogs);
+		var hasAllLogs = false;
+		if(!visualText.getTextFastLoad())
+			hasAllLogs = dirfuncs.hasLogDirs(dir,true);
+		vscode.commands.executeCommand('setContext', 'text.hasLogs', false);
+
+		var endTime = moment();
+		var timeDiff = moment.duration(endTime.diff(startTime),'milliseconds').format('mm:ss:SS');
+        visualText.debugMessage(`TextView loading: ${timeDiff} (m:s:ms)`);
+
 		return keepers;
+	}
+
+	checkFileCount(dir: string) {
+		var count = dirfuncs.fileCount(visualText.analyzer.getInputDirectory());
+		if (count > 100 && !visualText.getTextFastLoad()) {
+			let items: vscode.QuickPickItem[] = [];
+			let offMsg = 'Turn On Fast Text Load';
+			items.push({label: offMsg, description: 'files will not have attributes such as \'has log files\''});
+			items.push({label: 'Leave Fast Load Off', description: 'please generate all the file attributes'});
+
+			vscode.window.showQuickPick(items, {title: 'Fast Load Toggle', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+				if (selection != undefined) {
+					if (selection.label == 'Turn On Fast Text Load')
+						visualText.setTextFastLoad(true);
+				}
+			});
+		}
 	}
 
 	dirHasNonText(dir: vscode.Uri): boolean {
@@ -252,6 +290,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.analyzeDir', (textItem) => this.analyzeDir(textItem));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
+		vscode.commands.registerCommand('textView.fastLoad', () => this.fastLoad(true));
+		vscode.commands.registerCommand('textView.fastLoadOff', () => this.fastLoad(false));
 		vscode.commands.registerCommand('textView.newTextTop', (textItem) => this.newText(textItem,true));
 		vscode.commands.registerCommand('textView.newText', (textItem) => this.newText(textItem,false));
 		vscode.commands.registerCommand('textView.newDirTop', (textItem) => this.newDir(textItem,true));
@@ -282,6 +322,11 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	fastLoad(fastFlag: boolean=false) {
+		visualText.setTextFastLoad(fastFlag);
+		vscode.commands.executeCommand('setContext', 'textView.fastload', fastFlag);
 	}
 
 	editTest(textItem: TextItem) {
