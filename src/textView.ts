@@ -105,7 +105,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 	}
 
 	getKeepers(dir: vscode.Uri): TextItem[] {
-		this.checkFileCount(dir.fsPath);
+		// this.checkFileCount(dir.fsPath);
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
