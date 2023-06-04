@@ -37,6 +37,8 @@
 !node_modules/mime-types/**/*
 !node_modules/minimatch/**/*
 !node_modules/mkdirp/**/*
+!node_modules/moment/**/*
+!node_modules/moment-duration-format/**/*
 !node_modules/ms/**/*
 !node_modules/n-readlines/**/*
 !node_modules/nodejs-file-downloader/**/*
