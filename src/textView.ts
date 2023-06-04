@@ -122,7 +122,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 					hasLogs = dirfuncs.hasLogDirs(entry.uri,false);
 					hasNonText = entry.type == vscode.FileType.Directory && this.dirHasNonText(entry.uri) ? true : false;
 				}
-				keepers.push({uri: entry.uri, type: entry.type, hasLogs: false, hasNonText: false, moveUp: false, moveDown: false});
+				keepers.push({uri: entry.uri, type: entry.type, hasLogs: hasLogs, hasNonText: hasNonText, moveUp: false, moveDown: false});
 			}
 		}
 
