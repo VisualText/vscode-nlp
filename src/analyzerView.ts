@@ -5,8 +5,9 @@ import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
+import { SequenceFile } from './sequence';
 
-export enum analyzerItemType { ANALYZER, FOLDER }
+export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE }
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -66,23 +67,32 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		if (analyzerItem.hasReadme)
 			conVal = conVal + 'readMe';
 
+		let icon = this.fileIconFromType(analyzerItem.type);
+		treeItem.iconPath = {
+			light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+			dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+		}
+
 		if (analyzerItem.type === analyzerItemType.ANALYZER) {
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs + 'isAnalyzer';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
-			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'gear.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'gear.svg')
-			}
-		} else {
+		} else if (analyzerItem.type === analyzerItemType.FOLDER) {
 			treeItem.contextValue = conVal + 'isFolder';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
-			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', 'folder.svg'),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
-			}
+		} else if (analyzerItem.type === analyzerItemType.NLP) {
+			treeItem.tooltip = analyzerItem.uri.fsPath;
+			treeItem.collapsibleState = 0;
+			treeItem.command = { command: 'analyzerView.openFile', title: "Open File", arguments: [analyzerItem] };
+		} else {
+			if (analyzerItem.uri.fsPath.endsWith('.ecl'))
+				treeItem.contextValue = conVal + 'isECL';
+			treeItem.tooltip = analyzerItem.uri.fsPath;
+			treeItem.collapsibleState = 0;
+			// treeItem.label = treeItem.label + ' ' + treeItem.contextValue;
+			treeItem.command = { command: 'analyzerView.openFile', title: "Open File", arguments: [analyzerItem] };
 		}
 		return treeItem;
 	}
@@ -98,6 +108,18 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 				var hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
 				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
                 keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
+
+			} else if (entry.type == vscode.FileType.File) {
+				type = analyzerItemType.FILE;
+				if (entry.uri.fsPath.endsWith('.nlp'))
+					type = analyzerItemType.NLP;
+				else if (entry.uri.fsPath.endsWith('.seq'))
+					type = analyzerItemType.SEQUENCE;
+				else if (entry.uri.fsPath.endsWith('.ecl'))
+					type = analyzerItemType.ECL;
+				else if (entry.uri.fsPath.endsWith('.manifest'))
+					type = analyzerItemType.MANIFEST;
+				keepers.push({uri: entry.uri, type: type, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false});
 			}
 		}
 
@@ -105,6 +127,25 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
 		return keepers;
 	}
+
+	fileIconFromType(type: analyzerItemType): string {
+
+        let icon = 'file.svg';
+		if (type == analyzerItemType.ANALYZER) {
+            icon = 'gear.svg';
+        } else if (type == analyzerItemType.FOLDER) {
+            icon = 'folder.svg';
+        } else if (type == analyzerItemType.NLP) {
+            icon = 'nlp.svg';
+        } else if (type == analyzerItemType.SEQUENCE) {
+            icon = 'seq-circle.svg';
+		} else if (type == analyzerItemType.ECL) {
+            icon = 'ecl.svg';
+		} else if (type == analyzerItemType.MANIFEST) {
+            icon = 'manifest.svg';
+		}
+        return icon;
+    }
 }
 
 export let analyzerView: AnalyzerView;
@@ -114,6 +155,7 @@ export class AnalyzerView {
 	public folderUri: vscode.Uri | undefined;
 	public chosen: vscode.Uri | undefined;
 	public converting: boolean;
+	private sequenceFile = new SequenceFile;
 
 	constructor(context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
@@ -138,9 +180,11 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
 		vscode.commands.registerCommand('analyzerView.rename', resource => this.rename(resource));
+		vscode.commands.registerCommand('analyzerView.openFile', resource => this.openFile(resource));
+		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
+		vscode.commands.registerCommand('analyzerView.manifestGenerate', resource => this.manifestGenerate(resource));
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
-		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 		vscode.commands.registerCommand('analyzerView.video', () => this.video());
 
@@ -154,6 +198,107 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	manifestGenerate(analyzerItem: AnalyzerItem) {
+		let items: vscode.QuickPickItem[] = visualText.analyzerList('analyzers');
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('You must have an \'analyzers\' folder containing your NLP analyzers');
+			return;
+		}
+		let title = 'Generate HPCC Manifest File';
+		let placeHolder = 'Choose Analyzers to Manifest';
+
+		vscode.window.showQuickPick(items, {title, canPickMany: true, placeHolder: placeHolder}).then(selections => {
+			if (!selections)
+				return;
+
+			let files: string[] = [];
+			let start = visualText.getAnalyzerDir().fsPath.length;
+
+			for (let selection of selections) {
+				var analyzerPath = selection.description;
+				if (analyzerPath) {
+					let analyzerFiles = this.getAnalyzerManifestFiles(analyzerPath);
+					for (let file of analyzerFiles) {
+						files.push(this.cleanPath(file,start));
+					}
+					
+					// KB FILES
+					let kbPath = path.join(analyzerPath,'kb','user');
+					let kbFiles = dirfuncs.getFiles(vscode.Uri.file(kbPath),['.dict','.kbb','.kb']);
+					for (let file of kbFiles) {
+						files.push(this.cleanPath(file.fsPath,start));
+					}
+
+					// ENGINE DATA FILES
+					// let datas = this.copyDataFolder();
+					// for (let file of datas) {
+					// 	files.push(this.cleanPath(file,start));
+					// }
+				}
+			}
+
+			// Write files to manifest
+			let filepath = path.parse(analyzerItem.uri.fsPath);
+			let manifestFile = this.getManifestFilePath(filepath.name);
+			let mannie = fs.createWriteStream(manifestFile,{flags: 'w'});
+			mannie.write('<Manifest>\n');
+			for (let file of files) {
+				mannie.write('    <Resource filename="' + file + '" />\n');
+			}
+			mannie.write('</Manifest>');
+			mannie.close();
+
+			vscode.commands.executeCommand('analyzerView.refreshAll');
+			vscode.window.showTextDocument(vscode.Uri.file(manifestFile));
+		});
+	}
+
+	cleanPath(file: string, start: number): string {
+		let relative = file.substring(start);
+		relative = relative.replace(new RegExp('\\\\', 'g'),'/');
+		relative = relative.substring(1);
+		return relative;
+	}
+
+	getManifestFilePath(elcFileName: string): string {
+		return path.join(visualText.getAnalyzerDir().fsPath,elcFileName+'.manifest');
+	}
+
+	getAnalyzerManifestFiles(dir: string): string[] {
+		let files: string[] = [];
+		let specDir = path.join(dir,'spec');
+		this.sequenceFile.setSpecDir(specDir);
+		this.sequenceFile.getPassFiles(specDir);
+		files.push(path.join(specDir,'analyzer.seq'));
+		for (let item of this.sequenceFile.getPassItems()) {
+			let p = item.uri.fsPath;
+			if (p.length > 2 && fs.existsSync(p))
+				files.push(item.uri.fsPath);
+		}
+		return files;
+	}
+
+	// No longer needed but leaving around JUST IN CASE
+	copyDataFolder(): string[] {
+		let files: string[] = [];
+		var dataFolder = path.join(visualText.getAnalyzerDir().fsPath,'data','rfb','spec');
+		if (!fs.existsSync(dataFolder)) {
+			var engineData = path.join(visualText.engineDirectory().fsPath,'data','rfb','spec');
+			visualText.fileOps.addFileOperation(vscode.Uri.file(engineData),vscode.Uri.file(dataFolder),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
+			visualText.fileOps.startFileOps();
+		}
+		var uris = dirfuncs.getFiles(vscode.Uri.file(dataFolder));
+
+		for (let uri of uris) {
+			files.push(uri.fsPath);
+		}
+		return files;
+	}
+
+	openFile(analyzerItem: AnalyzerItem): void {
+		vscode.window.showTextDocument(analyzerItem.uri);
 	}
 
 	video() {
