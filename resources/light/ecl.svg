@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1"
+   data-name="Layer 1"
+   viewBox="0 0 16 16"
+   version="1.1"
+   sodipodi:docname="ecl.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview198"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="53.3125"
+     inkscape:cx="9.4630715"
+     inkscape:cy="8.2813599"
+     inkscape:window-width="1920"
+     inkscape:window-height="1111"
+     inkscape:window-x="1266"
+     inkscape:window-y="1341"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="text414" />
+  <defs
+     id="defs193">
+    <style
+       id="style191">.cls-1{fill:#eeec82;}</style>
+  </defs>
+  <g
+     aria-label="ECL"
+     transform="scale(0.90453633,1.1055388)"
+     id="text414"
+     style="font-size:12.2605px;font-family:'Franklin Gothic Demi Cond';-inkscape-font-specification:'Franklin Gothic Demi Cond';fill:#cbbdf6;stroke-width:1.79565;stroke-linecap:round;stroke-linejoin:round">
+    <path
+       d="M 0.35952747,2.8968494 H 5.3283824 V 4.2977073 H 2.1554991 V 6.1954507 H 4.6219669 V 7.6022952 H 2.1554991 V 9.6077969 H 5.3283824 V 11.068521 H 0.35952747 Z"
+       id="path296" />
+    <path
+       d="m 10.183493,8.0931941 1.65828,0.1017718 q -0.0898,1.329019 -0.844106,2.1671391 -0.754309,0.832134 -1.993529,0.832134 -1.5086163,0 -2.2988438,-1.119489 -0.7902275,-1.1194895 -0.7902275,-3.0830852 0,-1.9815554 0.7842409,-3.1010444 0.784241,-1.119489 2.3287766,-1.119489 2.5562668,0 2.7837558,3.1609102 L 10.17152,6.051773 q -0.06585,-1.819918 -1.1374492,-1.819918 -0.5627378,0 -0.8979858,0.5866841 -0.3292615,0.5866841 -0.3292615,2.2748975 0,1.5086162 0.3053152,2.0773405 0.3053152,0.5627378 0.9159455,0.5627378 0.9817978,0 1.1554088,-1.6403208 z"
+       id="path298" />
+    <path
+       d="m 12.89541,2.8968494 h 1.795972 v 6.6391087 h 2.634092 V 11.068521 H 12.89541 Z"
+       id="path300" />
+  </g>
+</svg>

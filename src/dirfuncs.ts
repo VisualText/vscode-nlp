@@ -166,7 +166,7 @@ export namespace dirfuncs {
         return count;
     }
 
-    export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false): vscode.Uri[] {
+    export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false, recurse: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
@@ -176,6 +176,12 @@ export namespace dirfuncs {
                 const stats = fs.statSync(filePath);
                 if (!(skipDirectories && stats.isDirectory()) && (filter.length == 0 || filter.includes(ext)))
                     fileUris.push(vscode.Uri.file(filePath));
+                if (stats.isDirectory() && recurse) {
+                    var children = getFiles(vscode.Uri.file(filename),filter,skipDirectories,recurse);
+                    for (let child of children) {
+                        fileUris.push(child);
+                    }
+                }
             }
         }
         return fileUris;

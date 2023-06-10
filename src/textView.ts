@@ -9,6 +9,8 @@ import { dirfuncs } from './dirfuncs';
 import { nlpStatusBar, DevMode, FiredMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
+import * as moment from 'moment';
+import 'moment-duration-format'
 
 export interface TextItem {
 	uri: vscode.Uri;
@@ -109,8 +111,6 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		var keepers = Array();
 		var entries = dirfuncs.getDirectoryTypes(dir);
 
-		var moment = require('moment');
-        require("moment-duration-format");
         var startTime = moment();
         var keepers = Array();
 

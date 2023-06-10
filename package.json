@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.25.7",
+    "version": "2.26.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -322,6 +322,14 @@
             {
                 "command": "outputView.video",
                 "title": "Help Video for Output File Viewer",
+                "icon": {
+                    "light": "resources/light/video.svg",
+                    "dark": "resources/dark/video.svg"
+                }
+            },
+            {
+                "command": "analyzerView.manifestGenerate",
+                "title": "Generate HPCC Manifest File",
                 "icon": {
                     "light": "resources/light/video.svg",
                     "dark": "resources/dark/video.svg"
@@ -2567,6 +2575,11 @@
                     "group": "inline"
                 },
                 {
+                    "command": "analyzerView.manifestGenerate",
+                    "when": "view == analyzerView && viewItem =~ /.*isECL.*/",
+                    "group": "ecl"
+                },
+                {
                     "command": "analyzerView.moveDownFolder",
                     "when": "view == analyzerView && viewItem =~ /.*isFolder.*/",
                     "group": "movefolder"
@@ -2628,7 +2641,7 @@
                 },
                 {
                     "command": "analyzerView.copyAnalyzer",
-                    "when": "view == analyzerView && viewItem != isFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "edit"
                 },
                 {
@@ -2638,7 +2651,7 @@
                 },
                 {
                     "command": "analyzerView.dupeAnalyzer",
-                    "when": "view == analyzerView && viewItem != isFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "edit"
                 },
                 {
@@ -2658,7 +2671,7 @@
                 },
                 {
                     "command": "analyzerView.dupeAnalyzer",
-                    "when": "view == analyzerView && viewItem != isFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "inline@1"
                 },
                 {
@@ -2837,6 +2850,7 @@
         "extract-zip": "^2.0.1",
         "latest-version": "^7.0.0",
         "line-reader": "^0.4.0",
+        "moment": "^2.29.4",
         "moment-duration-format": "^2.3.2",
         "n-readlines": "^1.0.1",
         "nodejs-file-downloader": "^4.7.3",
@@ -2857,6 +2871,7 @@
     "devDependencies": {
         "@types/glob": "^7.2.0",
         "@types/mocha": "^5.2.7",
+        "@types/moment-duration-format": "^2.2.3",
         "@types/node": "^12.20.47",
         "@types/vscode": "^1.65.0",
         "@vscode/vsce": "^2.15.0",

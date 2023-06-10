@@ -1420,6 +1420,21 @@ export class VisualText {
         return icon;
     }
 
+    analyzerList(subdir: string): vscode.QuickPickItem[] {
+        let dirs: vscode.Uri[] = [];
+        if (subdir.length) {
+            let pather = path.join(visualText.getWorkspaceFolder().fsPath,subdir);
+            dirs = dirfuncs.getDirectories(vscode.Uri.file(pather));
+        } else
+            dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+        let items: vscode.QuickPickItem[] = [];
+        for (let dir of dirs) {
+            let filename = path.basename(dir.fsPath);
+            items.push({label: filename, description: dir.fsPath});
+        }
+        return items;
+    }
+
     analyzerFolderList(specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
         let items: vscode.QuickPickItem[] = [];
