@@ -96,11 +96,21 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				conVal = conVal + 'foldernotok';
 				label = passItem.name;
 				if (debugConVal) label = label + ' ' + conVal;
+				let passes = seqFile.getFolderPasses(passItem.typeStr, passItem.name);
+				let oneActive = false;
+				for (let pass of passes) {
+					if (pass.active) {
+						oneActive = true;
+						break;
+					}
+				}
+				if (!oneActive)
+					passItem.active = false;
 				seqItems.push({label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal, inFolder: passItem.inFolder,
-					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed});
+					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active});
 			
 			} else if (passItem.isEnd(passItem.name)) {
-				var donothing = true;
+				let donothing = true;
 				
 			} else if (passItem.isRuleFile()) {
 				conVal = conVal + 'filenotok';
@@ -158,7 +168,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			icon = seqItem.active ? 'dnar.svg' : 'dnar-grayed.svg';
 
 		} else if (seqItem.type.localeCompare('folder') == 0) {
-			icon = 'folder.svg';
+			icon = seqItem.active ? 'folder.svg' : 'folder-inactive.svg';
 			collapse = vscode.TreeItemCollapsibleState.Collapsed;
 
 		} else if (seqItem.type.localeCompare('nlp')) {

@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.26.1",
+    "version": "2.26.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -2721,7 +2721,7 @@
                 },
                 {
                     "command": "sequenceView.toggleActive",
-                    "when": "view == sequenceView && viewItem =~ /hasKB|hasLoghasKB|hasLog|file/",
+                    "when": "view == sequenceView && viewItem =~ /hasKB|hasLoghasKB|hasLog|file|folder/",
                     "group": "inline"
                 },
                 {

@@ -557,7 +557,15 @@ export class SequenceFile extends TextFile {
 
 	saveActive(seqItem: SequenceItem, active: boolean) {
 		var passItem = this.findPass(seqItem.type,seqItem.name);
-		if (passItem.exists()) {
+		if (passItem.typeStr == 'folder') {
+			var passes: PassItem[] = this.getFolderPasses(passItem.typeStr,passItem.name);
+			for (let pass of passes) {
+				pass.active = active;
+			}
+			passItem.active = active;
+			this.saveFile();
+		}
+		else if (passItem.exists()) {
 			passItem.active = active;
 			this.saveFile();			
 		}
