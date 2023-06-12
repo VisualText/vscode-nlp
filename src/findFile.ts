@@ -50,13 +50,15 @@ export class FindFile {
 		var escaped = this.escapeRegExp(searchTerm);
 
 		for (let file of files) {
-			if (dirfuncs.directoryIsLog(file.fsPath))
+			if (dirfuncs.directoryIsLog(file.fsPath) || (functionFlag && file.fsPath.toLowerCase().indexOf('func') < 0))
 				continue;
 			if (extensions.length) {
 				let found: boolean = false;
 				for (let extension of extensions) {
-					if (file.fsPath.endsWith(extension))
+					if (file.fsPath.endsWith(extension)) {
 						found = true;
+						break;
+					}
 				}
 				if (!found)
 					continue;

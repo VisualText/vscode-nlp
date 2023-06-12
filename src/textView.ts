@@ -131,9 +131,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			hasAllLogs = dirfuncs.hasLogDirs(dir,true);
 		vscode.commands.executeCommand('setContext', 'text.hasLogs', false);
 
-		var endTime = moment();
-		var timeDiff = moment.duration(endTime.diff(startTime),'milliseconds').format('mm:ss:SS');
-        visualText.debugMessage(`TextView loading: ${timeDiff} (m:s:ms)`);
+		if (visualText.getTextFastLoad()) {
+			var endTime = moment();
+			var timeDiff = moment.duration(endTime.diff(startTime),'milliseconds').format('mm:ss:SS');
+			visualText.debugMessage(`TextView loading: ${timeDiff} (m:s:ms)`);			
+		}
 
 		return keepers;
 	}
