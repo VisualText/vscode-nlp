@@ -14,12 +14,19 @@ export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
 export enum analyzerStatus { UNKNOWN, ANALYZING, DONE, FAILED }
 export enum analyzerOperation { UNKNOWN, RUN, STOP }
 export enum analyzerType { UNKNOWN, FILE, DIRECTORY }
+export enum reformatType { NORMAL, ONELINE, PARENS }
 
 interface analyzerRun {
     uri: vscode.Uri;
     operation: analyzerOperation;
     status: analyzerStatus;
     type: analyzerType;
+}
+
+interface ruleParse {
+	suggested: string,
+    rule: string,
+    comment: string
 }
 
 export let nlpFile: NLPFile;
@@ -375,20 +382,14 @@ export class NLPFile extends TextFile {
 		}
 	}
 
-	reformatRule(editor: vscode.TextEditor) {
+	reformatRule(editor: vscode.TextEditor, type: reformatType) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			var rulevars = this.findRuleText(editor);
 
 			if (rulevars[0].length) {
-				var formattedRule = this.formatRule(rulevars[0]);
+				var formattedRule = this.formatRule(rulevars[0],type);
 				var rang = new vscode.Selection(rulevars[1].start,rulevars[1].end);
-				if (!rulevars[2]) {
-					formattedRule = this.getSeparator() + formattedRule;
-				}
-				if (!rulevars[3]) {
-					formattedRule = formattedRule + this.getSeparator() + '\t';
-				}
 				var snippet = new vscode.SnippetString(formattedRule);
 				editor.insertSnippet(snippet,rang);
 			}			
@@ -434,12 +435,11 @@ export class NLPFile extends TextFile {
 			multilined = true;
 			arrowFlag = true;
 		}
+		rulestr = line + rulestr;
 		if (lineStart < position.line)
 			charStart = 0;
 		else
 			charStart = pos+3;
-		if (multilined)
-			lineStart++;
 
 		multilined = false;
 		line = lines[lineEnd];
@@ -452,13 +452,10 @@ export class NLPFile extends TextFile {
 			firsttime = false;
 			atSignFlag = true;
 		}
-		if (!firsttime)	{
-			lineEnd--;
-			charEnd = lastline.length-1;
-		} else {
-			charEnd = pos;			
-		}
+		rulestr += line;
+		charEnd = pos + 2;			
 
+		charStart = 0;
 		var posStart = new vscode.Position(lineStart,charStart);
 		var posEnd = new vscode.Position(lineEnd,charEnd);
 		var range = new vscode.Range(posStart, posEnd);
@@ -467,85 +464,270 @@ export class NLPFile extends TextFile {
 			rulestr = lastline.substring(charStart,charEnd-charStart);
 		}
 
-		return [rulestr,range, arrowFlag, atSignFlag];
+		return [rulestr, range, arrowFlag, atSignFlag];
 	}
 
-	formatRule(ruleStr: string): string {
-
-		enum state { UNKNOWN, NODE, ATTR_START, ATTR, ATTR_END, COMMENT };
+	formatRule(ruleStr: string, type: reformatType = reformatType.NORMAL): string {
+		enum state { UNKNOWN, SUGGESTED, ARROW, NODE, NODE_DONE, ATTR, ATTR_END, COMMENT, ATAT };
 
 		var formattedRule = ruleStr.replace(this.getSeparatorNormalized(),' ');
 
-		var tokens = ruleStr.split(/\s+/);
-		var currentState = state.UNKNOWN;
-		var lastState = state.UNKNOWN;
-		var lastToken = '';
-		var rulelines = new Array();
+		var rules: ruleParse[] = [];
 		var rulelinesFinal = new Array();
-		var ruleline = '';
-		var maxline = 0;
-		const nodeNumRegex = /\([\d]+\)/g;
+		var words = new Array();
+		var currentState = state.UNKNOWN;
+		var word = '';
+		var isSpace = false;
+		var lastSpace = false;
+		var backSlash = false;
+		var suggested = false;
+		var c = '';
+		var cNext = '';
 
-		for (let token of tokens) {
-			if (!token.length)
+		// Parse rule string
+		for (let i=0; i < ruleStr.length; i++) {
+			c = ruleStr[i];
+			cNext = i < ruleStr.length - 1 ? ruleStr[i+1] : '';
+			isSpace = !/\S/.test(c);
+
+			if (backSlash) {
+				word += c;
+				backSlash = false;
+				continue;
+			}
+			backSlash = c == '\\' ? true : false;
+
+			// Skip more than one space
+			if (isSpace && lastSpace && c != '\n')
 				continue;
 
-			if (token.localeCompare('###') == 0 || token.match(nodeNumRegex)) {
+			// Waiting for next or first node
+			if (currentState == state.UNKNOWN && !isSpace) {
+				currentState = suggested ? state.NODE : state.SUGGESTED;
+				suggested = true;
+
+			// @@
+			} else if (c == '@' && cNext == '@') {
+				if (word.length)
+					words.push(word);
+				break;
+		
+			// <-
+			} else if (currentState == state.SUGGESTED && c == '<' && cNext == '-') {
+				if (word.length)
+					words.push(word);
+				words.push('<-');
+				rules.push({suggested: words[0], rule: '', comment: ''});
+				words = [];
+				word = '';
+				currentState = state.ARROW;
+				i++;
+				continue;
+				
+			// First node after arrow
+			} else if (currentState == state.ARROW && !isSpace) {
+				currentState = state.NODE;
+
+			// Finished picking up the first node in a rule line
+			} else if (currentState == state.NODE && (isSpace || c == '[')) {
+				currentState = state.NODE_DONE;
+				words.push(word);
+				word = '';
+				if (c == '[') {
+					words.push(c);
+					currentState = state.ATTR;
+					word = '';
+					continue;
+				}
+
+			// Found starting attribute bracket
+			} else if (currentState == state.NODE_DONE && c == '[') {
+				words.push(c);
+				currentState = state.ATTR;
+				word = '';
+				continue;
+
+			// If you have one node followed immediately by another or a new line
+			} else if (currentState == state.NODE_DONE && (c == '\n' || (!isSpace && c != '[' && c != '#'))) {
+				if (word.length) {
+					words.push(word);
+				}
+				this.constructLine(rules,words,type);
+				words = [];
+				word = '';
+				currentState = state.NODE;
+
+			// Ending a bracketed attribute area
+			} else if (currentState == state.ATTR && c == ']') {
+				if (word.length)
+					words.push(word);
+				words.push(c);
+				word = '';
+				currentState = state.ATTR_END;
+				continue;
+
+			// Ending a bracketed attribute area
+			} else if (currentState == state.ATTR && (c == ')' || c == '(')) {
+				if (word.length)
+					words.push(word);
+				words.push(c);
+				word = '';
+				continue;
+
+			// Is a comment
+			} else if (currentState == state.ATTR_END && c == '#') {
 				currentState = state.COMMENT;
 
-			} else if (currentState as state == state.NODE && token.startsWith('[')) {
-				currentState = state.ATTR_START;
-				if (token.endsWith(']'))
-					currentState = state.ATTR_END;
-
-			} else if (currentState == state.ATTR_START || currentState == state.ATTR ) {
-				if (token.endsWith(']'))
-					currentState = state.ATTR_END;
-				else
-					currentState = state.ATTR;
-
-			} else {
+			// New line
+			} else if ((currentState == state.NODE || currentState == state.COMMENT || currentState == state.ATTR_END) && c == '\n') {
+				if (word.length)
+					words.push(word);
+				this.constructLine(rules,words,type);
+				words = [];
+				word = '';
 				currentState = state.NODE;
+			
+			// Is a new node on the same line?
+			} else if (currentState == state.ATTR_END && !isSpace) {
+				this.constructLine(rules,words,type);
+				words = [];
+				word = '';
+				currentState = state.UNKNOWN;
 			}
 
-			if (currentState != state.COMMENT) {
-				if (currentState == state.NODE && (lastState == state.NODE || lastState as state == state.ATTR_END || lastState == state.COMMENT)) {
-					if (ruleline.length > maxline)
-						maxline = ruleline.length;
-					rulelines.push(ruleline);
-					ruleline = '';
-				}
-				if (ruleline.length > 1) {
-					ruleline = ruleline + ' ';
-				}
-				ruleline = ruleline + token;
+			if (!isSpace) {
+				word += c;
+			} else if (word.length && isSpace && !lastSpace) {
+				if (word.startsWith('#'))
+					currentState = state.COMMENT;
+				words.push(word);
+				word = '';
 			}
 
-			lastToken = token;
-			lastState = currentState;
+			lastSpace = isSpace;
 		}
-		if (ruleline.length > maxline)
-			maxline = ruleline.length;
-		rulelines.push(ruleline);
 
-		var passnum = 1;
+		if (words.length)
+			this.constructLine(rules,words,type);
+
+		// Find longest line
+		var maxLine = 0;
+		var maxComment = 0;
+		for (let rule of rules) {
+			let total = rule.rule.length;
+			if (total > maxLine)
+				maxLine = total;
+			total = rule.comment.length;
+			if (total > maxComment)
+				maxComment = total;
+		}
+		if (maxComment)
+			maxComment += 1;  // For space after user comment
+
+		// Construct reformated string
 		var tabsize = 4;
-		var tabsmax = Math.floor(maxline / tabsize);
-
-		for (var line of rulelines) {
-			var tabsline = Math.floor(line.length) / tabsize;
-			var tabs = tabsmax - tabsline + 1;
-			var tabstr = '\t';
-			for (let i=1; i<tabs; i++) {
-				tabstr = tabstr + '\t';
+		var tabsMax = Math.floor(maxLine / tabsize);
+		var tabsCommentMax = Math.floor(maxComment / tabsize);
+		var nodeNumber = 1;
+		var ruleLine = '';
+		var hasAtAt = false;
+		for (let rule of rules) {
+			if (rule.rule == '@@') {
+				ruleLine = type == reformatType.ONELINE ? '@@' : '\t@@';
+				hasAtAt = true;
+			} else if (rule.suggested.length) {
+				ruleLine = rule.suggested + ' <-';
+			} else {
+				let tabstr = this.tabString(rule.rule.length,tabsize,tabsMax);
+				let tabCommentStr = this.tabString(rule.comment.length,tabsize,tabsCommentMax);
+				let commentStr = rule.comment.length ? rule.comment + ' \t' : tabsCommentMax > 0 ? tabCommentStr : '';
+				if (type == reformatType.ONELINE)
+					ruleLine = rule.rule;
+				else
+					ruleLine = '\t' + rule.rule + tabstr + '### ' + commentStr + '(' + nodeNumber.toString() + ')';	
+				nodeNumber++;			
 			}
-			rulelinesFinal.push('\t' + line + tabstr + '### (' + passnum.toString() + ')');
-			passnum++;
+			rulelinesFinal.push(ruleLine);
 		}
+		if (!hasAtAt)
+			rulelinesFinal.push('\t@@');
 
-		formattedRule = rulelinesFinal.join(this.getSeparator());
+		var sep = type == reformatType.ONELINE ? '' : this.getSeparator();
+		formattedRule = rulelinesFinal.join(sep);
 
 		return formattedRule;
+	}
+
+	tabString(length: number, tabsize: number, tabsmax: number): string {
+		var tabsline = Math.floor(length) / tabsize;
+		var tabs = tabsmax - tabsline + 1;
+		var tabstr = '\t';
+		for (let i=1; i<tabs; i++) {
+			tabstr = tabstr + '\t';
+		}
+		return tabstr;
+	}
+
+	constructLine(rules, words: string[], type: reformatType)  {
+		// Check for user  or auto-generated comment
+		var lastOne = words[words.length-1];
+		var second = lastOne.substring(1,lastOne.length-1);
+		const parsed = parseInt(second);
+		var isNumeric = isNaN(parsed) ? false : true;
+		var lastIsNodeNumber = lastOne.startsWith('(') && lastOne.endsWith(')') && isNumeric ? true : false;
+		var commentStart = 0;
+		var userComment = '';
+		var found = false;
+		commentStart = words.length - 1;
+		for (let word of words.reverse()) {
+			if (word.startsWith('#')) {
+				found = true;
+				break;
+			}
+			commentStart--;
+		}
+		words.reverse();
+		if (found) {
+			var end = lastIsNodeNumber ? words.length - 1 : words.length;
+			for (let i=commentStart+1; i < end; i++) {
+				word = words[i];
+				if (userComment.length)
+					userComment += ' ';
+				userComment += word;
+			}			
+		}
+
+		// Construct Line
+		if (!words.length)
+			return '';
+		var line = '';
+		var word = '';
+		var nextWord = '';
+		var lastWord = '';
+		var parenFlag = false;
+
+		for (let i=0; i < words.length; i++) {
+			if (commentStart && i == commentStart)
+				break;
+			word = words[i];
+			nextWord = i < words.length-1 ? words[i+1] : '';
+
+			if (type == reformatType.PARENS && (word == '(' || word == ')')) {
+				parenFlag = word == '(' ? true : false;
+				if (word == ')')
+					line += '\n\t\t';
+			} else if (parenFlag) {
+				line += '\n\t\t\t';
+			}
+			line += word;
+			if (i < words.length-1 && word != '[' && word != '(' && !word.endsWith('=')
+				 && nextWord != ')' && nextWord != ']' && nextWord != '='
+				 && lastWord != '=')
+				line += ' ';
+			lastWord = word;
+		}
+		var ruleLine = type == reformatType.ONELINE ? line : line.trimEnd();
+		rules.push({suggested: '', rule: ruleLine, comment: userComment});
 	}
 
 	copyContext(editor: vscode.TextEditor) {

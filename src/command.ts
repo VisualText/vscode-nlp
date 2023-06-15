@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TreeFile, generateType } from './treeFile';
-import { NLPFile } from './nlp';
+import { NLPFile, reformatType } from './nlp';
 import { TextFile } from './textFile';
 
 export let nlpCommands: NLPCommands;
@@ -12,6 +12,8 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyze', this.analyze));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.analyzeDir', this.analyzeDir));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatRule', this.reformatRule));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatOneLine', this.reformatOneLine));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.reformatParens', this.reformatParens));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.searchWord', this.searchWord));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.goToFunction', this.goToFunction));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.ruleFired', this.ruleFired));
@@ -138,7 +140,21 @@ export class NLPCommands {
     reformatRule() {
         if (vscode.window.activeTextEditor) {
             var nlpFile = new NLPFile();
-            nlpFile.reformatRule(vscode.window.activeTextEditor);
+            nlpFile.reformatRule(vscode.window.activeTextEditor, reformatType.NORMAL);
+        }
+    }
+
+    reformatOneLine() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.ONELINE);
+        }
+    }
+
+    reformatParens() {
+        if (vscode.window.activeTextEditor) {
+            var nlpFile = new NLPFile();
+            nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.PARENS);
         }
     }
 
