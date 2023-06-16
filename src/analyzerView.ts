@@ -33,10 +33,9 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	async getChildren(analyzerItem?: AnalyzerItem): Promise<AnalyzerItem[]> {
 		if (analyzerItem) {
 			return this.getKeepers(analyzerItem.uri); 
+		} else if (visualText.hasWorkspaceFolder()) {
+			return this.getKeepers(visualText.analyzer.getAnalyzerDirectory());
 		}
-		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
-			return this.getKeepers(visualText.getWorkspaceFolder());  
-        }
 		return [];
 	}
 
@@ -346,7 +345,7 @@ export class AnalyzerView {
 				canSelectFiles: false,
 				canSelectFolders: true,
 				canSelectMany: true,
-				openLabel: 'Import Analyzers(s)',
+				openLabel: 'Import Analyzer(s)',
 				defaultUri: seqFile.getSpecDirectory()
 			};
 			vscode.window.showOpenDialog(options).then(selections => {
@@ -354,9 +353,15 @@ export class AnalyzerView {
 					return;
 				}
 				let analyzerDirExists = false;
-				let analyzerPath = analyzerItem.uri.fsPath;
-				if (visualText.isAnalyzerDirectory(analyzerItem.uri))
-					analyzerPath = path.dirname(analyzerPath);
+				let analyzerPath = '';
+				if (analyzerItem === undefined) {
+					analyzerPath = visualText.analyzer.getAnalyzerDirectory().fsPath;
+				} else {
+					analyzerPath = analyzerItem.uri.fsPath;
+					if (visualText.isAnalyzerDirectory(analyzerItem.uri))
+						analyzerPath = path.dirname(analyzerPath);					
+				}
+
 				for (let select of selections) {
 					if (visualText.isAnalyzerDirectory(select)) {
 						var dirname = path.basename(select.fsPath);
