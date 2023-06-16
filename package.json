@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.26.2",
+    "version": "2.27.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -662,6 +662,18 @@
                 "category": "NLP",
                 "title": "Reformat Rule",
                 "description": "Reformat the rule with node numbers"
+            },
+            {
+                "command": "nlp.reformatOneLine",
+                "category": "NLP",
+                "title": "Reformat Rule to One Line",
+                "description": "Reformats the rule to be on one line"
+            },
+            {
+                "command": "nlp.reformatParens",
+                "category": "NLP",
+                "title": "Reformat Rule Long Parens",
+                "description": "Reformats the rule with paren attributes per line"
             },
             {
                 "command": "nlp.searchWord",
@@ -1631,6 +1643,18 @@
                 "when": "resourceLangId == nlp"
             },
             {
+                "command": "nlp.reformatOneLine",
+                "key": "ctrl+shift+Q",
+                "mac": "cmd+shift+Q",
+                "when": "resourceLangId == nlp"
+            },
+            {
+                "command": "nlp.reformatParens",
+                "key": "ctrl+shift+A",
+                "mac": "cmd+shift+A",
+                "when": "resourceLangId == nlp"
+            },
+            {
                 "command": "nlp.passTree",
                 "key": "ctrl+shift+T",
                 "mac": "cmd+shift+T",
@@ -1724,6 +1748,16 @@
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "nlp.reformatRule",
+                    "group": "anlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.reformatOneLine",
+                    "group": "anlp"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "nlp.reformatParens",
                     "group": "anlp"
                 },
                 {
