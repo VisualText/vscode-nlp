@@ -31,6 +31,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	constructor() { }
 
 	async getChildren(analyzerItem?: AnalyzerItem): Promise<AnalyzerItem[]> {
+		visualText.getAnalyzers(false);
 		if (analyzerItem) {
 			return this.getKeepers(analyzerItem.uri); 
 		}
