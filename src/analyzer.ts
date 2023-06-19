@@ -167,7 +167,7 @@ export class Analyzer {
             return false;
         }
         visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),this.analyzerDir,[fileOpRefresh.ANALYZERS],fileOperation.COPY);
-        visualText.fileOps.startFileOps();	
+        visualText.fileOps.startFileOps();
     }
 
     createAnaSequenceFile(content: string=''): boolean {
