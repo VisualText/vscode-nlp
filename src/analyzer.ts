@@ -294,7 +294,9 @@ export class Analyzer {
 		return this.specDir;
 	}
 
-    getOutputDirectory(): vscode.Uri {
+    getOutputDirectory(filename: string=''): vscode.Uri {
+        if (filename.length)
+            return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
         return this.outputDir;
     }
     

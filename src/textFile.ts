@@ -393,7 +393,7 @@ export class TextFile {
 		} else {
 			filename = 'final.tree';
 		}
-		return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
+		return visualText.analyzer.getOutputDirectory(filename);
     }
 
 	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
