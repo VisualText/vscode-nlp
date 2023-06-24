@@ -4,6 +4,7 @@ import { visualText,updateOp } from './visualText';
 import { TreeFile } from './treeFile';
 import { nlpFileType } from './textFile';
 import * as os from 'os';
+import * as fs from 'fs';
 
 let nlpStatusBarRun: vscode.StatusBarItem;
 let nlpStatusBarText: vscode.StatusBarItem;
@@ -123,18 +124,25 @@ export class NLPStatusBar {
     }
 
     openVisualTextVersionSettings() {
-        vscode.window.showWarningMessage('Not implemented yet');
+        var url = 'https://github.com/VisualText/nlp-engine/pulls?q=is%3Apr+is%3Aclosed';
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
     }
 
     openFilesVersionSettings() {
+        var url = 'https://github.com/VisualText/visualtext-files/pulls?q=is%3Apr+is%3Aclosed';
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.checkVTFilesVersion(visualText.emptyOp())
     }
 
     openAnalyzersVersionSettings() {
+        var url = 'https://github.com/VisualText/analyzers/pulls?q=is%3Apr+is%3Aclosed';
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.checkAnalyzersVersion(visualText.emptyOp());
     }
 
     openEngineVersionSettings() {
+        var url = 'https://github.com/VisualText/nlp-engine/pulls?q=is%3Apr+is%3Aclosed';
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.startUpdater();
     }
 
