@@ -294,8 +294,8 @@ export class TreeFile extends TextFile {
 			this.basename = path.basename(this.basename,'.txt');
 			this.basename = path.basename(this.basename,'.pat');
 			this.basename = path.basename(this.basename,'.nlp');
-			this.treeFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.tree');
-			this.HighlightFile = path.join(visualText.analyzer.getOutputDirectory().fsPath,this.basename+'.txxt');
+			this.treeFile = visualText.analyzer.getOutputDirectory(this.basename+'.tree').fsPath;
+			this.HighlightFile = visualText.analyzer.getOutputDirectory(this.basename+'.txxt').fsPath;
 			this.inputFile = visualText.analyzer.getTextPath().fsPath;
 		}
 	}

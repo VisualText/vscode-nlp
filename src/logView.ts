@@ -135,7 +135,7 @@ export class LogView {
 
 	private loadTimingLog() {
 		this.clearLogs();
-		var cgFile = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'dbg.log'));
+		var cgFile = visualText.analyzer.getOutputDirectory('dbg.log');
 		this.addLogFile(cgFile,logLineType.LOGFILE);
 	}
 
@@ -152,13 +152,13 @@ export class LogView {
 	}
 	
 	public loadMakeAna() {
-		var errorLog = vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,'err.log'));
+		var errorLog = visualText.analyzer.getOutputDirectory('err.log');
 		this.addLogFile(errorLog,logLineType.LOGFILE);
 		this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
 	}
 
 	public syntaxErrorsOutput(filename: string): boolean {
-		var errorLog = visualText.analyzer.treeFile('make_ana');
+		var errorLog = visualText.analyzer.getOutputDirectory(filename);
 		return this.syntaxErrors(errorLog);
 	}
 
@@ -222,7 +222,7 @@ export class LogView {
 		if (tokens.length >= 2) {
 			passNum = +tokens[0];
 			lineNum = +tokens[1];
-			if (!isNaN(passNum) && !isNaN(lineNum) && lineNum > 0) {
+			if (!isNaN(passNum) && passNum > 0) {
 				firstTwoNumbers = true;
 			}
 		}
@@ -240,8 +240,13 @@ export class LogView {
 				else if (visualText.analyzer.isLoaded()) {
 					var seqFile = visualText.analyzer.seqFile;
 					uri = seqFile.getUriByPassNumber(passNum);
-					type = logLineType.SYNTAX_ERROR;
-					icon = this.typeIcon(logLineType.SYNTAX_ERROR);
+					if (lineTrimmed.toLocaleLowerCase().indexOf("ignor") >= 0) {
+						type = logLineType.WARNING;
+						icon = this.typeIcon(logLineType.WARNING);
+					} else {
+						type = logLineType.SYNTAX_ERROR;
+						icon = this.typeIcon(logLineType.SYNTAX_ERROR);
+					}
 				}
 			} else if (line.startsWith('FAILED download')) {
 				type = logLineType.DOWNLOAD_ERROR;
