@@ -225,6 +225,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.libraryKB', () => this.libraryKB());
 		vscode.commands.registerCommand('kbView.dictEnglish', () => this.dictEnglish());
 		vscode.commands.registerCommand('kbView.dictOther', () => this.dictOther());
+		vscode.commands.registerCommand('kbView.functionWords', () => this.functionWords());
 		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
 		vscode.commands.registerCommand('kbView.video', () => this.video());
@@ -365,6 +366,10 @@ export class KBView {
 		
 	private dictOther(): void {
 		this.chooseLibFiles('Dictionary','dict','other','.dict');
+	}
+
+	private functionWords(): void {
+		this.chooseLibFiles('Dictionary','dict','functionwords','.dict');
 	}
 		
 	private dictStopWords() {
