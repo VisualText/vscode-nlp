@@ -1,9 +1,9 @@
 # Change Log
-All notable changes to the "nlp" extension will be documented in this file.
+All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org) will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.28.1
+### 2.28.3
 Fixed error display (again)
 
 ### 2.27.3
