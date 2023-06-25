@@ -124,8 +124,13 @@ export class NLPStatusBar {
     }
 
     openVisualTextVersionSettings() {
-        var url = 'https://github.com/VisualText/nlp-engine/pulls?q=is%3Apr+is%3Aclosed';
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+        var filepath = path.join(visualText.extensionDirectory().fsPath,'CHANGELOG.md');
+        if (fs.existsSync(filepath)) {
+            vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(filepath));
+        } else {
+            var url = 'https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md';
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+        }
     }
 
     openFilesVersionSettings() {
