@@ -79,22 +79,27 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			var hasLogs = treeItem.contextValue = analyzerItem.hasLogs ? 'hasLogs' : '';
 			treeItem.contextValue = conVal + hasLogs + 'isAnalyzer';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
+
 		} else if (analyzerItem.type === analyzerItemType.FOLDER) {
 			treeItem.contextValue = conVal + 'isFolder';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.command = { command: 'analyzerView.openAnalyzer', title: "Open Analyzer", arguments: [analyzerItem] };
+
 		} else if (analyzerItem.type === analyzerItemType.NLP) {
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.collapsibleState = 0;
 			treeItem.command = { command: 'analyzerView.openFile', title: "Open File", arguments: [analyzerItem] };
+
 		} else {
 			if (analyzerItem.uri.fsPath.endsWith('.ecl'))
-				treeItem.contextValue = conVal + 'isECL';
+			conVal = conVal + 'isECL';
+			treeItem.contextValue = conVal + 'isFile';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.collapsibleState = 0;
-			// treeItem.label = treeItem.label + ' ' + treeItem.contextValue;
+
 			treeItem.command = { command: 'analyzerView.openFile', title: "Open File", arguments: [analyzerItem] };
 		}
+		// treeItem.label = treeItem.label + ' ' + treeItem.contextValue;
 		return treeItem;
 	}
 
@@ -164,6 +169,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', (resource) => this.newAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.deleteFile', resource => this.deleteFile(resource));
 		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', resource => this.loadExampleAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
@@ -180,7 +186,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
-		vscode.commands.registerCommand('analyzerView.rename', resource => this.rename(resource));
+		vscode.commands.registerCommand('analyzerView.renameAnalyzer', resource => this.renameAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.reanemFile', resource => this.renameFile(resource));
 		vscode.commands.registerCommand('analyzerView.openFile', resource => this.openFile(resource));
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.manifestGenerate', resource => this.manifestGenerate(resource));
@@ -307,9 +314,24 @@ export class AnalyzerView {
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
-	rename(analyzerItem: AnalyzerItem): void {
+	renameAnalyzer(analyzerItem: AnalyzerItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
+			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new Analyzer name' }).then(newname => {
+				if (newname) {
+					var original = analyzerItem.uri;
+					if (path.extname(newname).length == 0)
+						newname = newname+path.extname(analyzerItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+					visualText.fileOps.startFileOps();
+				}
+			});
+		}
+	}
+
+	renameFile(analyzerItem: AnalyzerItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new file name' }).then(newname => {
 				if (newname) {
 					var original = analyzerItem.uri;
 					if (path.extname(newname).length == 0)
@@ -575,6 +597,23 @@ export class AnalyzerView {
 			items.push({label: 'No', description: 'Do not delete analyzer'});
 
 			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+				visualText.fileOps.startFileOps();
+			});
+		}
+	}
+
+	private deleteFile(analyzerItem: AnalyzerItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = [];
+			var deleteDescr = '';
+			deleteDescr = deleteDescr.concat('Delete file \'',path.basename(analyzerItem.uri.fsPath));
+			items.push({label: 'Yes', description: deleteDescr});
+			items.push({label: 'No', description: 'Do not delete file'});
+
+			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
