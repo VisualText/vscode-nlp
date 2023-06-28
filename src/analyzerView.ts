@@ -187,7 +187,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
 		vscode.commands.registerCommand('analyzerView.renameAnalyzer', resource => this.renameAnalyzer(resource));
-		vscode.commands.registerCommand('analyzerView.reanemFile', resource => this.renameFile(resource));
+		vscode.commands.registerCommand('analyzerView.renameFile', resource => this.renameFile(resource));
 		vscode.commands.registerCommand('analyzerView.openFile', resource => this.openFile(resource));
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.manifestGenerate', resource => this.manifestGenerate(resource));
