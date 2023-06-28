@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.28.3",
+    "version": "2.28.5",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -378,6 +378,14 @@
             {
                 "command": "kbView.dictOther",
                 "title": "Other Dictionaries",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
+                "command": "kbView.functionWords",
+                "title": "Function Words",
                 "icon": {
                     "light": "resources/light/dict.svg",
                     "dark": "resources/dark/dict.svg"
@@ -1170,7 +1178,23 @@
                 }
             },
             {
-                "command": "analyzerView.rename",
+                "command": "analyzerView.deleteFile",
+                "title": "Delete File",
+                "icon": {
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "analyzerView.renameFile",
+                "title": "Rename File",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
+                }
+            },
+            {
+                "command": "analyzerView.renameAnalyzer",
                 "title": "Rename Analyzer",
                 "icon": {
                     "light": "resources/light/rename.svg",
@@ -2189,12 +2213,16 @@
                     "group": "edit@1"
                 },
                 {
-                    "command": "kbView.dictOther",
+                    "command": "kbView.functionWords",
                     "group": "edit@2"
                 },
                 {
-                    "command": "kbView.dictStopWords",
+                    "command": "kbView.dictOther",
                     "group": "edit@3"
+                },
+                {
+                    "command": "kbView.dictStopWords",
+                    "group": "edit@4"
                 }
             ],
             "view/item/context": [
@@ -2604,8 +2632,13 @@
                     "group": "folder"
                 },
                 {
-                    "command": "analyzerView.rename",
+                    "command": "analyzerView.renameAnalyzer",
                     "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "inline"
+                },
+                {
+                    "command": "analyzerView.renameFile",
+                    "when": "view == analyzerView && viewItem =~ /.*isFile.*/",
                     "group": "inline"
                 },
                 {
@@ -2630,17 +2663,17 @@
                 },
                 {
                     "command": "analyzerView.deleteReadMe",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "readme"
                 },
                 {
                     "command": "analyzerView.editReadMe",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "readme"
                 },
                 {
                     "command": "analyzerView.readMe",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "readme"
                 },
                 {
@@ -2664,13 +2697,23 @@
                     "group": "folder"
                 },
                 {
-                    "command": "analyzerView.rename",
+                    "command": "analyzerView.renameFile",
+                    "when": "view == analyzerView && viewItem =~ /.*isFile.*/",
+                    "group": "file"
+                },
+                {
+                    "command": "analyzerView.deleteFile",
+                    "when": "view == analyzerView && viewItem =~ /.*isFile.*/",
+                    "group": "file"
+                },
+                {
+                    "command": "analyzerView.renameAnalyzer",
                     "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "edit"
                 },
                 {
                     "command": "analyzerView.deleteAnalyzer",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "edit"
                 },
                 {
@@ -2725,8 +2768,13 @@
                 },
                 {
                     "command": "analyzerView.deleteAnalyzer",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "inline@4"
+                },
+                {
+                    "command": "analyzerView.deleteFile",
+                    "when": "view == analyzerView && viewItem =~ /.*isFile.*/",
+                    "group": "inline@5"
                 },
                 {
                     "command": "sequenceView.insertNew",
