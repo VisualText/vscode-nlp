@@ -9,7 +9,7 @@ import { nlpStatusBar } from './status';
 import { logView,logLineType } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
-import { ModFile } from './modMile';
+import { ModFile } from './modFile';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 
@@ -978,7 +978,7 @@ export class VisualText {
 
     extensionParentDirectory() {
         let extDir = '.vscode';
-        if (this.platform == 'linux') {
+        if (this.platform == 'darwin') {
             extDir = '.vscode-server';
         }
         return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions'));
