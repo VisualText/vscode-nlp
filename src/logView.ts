@@ -144,17 +144,19 @@ export class LogView {
 		this.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE);
 	}
 
-	public makeAna() {
+	public makeAna(): boolean {
 		this.clearLogs();
+		var errFlag = false
 		if (logView.syntaxErrorsLog('cgerr'))
-			logView.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE,'',true);
-		this.loadMakeAna();
+			errFlag = logView.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE,'',true);
+		return errFlag || this.loadMakeAna();
 	}
 	
-	public loadMakeAna() {
+	public loadMakeAna(): boolean {
 		var errorLog = visualText.analyzer.getOutputDirectory('err.log');
-		this.addLogFile(errorLog,logLineType.LOGFILE);
-		this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
+		var errFlag = this.addLogFile(errorLog,logLineType.LOGFILE);
+		var makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
+		return errFlag || makeFlag;
 	}
 
 	public syntaxErrorsOutput(filename: string): boolean {
@@ -186,7 +188,7 @@ export class LogView {
 		this.logs.push(this.parseLogLine(message, type, uri));
 	}
 
-	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false) {
+	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false): boolean {
 		if (fs.existsSync(logFileName.fsPath)) {
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
@@ -197,7 +199,9 @@ export class LogView {
 						this.logs.push(logItem);
 				}
 			}
-		}		
+			return true;
+		}
+		return false;	
 	}
 
 	public getLogs(): LogItem[] {
@@ -222,7 +226,7 @@ export class LogView {
 		if (tokens.length >= 2) {
 			passNum = +tokens[0];
 			lineNum = +tokens[1];
-			if (!isNaN(passNum) && passNum > 0) {
+			if (!isNaN(passNum) && lineNum != 0 && passNum >= 0) {
 				firstTwoNumbers = true;
 			}
 		}
@@ -254,6 +258,8 @@ export class LogView {
 				type = logLineType.JSON_ERROR;
 			} else if (line.startsWith('Updater timed out')) {
 				type = logLineType.UPDATER_TIMEOUT;
+			} else if (line.indexOf("Unhandled") >= 0) {
+				type = logLineType.SYNTAX_ERROR;
 			}
 		}
 
@@ -267,7 +273,7 @@ export class LogView {
 				}
 			}
 		}
-		if (line.indexOf("Warning") >= 0 || line.indexOf("Unhandled") >= 0 ||type == logLineType.WARNING) {
+		if (line.indexOf("Warning") >= 0 || line.indexOf("Unhandled") >= 0 || type == logLineType.WARNING) {
 			icon = 'yield.svg'; 
 		}
 		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
