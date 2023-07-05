@@ -9,7 +9,7 @@ import { nlpStatusBar } from './status';
 import { logView,logLineType } from './logView';
 import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
-import { ModFile } from './modfile';
+import { ModFile } from './modMile';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 
