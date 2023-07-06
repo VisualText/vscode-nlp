@@ -978,9 +978,6 @@ export class VisualText {
 
     extensionParentDirectory() {
         let extDir = '.vscode';
-        if (this.platform == 'darwin') {
-            extDir = '.vscode-server';
-        }
         return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions'));
     }
 
