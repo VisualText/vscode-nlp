@@ -68,10 +68,6 @@ export class VisualText {
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt73.dll';
     public readonly ICU2_WIN = 'icuuc73.dll';
-    public readonly ICU1_LINUX = 'libicutu.a';
-    public readonly ICU2_LINUX = 'libicuuc.a';
-    public readonly ICU1_MAC = 'libicutum.a';
-    public readonly ICU2_MAC = 'libicuucm.a';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
     public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';
@@ -308,15 +304,19 @@ export class VisualText {
 
     pushCheckEngineFiles() {
         let op = visualText.emptyOp();
-        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU1);
-        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU2);
+        if (visualText.platform == 'win32') {
+            visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU1);
+            visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU2);
+        }
         visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.NLP_EXE);
         visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.ENGINE_FILES);
     }
 
     pushDeleteEngineFiles(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU1);
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU2);
+        if (visualText.platform == 'win32') {
+            visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU1);
+            visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU2);
+        }
         visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.NLP_EXE);
         visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ENGINE_FILES);
     }
@@ -332,8 +332,10 @@ export class VisualText {
     pushDownloadEngineFiles(op: updateOp, push: upPush) {
         visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ENGINE_FILES);
         visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.NLP_EXE);
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);
+        if (visualText.platform == 'win32') {
+            visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
+            visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);            
+        }
     }
 
     pushDownloadVTFiles(op: updateOp, push: upPush) {
@@ -408,13 +410,6 @@ export class VisualText {
                 libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
                 lib = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
                 break;
-            case 'darwin':
-                libRelease = icu1 ? visualText.ICU1_MAC : visualText.ICU2_MAC;
-                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
-                break;
-            default:
-                libRelease = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
-                lib = icu1 ? visualText.ICU1_LINUX : visualText.ICU2_LINUX;
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         var engDir = visualText.engineDirectory().fsPath;
@@ -986,6 +981,7 @@ export class VisualText {
     }
   
     fetchExeVersion(op: updateOp, debug: boolean=false) {
+        dirfuncs.changeMod(op.local,755);
         visualText.exeEngineVersion = '';
 		const cp = require('child_process');
         return new Promise((resolve,reject) => {
