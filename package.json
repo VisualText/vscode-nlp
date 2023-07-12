@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.29.1",
+    "version": "2.30.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -328,11 +328,19 @@
                 }
             },
             {
+                "command": "analyzerView.newECLFile",
+                "title": "New ECL File",
+                "icon": {
+                    "light": "resources/light/ecl.svg",
+                    "dark": "resources/dark/ecl.svg"
+                }
+            },
+            {
                 "command": "analyzerView.manifestGenerate",
                 "title": "Generate HPCC Manifest File",
                 "icon": {
-                    "light": "resources/light/video.svg",
-                    "dark": "resources/dark/video.svg"
+                    "light": "resources/light/manifest.svg",
+                    "dark": "resources/dark/manifest.svg"
                 }
             },
             {
@@ -2649,6 +2657,11 @@
                 {
                     "command": "analyzerView.manifestGenerate",
                     "when": "view == analyzerView && viewItem =~ /.*isECL.*/",
+                    "group": "ecl"
+                },
+                {
+                    "command": "analyzerView.newECLFile",
+                    "when": "view == analyzerView",
                     "group": "ecl"
                 },
                 {

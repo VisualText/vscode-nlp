@@ -191,6 +191,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.openFile', resource => this.openFile(resource));
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.manifestGenerate', resource => this.manifestGenerate(resource));
+		vscode.commands.registerCommand('analyzerView.newECLFile', resource => this.newECLFile(resource));
 		vscode.commands.registerCommand('analyzerView.exploreAll', () => this.exploreAll());
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
@@ -206,6 +207,23 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	newECLFile(analyzerItem: AnalyzerItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter ECL file name' }).then(newname => {
+				if (newname) {
+					var dirPath = visualText.getAnalyzerDir().fsPath;
+					if (analyzerItem)
+						dirPath = path.dirname(dirfuncs.getDirPath(analyzerItem.uri.fsPath));
+					var filepath = path.join(dirPath,newname+'.ecl');
+					if (path.extname(newname))
+						filepath = path.join(dirPath,newname);
+					dirfuncs.writeFile(filepath,"a := 'Hello world!';\noutput(a);");
+					vscode.commands.executeCommand('analyzerView.refreshAll');
+				}
+			});
+		}
 	}
 
 	manifestGenerate(analyzerItem: AnalyzerItem) {
