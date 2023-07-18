@@ -3,7 +3,6 @@ import * as path from 'path';
 import { visualText, closeFileIfOpen } from './visualText';
 import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
-import { modType } from './modFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 import { nlpStatusBar, DevMode, FiredMode } from './status';
@@ -79,14 +78,22 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			treeItem.command = { command: 'textView.openFile', title: "Open File", arguments: [textItem], };
 			treeItem.contextValue = 'file' + conVal + hasLogs + hasTest;
 			//treeItem.tooltip = treeItem.contextValue;
-			treeItem.iconPath = {
-				light: textItem.hasLogs ?
-					hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg') :
-					hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
-				dark: textItem.hasLogs ?
-					hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :
-					hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
+			if (textItem.uri.fsPath.endsWith('.py')) {
+				treeItem.iconPath = {
+					light: path.join(__filename, '..', '..', 'resources', 'light', 'python.svg'),
+					dark: path.join(__filename, '..', '..', 'resources', 'dark', 'python.svg')
+				}
+			} else {
+				treeItem.iconPath = {
+					light: textItem.hasLogs ?
+						hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'document.svg') :
+						hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'file.svg'),
+					dark: textItem.hasLogs ?
+						hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'document-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg') :
+						hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'file-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'),
+				}
 			}
+
 		} else {
 			if (!visualText.getAutoUpdate()) {
 				if (visualText.analyzer.folderHasTests(textItem.uri))
@@ -458,8 +465,10 @@ export class TextView {
 
 	analyze(textItem: TextItem) {
         if (textItem.uri.fsPath.length) {
-			visualText.nlp.addAnalyzer(textItem.uri,analyzerType.FILE);
-			visualText.nlp.startAnalyzer();
+			// visualText.nlp.addAnalyzer(textItem.uri,analyzerType.FILE);
+			// visualText.nlp.startAnalyzer();
+			var nlp = new NLPFile();
+			nlp.analyze(textItem.uri);
 		}
 	}
 
