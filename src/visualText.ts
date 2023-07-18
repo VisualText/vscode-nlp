@@ -1408,6 +1408,10 @@ export class VisualText {
             icon = 'mod.svg';
         } else if (filename.endsWith('.test')) {
             icon = 'test.svg';
+        } else if (filename.endsWith('.py')) {
+            icon = 'python.svg';
+        } else {
+            icon = 'file.svg';
         }
 
         return icon;

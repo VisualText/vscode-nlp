@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.30.0
+### 2.30.1
 Can now create an ECL file.
 
 ### 2.29.1
