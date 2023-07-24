@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.31.0
+When loading an analyzer, check to see if the hier.kb file needs updating (added the "emoji" path recently).
+
 ### 2.30.1
 Can now create an ECL file.
 

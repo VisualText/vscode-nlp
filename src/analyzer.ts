@@ -7,6 +7,7 @@ import { JsonState } from './jsonState';
 import { dirfuncs } from './dirfuncs';
 import { TextFile } from './textFile';
 import { nlpFileType } from './textFile';
+import { logLineType } from './logView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 
 export let analyzer: Analyzer;
@@ -238,9 +239,29 @@ export class Analyzer {
         this.setWorkingDir(analyzerDir);
         this.readState();
         this.seqFile.init();
+        this.checkHierFile();
         vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
         if (this.currentTextFile.fsPath.length > 2)
             vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.fsPath));
+    }
+
+    checkHierFile() {
+        var kbPath = visualText.analyzer.getKBDirectory();
+        var hierPath = path.join(kbPath.fsPath,'hier.kb');
+        if (fs.existsSync(hierPath)) {
+            var currHierText = new TextFile(hierPath);
+            visualText.getExtensionDirs();
+            var extPath = visualText.getExtensionPath();
+            var extHierPath = path.join(extPath.fsPath,'nlp-engine','visualtext','analyzers','basic','kb','user','hier.kb');
+            if (fs.existsSync(extHierPath)) {
+                var basicHierText = new TextFile(extHierPath);
+                if (basicHierText.getText() != currHierText.getText()) {
+                    visualText.debugMessage('Updating hier.kb file',logLineType.UPDATER);
+                    currHierText.setText(basicHierText.getText());
+                    currHierText.saveFile();
+                }
+            }            
+        }
     }
 
     outputDirectory() {
