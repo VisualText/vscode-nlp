@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.32.0",
+    "version": "2.32.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -2702,7 +2702,7 @@
                 },
                 {
                     "command": "analyzerView.createReadMe",
-                    "when": "view == analyzerView && !(viewItem =~ /.*isAnalyzer.*/) && !(viewItem =~ /.*isReadMe.*/)",
+                    "when": "view == analyzerView && !(viewItem =~ /.*isAnalyzer.*/)",
                     "group": "readme"
                 },
                 {
