@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.31.2",
+    "version": "2.32.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -433,7 +433,7 @@
             },
             {
                 "command": "kbView.explore",
-                "title": "Explore KB Directory",
+                "title": "Explore KB Folder",
                 "icon": {
                     "light": "resources/light/searchAll.svg",
                     "dark": "resources/dark/searchAll.svg"
@@ -575,7 +575,7 @@
             },
             {
                 "command": "textView.exploreAll",
-                "title": "Explore input directory",
+                "title": "Explore Input Folder",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"
@@ -583,7 +583,7 @@
             },
             {
                 "command": "textView.explore",
-                "title": "Explore current directory",
+                "title": "Explore Current Folder",
                 "icon": {
                     "light": "resources/light/folder.svg",
                     "dark": "resources/dark/folder.svg"
@@ -631,7 +631,7 @@
             },
             {
                 "command": "textView.analyzeDir",
-                "title": "Analyze Directory",
+                "title": "Analyze Folder",
                 "icon": {
                     "light": "resources/light/run.svg",
                     "dark": "resources/dark/run.svg"
@@ -647,7 +647,7 @@
             },
             {
                 "command": "textView.renameDir",
-                "title": "Rename Directory",
+                "title": "Rename Folder",
                 "icon": {
                     "light": "resources/light/rename.svg",
                     "dark": "resources/dark/rename.svg"
@@ -655,7 +655,7 @@
             },
             {
                 "command": "textView.splitDir",
-                "title": "Split Directory",
+                "title": "Split Folder",
                 "icon": {
                     "light": "resources/light/rename.svg",
                     "dark": "resources/dark/rename.svg"
@@ -807,7 +807,7 @@
             },
             {
                 "command": "sequenceView.explore",
-                "title": "Explore Sequence Directory"
+                "title": "Explore Sequence Folder"
             },
             {
                 "command": "sequenceView.tokenize",
@@ -1202,6 +1202,14 @@
                 }
             },
             {
+                "command": "analyzerView.renameFolder",
+                "title": "Rename Folder",
+                "icon": {
+                    "light": "resources/light/rename.svg",
+                    "dark": "resources/dark/rename.svg"
+                }
+            },
+            {
                 "command": "analyzerView.renameAnalyzer",
                 "title": "Rename Analyzer",
                 "icon": {
@@ -1244,6 +1252,14 @@
             {
                 "command": "analyzerView.deleteReadMe",
                 "title": "README Delete file",
+                "icon": {
+                    "light": "resources/light/readme.svg",
+                    "dark": "resources/dark/readme.svg"
+                }
+            },
+            {
+                "command": "analyzerView.createReadMe",
+                "title": "README Edit/Create file",
                 "icon": {
                     "light": "resources/light/readme.svg",
                     "dark": "resources/dark/readme.svg"
@@ -1347,7 +1363,7 @@
             },
             {
                 "command": "analyzerView.copyAll",
-                "title": "Copy All Analyzers to Another Directory",
+                "title": "Copy All Analyzers to Another Folder",
                 "icon": {
                     "light": "resources/light/anacopy.svg",
                     "dark": "resources/dark/anacopy.svg"
@@ -1443,7 +1459,7 @@
             },
             {
                 "command": "outputView.explore",
-                "title": "Explore Output Directory",
+                "title": "Explore Output Folder",
                 "icon": {
                     "light": "resources/light/gear.svg",
                     "dark": "resources/dark/gear.svg"
@@ -2650,6 +2666,11 @@
                     "group": "inline"
                 },
                 {
+                    "command": "analyzerView.renameFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isFolder.*/",
+                    "group": "inline"
+                },
+                {
                     "command": "analyzerView.readMe",
                     "when": "view == analyzerView && viewItem =~ /.*readMe.*/",
                     "group": "inline"
@@ -2680,6 +2701,11 @@
                     "group": "readme"
                 },
                 {
+                    "command": "analyzerView.createReadMe",
+                    "when": "view == analyzerView && !(viewItem =~ /.*isAnalyzer.*/) && !(viewItem =~ /.*isReadMe.*/)",
+                    "group": "readme"
+                },
+                {
                     "command": "analyzerView.editReadMe",
                     "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "readme"
@@ -2701,12 +2727,17 @@
                 },
                 {
                     "command": "analyzerView.moveUp",
-                    "when": "view == analyzerView",
+                    "when": "view == analyzerView && viewItem =~ /.*moveUp.*/",
                     "group": "folder"
                 },
                 {
                     "command": "analyzerView.explore",
                     "when": "view == analyzerView",
+                    "group": "folder"
+                },
+                {
+                    "command": "analyzerView.renameFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isFolder.*/",
                     "group": "folder"
                 },
                 {
