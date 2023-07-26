@@ -3,7 +3,10 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.31.2
+### 2.32.0
+Added readme files editing in Analyzer window anywhere. Misc fixes.
+
+### 2.31.3
 When loading an analyzer, check to see if the hier.kb file needs updating (added the "emoji" path recently).
 
 ### 2.30.1

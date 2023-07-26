@@ -97,7 +97,10 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.31.2
+### 2.32.0
+Added readme files editing in Analyzer window anywhere. Misc fixes.
+
+### 2.31.3
 When loading an analyzer, check to see if the hier.kb file needs updating (added the "emoji" path recently).
 
 ### 2.30.1
@@ -162,15 +165,6 @@ Can now move the VisualText editor up or down in the analyzer view.
 
 ### 2.10.0
 Added library files for dictionaires and KBs.
-
-### 2.9.2
-Copy kb files to a sister analyzer.
-
-### 2.8.2
-Added toggle active / inactive for kbb and dict files. Added attr and val while loops in snipper.
-
-### 2.7.2
-Insert and delete orphan(s), icon variety in KB, duplidate line shortcut in dict and kbb, explore output directory, import analyzer
 
 # Development
 

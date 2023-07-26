@@ -6,8 +6,9 @@ import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 import { SequenceFile } from './sequence';
+import { TextFile } from './textFile';
 
-export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE }
+export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE, README }
 
 interface AnalyzerItem {
 	uri: vscode.Uri;
@@ -92,7 +93,9 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 		} else {
 			if (analyzerItem.uri.fsPath.endsWith('.ecl'))
-			conVal = conVal + 'isECL';
+				conVal = conVal + 'isECL';
+			else if (analyzerItem.uri.fsPath.endsWith('.md'))
+				conVal = conVal + 'isReadMe';
 			treeItem.contextValue = conVal + 'isFile';
 			treeItem.tooltip = analyzerItem.uri.fsPath;
 			treeItem.collapsibleState = 0;
@@ -116,15 +119,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
                 keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
 
 			} else if (entry.type == vscode.FileType.File) {
-				type = analyzerItemType.FILE;
-				if (entry.uri.fsPath.endsWith('.nlp'))
-					type = analyzerItemType.NLP;
-				else if (entry.uri.fsPath.endsWith('.seq'))
-					type = analyzerItemType.SEQUENCE;
-				else if (entry.uri.fsPath.endsWith('.ecl'))
-					type = analyzerItemType.ECL;
-				else if (entry.uri.fsPath.endsWith('.manifest'))
-					type = analyzerItemType.MANIFEST;
+				type = this.typeFromExtension(entry.uri);
 				keepers.push({uri: entry.uri, type: type, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false});
 			}
 		}
@@ -132,6 +127,22 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getWorkspaceFolder(),true);
 		vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
 		return keepers;
+	}
+
+	typeFromExtension(dir: vscode.Uri): analyzerItemType {
+		var type = analyzerItemType.FILE;
+		var dirPath = dir.fsPath;
+		if (dirPath.endsWith('.nlp'))
+			type = analyzerItemType.NLP;
+		else if (dirPath.endsWith('.seq'))
+			type = analyzerItemType.SEQUENCE;
+		else if (dirPath.endsWith('.ecl'))
+			type = analyzerItemType.ECL;
+		else if (dirPath.endsWith('.manifest'))
+			type = analyzerItemType.MANIFEST
+		else if (dirPath.endsWith('.md'))
+			type = analyzerItemType.README
+		return type;
 	}
 
 	fileIconFromType(type: analyzerItemType): string {
@@ -149,6 +160,8 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
             icon = 'ecl.svg';
 		} else if (type == analyzerItemType.MANIFEST) {
             icon = 'manifest.svg';
+		} else if (type == analyzerItemType.README) {
+			icon = 'readme.svg';
 		}
         return icon;
     }
@@ -182,12 +195,14 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.moveToFolder', resource => this.moveToFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveUp', resource => this.moveUp(resource));
 		vscode.commands.registerCommand('analyzerView.readMe', resource => this.readMe(resource));
+		vscode.commands.registerCommand('analyzerView.createReadMe', resource => this.editReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.editReadMe', resource => this.editReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.deleteReadMe', resource => this.deleteReadMe(resource));
 		vscode.commands.registerCommand('analyzerView.moveDownFolder', resource => this.moveDownFolder(resource));
 		vscode.commands.registerCommand('analyzerView.moveToParent', resource => this.moveToParent(resource));
 		vscode.commands.registerCommand('analyzerView.renameAnalyzer', resource => this.renameAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.renameFile', resource => this.renameFile(resource));
+		vscode.commands.registerCommand('analyzerView.renameFolder', resource => this.renameFolder(resource));
 		vscode.commands.registerCommand('analyzerView.openFile', resource => this.openFile(resource));
 		vscode.commands.registerCommand('analyzerView.importAnalyzers', resource => this.importAnalyzers(resource));
 		vscode.commands.registerCommand('analyzerView.manifestGenerate', resource => this.manifestGenerate(resource));
@@ -214,16 +229,53 @@ export class AnalyzerView {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter ECL file name' }).then(newname => {
 				if (newname) {
 					var dirPath = visualText.getAnalyzerDir().fsPath;
-					if (analyzerItem)
-						dirPath = path.dirname(dirfuncs.getDirPath(analyzerItem.uri.fsPath));
-					var filepath = path.join(dirPath,newname+'.ecl');
-					if (path.extname(newname))
-						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"a := 'Hello world!';\noutput(a);");
-					vscode.commands.executeCommand('analyzerView.refreshAll');
+					if (analyzerItem) {
+						if (dirfuncs.isDir(analyzerItem.uri.fsPath))
+							dirPath = analyzerItem.uri.fsPath;
+						else
+							dirPath = path.dirname(analyzerItem.uri.fsPath);
+					}
+					this.createNewECLFile(dirPath,newname);
 				}
 			});
 		}
+	}
+	
+    createNewECLFile(dirPath: string, fileName: string): boolean {
+		let items: vscode.QuickPickItem[] = [];
+		var fromDir = path.join(visualText.getVisualTextDirectory('ecl'));
+
+		if (dirfuncs.isDir(fromDir)) {
+			let files = dirfuncs.getFiles(vscode.Uri.file(fromDir));
+			var textFile = new TextFile();
+			for (let file of files) {
+				let firstLine = textFile.readFirstLine(file.fsPath).trim();
+				firstLine = firstLine.replace("// ","");
+				items.push({label: path.basename(file.fsPath), description: ' ' + firstLine});
+			}
+			vscode.window.showQuickPick(items, {title: 'Creating New ECL File', canPickMany: false, placeHolder: 'Choose ecl template'}).then(selection => {
+				if (!selection) {
+					return false;
+				}
+				var name = path.join(fromDir,selection.label);
+				textFile.setFile(vscode.Uri.file(name));
+				this.saveECLFile(dirPath, fileName, textFile.getText());
+				return true;
+			});
+		} else {
+			this.saveECLFile(dirPath,fileName,"a := 'Hello world!';\noutput(a);");
+		}
+
+		return false;
+    }
+
+	saveECLFile(dirPath: string, fileName: string, text: string) {
+		var filePath = path.join(dirPath,fileName+'.ecl');
+		if (path.extname(fileName))
+			filePath = path.join(dirPath,fileName);
+		dirfuncs.writeFile(filePath,text);
+		vscode.commands.executeCommand('analyzerView.refreshAll');
+		vscode.window.showTextDocument(vscode.Uri.file(filePath));
 	}
 
 	manifestGenerate(analyzerItem: AnalyzerItem) {
@@ -361,6 +413,19 @@ export class AnalyzerView {
 			});
 		}
 	}
+	
+	renameFolder(analyzerItem: AnalyzerItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new folder name' }).then(newname => {
+				if (newname) {
+					var original = analyzerItem.uri;
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+					visualText.fileOps.startFileOps();
+				}
+			});
+		}
+	}
 
 	moveDownFolder(analyzerItem: AnalyzerItem) {
 		this.openFolder(analyzerItem.uri);
@@ -468,28 +533,16 @@ export class AnalyzerView {
 	}
 
 	editReadMe(analyzerItem: AnalyzerItem) {
-		var readMe = path.join(analyzerItem.uri.fsPath,"README.md");
-
-		if (!fs.existsSync(readMe)) {
-			var content = "# " + path.basename(analyzerItem.uri.fsPath).toUpperCase() + "\n\nDescription here.";
-			readMe = "untitled:" + readMe;
-			var rm = vscode.Uri.parse(readMe);
-			
-			vscode.workspace.openTextDocument(rm).then(document => {
-				const edit = new vscode.WorkspaceEdit();
-				edit.insert(rm, new vscode.Position(0, 0), content);
-				return vscode.workspace.applyEdit(edit).then(success => {
-					if (success) {
-						vscode.window.showTextDocument(document);
-					} else {
-						vscode.window.showInformationMessage('Error!');
-					}
-				});
-			});
-
-		} else {
-			vscode.window.showTextDocument(vscode.Uri.file(readMe));
+		var dirPath = analyzerItem.uri.fsPath;
+		if (!dirfuncs.isDir(dirPath)) {
+			dirPath = path.dirname(analyzerItem.uri.fsPath);
 		}
+		var readMe = path.join(dirPath,"README.md");
+		if (!fs.existsSync(readMe)) {
+			var content = "# TITLE\n\nDescription here.";
+			dirfuncs.writeFile(readMe,content);
+		}
+		vscode.window.showTextDocument(vscode.Uri.file(readMe));
 		vscode.commands.executeCommand('analyzerView.refreshAll');
 	}
 
