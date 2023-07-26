@@ -376,7 +376,10 @@ export class AnalyzerView {
 	}
 
 	openFile(analyzerItem: AnalyzerItem): void {
-		vscode.window.showTextDocument(analyzerItem.uri);
+		if (analyzerItem.type == analyzerItemType.README)
+			vscode.commands.executeCommand("markdown.showPreview", analyzerItem.uri);
+		else
+			vscode.window.showTextDocument(analyzerItem.uri);
 	}
 
 	video() {
