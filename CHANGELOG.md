@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.32.1
+### 2.32.2
 Added readme files editing in Analyzer window anywhere. Misc fixes.
 
 ### 2.31.3

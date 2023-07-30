@@ -97,7 +97,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.32.1
+### 2.32.2
 Added readme files editing in Analyzer window anywhere. Misc fixes.
 
 ### 2.31.3
