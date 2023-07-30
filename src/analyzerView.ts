@@ -102,7 +102,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 			treeItem.command = { command: 'analyzerView.openFile', title: "Open File", arguments: [analyzerItem] };
 		}
-		// treeItem.label = treeItem.label + ' ' + treeItem.contextValue;
+		//treeItem.label = treeItem.label + ' ' + treeItem.contextValue;
 		return treeItem;
 	}
 
@@ -183,6 +183,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.newAnalyzer', (resource) => this.newAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteFile', resource => this.deleteFile(resource));
+		vscode.commands.registerCommand('analyzerView.deleteFolder', resource => this.deleteFolder(resource));
 		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', resource => this.loadExampleAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
@@ -693,6 +694,32 @@ export class AnalyzerView {
 				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
+		}
+	}
+	
+	private deleteFolder(analyzerItem: AnalyzerItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			var itemCount = fs.readdirSync(analyzerItem.uri.fsPath).length;
+			var yesDescr = '';
+			var noDescr = '';
+			var placeDescr = 'Choose Yes of No';
+			yesDescr = yesDescr.concat('Delete empty folder \'',path.basename(analyzerItem.uri.fsPath),'\'');
+			noDescr = 'Do not delete empty folder';
+			if (fs.readdirSync(analyzerItem.uri.fsPath).length != 0) {
+				yesDescr = `FOLDER NOT EMPTY: Delete folder and its ${itemCount} items?`;
+				noDescr = 'Do not delete folder and all its contents';
+				placeDescr = 'FOLDER NOT EMPTY: choose yes or no';
+			}
+			let items: vscode.QuickPickItem[] = [];
+			items.push({label: 'Yes', description: yesDescr});
+			items.push({label: 'No', description: noDescr});
+
+			vscode.window.showQuickPick(items, {title: 'Delete Folder', canPickMany: false, placeHolder: placeDescr}).then(selection => {
+				if (!selection || selection.label == 'No')
+					return;
+				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+				visualText.fileOps.startFileOps();
+			});				
 		}
 	}
 

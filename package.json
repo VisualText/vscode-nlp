@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.32.1",
+    "version": "2.32.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1188,6 +1188,14 @@
             {
                 "command": "analyzerView.deleteFile",
                 "title": "Delete File",
+                "icon": {
+                    "light": "resources/light/chrome-close.svg",
+                    "dark": "resources/dark/chrome-close.svg"
+                }
+            },
+            {
+                "command": "analyzerView.deleteFolder",
+                "title": "Delete Folder",
                 "icon": {
                     "light": "resources/light/chrome-close.svg",
                     "dark": "resources/dark/chrome-close.svg"
@@ -2816,8 +2824,13 @@
                     "group": "inline@4"
                 },
                 {
+                    "command": "analyzerView.deleteFolder",
+                    "when": "view == analyzerView && viewItem =~ /.*isFolder.*/",
+                    "group": "inline@5"
+                },
+                {
                     "command": "analyzerView.deleteFile",
-                    "when": "view == analyzerView && viewItem =~ /.*isFile.*/",
+                    "when": "view == analyzerView && !(viewItem =~ /.*isAnalyzer.*/) && !(viewItem =~ /.*isFolder.*/)",
                     "group": "inline@5"
                 },
                 {
