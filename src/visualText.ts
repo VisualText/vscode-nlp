@@ -972,8 +972,13 @@ export class VisualText {
     }
 
     extensionParentDirectory() {
-        let extDir = '.vscode';
-        return vscode.Uri.file(path.join(this.homeDir,extDir,'extensions'));
+        let dir = path.join(this.homeDir,'.vscode','extensions');
+        if (!fs.existsSync(dir)) {
+            if (this.platform == 'linux') {
+                dir = path.join(this.homeDir,'.vscode-server','extensions') ;
+            }
+        }
+        return vscode.Uri.file(dir);
     }
 
     visualTextFilesDirectory() {
