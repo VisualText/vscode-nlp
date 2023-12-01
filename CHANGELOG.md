@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.34.1
+### 2.34.2
 Added Portuguese dictionaries in KB context menu.
 
 ### 2.33.2
