@@ -384,6 +384,14 @@
                 }
             },
             {
+                "command": "kbView.dictPortuguese",
+                "title": "Portuguese Dictionary",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
                 "command": "kbView.dictOther",
                 "title": "Other Dictionaries",
                 "icon": {
@@ -2245,16 +2253,20 @@
                     "group": "edit@1"
                 },
                 {
-                    "command": "kbView.functionWords",
+                    "command": "kbView.dictPortuguese",
                     "group": "edit@2"
                 },
                 {
-                    "command": "kbView.dictOther",
+                    "command": "kbView.functionWords",
                     "group": "edit@3"
                 },
                 {
-                    "command": "kbView.dictStopWords",
+                    "command": "kbView.dictOther",
                     "group": "edit@4"
+                },
+                {
+                    "command": "kbView.dictStopWords",
+                    "group": "edit@5"
                 }
             ],
             "view/item/context": [
