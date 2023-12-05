@@ -444,6 +444,6 @@ export class TextFile {
         if (liner.next())
             liner.close();
             
-        return line.toString();
+        return line.toString().trim();
 	}
 }

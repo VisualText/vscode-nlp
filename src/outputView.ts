@@ -206,7 +206,7 @@ export class OutputView {
 	deleteOrphans(): void {
 		if (visualText.hasWorkspaceFolder()) {
 			let files: vscode.Uri[] = [];
-			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp']);
 			for (let nlpFile of nlpFiles) {
 				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
 					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
@@ -295,12 +295,12 @@ export class OutputView {
 		this.outputFiles = [];
 		if (visualText.analyzer.hasText()) {
 			if (this.type == outputFileType.KB) {
-				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb'],true);
-				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb'],true);
+				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb']);
+				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb']);
 				this.outputFiles = this.outputFiles.concat(kbFiles);
 			}
 			else if (this.type == outputFileType.NLP) {
-				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp']);
 				for (let nlpFile of nlpFiles) {
 					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
 						visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
@@ -309,7 +309,7 @@ export class OutputView {
 				}
 			}
 			else if (this.type == outputFileType.TXXT) {
-				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.txxt'],true);
+				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.txxt']);
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
 			else if (this.type == outputFileType.TREE) {
@@ -317,7 +317,7 @@ export class OutputView {
 				if (fs.existsSync(finalTree.fsPath)) {
 					this.outputFiles.push(finalTree);
 				}
-				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.tree'],true);
+				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.tree']);
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
 			else {

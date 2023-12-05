@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import { visualText } from './visualText';
 
+export enum getFileTypes { UNKNOWN, FILES, FILES_DIRS, DIRS }
+
 export namespace dirfuncs {
 
     export function copyDirectory(fromPath: string, toPath: string): boolean {
@@ -166,7 +168,7 @@ export namespace dirfuncs {
         return count;
     }
 
-    export function getFiles(folder: vscode.Uri, filter: string[]=[], skipDirectories: boolean=false, recurse: boolean=false): vscode.Uri[] {
+    export function getFiles(folder: vscode.Uri, filter: string[]=[], getType: getFileTypes=getFileTypes.FILES, recurse: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.fsPath);
         for (let filename of filenames) {
@@ -174,10 +176,10 @@ export namespace dirfuncs {
                 var filePath = path.join(folder.fsPath,filename);
                 var ext = path.extname(filePath);
                 const stats = fs.statSync(filePath);
-                if (!(skipDirectories && stats.isDirectory()) && (filter.length == 0 || filter.includes(ext)))
+                if ((getType == getFileTypes.DIRS && stats.isDirectory()) || filter.length == 0 || filter.includes(ext))
                     fileUris.push(vscode.Uri.file(filePath));
                 if (stats.isDirectory() && recurse) {
-                    var children = getFiles(vscode.Uri.file(filename),filter,skipDirectories,recurse);
+                    var children = getFiles(vscode.Uri.file(filename),filter,getType,recurse);
                     for (let child of children) {
                         fileUris.push(child);
                     }

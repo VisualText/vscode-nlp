@@ -688,7 +688,7 @@ export class SequenceView {
 			let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
 			let items: vscode.QuickPickItem[] = [];
 
-			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp'],true);
+			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp']);
 			for (let nlpFile of nlpFiles) {
 				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
 					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {

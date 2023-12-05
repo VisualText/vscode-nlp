@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.34.2",
+    "version": "2.35.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -352,67 +352,27 @@
                 }
             },
             {
+                "command": "kbView.langLibs",
+                "title": "Language Library",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
+                "command": "kbView.miscLibs",
+                "title": "Miscelaneous Libraries",
+                "icon": {
+                    "light": "resources/light/dict.svg",
+                    "dark": "resources/dark/dict.svg"
+                }
+            },
+            {
                 "command": "kbView.video",
                 "title": "Help Video for KB Viewer",
                 "icon": {
                     "light": "resources/light/video.svg",
                     "dark": "resources/dark/video.svg"
-                }
-            },
-            {
-                "command": "kbView.libraryMods",
-                "title": "Library Modules",
-                "icon": {
-                    "light": "resources/light/kbb.svg",
-                    "dark": "resources/dark/kbb.svg"
-                }
-            },
-            {
-                "command": "kbView.libraryKB",
-                "title": "Library KB",
-                "icon": {
-                    "light": "resources/light/kbb.svg",
-                    "dark": "resources/dark/kbb.svg"
-                }
-            },
-            {
-                "command": "kbView.dictEnglish",
-                "title": "English Dictionary",
-                "icon": {
-                    "light": "resources/light/dict.svg",
-                    "dark": "resources/dark/dict.svg"
-                }
-            },
-            {
-                "command": "kbView.dictPortuguese",
-                "title": "Portuguese Dictionary",
-                "icon": {
-                    "light": "resources/light/dict.svg",
-                    "dark": "resources/dark/dict.svg"
-                }
-            },
-            {
-                "command": "kbView.dictOther",
-                "title": "Other Dictionaries",
-                "icon": {
-                    "light": "resources/light/dict.svg",
-                    "dark": "resources/dark/dict.svg"
-                }
-            },
-            {
-                "command": "kbView.functionWords",
-                "title": "Function Words",
-                "icon": {
-                    "light": "resources/light/dict.svg",
-                    "dark": "resources/dark/dict.svg"
-                }
-            },
-            {
-                "command": "kbView.dictStopWords",
-                "title": "Stop Words",
-                "icon": {
-                    "light": "resources/light/dict.svg",
-                    "dark": "resources/dark/dict.svg"
                 }
             },
             {
@@ -1733,10 +1693,6 @@
             {
                 "id": "librarypass",
                 "label": "Library Pass"
-            },
-            {
-                "id": "librarydict",
-                "label": "Library Dictionary"
             }
         ],
         "menus": {
@@ -2247,28 +2203,6 @@
                     "group": "edit@6"
                 }
             ],
-            "librarydict": [
-                {
-                    "command": "kbView.dictEnglish",
-                    "group": "edit@1"
-                },
-                {
-                    "command": "kbView.dictPortuguese",
-                    "group": "edit@2"
-                },
-                {
-                    "command": "kbView.functionWords",
-                    "group": "edit@3"
-                },
-                {
-                    "command": "kbView.dictOther",
-                    "group": "edit@4"
-                },
-                {
-                    "command": "kbView.dictStopWords",
-                    "group": "edit@5"
-                }
-            ],
             "view/item/context": [
                 {
                     "command": "outputView.rename",
@@ -2296,19 +2230,14 @@
                     "group": "navigation"
                 },
                 {
-                    "submenu": "librarydict",
-                    "when": "view == kbView",
-                    "group": "atop@1"
-                },
-                {
-                    "command": "kbView.libraryMods",
+                    "command": "kbView.langLibs",
                     "when": "view == kbView",
                     "group": "atop@2"
                 },
                 {
-                    "command": "kbView.libraryKB",
+                    "command": "kbView.miscLibs",
                     "when": "view == kbView",
-                    "group": "atop@3"
+                    "group": "atop@2"
                 },
                 {
                     "command": "kbView.rename",
