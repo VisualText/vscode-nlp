@@ -97,6 +97,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.35.0
+Reorganization of library dictionaries, kbs, and mod files
+
 ### 2.34.2
 Added Portuguese dictionaries in KB context menu.
 
@@ -162,15 +165,6 @@ Renaming now changes header comment. Dupliation intelligently increments end num
 
 ### 2.13.8
 Added icon buttons to directly open tutorial videos.
-
-### 2.12.5
-Can copy input files and folders to another analyzer. Fixed delete log files bug in the analyzerView. Added icons to the log output lines.
-
-### 2.11.5
-Can now move the VisualText editor up or down in the analyzer view.
-
-### 2.10.0
-Added library files for dictionaires and KBs.
 
 # Development
 

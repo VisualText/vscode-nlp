@@ -4,7 +4,7 @@ import { visualText } from './visualText';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { outputView } from './outputView';
-import { dirfuncs } from './dirfuncs';
+import { dirfuncs, getFileTypes } from './dirfuncs';
 import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
@@ -222,18 +222,13 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
 		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
 		vscode.commands.registerCommand('kbView.copyToAnalyzer', (KBItem) => this.copyToAnalyzer(KBItem));
-		vscode.commands.registerCommand('kbView.libraryKB', () => this.libraryKB());
-		vscode.commands.registerCommand('kbView.dictEnglish', () => this.dictEnglish());
-		vscode.commands.registerCommand('kbView.dictPortuguese', () => this.dictPortuguese());
-		vscode.commands.registerCommand('kbView.dictOther', () => this.dictOther());
-		vscode.commands.registerCommand('kbView.functionWords', () => this.functionWords());
-		vscode.commands.registerCommand('kbView.dictStopWords', () => this.dictStopWords());
 		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
 		vscode.commands.registerCommand('kbView.video', () => this.video());
 		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
 		vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate());
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
-		vscode.commands.registerCommand('kbView.libraryMods', (KBItem) => this.libraryMods(KBItem));
+		vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
+		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
     }
     
     static attach(ctx: vscode.ExtensionContext) {
@@ -242,9 +237,38 @@ export class KBView {
         }
         return kbView;
 	}
+	
+	langLibs() {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),"languages");
+		let items: vscode.QuickPickItem[] = [];
 
-	libraryMods(kbItem: KBItem) {
-		this.chooseLibFiles('Mod Files','mods','en','.nlm');
+		var exts: string[] = [];
+		exts.push(".dict");
+		exts.push(".kbb");
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts, getFileTypes.DIRS);
+		for (let dictFile of dictFiles) {
+			let descr = "";
+
+			let language = path.basename(dictFile.fsPath);
+			items.push({label: language, description: `${language} language dictionaries, knowledge bases, mod files`});
+		}
+
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('Not created yet and you can help!');
+			return;
+		}
+
+		vscode.window.showQuickPick(items, {title: 'Choose Language', canPickMany: false, placeHolder: 'Choose Language to see dictionaries and KB'}).then(selection => {
+			if (!selection)
+				return;
+			if (selection.label) {
+				this.chooseLibFiles('Dictionary','languages',selection.label,[".dict",".kbb",".nlm"]);
+			}	
+		});
+	}
+
+	miscLibs() {
+		this.chooseLibFiles('Choose File','misc','',[".dict",".kbb",".nlm"]);
 	}
 
 	modLoad(kbItem: KBItem) {
@@ -272,7 +296,7 @@ export class KBView {
 		let allStr = 'ALL FILES BELOW';
 		let allButValidStr = 'ALL BUT VALID KB FILES';
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],true);
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],getFileTypes.FILES);
 		if (dictFiles.length == 0) {
 			vscode.window.showWarningMessage('No KB files to delete');
 			return;
@@ -280,7 +304,7 @@ export class KBView {
 		items.push({label: allStr, description: 'All the files listed below (non .KB files)'});
 		items.push({label: allButValidStr, description: 'All files except .KB, .KBB, and .DICT files'});
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],true);
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],getFileTypes.FILES);
 		for (let dictFile of dictFiles) {
 			if (path.extname(dictFile.fsPath) == '.kb')
 				continue;
@@ -327,67 +351,11 @@ export class KBView {
 		});
 	}
 
-	private libraryKB(): void {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),'kb');
+	private chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]) {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),dirName,subDir);
 		let items: vscode.QuickPickItem[] = [];
 
-		if (!fs.existsSync(fileDir)) {
-			vscode.window.showWarningMessage('No KB Library is found');
-			return;
-		}
-
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),['.kbb'],true);
-		for (let dictFile of dictFiles) {
-			let descr = "";
-
-			let firstLine = this.textFile.readFirstLine(dictFile.fsPath);
-			if (firstLine[0] == '#') {
-				descr = firstLine.substring(1).trim();
-			}
-			items.push({label: path.basename(dictFile.fsPath), description: descr});
-		}
-
-		if (items.length == 0) {
-			vscode.window.showWarningMessage('No Knowledge Bases in the library as of yet.');
-			return;
-		}
-
-		vscode.window.showQuickPick(items, {title: 'Choose Knowledge Base', canPickMany: false, placeHolder: 'Choose KB File to insert'}).then(selection => {
-			if (!selection)
-				return;
-			if (selection.description) {
-				this.insertLibraryFile(path.join('kb'),selection.label);
-			}	
-		});
-	}
-
-	private dictEnglish(): void {
-		this.chooseLibFiles('Dictionary','dict','en','.dict');
-	}
-
-	private dictPortuguese(): void {
-		this.chooseLibFiles('Dictionary','dict','pt','.dict');
-	}
-		
-	private dictOther(): void {
-		this.chooseLibFiles('Dictionary','dict','other','.dict');
-	}
-
-	private functionWords(): void {
-		this.chooseLibFiles('Dictionary','dict','functionwords','.dict');
-	}
-		
-	private dictStopWords() {
-		this.chooseLibFiles('Dictionary','dict','stop','.dict');
-	}
-
-	private chooseLibFiles(prompt: string, dirName: string, subDirName: string, ext: string) {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),dirName,subDirName);
-		let items: vscode.QuickPickItem[] = [];
-
-		var exts: string[] = [];
-		exts.push(ext);
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts,true);
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
 		for (let dictFile of dictFiles) {
 			let descr = "";
 
@@ -395,7 +363,11 @@ export class KBView {
 			if (firstLine[0] == '#') {
 				descr = firstLine.substring(1);
 			}
-			items.push({label: path.basename(dictFile.fsPath), description: descr});
+			let icon = visualText.fileIconFromExt(dictFile.fsPath);
+			let label = path.basename(dictFile.fsPath);
+			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
+			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
+			items.push({label: label, description: descr, iconPath: {light: light, dark: dark}});
 		}
 
 		if (items.length == 0) {
@@ -403,16 +375,17 @@ export class KBView {
 			return;
 		}
 
-		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, canPickMany: false, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selection => {
-			if (!selection)
+		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, canPickMany: true, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selections => {
+			if (!selections)
 				return;
-			if (selection.label) {
-				if (ext == '.nlm') {
-					var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDirName,selection.label);
+
+			for (let selection of selections) {
+				if (exts[0] == '.nlm') {
+					var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDir,selection.label);
 					visualText.mod.load(vscode.Uri.file(filepath));
 				} else
-					this.insertLibraryFile(path.join(dirName,subDirName),selection.label);
-			}	
+					this.insertLibraryFile(path.join(dirName,subDir),selection.label);
+			}
 		});
 	}
 
@@ -465,7 +438,7 @@ export class KBView {
 				canSelectFiles: true,
 				canSelectFolders: false,
 				filters: {
-					'KB files': ['dict','kb','kbb'],
+					'KB files': ['dict','kb','kbb','nlm'],
 					'All files': ['*']
 				}
 			};
@@ -496,7 +469,7 @@ export class KBView {
 			if (visualText.hasWorkspaceFolder()) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord) {
-						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.kb','.kbb','.dict']);
+						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.kb','.kbb','.dict','.nlm']);
 						findView.loadFinds(searchWord,this.findFile.getMatches());
 						findView.setSearchWord(searchWord);
 						vscode.commands.executeCommand('findView.updateTitle');
