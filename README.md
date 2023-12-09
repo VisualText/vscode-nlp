@@ -1,6 +1,6 @@
 # NLP++ Language Extension
 
-![Natural Langauge Understanding Global Initiative](resources\NLUGlobLogoBanner.png)
+![Natural Langauge Understanding Global Initiative](resources/NLUGlobLogoBanner.png)
 
 In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org/category/people/) from around the world who are developing dictionaries, knowledge bases, and analyzers using NLP++, VisualText, and the Conceptual Grammar.
 
@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.36.2
+### 2.36.3
 Added capability to call Python scripts that run on the text in a text window.
 
 ### 2.35.0
