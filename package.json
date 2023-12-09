@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.35.0",
+    "version": "2.36.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -496,6 +496,11 @@
                 "command": "nlp.lowerCase",
                 "title": "Change to Lowercase",
                 "description": "Change the selected text to lower case"
+            },
+            {
+                "command": "nlp.runPython",
+                "title": "Run Python Script on Text",
+                "description": "Allows a user to run a Python script on the text"
             },
             {
                 "command": "helpView.windowCHMHelp",
@@ -1728,6 +1733,11 @@
                 {
                     "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict || resourceExtname == .kbb",
                     "command": "nlp.lowerCase",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict || resourceExtname == .kbb",
+                    "command": "nlp.runPython",
                     "group": "nlp"
                 },
                 {

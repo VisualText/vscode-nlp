@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { exec } from 'child_process';
 import { visualText } from './visualText';
+import { dirfuncs } from './dirfuncs';
 
 export enum separatorType { SEP_UNKNOWN, SEP_R, SEP_RN, SEP_N }
 export enum nlpFileType { UNKNOWN, SEQ, TXT, NLP, TXXT, TREE, LOG, KB, KBB, DICT, NLM }
@@ -29,6 +31,77 @@ export class TextFile {
             this.setText(text, separateLines);
         else if (filepath.length)
             this.setFile(vscode.Uri.file(filepath),separateLines);
+    }
+
+    runPython(editor: vscode.TextEditor) {
+        if (vscode.window.activeTextEditor) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                this.choosePythonScript(editor);
+            }
+        }
+    }
+
+    choosePythonScript(editor: vscode.TextEditor) {
+		var fileDir = path.join(visualText.getVisualTextDirectory(),"python");
+        if (!fs.existsSync(fileDir)) {
+            vscode.window.showWarningMessage("No library Python scripts available");
+			return;
+        }
+		let items: vscode.QuickPickItem[] = [];
+        const exts = [".py"];
+
+		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
+		for (let dictFile of dictFiles) {
+			let descr = "";
+
+			let firstLine = this.readFirstLine(dictFile.fsPath);
+			if (firstLine[0] == '#') {
+				descr = firstLine.substring(1);
+			}
+			let icon = visualText.fileIconFromExt(dictFile.fsPath);
+			let label = path.basename(dictFile.fsPath);
+			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
+			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
+			items.push({label: label, description: descr, detail: dictFile.fsPath, iconPath: {light: light, dark: dark}});
+		}
+
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('Not created yet and you can help!');
+			return;
+		}
+
+        const prompt = "Python Script";
+
+		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selection => {
+            if (!selection)
+                return;
+			if (selection.detail) {
+				this.runPythonCode(editor, selection.detail);
+			}	
+		});
+	}
+
+    runPythonCode(editor: vscode.TextEditor, pythonScriptPath: string) {
+        const inputFilePath = editor.document.uri.fsPath;
+        const command = `python ${pythonScriptPath} ${inputFilePath}`;
+
+        // Execute the command
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error executing the Python script: ${error.message}`);
+                return;
+            }
+        
+            if (stderr) {
+                console.error(`Python script STDERR: ${stderr}`);
+                return;
+            }
+
+            const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
+            var snippet = new vscode.SnippetString(stdout);
+            editor.insertSnippet(snippet,range);
+        });
     }
 
     appendText(text: string) {
