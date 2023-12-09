@@ -30,6 +30,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.displayMatchedRules', this.displayMatchedRulesNLP));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.lowerCase', this.lowerCase));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.runPython', this.runPython));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldRecursively', this.foldRecursively));
@@ -84,6 +85,16 @@ export class NLPCommands {
 				let str = editor.document.getText(range);
 				var snippet = new vscode.SnippetString(str.toLowerCase());
 				editor.insertSnippet(snippet,range);
+            }
+        }
+    }
+
+    runPython() {
+        if (vscode.window.activeTextEditor) {
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                const textFile = new TextFile(editor.document.uri.fsPath)
+                textFile.runPython(editor);
             }
         }
     }
