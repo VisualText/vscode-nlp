@@ -1,5 +1,9 @@
 # NLP++ Language Extension
 
+![Natural Langauge Understanding Global Initiative](resources\NLUGlobLogoBanner.png)
+
+In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org/category/people/) from around the world who are developing dictionaries, knowledge bases, and analyzers using NLP++, VisualText, and the Conceptual Grammar.
+
 ## Version 2 Released
 
 On December 29, 2022, version 2 was released. Since the NLP++ language extension is updated frequently, the new version is more of a formality. The major change is the ability to build and use the .kbb files to load a knowledge base. This is in conjunction with version 2 of the NLP Engine which is necessary for reading .kbb files into the knowledge base.
@@ -97,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.36.1
+### 2.36.2
 Added capability to call Python scripts that run on the text in a text window.
 
 ### 2.35.0
