@@ -30,6 +30,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.displayMatchedRules', this.displayMatchedRulesNLP));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.lowerCase', this.lowerCase));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.removeAccents', this.removeAccents));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.runPython', this.runPython));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.foldAll', this.foldAll));
         ctx.subscriptions.push(vscode.commands.registerCommand('log.unfoldAll', this.unfoldAll));
@@ -85,6 +86,19 @@ export class NLPCommands {
 				let str = editor.document.getText(range);
 				var snippet = new vscode.SnippetString(str.toLowerCase());
 				editor.insertSnippet(snippet,range);
+            }
+        }
+    }
+
+    removeAccents() {
+        if (vscode.window.activeTextEditor) {
+            let editor = vscode.window.activeTextEditor;
+            if (editor) {
+                const text = editor.document.getText();
+                const textNoAccents = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
+                var snippet = new vscode.SnippetString(textNoAccents);
+                editor.insertSnippet(snippet,range);
             }
         }
     }

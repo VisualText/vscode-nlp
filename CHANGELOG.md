@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.36.0
+### 2.36.1
 Added capability to call Python scripts that run on the text in a text window.
 
 ### 2.35.0
