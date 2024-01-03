@@ -105,7 +105,8 @@ export class FindFile {
 						line = line.replace(searchTerm,` <<${searchTerm}>> `);
 					var label = `${filename} [${num} ${pos}] ${line}`;
 					var trimmed = line.trim();
-					if (!functionFlag || bracketsFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))) {
+					if ((functionFlag && pos == 0)
+					    || (!functionFlag && (bracketsFlag || (!lineOrig.includes(';') && trimmed.startsWith('<<' + searchTerm + '>> ('))))) {
 						this.finds.push({uri: uri, label: label, line: num, pos: Number.parseInt(pos), text: line});
 					}
 				}
