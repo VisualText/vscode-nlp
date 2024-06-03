@@ -140,7 +140,9 @@ export class Analyzer {
                 let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
                 for (let file of files) {
                     if (dirfuncs.isDir(file.fsPath)) {
-                        items.push({label: path.basename(file.fsPath), description: ' (analyzer template)'});
+                        const readme = path.join(file.fsPath,"README.MD");
+                        const descr = this.readDescription(readme);
+                        items.push({label: path.basename(file.fsPath), description: descr});
                     }
                 }
                 vscode.window.showQuickPick(items, {title: 'Creating New Analzyer', canPickMany: false, placeHolder: 'Choose analyzer template'}).then(selection => {
@@ -160,6 +162,29 @@ export class Analyzer {
         }
         return false;
     }
+
+    readDescription(filepath: string): string {
+        if (!fs.existsSync(filepath))
+            return '';
+        const lineByLine = require('n-readlines');
+        const liner = new lineByLine(filepath);
+         
+        let line = '';
+        let l = '';
+        let count = 0;
+         
+        while (line = liner.next()) {
+            l = line.toString().trim();
+            if (count > 0 && l.length > 5)
+                break;
+            count++;
+        }
+
+        if (liner.next())
+            liner.close();
+            
+        return l;
+	}
 
     makeNewAnalyzer(fromDir: string, analyzer: string) {
         fromDir = path.join(fromDir,analyzer);
