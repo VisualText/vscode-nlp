@@ -66,8 +66,8 @@ export class VisualText {
     public readonly TEST_SUFFIX = '_test';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
     public readonly NLP_EXE = 'nlp.exe';
-    public readonly ICU1_WIN = 'icudt73.dll';
-    public readonly ICU2_WIN = 'icuuc73.dll';
+    public readonly ICU1_WIN = 'icudt74.dll';
+    public readonly ICU2_WIN = 'icuuc74.dll';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
     public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';

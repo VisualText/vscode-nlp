@@ -905,13 +905,17 @@ export class SequenceView {
 
 	private displayMatchedRules(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
-			this.textFile.setFile(seqItem.uri);
-			if (!this.textFile.isFileType(nlpFileType.NLP)) {
-				vscode.window.showWarningMessage('Not editable');
-				return;
-			}
-			if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
+			if (seqItem.passNum == 1) {
 				this.openRuleMatchFile(seqItem.passNum);
+			} else {
+				this.textFile.setFile(seqItem.uri);
+				if (!this.textFile.isFileType(nlpFileType.NLP)) {
+					vscode.window.showWarningMessage('Not editable');
+					return;
+				}
+				if (fs.existsSync(visualText.analyzer.getOutputDirectory().fsPath)) {
+					this.openRuleMatchFile(seqItem.passNum);
+				}
 			}
 		}
 	}
