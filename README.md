@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.39.0
+Added highlighting of dictionary matches.
+
 ### 2.36.4
 Added capability to call Python scripts that run on the text in a text window.
 

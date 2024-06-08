@@ -3,6 +3,9 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.39.0
+Added highlighting of dictionary matches.
+
 ### 2.36.4
 Added capability to call Python scripts that run on the text in a text window.
 
