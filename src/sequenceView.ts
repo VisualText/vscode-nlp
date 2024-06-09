@@ -7,14 +7,12 @@ import { TextFile, nlpFileType } from './textFile';
 import { NLPFile } from './nlp';
 import { TreeFile } from './treeFile';
 import { FindFile } from './findFile';
-import { modType } from './modFile';
 import { fileOpRefresh,fileOperation } from './fileOps';
 import { findView } from './findView';
 import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
-import { debug } from 'console';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -656,6 +654,10 @@ export class SequenceView {
 	}
 
 	modAdd() {
+		if (visualText.modFiles.length == 0) {
+			vscode.window.showWarningMessage('No modfiles exist. Please create one in the KB view');
+			return;
+		}
 		visualText.mod.getMod().then(retVal => {
 			if (!retVal)
 				return;

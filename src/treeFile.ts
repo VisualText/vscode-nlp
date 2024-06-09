@@ -21,6 +21,7 @@ export interface Highlight {
 }
 
 export interface Fired {
+	str: string;
 	from: number;
 	to: number;
 	ufrom: number;
@@ -85,44 +86,56 @@ export class TreeFile extends TextFile {
 
 				// If 0,0, then search inside dictionary files
 				} else if (tline.ruleLine == 0) {
-					var finalMatches: FindItem[] = [];
-					var searchWord = tline.node.toLowerCase();
-					var str = searchWord;
-
-					if (searchWord.startsWith('_')) {
-						searchWord = tline.node.substring(1);
-						str = this.gatherChildrenText();
-						if (searchWord == 'phrase') {
-							searchWord = str;
-						} else {
-							searchWord = 's=' + tline.node.substring(1);
-						}
-					}
-
-					this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict'],0,false,false);
-					var matches = this.findFile.getMatches();
-
-					// Need to eventually add attributes to match to narrow choices down. Lots of parsing to do for that idea.
-					str = str + ' ';  // The space eliminates substrings, won't work if space is a tab in the dictionary
-					for (let match of matches) {
-						let text = match.text;
-						if (text.startsWith(str)) {
-							finalMatches.push(match);
-						}
-					}
-
-					// Display the find(s)
-					if (finalMatches.length == 1) {
-						findView.openFile(finalMatches[0]);
-					} else {
-						findView.loadFinds(searchWord,finalMatches);
-						findView.setSearchWord(searchWord);
-						vscode.commands.executeCommand('findView.updateTitle');
-						vscode.commands.executeCommand('findView.refreshAll');						
-					}
+					this.searchInDictionaries(tline.node);
 				}
 			}
 		}
+	}
+
+	searchInDictionaries(word: string) {
+		var finalMatches: FindItem[] = [];
+		var searchWord = word.toLowerCase();
+		var str = searchWord;
+
+		if (searchWord.startsWith('_')) {
+			searchWord = word.substring(1);
+			str = this.gatherChildrenText();
+			if (searchWord == 'phrase') {
+				searchWord = str;
+			} else {
+				searchWord = 's=' + word.substring(1);
+			}
+		}
+
+		this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict'],0,false,false);
+		var matches = this.findFile.getMatches();
+
+		for (let match of matches) {
+			let text = match.text;
+			if (this.matchDictLine(str,text)) {
+				finalMatches.push(match);
+			}
+		}
+
+		// Display the find(s)
+		if (finalMatches.length >= 1) {
+			findView.openFile(finalMatches[0]);
+			findView.loadFinds(searchWord,finalMatches);
+			findView.setSearchWord(searchWord);
+			vscode.commands.executeCommand('findView.updateTitle');
+			vscode.commands.executeCommand('findView.refreshAll');						
+		}
+	}
+
+	matchDictLine(original: string, line: string): boolean {
+		var tokens = line.split('=');
+		if (tokens.length > 1) {
+			var toks = tokens[0].split('\s');
+			let lastIndex: number = tokens[0].lastIndexOf(" ");
+			let str = tokens[0].substring(0, lastIndex);
+			return str == original;
+		}
+		return false;
 	}
 
 	gatherChildrenText(): string {
@@ -254,8 +267,10 @@ export class TreeFile extends TextFile {
 								var range = new vscode.Range(pos, pos);
 								editor.revealRange(range);
 							});							
-						}
-					}		
+						} else {
+							this.searchInDictionaries(chosen.str);
+						}		
+					}
 				}
 			}
 			else {
@@ -568,8 +583,9 @@ ${ruleStr}
 				var bLen = this.getCharacterLength(beforeStr);
 				absStart += bLen - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
-					var selStr = line.substring(selection.start.character,selection.end.character-selection.start.character);
-					absEnd = absStart + selStr.length - this.bracketCount(selStr) - 1;
+					var selStr = line.substring(selection.start.character,selection.end.character);
+					// var selStr = line.substring(selection.start.character,selection.end.character-selection.start.character);
+					absEnd = absStart + selStr.length - this.bracketCount(selStr);
 					break;
 				}
 				absEnd = absStart + len - selection.start.character - this.bracketCount(line);
@@ -652,8 +668,8 @@ ${ruleStr}
 	}
 
 	parseBracketsRegex(bracket: string): number {
-		var startPattern = bracket === '(' ? '\<\<' : '\(\(';
-		var endPattern = bracket === '<' ? '\>\>' : '\(\(';
+		var startPattern = bracket === '<' ? '\<\<' : '\(\(';
+		var endPattern = bracket === '<' ? '\>\>' : '\)\)';
 
 		var file = new TextFile(this.HighlightFile,false);
 		var tokens = file.getText(true).split(startPattern);
@@ -691,13 +707,15 @@ ${ruleStr}
 		var file = new TextFile(treeFile);
 		var lastTo = 0;
 
-		for (let line of file.getLines()) {
+		for (let i=0; i < file.getLines().length; i++) {
+			let line = file.getLine(i);
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
-				let fired: Fired = {from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
+				let fired: Fired = {str: '', from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
 				var tts = line.split(refire);
 				fired.built = (tts.length >= 9 && tts[9] === 'blt') ? true : false;
 				if (+tts[2] > lastTo) {
+					fired.str = tts[0].trim();
 					fired.from = +tts[1];
 					fired.to = lastTo = +tts[2];
 					fired.ufrom = +tts[3];
@@ -705,7 +723,23 @@ ${ruleStr}
 					fired.rulenum = +tts[5];
 					fired.ruleline = +tts[6];
 					if (nlpStatusBar.getFiredMode() == FiredMode.FIRED || fired.built)
-						this.fireds.push(fired);						
+						this.fireds.push(fired);
+					
+					if (fired.str.startsWith('_')) {
+						let indent = line.search(/\S/);
+						fired.str = '';
+						while (indent > 0) {
+							i++;
+							let nextLine = file.getLine(i);
+							let pos = nextLine.search(/\S/);
+							if (pos <= indent)
+								break;
+							let ts = nextLine.split(/\s+/);
+							let rest = ts[1].trim();
+							fired.str = fired.str + ' ' + rest;
+						}
+						fired.str = fired.str.trim();
+					}
 				}
 			}
 		}

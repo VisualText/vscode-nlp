@@ -367,7 +367,7 @@ export class KBView {
 			let label = path.basename(dictFile.fsPath);
 			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
 			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
-			items.push({label: label, description: descr, iconPath: {light: light, dark: dark}});
+			items.push({label: label, description: descr});
 		}
 
 		if (items.length == 0) {
