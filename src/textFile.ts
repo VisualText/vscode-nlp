@@ -63,7 +63,7 @@ export class TextFile {
 			let label = path.basename(dictFile.fsPath);
 			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
 			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
-			items.push({label: label, description: descr, detail: dictFile.fsPath, iconPath: {light: light, dark: dark}});
+			items.push({label: label, description: descr, detail: dictFile.fsPath});
 		}
 
 		if (items.length == 0) {
@@ -421,6 +421,10 @@ export class TextFile {
             return this.linesNormalized;
         }
         return this.lines;
+    }
+
+    getLine(lineNumber: number): string {
+        return this.lines[lineNumber];
     }
 
     findLineStartsWith(startsWithStr: string) {
