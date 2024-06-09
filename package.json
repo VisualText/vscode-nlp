@@ -1004,7 +1004,7 @@
             },
             {
                 "command": "sequenceView.insert",
-                "title": "Insert Existing Pass(es)",
+                "title": "Insert Existing Passes",
                 "icon": {
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
@@ -1012,7 +1012,15 @@
             },
             {
                 "command": "sequenceView.insertSister",
-                "title": "Insert Existing Sister Pass(es)",
+                "title": "Insert Existing Sister Passes",
+                "icon": {
+                    "light": "resources/light/file-code.svg",
+                    "dark": "resources/dark/file-code.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertTemplate",
+                "title": "Insert Template Analyzer Passes",
                 "icon": {
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
@@ -2360,14 +2368,19 @@
                     "group": "atop@3"
                 },
                 {
-                    "command": "sequenceView.insertOrphan",
+                    "command": "sequenceView.insertTemplate",
                     "when": "view == sequenceView",
                     "group": "atop@4"
                 },
                 {
+                    "command": "sequenceView.insertOrphan",
+                    "when": "view == sequenceView",
+                    "group": "atop@5"
+                },
+                {
                     "command": "sequenceView.newFolder",
                     "when": "view == sequenceView && viewItem =~ /.*outside.*/",
-                    "group": "atop@5"
+                    "group": "atop@6"
                 },
                 {
                     "command": "sequenceView.openFile",

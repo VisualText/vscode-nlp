@@ -118,7 +118,6 @@ export class VisualText {
 
     private extensionItems: ExtensionItem[] = new Array();
     private latestExtIndex: number = 0;
-    private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
 
     private testItem: TestItem = {fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0};
@@ -963,8 +962,9 @@ export class VisualText {
         return vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,visualText.NLP_EXE));
     }
 
-    engineDirectory() {
-        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_REPO));
+    engineDirectory(subdir: vscode.Uri = vscode.Uri.file('')) {
+        const dir = vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_REPO,subdir.fsPath));
+        return dir
     }
 
     extensionDirectory() {
@@ -1437,10 +1437,10 @@ export class VisualText {
         return items;
     }
 
-    analyzerFolderList(specFlag: boolean=false): vscode.QuickPickItem[] {
-        let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+    analyzerFolderList(folder: vscode.Uri=visualText.getWorkspaceFolder(), specFlag: boolean=false): vscode.QuickPickItem[] {
+        let dirs = dirfuncs.getDirectories(folder);
         let items: vscode.QuickPickItem[] = [];
-        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0,specFlag);
+        return this.analyzerFolderListRecurse(folder,items,0,specFlag);
     }
     
     analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number, specFlag: boolean=false): vscode.QuickPickItem[] {
@@ -1455,11 +1455,17 @@ export class VisualText {
         for (let dir of dirs) {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
-            if (visualText.isAnalyzerDirectory(dir)) {
 
+            if (visualText.isAnalyzerDirectory(dir)) {
                 if (specFlag) {
-                    items.push({label: indent + basename, description: '======================='});
-                    seq.choicePasses(path.join(dir.fsPath,'spec'),items,'-' + indent + spacer,false);
+                    let specItems: vscode.QuickPickItem[] = [];
+                    seq.choicePasses(path.join(dir.fsPath,'spec'),specItems,'-' + indent + spacer,false);
+                    if (specItems.length) {
+                        items.push({label: indent + basename, description: dir.fsPath});
+                        for (let specItem of specItems) {
+                            items.push(specItem);
+                        }
+                    }
                 } else {
                     items.push({label: indent + basename, description: dir.fsPath});
                 }

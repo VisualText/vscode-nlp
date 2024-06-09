@@ -369,9 +369,17 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
-	insertSisterPass(seqItem: SequenceItem): void {
+	insertSisterPasses(seqItem: SequenceItem): void {
+		this.insertFolderPasses(seqItem,visualText.getWorkspaceFolder());
+	}
+
+	insertTemplatePasses(seqItem: SequenceItem): void {
+		this.insertFolderPasses(seqItem,visualText.engineDirectory(vscode.Uri.file(path.join('visualtext','analyzers'))),false);
+	}
+
+	insertFolderPasses(seqItem: SequenceItem, folder: vscode.Uri, specFlag: boolean=true): void {
 		if (visualText.getWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList(true);
+			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList(folder,specFlag);
 			let title = 'Insert NLP file';
 			let placeHolder = 'Choose NLP file to insert';
 
@@ -388,20 +396,37 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				var seqFile = visualText.analyzer.seqFile;
 				for (let selection of selections.reverse()) {
 					if (selection.description) {
-						let uri = vscode.Uri.file(selection.description);
-						if (dirfuncs.isDir(selection.description)) {
-							let files = dirfuncs.getFiles(uri,['.nlp','.pat']);
-							for (let file of files) {
-								let toUri = vscode.Uri.file(path.join(fromDir,path.basename(file.fsPath)));
-								let fromUri = vscode.Uri.file(path.join(uri.fsPath,path.basename(file.fsPath)));
-								seqFile.insertPass(seqItem.passNum,toUri);
-								visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+						const pathStr = selection.description;
+
+						// If it is a directory, insert all the passes
+						if (dirfuncs.isDir(pathStr)) {
+							let sequence = new SequenceFile;
+							sequence.setAnalyzerDirectory(pathStr);
+							let passNum = seqItem.passNum;
+							for (let pass of sequence.getPasses()) {
+								if (!pass.tokenizer) {
+									let toUri = vscode.Uri.file(path.join(fromDir,path.basename(pass.uri.fsPath)));
+									seqFile.insertPass(passNum++,toUri);
+									visualText.fileOps.addFileOperation(pass.uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+									found = true;									
+								}
+							}
+
+							// Copy the kb and dict files as well
+							const kbDir = path.join(pathStr,'kb','user');
+							const files = dirfuncs.getFiles(vscode.Uri.file(kbDir),['.kb','.dict']);
+							const destDir = vscode.Uri.file(path.join(path.dirname(seqFile.getSpecDirectory().fsPath),'kb','user'));
+							for (const file of files) {
+								const toUri = vscode.Uri.file(path.join(destDir.fsPath,path.basename(file.fsPath)));
+								visualText.fileOps.addFileOperation(file,toUri,[fileOpRefresh.KB],fileOperation.COPY);
 								found = true;
 							}
+
+						// If it is a file, insert the pass
 						} else {
-							let toUri = vscode.Uri.file(path.join(fromDir,path.basename(uri.fsPath)));
+							let toUri = vscode.Uri.file(path.join(fromDir,path.basename(pathStr)));
 							seqFile.insertPass(seqItem.passNum,toUri);
-							visualText.fileOps.addFileOperation(uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+							visualText.fileOps.addFileOperation(vscode.Uri.file(pathStr),toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 							found = true;	
 						}
 					}
@@ -621,7 +646,8 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem));
 		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
-		vscode.commands.registerCommand('sequenceView.insertSister', (seqItem) => treeDataProvider.insertSisterPass(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertSister', (seqItem) => treeDataProvider.insertSisterPasses(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertTemplate', (seqItem) => treeDataProvider.insertTemplatePasses(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertCode', (seqItem) => treeDataProvider.insertCode(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));

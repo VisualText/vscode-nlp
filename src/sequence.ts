@@ -98,6 +98,12 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
+	public setAnalyzerDirectory(analyzerDir: string) {
+		const specDir = path.join(analyzerDir,'spec');
+		this.setSpecDir(specDir);
+		this.getPassFiles(this.specDir.fsPath);
+	}
+
 	public setSpecDir(specDir: string) {
 		this.specDir = vscode.Uri.file(specDir);
 	}
