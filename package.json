@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.39.1",
+    "version": "2.39.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -643,7 +643,7 @@
             {
                 "command": "nlp.ruleFired",
                 "category": "NLP",
-                "title": "View rule fired",
+                "title": "View rule or dictionary match",
                 "description": "View the rule that fired for this match"
             },
             {
