@@ -849,7 +849,7 @@ export class SequenceView {
 	}
 
 	private openNLP(seqItem: SequenceItem): void {
-		if (this.notMissing(seqItem) && seqItem.type.localeCompare('folder') && seqItem.type.localeCompare('stub')) {
+		if (seqItem.passNum > 1 && this.notMissing(seqItem) && seqItem.type.localeCompare('folder') && seqItem.type.localeCompare('stub')) {
 			this.textFile.setFile(seqItem.uri);
 			if (!this.textFile.isFileType(nlpFileType.NLP)) {
 				vscode.window.showWarningMessage('Not editable');

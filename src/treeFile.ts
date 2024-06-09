@@ -133,7 +133,7 @@ export class TreeFile extends TextFile {
 			var toks = tokens[0].split('\s');
 			let lastIndex: number = tokens[0].lastIndexOf(" ");
 			let str = tokens[0].substring(0, lastIndex);
-			return str == original;
+			return str.localeCompare(original, undefined, { sensitivity: 'base' }) == 0;
 		}
 		return false;
 	}
@@ -281,7 +281,7 @@ export class TreeFile extends TextFile {
 
 	getFired(firedNumber: number): Fired {
 		var chosen = this.fireds[firedNumber];
-		while (chosen.rulenum == 0) {
+		while (chosen.rulenum == 0 && firedNumber > 0) {
 			firedNumber--;
 			if (firedNumber < 0)
 				break;

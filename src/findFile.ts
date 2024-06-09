@@ -85,10 +85,11 @@ export class FindFile {
 		this.textFile.setFile(uri);
 		let filename = path.basename(uri.fsPath);
 
-		if (this.textFile.getText().search(escaped) >= 0) {
+		if (this.textFile.getText().toLowerCase().search(escaped) >= 0) {
 			let num = 0;
 			for (let line of this.textFile.getLines()) {
-				var pos = line.search(escaped);
+				var lineLower = line.toLowerCase();
+				var pos = lineLower.search(escaped);
 				var lineOrig = line;
 				if (pos >= 0) {
 					if (line.length + escaped.length > context) {
