@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.39.3",
+    "version": "2.40.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -2935,6 +2935,12 @@
                     "scope": "application",
                     "default": "",
                     "description": "Analyzers version"
+                },
+                "logs.clear": {
+                    "type": "boolean",
+                    "scope": "application",
+                    "default": true,
+                    "description": "Clear logs before new operations"
                 }
             }
         }
