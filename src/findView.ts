@@ -21,7 +21,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 		}
 
 		return {
-			label: findItem.label,
+			label: findItem.highlighted,
 			resourceUri: findItem.uri,
 			collapsibleState: void 0,
 			command: {
@@ -96,7 +96,7 @@ export class FindView {
 	public loadFinds(searchWord: string, findItems: FindItem[]) {
 		this.findItems = findItems;
 		if (findItems.length == 0) {
-			findItems.push({uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: 0, pos: 0, text: ''});
+			findItems.push({uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: '', lineNum: 0, pos: 0, highlighted: ''});
 		} else if (findItems.length == 1) {
 			this.openFile(findItems[0]);
 		}
@@ -107,8 +107,8 @@ export class FindView {
 		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(findItem.uri).then(editor => 
 			{
-				var pos = new vscode.Position(findItem.line,findItem.pos);
-				var posEnd = new vscode.Position(findItem.line,findItem.pos+this.searchWord.length);
+				var pos = new vscode.Position(findItem.lineNum,findItem.pos);
+				var posEnd = new vscode.Position(findItem.lineNum,findItem.pos+this.searchWord.length);
 				editor.selections = [new vscode.Selection(pos,posEnd)]; 
 				var range = new vscode.Range(pos, pos);
 				editor.revealRange(range);

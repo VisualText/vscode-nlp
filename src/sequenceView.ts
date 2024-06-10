@@ -6,7 +6,7 @@ import { PassItem, moveDirection, newPassType } from './sequence';
 import { TextFile, nlpFileType } from './textFile';
 import { NLPFile } from './nlp';
 import { TreeFile } from './treeFile';
-import { FindFile } from './findFile';
+import { FindFile, FindItem } from './findFile';
 import { fileOpRefresh,fileOperation } from './fileOps';
 import { findView } from './findView';
 import { analyzerView } from './analyzerView';
@@ -829,15 +829,37 @@ export class SequenceView {
 
 	private findWord(word: string, functionFlag: boolean = false, topFlag: boolean = false) {
 		if (word.length) {
-			if (functionFlag)
-				this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,['.nlp','.pat'],0,functionFlag);
-			else
+			if (functionFlag) {
+				this.findFile.searchFiles(visualText.analyzer.getSpecDirectory(),word,['.nlp','.pat'],0,true);
+				var matches = this.findFile.getMatches();
+
+				var finalMatches: FindItem[] = [];
+				for (let match of matches) {
+					if (this.matchFunctionLine(word,match.line)) {
+						finalMatches.push(match);
+					}
+				}
+
+				// Display the find(s)
+				if (finalMatches.length >= 1) {
+					findView.openFile(finalMatches[0]);
+					findView.loadFinds(word,finalMatches);
+				}
+			}
+			else {
 				this.findFile.searchSequenceFiles(word,topFlag);
-			findView.loadFinds(word,this.findFile.getMatches());
-			findView.setSearchWord(word);
+				findView.loadFinds(word,this.findFile.getMatches());
+			}
+
+			findView.setSearchWord(word);	
 			vscode.commands.executeCommand('findView.updateTitle');
 			vscode.commands.executeCommand('findView.refreshAll');
 		}
+	}
+
+	matchFunctionLine(original: string, line: string): boolean {
+		var tokens = line.split('(');
+		return tokens.length > 1 && tokens[0].localeCompare(original) == 0;
 	}
 
 	private notMissing(seqItem: SequenceItem): boolean {
