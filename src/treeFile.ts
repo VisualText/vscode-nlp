@@ -111,8 +111,7 @@ export class TreeFile extends TextFile {
 		var matches = this.findFile.getMatches();
 
 		for (let match of matches) {
-			let text = match.text;
-			if (this.matchDictLine(str,text)) {
+			if (this.matchDictLine(str,match.highlighted)) {
 				finalMatches.push(match);
 			}
 		}
