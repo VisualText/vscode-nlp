@@ -252,6 +252,7 @@ export class VisualText {
 
     startUpdater(preInfoFlag: boolean = true) {
         if (this.updaterID == 0) {
+            logView.clearLogs(false);
             this.platform = os.platform();
             let plat = this.platform == 'darwin' ? 'mac' : this.platform;
             this.homeDir = os.homedir();
@@ -272,8 +273,9 @@ export class VisualText {
     }
 
     startTimer() {
-        if (this.updaterID == 0)
-            this.updaterID = +setInterval(this.updaterTimer,1000);
+        if (this.updaterID == 0) {
+            this.updaterID = +setInterval(this.updaterTimer,1000);           
+        }
     }
 
     stopUpdater() {

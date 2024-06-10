@@ -179,9 +179,13 @@ export class LogView {
 		return false;
 	}
 
-	public clearLogs() {
-		this.logs = [];
-		vscode.commands.executeCommand('logView.refreshAll');			
+	public clearLogs(force: boolean=true) {
+		const config = vscode.workspace.getConfiguration('logs');
+		const clear = config.get<boolean>('clear');
+		if (force || clear) {
+			this.logs = [];
+			vscode.commands.executeCommand('logView.refreshAll');				
+		}
 	}
 
 	public addMessage(message: string, type: logLineType = logLineType.INFO, uri: vscode.Uri | undefined) {
@@ -190,6 +194,7 @@ export class LogView {
 
 	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false): boolean {
 		if (fs.existsSync(logFileName.fsPath)) {
+			this.clearLogs(false);
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
 				line = line.substring(0,line.length);

@@ -42,6 +42,7 @@ export class FileOps {
 
     public startFileOps(mils: number=100) {
         if (this.timerID == 0) {
+            logView.clearLogs(false);
             this.timerCounter = 0;
             visualText.debugMessage('Starting file operations...',logLineType.FILE_OP);
             this.timerID = +setInterval(this.fileTimer,mils);
