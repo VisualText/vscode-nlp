@@ -1,4 +1,32 @@
 {
+    "N": {
+        "prefix": ["N(\"$text\",1);"],
+        "body": [
+            "N(\"$text\",${1:1});"
+        ],
+        "description": "Node variable with $text value."
+    },
+    "S": {
+        "prefix": ["S(\"something\") = "],
+        "body": [
+            "S(\"${1:1}\") = "
+        ],
+        "description": "Suggested variable."
+    },
+    "X": {
+        "prefix": ["X(\"something\",1) = "],
+        "body": [
+            "X(\"${1:con}\",${2:1}) = "
+        ],
+        "description": "Context variable."
+    },
+    "L": {
+        "prefix": ["L(\"something\") = "],
+        "body": [
+            "L(\"${1:1}\") = "
+        ],
+        "description": "Local variable."
+    },
     "deaccent": {
         "prefix": ["deaccent"],
         "body": [
