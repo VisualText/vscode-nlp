@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.40.3
+Fixed folder creation and moving.
+
 ### 2.39.0
 Added highlighting of dictionary matches.
 
