@@ -67,10 +67,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		var pnum = 0;
 		var order = 0;
+		var tooltip = '';
 		var debugConVal = false;
 
 		for (let passItem of passes) {
 			var label = passItem.passNum.toString() + ' ' + passItem.name;
+			order = passItem.order;
 
 			var conVal = '';
 			var inFolder = seqFile.inFolder(passItem);
@@ -93,7 +95,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			} else if (passItem.isFolder()) {
 				conVal = conVal + 'foldernotok';
 				label = passItem.name;
-				if (debugConVal) label = label + ' ' + conVal;
+				if (debugConVal) label = order.toString() + ' ' + conVal;
 				let passes = seqFile.getFolderPasses(passItem.typeStr, passItem.name);
 				let oneActive = false;
 				for (let pass of passes) {
@@ -116,7 +118,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					conVal = conVal + 'hasLog';
 				if (treeFile.hasFileType(passItem.uri,passItem.passNum,nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
-				if (debugConVal) label = label + ' ' + conVal;
+				if (debugConVal) label =  order.toString() + ' ' + conVal;
+				tooltip = order.toString() + ' ' + tooltip;
 				if (passItem.fileExists())
 					seqItems.push({uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal,
 						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
@@ -125,7 +128,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						type: 'missing', passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			
 			} else {
-				var tooltip = passItem.uri.fsPath;
+				tooltip = passItem.uri.fsPath;
 				if (passItem.tokenizer) {
 					label = '1 ' + passItem.typeStr;
 					tooltip = passItem.fetchTooltip();
@@ -135,11 +138,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					label = passItem.name;
 					conVal = conVal + 'stub';
 				}
-				if (debugConVal) label = label + ' ' + conVal;
+				if (debugConVal) label = order.toString() + ' ' + conVal;
 				seqItems.push({label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, order: order, collapsibleState: collapse, active: passItem.active});
 			}
-			order++;	
 		}
 
 		var specDir: vscode.Uri = visualText.analyzer.getSpecDirectory();
@@ -344,72 +346,17 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	insertPass(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			var seqFile = visualText.analyzer.seqFile;
-			const options: vscode.OpenDialogOptions = {
-				canSelectFiles: true,
-				canSelectFolders: false,
-				canSelectMany: true,
-				openLabel: 'Import Pass(es)',
-				defaultUri: seqFile.getSpecDirectory(),
-				filters: {
-					'Text files': ['pat','nlp'],
-					'All files': ['*']
-				}
-			};
-			vscode.window.showOpenDialog(options).then(selections => {
-				if (!selections) {
-					return;
-				}
-				for (let select of selections.reverse()) {
-					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
-					seqFile.insertPass(seqItem.passNum,newfile);
-				}
-				vscode.commands.executeCommand('sequenceView.refreshAll');
-			});			
+			let seq = new SequenceFile;
+			let items: vscode.QuickPickItem[] = [];
+			seq.choicePasses(visualText.analyzer.seqFile.getSpecDirectory().fsPath,items,'',false);
+			sequenceView.insertChosenPasses(seqItem,items);			
 		}
 	}
 
 	insertSisterPass(seqItem: SequenceItem): void {
 		if (visualText.getWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList(true);
-			let title = 'Insert NLP file';
-			let placeHolder = 'Choose NLP file to insert';
-
-			vscode.window.showQuickPick(items, {title, canPickMany: true, placeHolder: placeHolder}).then(selections => {
-				if (!selections)
-					return;
-				let found = false;
-				let fromDir = '';
-				if (seqItem.contextValue?.indexOf('tokenize') != -1) {
-					fromDir = visualText.analyzer.getSpecDirectory().fsPath;
-				} else {
-					fromDir = path.dirname(seqItem.uri.fsPath);
-				}
-				var seqFile = visualText.analyzer.seqFile;
-				for (let selection of selections.reverse()) {
-					if (selection.description) {
-						let uri = vscode.Uri.file(selection.description);
-						if (dirfuncs.isDir(selection.description)) {
-							let files = dirfuncs.getFiles(uri,['.nlp','.pat']);
-							for (let file of files) {
-								let toUri = vscode.Uri.file(path.join(fromDir,path.basename(file.fsPath)));
-								let fromUri = vscode.Uri.file(path.join(uri.fsPath,path.basename(file.fsPath)));
-								seqFile.insertPass(seqItem.passNum,toUri);
-								visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
-								found = true;
-							}
-						} else {
-							let toUri = vscode.Uri.file(path.join(fromDir,path.basename(uri.fsPath)));
-							seqFile.insertPass(seqItem.passNum,toUri);
-							visualText.fileOps.addFileOperation(uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
-							found = true;	
-						}
-					}
-				}
-
-				if (found)
-					visualText.fileOps.startFileOps();
-			});
+			sequenceView.insertChosenPasses(seqItem,items);
 		}
 	}
 
@@ -703,16 +650,79 @@ export class SequenceView {
 				return;
 			}
 
-			vscode.window.showQuickPick(items, {title: 'Choose Orphan', canPickMany: false, placeHolder: 'Choose orphan pass to insert'}).then(selection => {
-				if (!selection)
+			this.insertChosenPasses(seqItem,items,true);
+		}
+	}
+		
+	insertChosenPasses(seqItem: SequenceItem, items: vscode.QuickPickItem[], orphanFlag: boolean=false): void {
+		if (visualText.getWorkspaceFolder()) {
+			let title = 'Insert NLP files';
+			let placeHolder = 'Choose NLP files to insert';
+
+			vscode.window.showQuickPick(items, {title, canPickMany: true, placeHolder: placeHolder}).then(selections => {
+				if (!selections)
 					return;
-				if (selection.description) {
-					var newfile: vscode.Uri = vscode.Uri.file(selection.description);
-					visualText.analyzer.seqFile.insertPass(seqItem.passNum,newfile);
-					vscode.commands.executeCommand('sequenceView.refreshAll');
-				}	
+				let found = false;
+				let fromDir = '';
+				if (seqItem.contextValue?.indexOf('tokenize') != -1) {
+					fromDir = visualText.analyzer.getSpecDirectory().fsPath;
+				} else {
+					fromDir = path.dirname(seqItem.uri.fsPath);
+				}
+				var seqFile = visualText.analyzer.seqFile;
+				for (let selection of selections.reverse()) {
+					if (selection.description) {
+						let uri = vscode.Uri.file(selection.description);
+						if (dirfuncs.isDir(selection.description)) {
+							let files = dirfuncs.getFiles(uri,['.nlp','.pat']);
+							for (let file of files) {
+								let toUri = vscode.Uri.file(this.safePassName(path.join(fromDir,path.basename(file.fsPath)),orphanFlag));
+								let fromUri = vscode.Uri.file(path.join(uri.fsPath,path.basename(file.fsPath)));
+								seqFile.insertPass(seqItem.order+1,toUri);
+								visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+								found = true;
+							}
+						} else {
+							let toUri = vscode.Uri.file(this.safePassName(path.join(fromDir,path.basename(uri.fsPath)),orphanFlag));
+							seqFile.insertPass(seqItem.order+1,toUri);
+							visualText.fileOps.addFileOperation(uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+							found = true;	
+						}
+					}
+				}
+
+				if (found)
+					visualText.fileOps.startFileOps();
 			});
 		}
+	}
+
+	safePassName(filePath: string, orphanFlag: boolean=false): string {
+		let newFilePath = filePath;
+		if (fs.existsSync(filePath) && !orphanFlag) {
+			const filename = path.basename(filePath);
+			const regex = /([a-zA-Z]+)(\d+)\.([a-zA-Z]+)/;
+			const match = filePath.match(regex);
+			let newFileName = '';
+			let newNumber = 1;
+			let front = filename.split('.')[0];
+			let ext = filename.split('.')[1];
+
+			if (match) {
+				front = match[1];
+				const num =  match[2];
+				newNumber = Number(num) + 1;
+
+			}
+			newFileName = `${front}${newNumber}.${ext}`;
+			newFilePath = path.join(path.dirname(filePath),newFileName);
+			while (fs.existsSync(newFilePath)) {
+				newNumber++;
+				newFileName = `${front}${newNumber}.${ext}`;
+				newFilePath = path.join(path.dirname(filePath),newFileName);
+			}
+		}
+		return newFilePath;
 	}
 
 	video() {
@@ -961,5 +971,4 @@ export class SequenceView {
 			}
 		}
 	}
-
 }
