@@ -532,7 +532,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			var seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ title: 'Create New Folder', value: 'newpass', prompt: 'Enter new folder name' }).then(newname => {
 				if (newname) {
-					if (seqItem.order == 0 || (seqItem && seqItem.uri))
+					if (seqItem.order == 0 || seqItem.type == "folder" || (seqItem && seqItem.uri))
 						seqFile.insertNewFolder(seqItem,newname);
 					else
 						seqFile.insertNewFolderEnd(newname);
