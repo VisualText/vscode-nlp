@@ -761,12 +761,14 @@ export class SequenceFile extends TextFile {
 		this.setSpecDir(specDir);
 		this.getPassFiles(specDir);
 		for (let pass of this.getPassItems()) {
-			if (pass.tokenizer && includeTokFlag) {
-				items.push({label: pass.typeStr, description: 'tokenizer pass'});
-			} else {
-				let uri = this.passItemUri(pass);
-				if (fs.existsSync(uri.fsPath))
-					items.push({label: indent + path.basename(uri.fsPath), description: uri.fsPath});				
+			if (pass.typeStr.localeCompare('folder')) {
+				if (pass.tokenizer && includeTokFlag) {
+					items.push({label: pass.typeStr, description: 'tokenizer pass'});
+				} else {
+					let uri = this.passItemUri(pass);
+					if (fs.existsSync(uri.fsPath))
+						items.push({label: indent + path.basename(uri.fsPath), description: uri.fsPath});				
+				}
 			}
 		}
 	}

@@ -1445,7 +1445,7 @@ export class VisualText {
         return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0,specFlag);
     }
     
-    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number, specFlag: boolean=false): vscode.QuickPickItem[] {
+    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number=0, specFlag: boolean=false): vscode.QuickPickItem[] {
         let dirs = dirfuncs.getDirectories(dir);
         let indent = '';
         let spacer = '   ';
