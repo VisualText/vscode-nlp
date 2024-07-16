@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.41.0
+Added Insert Template Analyzer to sequence menu.
+
 ### 2.40.4
 Fixed folder creation and moving.
 
@@ -169,15 +172,6 @@ Added mod files allowing for saving and loading multiple files together in one f
 
 ### 2.16.3
 Put active toggle on sequence passes.
-
-### 2.15.0
-Now opening files to the side that are modified or called by a context menu.
-
-### 2.14.6
-Renaming now changes header comment. Dupliation intelligently increments end number.
-
-### 2.13.8
-Added icon buttons to directly open tutorial videos.
 
 # Development
 

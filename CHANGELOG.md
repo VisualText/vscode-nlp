@@ -3,6 +3,9 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.41.0
+Added Insert Template Analyzer to sequence menu.
+
 ### 2.40.4
 Fixed folder creation and moving.
 
