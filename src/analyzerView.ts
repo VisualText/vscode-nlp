@@ -724,7 +724,7 @@ export class AnalyzerView {
 	}
 
 	private loadExampleAnalyzers() {
-		this.openFolder(visualText.getExampleAnalyzersPath());
+		this.openFolder(visualText.getTemplateAnalyzersPath());
 	}
 	
 	private newAnalyzer(analyzerItem: AnalyzerItem) {

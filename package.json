@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.40.4",
+    "version": "2.41.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1013,6 +1013,14 @@
             {
                 "command": "sequenceView.insertSister",
                 "title": "Insert Existing Sister Pass(es)",
+                "icon": {
+                    "light": "resources/light/file-code.svg",
+                    "dark": "resources/dark/file-code.svg"
+                }
+            },
+            {
+                "command": "sequenceView.insertTemplateAnalyzers",
+                "title": "Insert Template Analyzer(s)",
                 "icon": {
                     "light": "resources/light/file-code.svg",
                     "dark": "resources/dark/file-code.svg"
@@ -2365,9 +2373,14 @@
                     "group": "atop@4"
                 },
                 {
-                    "command": "sequenceView.newFolder",
+                    "command": "sequenceView.insertTemplateAnalyzers",
                     "when": "view == sequenceView && viewItem =~ /.*outside.*/",
                     "group": "atop@5"
+                },
+                {
+                    "command": "sequenceView.newFolder",
+                    "when": "view == sequenceView && viewItem =~ /.*outside.*/",
+                    "group": "atop@6"
                 },
                 {
                     "command": "sequenceView.openFile",

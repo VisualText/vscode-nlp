@@ -1013,8 +1013,8 @@ export class VisualText {
         });
 	}
 
-    getExampleAnalyzersPath(): vscode.Uri {
-       return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,visualText.ANALYZERS_REPO));
+    getTemplateAnalyzersPath(): vscode.Uri {
+        return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,visualText.ANALYZERS_REPO));
     }
 
     getExtensionPath(): vscode.Uri {

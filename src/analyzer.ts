@@ -86,7 +86,7 @@ export class Analyzer {
 
     newAnalyzer(dir: vscode.Uri): string {
         if (visualText.hasWorkspaceFolder()) {
-            var exampleDir = visualText.getExampleAnalyzersPath().fsPath;
+            var exampleDir = visualText.getTemplateAnalyzersPath().fsPath;
             var workDir = visualText.getWorkspaceFolder().fsPath;
 
             if (exampleDir == workDir) {
@@ -163,7 +163,7 @@ export class Analyzer {
         return false;
     }
 
-    readDescription(filepath: string): string {
+    public readDescription(filepath: string): string {
         if (!fs.existsSync(filepath))
             return '';
         const lineByLine = require('n-readlines');
