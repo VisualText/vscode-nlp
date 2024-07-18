@@ -7,6 +7,7 @@ import { textView, TextItem } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
+import { anaSubDir } from './analyzer';
 
 export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE, README }
 
@@ -254,7 +255,7 @@ export class AnalyzerView {
 				firstLine = firstLine.replace("// ","");
 				items.push({label: path.basename(file.fsPath), description: ' ' + firstLine});
 			}
-			vscode.window.showQuickPick(items, {title: 'Creating New ECL File', canPickMany: false, placeHolder: 'Choose ecl template'}).then(selection => {
+			vscode.window.showQuickPick(items, {title: 'Creating New ECL File', canPickMany: false, placeHolder: 'Choose ecl block'}).then(selection => {
 				if (!selection) {
 					return false;
 				}
@@ -304,8 +305,8 @@ export class AnalyzerView {
 					}
 					
 					// KB FILES
-					let kbPath = path.join(analyzerPath,'kb','user');
-					let kbFiles = dirfuncs.getFiles(vscode.Uri.file(kbPath),['.dict','.kbb','.kb']);
+					let kbPath = visualText.analyzer.constructDir(vscode.Uri.file(analyzerPath),anaSubDir.KB);
+					let kbFiles = dirfuncs.getFiles(kbPath,['.dict','.kbb','.kb']);
 					for (let file of kbFiles) {
 						files.push(this.cleanPath(file.fsPath,start));
 					}
@@ -347,10 +348,10 @@ export class AnalyzerView {
 
 	getAnalyzerManifestFiles(dir: string): string[] {
 		let files: string[] = [];
-		let specDir = path.join(dir,'spec');
+		let specDir = path.join(dir,visualText.ANALYZER_SEQUENCE_FOLDER);
 		this.sequenceFile.setSpecDir(specDir);
 		this.sequenceFile.getPassFiles(specDir);
-		files.push(path.join(specDir,'analyzer.seq'));
+		files.push(path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE));
 		for (let item of this.sequenceFile.getPassItems()) {
 			let p = item.uri.fsPath;
 			if (p.length > 2 && fs.existsSync(p))
@@ -362,9 +363,9 @@ export class AnalyzerView {
 	// No longer needed but leaving around JUST IN CASE
 	copyDataFolder(): string[] {
 		let files: string[] = [];
-		var dataFolder = path.join(visualText.getAnalyzerDir().fsPath,'data','rfb','spec');
+		var dataFolder = path.join(visualText.getAnalyzerDir().fsPath,'data','rfb',visualText.ANALYZER_SEQUENCE_FOLDER);
 		if (!fs.existsSync(dataFolder)) {
-			var engineData = path.join(visualText.engineDirectory().fsPath,'data','rfb','spec');
+			var engineData = path.join(visualText.engineDirectory().fsPath,'data','rfb',visualText.ANALYZER_SEQUENCE_FOLDER);
 			visualText.fileOps.addFileOperation(vscode.Uri.file(engineData),vscode.Uri.file(dataFolder),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		}
@@ -674,7 +675,7 @@ export class AnalyzerView {
 			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.TEXT,fileOpRefresh.KB,fileOpRefresh.ANALYZERS,fileOpRefresh.ANALYZER],fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -724,7 +725,7 @@ export class AnalyzerView {
 	}
 
 	private loadExampleAnalyzers() {
-		this.openFolder(visualText.getTemplateAnalyzersPath());
+		this.openFolder(visualText.getBlockAnalyzersPath());
 	}
 	
 	private newAnalyzer(analyzerItem: AnalyzerItem) {

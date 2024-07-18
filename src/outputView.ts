@@ -5,6 +5,7 @@ import { visualText } from './visualText';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { fileOpRefresh, fileOperation } from './fileOps';
+import { anaSubDir } from './analyzer';
 
 export enum outputFileType { ALL, TXXT, TREE, KB, NLP }
 
@@ -365,11 +366,13 @@ export class OutputView {
 	}
 
 	copytoKB(outputItem: OutputItem) {
-		this.copyFileToAnalyzer(outputItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+		const kbDir = visualText.analyzer.constructDir(outputItem.uri,anaSubDir.KB);
+		this.copyFileToAnalyzer(kbDir,"",'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
 
 	copytoText(outputItem: OutputItem) {
-		this.copyFileToAnalyzer(outputItem.uri,'input','Copy file to another analyzer','Copy file to input directory of:');
+		const out = visualText.analyzer.constructDir(outputItem.uri,anaSubDir.INPUT);
+		this.copyFileToAnalyzer(out,"",'Copy file to another analyzer','Copy file to input directory of:');
 	}
 
 	copyFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {

@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 import { visualText } from './visualText';
+import { anaSubDir } from './analyzer';
 
 export enum getFileTypes { UNKNOWN, FILES, FILES_DIRS, DIRS }
 
@@ -105,7 +106,7 @@ export namespace dirfuncs {
         for (let dir of dirs) {
             var subDirs = getDirectories(dir);
             for (let subDir of subDirs) {
-                if (path.basename(subDir.fsPath).localeCompare('spec') == 0) {
+                if (path.basename(subDir.fsPath).localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
                     let specfile = path.join(subDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE);
                     if (fs.existsSync(specfile))
                         specCount++;
@@ -283,13 +284,13 @@ export namespace dirfuncs {
     }
 
     export function analyzerHasLogFiles(dir: vscode.Uri): boolean {
-        var outputDir = vscode.Uri.file(path.join(dir.fsPath,'output'));
+        var outputDir = visualText.analyzer.constructDir(dir,anaSubDir.OUTPUT);
         if (fs.existsSync(outputDir.fsPath) && dirfuncs.directoryHasFiles(outputDir))
             return true;
-        var logsDir = vscode.Uri.file(path.join(dir.fsPath,'logs'));
+        var logsDir = visualText.analyzer.constructDir(dir,anaSubDir.LOGS);
         if (fs.existsSync(logsDir.fsPath) && dirfuncs.directoryHasFiles(logsDir))
             return true;
-        var inputDir = vscode.Uri.file(path.join(dir.fsPath,'input'));
+        var inputDir = visualText.analyzer.constructDir(dir,anaSubDir.INPUT);
         if (fs.existsSync(inputDir.fsPath)) {
             return dirfuncs.hasLogDirs(inputDir,false);
         }
@@ -385,5 +386,20 @@ export namespace dirfuncs {
 
     export function fileHasLog(filePath: string): boolean {
         return dirfuncs.isDir(filePath + visualText.LOG_SUFFIX);
+    }
+
+    export function needToCopy(fileFrom: string, fileTo: string): boolean {
+        if (!fs.existsSync(fileTo))
+            return true;
+        try {
+            const file1Content = fs.readFileSync(fileFrom, 'utf-8');
+            const file2Content = fs.readFileSync(fileTo, 'utf-8');
+            if (file1Content === file2Content)
+                return false;
+            return true;
+        } catch (error) {
+            console.error('Error reading files:', error);
+            return false;
+        }
     }
 }

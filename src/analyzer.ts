@@ -1,49 +1,52 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import { SequenceFile } from './sequence';
-import { visualText } from './visualText';
-import { JsonState } from './jsonState';
-import { dirfuncs } from './dirfuncs';
-import { TextFile } from './textFile';
-import { nlpFileType } from './textFile';
-import { logLineType } from './logView';
-import { fileOpRefresh, fileOperation } from './fileOps';
+import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
+import { SequenceFile } from "./sequence";
+import { visualText } from "./visualText";
+import { JsonState } from "./jsonState";
+import { dirfuncs } from "./dirfuncs";
+import { TextFile } from "./textFile";
+import { nlpFileType } from "./textFile";
+import { logLineType } from "./logView";
+import { fileOpRefresh, fileOperation } from "./fileOps";
+import { sequenceView } from "./sequenceView";
+
+export enum anaSubDir { UNKNOWN, INPUT, KB, LOGS, OUTPUT, SPEC };
 
 export let analyzer: Analyzer;
 export class Analyzer {
 
     public seqFile = new SequenceFile();
     private jsonState = new JsonState();
-    private analyzerDir: vscode.Uri = vscode.Uri.file('');
-    private specDir: vscode.Uri = vscode.Uri.file('');
-    private inputDir: vscode.Uri = vscode.Uri.file('');
-    private outputDir: vscode.Uri = vscode.Uri.file('');
-    private kbDir: vscode.Uri = vscode.Uri.file('');
-    private logDir: vscode.Uri = vscode.Uri.file('');
-    private currentTextFile: vscode.Uri = vscode.Uri.file('');
-    private currentPassFile: vscode.Uri = vscode.Uri.file('');
+    private analyzerDir: vscode.Uri = vscode.Uri.file("");
+    private specDir: vscode.Uri = vscode.Uri.file("");
+    private inputDir: vscode.Uri = vscode.Uri.file("");
+    private outputDir: vscode.Uri = vscode.Uri.file("");
+    private kbDir: vscode.Uri = vscode.Uri.file("");
+    private logDir: vscode.Uri = vscode.Uri.file("");
+    private currentTextFile: vscode.Uri = vscode.Uri.file("");
+    private currentPassFile: vscode.Uri = vscode.Uri.file("");
     private passNum: number = 0;;
     private loaded: boolean = false;
     
     public hasLogs: boolean = false;
     public timerCounter: number = 0;
     public timerID: number = 0;
-    public analyzerCopyUri: vscode.Uri = vscode.Uri.file('');
+    public analyzerCopyUri: vscode.Uri = vscode.Uri.file("");
     public name: string = "";
 
 	constructor() {
     }
 
 	readState() {
-        if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
+        if (this.jsonState.jsonParse(this.analyzerDir,"state")) {
             var parse = this.jsonState.json.visualText[0];
             if (parse.currentTextFile) {
                 var currentFile = parse.currentTextFile;
                 if (fs.existsSync(currentFile))
                     this.currentTextFile = vscode.Uri.file(currentFile);
-                else if (currentFile.includes('input')) {
-                    this.currentTextFile = vscode.Uri.file('');
+                else if (currentFile.includes("input")) {
+                    this.currentTextFile = vscode.Uri.file("");
                 }
                 else
                     this.currentTextFile = vscode.Uri.file(path.join(this.getInputDirectory().fsPath,currentFile));
@@ -56,25 +59,25 @@ export class Analyzer {
                         this.currentPassFile = vscode.Uri.file(path.join(this.getSpecDirectory().fsPath,currentFile));                    
                 }
 
-                vscode.commands.executeCommand('status.update');
+                vscode.commands.executeCommand("status.update");
                 this.outputDirectory();               
             }
         }
     }
 
 	async modCreate(uri: vscode.Uri) {
-        await vscode.window.showInputBox({ value: 'filename', prompt: 'Enter mod file name' }).then(newname => {
+        await vscode.window.showInputBox({ value: "filename", prompt: "Enter mod file name" }).then(newname => {
             if (newname) {
-                var filepath = path.join(uri.fsPath,newname+'.nlm');
+                var filepath = path.join(uri.fsPath,newname+".nlm");
                 if (fs.existsSync(filepath)) {
-                    vscode.window.showWarningMessage("Mod file: " + filepath + ' already exists');
+                    vscode.window.showWarningMessage("Mod file: " + filepath + " already exists");
                     return false;
                 }
                 var modUri = vscode.Uri.file(filepath);
                 visualText.modFiles.push(modUri);
-                dirfuncs.writeFile(filepath,'# Description goes here');
+                dirfuncs.writeFile(filepath,"# Description goes here");
                 visualText.setModFile(modUri);
-                vscode.commands.executeCommand('kbView.refreshAll');
+                vscode.commands.executeCommand("kbView.refreshAll");
                 return true;
             }
         });
@@ -86,7 +89,7 @@ export class Analyzer {
 
     newAnalyzer(dir: vscode.Uri): string {
         if (visualText.hasWorkspaceFolder()) {
-            var exampleDir = visualText.getTemplateAnalyzersPath().fsPath;
+            var exampleDir = visualText.getBlockAnalyzersPath().fsPath;
             var workDir = visualText.getWorkspaceFolder().fsPath;
 
             if (exampleDir == workDir) {
@@ -100,11 +103,11 @@ export class Analyzer {
                 this.askToCreateNewAnalyzer(dir);
             }
         }
-        return '';
+        return "";
     }
 
     askToCreateNewAnalyzer(dir: vscode.Uri) {
-        vscode.window.showInputBox({ value: 'name', prompt: 'Enter new analyzer name' }).then(newname => {
+        vscode.window.showInputBox({ value: "name", prompt: "Enter new analyzer name" }).then(newname => {
             if (newname) {
                 this.createNewAnalyzer(dir,newname);
                 return newname;
@@ -113,13 +116,13 @@ export class Analyzer {
     }
 
     zeroAnalyzer() {
-        this.analyzerDir = vscode.Uri.file('');
-        this.specDir = vscode.Uri.file('');
-        this.inputDir = vscode.Uri.file('');
-        this.outputDir = vscode.Uri.file('');
-        this.kbDir = vscode.Uri.file('');
-        this.currentTextFile = vscode.Uri.file('');
-        this.name = '';
+        this.analyzerDir = vscode.Uri.file("");
+        this.specDir = vscode.Uri.file("");
+        this.inputDir = vscode.Uri.file("");
+        this.outputDir = vscode.Uri.file("");
+        this.kbDir = vscode.Uri.file("");
+        this.currentTextFile = vscode.Uri.file("");
+        this.name = "";
         this.passNum = 0;
         this.loaded = false;
     }
@@ -128,14 +131,14 @@ export class Analyzer {
         visualText.readState();
         this.analyzerDir = vscode.Uri.file(path.join(dir.fsPath,analyzerName));
         if (fs.existsSync(this.analyzerDir.fsPath)) {
-            vscode.window.showWarningMessage('Analyzer already exists');
+            vscode.window.showWarningMessage("Analyzer already exists");
             return false;
         } else if (!visualText.visualTextDirectoryExists()) {
-            vscode.window.showWarningMessage('Template analyzer files missing');
+            vscode.window.showWarningMessage("Block analyzer files missing");
             return false;
         } else {
             let items: vscode.QuickPickItem[] = [];
-            var fromDir = path.join(visualText.getVisualTextDirectory('analyzers'));
+            var fromDir = path.join(visualText.getVisualTextDirectory("analyzers"));
             if (dirfuncs.isDir(fromDir)) {
                 let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
                 for (let file of files) {
@@ -145,18 +148,31 @@ export class Analyzer {
                         items.push({label: path.basename(file.fsPath), description: descr});
                     }
                 }
-                vscode.window.showQuickPick(items, {title: 'Creating New Analzyer', canPickMany: false, placeHolder: 'Choose analyzer template'}).then(selection => {
-                    if (!selection) {
-                    return false;
+                vscode.window.showQuickPick(items, {title: "Creating New Analzyer", canPickMany: true, placeHolder: "Choose analyzer block"}).then(selections => {
+                    if (!selections) {
+                        return false;
                     }
-                    this.makeNewAnalyzer(fromDir,selection.label);
+                    if (selections.length == 1) {
+                        this.makeNewAnalyzer(fromDir,selections[0].label);
+                        visualText.fileOps.startFileOps();
+                        this.loaded = true;
+                        return true;
+                    }
+                    this.makeNewAnalyzer(fromDir,"Bare Minimum");
+                    let toDir = this.analyzerDir.fsPath;
+                    visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),vscode.Uri.file(toDir),[fileOpRefresh.ANALYZER],fileOperation.ANASEL,"1");
+					for (let selection of selections) {
+						sequenceView.insertAnalyzerBlock(fromDir,toDir,selection.label);
+					}
                     this.loaded = true;
+                    visualText.fileOps.startFileOps();
                     return true;
                 });
 
             } else {
-                fromDir = path.join(visualText.getVisualTextDirectory('visualText'));
-                this.makeNewAnalyzer(fromDir,'');
+                fromDir = path.join(visualText.getVisualTextDirectory("visualText"));
+                this.makeNewAnalyzer(fromDir,"");
+                return true;
             }
 
         }
@@ -165,12 +181,12 @@ export class Analyzer {
 
     public readDescription(filepath: string): string {
         if (!fs.existsSync(filepath))
-            return '';
-        const lineByLine = require('n-readlines');
+            return "";
+        const lineByLine = require("n-readlines");
         const liner = new lineByLine(filepath);
          
-        let line = '';
-        let l = '';
+        let line = "";
+        let l = "";
         let count = 0;
          
         while (line = liner.next()) {
@@ -193,11 +209,11 @@ export class Analyzer {
             return false;
         }
         visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),this.analyzerDir,[fileOpRefresh.ANALYZERS],fileOperation.COPY);
-        visualText.fileOps.startFileOps();
+        visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),this.analyzerDir,[fileOpRefresh.ANALYZERS],fileOperation.ANALOAD);
     }
 
-    createAnaSequenceFile(content: string=''): boolean {
-        var cont = content.length ? content : '#\ntokenize	nil	# Gen:   Convert input to token list.';
+    createAnaSequenceFile(content: string=""): boolean {
+        var cont = content.length ? content : "#\ntokenize	nil	# Gen:   Convert input to token list.";
         if (this.getSpecDirectory()) {
             var anaFile = path.join(this.getSpecDirectory().fsPath,visualText.ANALYZER_SEQUENCE_FILE);
             return dirfuncs.writeFile(anaFile,cont);
@@ -207,7 +223,7 @@ export class Analyzer {
 
     saveStateFile() {
         if (this.currentPassFile.fsPath.length == 0 || this.currentTextFile.fsPath.length == 0) {
-            if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
+            if (this.jsonState.jsonParse(this.analyzerDir,"state")) {
                 var parse = this.jsonState.json.visualText[0];
                 if (parse.currentTextFile && this.currentPassFile.fsPath.length == 0) {
                     var currentFile = parse.currentTextFile;
@@ -241,7 +257,7 @@ export class Analyzer {
                 }
             ]
         }
-        this.jsonState.saveFile(this.analyzerDir.fsPath, 'state', stateJsonDefault);  
+        this.jsonState.saveFile(this.analyzerDir.fsPath, "state", stateJsonDefault);  
     }
 
     getCurrentFile(): vscode.Uri {
@@ -265,23 +281,23 @@ export class Analyzer {
         this.readState();
         this.seqFile.init();
         this.checkHierFile();
-        vscode.commands.executeCommand('analyzerView.updateTitle',analyzerDir);
+        vscode.commands.executeCommand("analyzerView.updateTitle",analyzerDir);
         if (this.currentTextFile.fsPath.length > 2)
-            vscode.commands.executeCommand('textView.updateTitle',vscode.Uri.file(this.currentTextFile.fsPath));
+            vscode.commands.executeCommand("textView.updateTitle",vscode.Uri.file(this.currentTextFile.fsPath));
     }
 
     checkHierFile() {
         var kbPath = visualText.analyzer.getKBDirectory();
-        var hierPath = path.join(kbPath.fsPath,'hier.kb');
+        var hierPath = path.join(kbPath.fsPath,"hier.kb");
         if (fs.existsSync(hierPath)) {
             var currHierText = new TextFile(hierPath);
             visualText.getExtensionDirs();
             var extPath = visualText.getExtensionPath();
-            var extHierPath = path.join(extPath.fsPath,'nlp-engine','visualtext','analyzers','basic','kb','user','hier.kb');
+            var extHierPath = path.join(extPath.fsPath,"nlp-engine","visualtext","analyzers","basic","kb","user","hier.kb");
             if (fs.existsSync(extHierPath)) {
                 var basicHierText = new TextFile(extHierPath);
                 if (basicHierText.getText() != currHierText.getText()) {
-                    visualText.debugMessage('Updating hier.kb file',logLineType.UPDATER);
+                    visualText.debugMessage("Updating hier.kb file",logLineType.UPDATER);
                     currHierText.setText(basicHierText.getText());
                     currHierText.saveFile();
                 }
@@ -293,7 +309,7 @@ export class Analyzer {
         if (this.currentTextFile.fsPath.length > 2) {
             this.outputDir = vscode.Uri.file(this.currentTextFile.fsPath + visualText.LOG_SUFFIX);
         } else {
-            this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.fsPath,'output'));
+            this.outputDir = vscode.Uri.file(path.join(this.analyzerDir.fsPath,"output"));
         }
     }
 
@@ -314,10 +330,10 @@ export class Analyzer {
     treeFile(name: string): vscode.Uri {
         if (this.logDir.fsPath.length) {
             var pather = path.join(this.logDir.fsPath,name);
-            pather = pather.concat('.log');
+            pather = pather.concat(".log");
             return vscode.Uri.file(pather);        
         }
-        return vscode.Uri.file('');
+        return vscode.Uri.file("");
     }
 
     isLoaded(): boolean {
@@ -328,7 +344,7 @@ export class Analyzer {
         this.currentTextFile = filePath;
     }
 
-    getAnalyzerDirectory(subDir: string=''): vscode.Uri {
+    getAnalyzerDirectory(subDir: string=""): vscode.Uri {
         return vscode.Uri.file(path.join(this.analyzerDir.fsPath,subDir));
     }
 
@@ -340,7 +356,7 @@ export class Analyzer {
 		return this.specDir;
 	}
 
-    getOutputDirectory(filename: string=''): vscode.Uri {
+    getOutputDirectory(filename: string=""): vscode.Uri {
         if (filename.length)
             return vscode.Uri.file(path.join(visualText.analyzer.getOutputDirectory().fsPath,filename));
         return this.outputDir;
@@ -403,15 +419,41 @@ export class Analyzer {
         this.analyzerDir = directory;
         if (fs.existsSync(directory.fsPath)) {
             this.name = path.basename(directory.fsPath);
-            this.specDir = vscode.Uri.file(path.join(directory.fsPath,'spec'));
-            this.inputDir = vscode.Uri.file(path.join(directory.fsPath,'input'));
-            this.kbDir = vscode.Uri.file(path.join(directory.fsPath,'kb','user'));
-            this.logDir = vscode.Uri.file(path.join(directory.fsPath,'logs'));
+            this.specDir = this.constructDir(directory, anaSubDir.SPEC);;
+            this.inputDir = this.constructDir(directory, anaSubDir.INPUT);
+            this.kbDir = this.constructDir(directory, anaSubDir.KB);
+            this.logDir = this.constructDir(directory, anaSubDir.LOGS);
             this.loaded = true;          
         }
         else
             this.loaded = false;
 	}
+
+    constructDir(analyzerDir: vscode.Uri, dir: anaSubDir ): vscode.Uri {
+        return vscode.Uri.file(path.join(analyzerDir.fsPath,this.anaSubDirPath(dir)));
+    }
+
+    anaSubDirPath(dir: anaSubDir ): string {
+        let pathStr = "";
+        switch (dir) {
+            case anaSubDir.INPUT:
+                pathStr = "input";
+                break;
+            case anaSubDir.KB:
+                pathStr = path.join("kb", "user");
+                break;
+            case anaSubDir.SPEC:
+                pathStr = visualText.ANALYZER_SEQUENCE_FOLDER;
+                break;
+            case anaSubDir.LOGS:
+                pathStr = "logs";
+                break;
+            case anaSubDir.OUTPUT:
+                pathStr = "output";
+                break;
+        }
+        return pathStr;
+    }
 
     getAnalyzerConverting() {
         return this.getAnalyzerConverting;

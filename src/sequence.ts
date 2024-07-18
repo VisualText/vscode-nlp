@@ -102,8 +102,13 @@ export class SequenceFile extends TextFile {
 		this.specDir = vscode.Uri.file(specDir);
 	}
 
-	public getPassFiles(specDir: string) {
-		super.setFile(vscode.Uri.file(path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE)),true);
+	public getPassFiles(specDir: string, addSpec: boolean = false) {
+		specDir = addSpec ? path.join(specDir,visualText.ANALYZER_SEQUENCE_FOLDER) : specDir;
+		if (addSpec) 
+			this.setSpecDir(specDir);
+
+		const anaFile = path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE);
+		super.setFile(vscode.Uri.file(anaFile),true);
 		let passNum = 1;
 		this.passItems = [];
 		var folder = '';
@@ -140,6 +145,20 @@ export class SequenceFile extends TextFile {
 
 	public getPassItems() {
 		return this.passItems;
+	}
+
+	public getLastItem(): PassItem {
+		return this.passItems[this.passItems.length-1];
+	}
+
+	public getLastItemInFolder(row: number): PassItem {
+		let folderItem = this.passItems[row];
+		for (let i=row; i<this.passItems.length; i++) {
+			let passItem = this.passItems[i];
+			if (passItem.name.localeCompare(folderItem.name) == 0 && passItem.typeStr.localeCompare('end') == 0)
+				return passItem;
+		}
+		return folderItem;
 	}
 
 	isOrphan(nlpFileName: string): boolean {
@@ -300,7 +319,7 @@ export class SequenceFile extends TextFile {
 		}
 	}
 	
-	insertPass(row: number, newpass: vscode.Uri) {
+	insertPass(row: number, newpass: vscode.Uri): number {
 		if (this.passItems.length) {
 
 			if (row >= 0) {
@@ -316,18 +335,21 @@ export class SequenceFile extends TextFile {
 					}
 					copy = true;
 				}
+				var pi = this.passItems[0];
 				for (let pass of passes) {
 					var passPath = path.join(specDir,path.basename(pass.fsPath));
 					if (copy) {
 						fs.copyFileSync(pass.fsPath,passPath);								
 					}		
-					var passItem = this.createPassItemFromFile(passPath);
-					this.passItems.splice(row,0,passItem);
+					pi = this.createPassItemFromFile(passPath);
 					row++;
+					this.passItems.splice(row,0,pi);
 				}
-				this.saveFile();			
+				this.saveFile();
+				this.renumberPasses();
 			}
 		}
+		return row;
 	}
 
 	findPassByFilename(filename: string): number {
@@ -362,19 +384,19 @@ export class SequenceFile extends TextFile {
 		}
 	}
 			
-	insertNewFolderPass(row: number, folderName: string, type: string) {
+	insertNewFolderPass(row: number, folderName: string, type: string): number {
 		const passItem = this.getPassByRow(row);
 		if (folderName.length) {
 			if (passItem) {
 				const newPassItem = this.createPassItemFolder(type,folderName);
 				newPassItem.row = row+1;
 				newPassItem.passNum = passItem.passNum;
-				this.passItems.splice(passItem.row+1,0,newPassItem);
+				this.passItems.splice(newPassItem.row,0,newPassItem);
 				this.saveFile();
-				return newPassItem;		
+				return newPassItem.row;		
 			}
 		}
-		return passItem
+		return row;
 	}
 
 	insertNewFolder(seqItem: SequenceItem, newFolder: string) {
@@ -572,7 +594,7 @@ export class SequenceFile extends TextFile {
 	}
 
 	getLibraryDirectory(): vscode.Uri {
-		return vscode.Uri.file(visualText.getVisualTextDirectory('spec'));
+		return vscode.Uri.file(visualText.getVisualTextDirectory(visualText.ANALYZER_SEQUENCE_FOLDER));
 	}
 
 	getSpecDirectory(): vscode.Uri {
@@ -797,5 +819,33 @@ export class SequenceFile extends TextFile {
 				}
 			}
 		}
+	}
+
+	public getSisterFiles(filename: string): SequenceItem[] {
+		let name = filename;
+		let seqItems: SequenceItem[] = [];
+		let tokens = filename.split('_');
+		if (tokens.length > 1) {
+			name = tokens[0];
+		}
+		for (let item of visualText.analyzer.seqFile.getPassItems()) {
+			if (!(item.name === filename) && item.name.startsWith(name))
+				seqItems.push(item);
+		}
+		return seqItems;
+	}
+
+	public hasSisterFile(filename: string): boolean {
+		const seqItems = this.getPassItems();
+		for (let item of seqItems) {
+			const base = item.name;
+			if (!(base === filename) && (this.compareSisters(base,filename) || this.compareSisters(filename,base)))
+				return true;
+		}
+		return false;
+	}
+
+	compareSisters(filename1: string, filename2: string): boolean {
+		return filename2.length > filename1.length && filename2.startsWith(filename1 + "_");
 	}
 }

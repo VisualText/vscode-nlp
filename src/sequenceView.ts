@@ -13,6 +13,7 @@ import { analyzerView } from './analyzerView';
 import { dirfuncs } from './dirfuncs';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
+import { anaSubDir } from './analyzer';
 
 export interface SequenceItem extends vscode.TreeItem {
 	uri: vscode.Uri;
@@ -88,6 +89,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				conVal = conVal + 'outside';
 
 			pnum++;
+
+			if (visualText.analyzer.seqFile.hasSisterFile(passItem.name)) {
+				conVal = conVal + 'sister';
+			}
 
 			if (passItem.isEnd(passItem.name) || (inFolder && !openingFolder)) {
 				var donothing = true;
@@ -186,7 +191,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
 			},
 			command: {
-				command: 'sequenceView.openFile',
+				command: 'sequenceView.openPass',
 				arguments: [seqItem],
 				title: 'Open Pass'
 			}
@@ -300,7 +305,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	}
 
 	insertLibraryFile(seqItem: SequenceItem, dir: string, filename: string) {
-		var filepath = path.join(visualText.getVisualTextDirectory('spec'),dir,filename);
+		var filepath = path.join(visualText.getVisualTextDirectory(visualText.ANALYZER_SEQUENCE_FOLDER),dir,filename);
 		var newfile: vscode.Uri = vscode.Uri.file(filepath);
 		var seqFile = visualText.analyzer.seqFile;
 		var passNum = seqFile.findPassByFilename(filename);
@@ -311,7 +316,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			visualText.fileOps.addFileOperation(newfile,currentFile,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		} else {
-			seqFile.insertPass(seqItem.passNum,newfile);
+			seqFile.insertPass(seqItem.row,newfile);
 		}
 
 		vscode.commands.executeCommand('sequenceView.refreshAll');
@@ -337,7 +342,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				for (let select of selection.reverse()) {
 					var newfile: vscode.Uri = vscode.Uri.file(select.fsPath);
-					seqFile.insertPass(seqItem.passNum,newfile);
+					seqFile.insertPass(seqItem.row,newfile);
 				}
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});			
@@ -358,78 +363,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList(true);
 			sequenceView.insertChosenPasses(seqItem,items);
 		}
-	}
-	
-	insertTemplateAnalyzers(seqItem: SequenceItem): void {
-		if (visualText.getWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-            var fromDir = path.join(visualText.getVisualTextDirectory('analyzers'));
-            if (dirfuncs.isDir(fromDir)) {
-                let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
-                for (let file of files) {
-                    if (dirfuncs.isDir(file.fsPath)) {
-                        const readme = path.join(file.fsPath,"README.MD");
-                        const descr = visualText.analyzer.readDescription(readme);
-						items.push({label: path.basename(file.fsPath), description: descr});
-                    }
-                }
-                vscode.window.showQuickPick(items, {title: 'Insert Analyzer', canPickMany: true, placeHolder: 'Choose analyzer to insert'}).then(selections => {
-                    if (!selections)
-                    	return false;
-					let passItem = visualText.analyzer.seqFile.findPass(seqItem.type,seqItem.name);
-					for (let selection of selections) {
-						passItem = this.insertTemplateAnalyzer(passItem,fromDir,selection.label);
-					}
-					vscode.commands.executeCommand('sequenceView.refreshAll');
-                    return true;
-                });
-
-            } else {
-                vscode.window.showWarningMessage('No analyzers found in ' + fromDir);
-            }
-		}
-	}
-
-	insertTemplateAnalyzer(passItem: PassItem, anaDir: string, folderName: string): PassItem {
-		var seqFile = visualText.analyzer.seqFile;
-		var toDir = seqFile.getSpecDirectory().fsPath;
-		var fromDir = path.join(anaDir,folderName,"spec");
-		const folder = this.makeAbbrevFolderName(folderName);
-
-		if (passItem.typeStr == 'folder') {
-			passItem = seqFile.moveToFolderEnd(passItem);
-		}
-		seqFile.insertNewFolderPass(passItem.row,folder,"folder");
-
-		const sequence = new SequenceFile;
-		sequence.getPassFiles(fromDir);
-		let orderCount = 0;
-		for (let pi of sequence.getPassItems()) {
-			if (pi.uri.path.length > 2) {
-				const basename = path.basename(pi.uri.path);
-				let toUri = vscode.Uri.file(sequenceView.safeFolderPassName(path.join(toDir,basename),folder));
-				let fromUri = vscode.Uri.file(path.join(anaDir,folderName,"spec",basename));
-				seqFile.insertPass(pi.row+passItem.row+1,toUri);
-				visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
-			}
-			orderCount++;
-		}
-		seqFile.renumberPasses();
-		const lastPassItem = seqFile.insertNewFolderPass(passItem.row+orderCount-1,folder,"end");
-		visualText.fileOps.startFileOps();
-
-		return lastPassItem;
-	}
-
-	makeAbbrevFolderName(name: string): string {
-		var abbrev = '';
-		var tokens = name.split(' ');
-		for (let token of tokens) {
-			let tok = token.substring(0, Math.min(token.length, 4));
-			tok = tok.charAt(0).toUpperCase() + tok.substring(1).toLowerCase();
-			abbrev = abbrev.concat(tok);
-		}
-		return abbrev;
 	}
 
 	insertCode(seqItem: SequenceItem): void {
@@ -627,7 +560,7 @@ export class SequenceView {
 		const treeDataProvider = new PassTree();
 		
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
-		vscode.commands.registerCommand('sequenceView.openFile', (seqItem) => this.openNLP(seqItem));
+		vscode.commands.registerCommand('sequenceView.openPass', (seqItem) => this.openPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem));
 		vscode.commands.registerCommand('sequenceView.displayMatchedRules', (seqItem) => this.displayMatchedRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.openKB', (seqItem) => this.openKB(seqItem));
@@ -641,7 +574,6 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertSister', (seqItem) => treeDataProvider.insertSisterPass(seqItem));
-		vscode.commands.registerCommand('sequenceView.insertTemplateAnalyzers', (seqItem) => treeDataProvider.insertTemplateAnalyzers(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertCode', (seqItem) => treeDataProvider.insertCode(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
@@ -671,6 +603,113 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
 		vscode.commands.registerCommand('sequenceView.modAdd', () => this.modAdd());
 		vscode.commands.registerCommand('sequenceView.video', () => this.video());
+		vscode.commands.registerCommand('sequenceView.insertAnalyzerBlock', (seqItem) => this.insertAnalyzerBlocks(seqItem));
+		vscode.commands.registerCommand('sequenceView.compareSisters', (seqItem) => this.compareSisters(seqItem));
+	}
+
+	compareSisters(seqItem: SequenceItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			let seqFile = visualText.analyzer.seqFile;
+			let items: vscode.QuickPickItem[] = [];
+			let sisters = seqFile.getSisterFiles(seqItem.name);
+			for (let sister of sisters) {
+				items.push({label: sister.name, description: sister.uri.fsPath});
+			}
+			if (items.length == 1 && items[0].description) {
+				vscode.commands.executeCommand('vscode.diff', vscode.Uri.file(items[0].description), seqItem.uri, 'File Comparison');
+			} else {
+				vscode.window.showQuickPick(items, {title: 'Choose Sister to Compare', canPickMany: false, placeHolder: 'Choose sister to compare'}).then(selection => {
+					if (!selection)
+						return;
+					if (selection.description)
+						vscode.commands.executeCommand('vscode.diff', vscode.Uri.file(selection.description), seqItem.uri, 'File Comparison');
+				});
+			}
+		}
+	}
+
+	insertAnalyzerBlocks(seqItem: SequenceItem): void {
+		if (visualText.getWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = [];
+            var fromDir = path.join(visualText.getVisualTextDirectory('analyzers'));
+            if (dirfuncs.isDir(fromDir)) {
+                let files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
+                for (let file of files) {
+                    if (dirfuncs.isDir(file.fsPath)) {
+                        const readme = path.join(file.fsPath,"README.MD");
+                        const descr = visualText.analyzer.readDescription(readme);
+						items.push({label: path.basename(file.fsPath), description: descr});
+                    }
+                }
+                vscode.window.showQuickPick(items, {title: 'Insert Analyzer', canPickMany: true, placeHolder: 'Choose analyzer blocks to insert'}).then(selections => {
+                    if (!selections)
+                    	return false;
+					let row = seqItem.row;
+					if (seqItem.type.localeCompare('folder') == 0)
+						row = visualText.analyzer.seqFile.getLastItemInFolder(row).row;
+					var toDir = visualText.analyzer.getAnalyzerDirectory().fsPath;
+					visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),vscode.Uri.file(toDir),[fileOpRefresh.ANALYZER],fileOperation.ANASEL,row.toString());
+					for (let selection of selections) {
+						if (selection.description)
+							this.insertAnalyzerBlock(fromDir,toDir,selection.label);
+					}
+					visualText.fileOps.startFileOps();
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+                    return true;
+                });
+
+            } else {
+                vscode.window.showWarningMessage('No analyzers found in ' + fromDir);
+            }
+		}
+	}
+
+	insertAnalyzerBlock(fromDirIn: string, toDir: string, folderName: string) {
+		var fromDir = path.join(fromDirIn,folderName,visualText.ANALYZER_SEQUENCE_FOLDER);
+		const folder = this.makeAbbrevFolderName(folderName);
+
+		// Copy analyzer block to analyzer
+		visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir),vscode.Uri.file(toDir),[fileOpRefresh.ANALYZER],fileOperation.ANAFOLDER,folder,"folder");
+	
+		const sequence = new SequenceFile;
+		sequence.getPassFiles(fromDir);
+		let orderCount = 0;
+		for (let pi of sequence.getPassItems()) {
+			if (pi.uri.path.length > 2) {
+				const basename = path.basename(pi.uri.path);
+				let toUri = vscode.Uri.file(path.join(toDir,visualText.ANALYZER_SEQUENCE_FOLDER,basename));
+				let fromUri = vscode.Uri.file(path.join(fromDir,basename));
+				if (dirfuncs.needToCopy(fromUri.fsPath,toUri.fsPath)) {
+					toUri = vscode.Uri.file(sequenceView.safeBlockFilename(path.join(toDir,visualText.ANALYZER_SEQUENCE_FOLDER,basename),folder));
+					visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
+					visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.ANAFILE,basename);
+				}
+			}
+			orderCount++;
+		}
+		visualText.fileOps.addFileOperation(vscode.Uri.file(""),vscode.Uri.file(""),[fileOpRefresh.ANALYZER],fileOperation.ANAFOLDER,folder,"end");
+
+		// Copy over KB files
+		let fromUri = visualText.analyzer.constructDir(vscode.Uri.file(path.join(fromDirIn,folderName)),anaSubDir.KB);
+		let toUri = visualText.analyzer.constructDir(vscode.Uri.file(toDir),anaSubDir.KB);
+		let kbFiles = dirfuncs.getFiles(fromUri,[".dict",".kbb"]);
+		for (let kbFile of kbFiles) {
+			const tUri = path.join(toUri.fsPath,path.basename(kbFile.fsPath));
+			if (dirfuncs.needToCopy(kbFile.fsPath,tUri)) {
+				visualText.fileOps.addFileOperation(kbFile, vscode.Uri.file(sequenceView.safeBlockFilename(tUri,folder)), [fileOpRefresh.KB], fileOperation.COPY);	
+			}
+		}
+	}
+
+	makeAbbrevFolderName(name: string, cuttoff: number=4): string {
+		var abbrev = '';
+		var tokens = name.split(' ');
+		for (let token of tokens) {
+			let tok = token.substring(0, Math.min(token.length, cuttoff));
+			tok = tok.charAt(0).toUpperCase() + tok.substring(1).toLowerCase();
+			abbrev = abbrev.concat(tok);
+		}
+		return abbrev;
 	}
 
 	modAdd() {
@@ -749,15 +788,15 @@ export class SequenceView {
 						if (dirfuncs.isDir(selection.description)) {
 							let files = dirfuncs.getFiles(uri,['.nlp','.pat']);
 							for (let file of files) {
-								let toUri = vscode.Uri.file(this.safePassName(path.join(fromDir,path.basename(file.fsPath)),orphanFlag));
+								let toUri = vscode.Uri.file(this.safeFilename(path.join(fromDir,path.basename(file.fsPath)),orphanFlag));
 								let fromUri = vscode.Uri.file(path.join(uri.fsPath,path.basename(file.fsPath)));
-								seqFile.insertPass(seqItem.row+1,toUri);
+								seqFile.insertPass(seqItem.row,toUri);
 								visualText.fileOps.addFileOperation(fromUri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 								found = true;
 							}
 						} else {
-							let toUri = vscode.Uri.file(this.safePassName(path.join(fromDir,path.basename(uri.fsPath)),orphanFlag));
-							seqFile.insertPass(seqItem.row+1,toUri);
+							let toUri = vscode.Uri.file(this.safeFilename(path.join(fromDir,path.basename(uri.fsPath)),orphanFlag));
+							seqFile.insertPass(seqItem.row,toUri);
 							visualText.fileOps.addFileOperation(uri,toUri,[fileOpRefresh.ANALYZER],fileOperation.COPY);
 							found = true;	
 						}
@@ -770,7 +809,7 @@ export class SequenceView {
 		}
 	}u
 
-	safeFolderPassName(filePath: string, folderName: string): string {
+	safeBlockFilename(filePath: string, folderName: string): string {
 		let newFilePath = filePath;
 		if (fs.existsSync(filePath) || visualText.analyzer.seqFile.findPassByFilename(filePath)) {
 			const dotIndex = filePath.lastIndexOf('.');
@@ -783,7 +822,7 @@ export class SequenceView {
 		return newFilePath;
 	}
 
-	safePassName(filePath: string, orphanFlag: boolean=false): string {
+	safeFilename(filePath: string, orphanFlag: boolean=false): string {
 		let newFilePath = filePath;
 		if (fs.existsSync(filePath) && !orphanFlag) {
 			const filename = path.basename(filePath);
@@ -798,7 +837,6 @@ export class SequenceView {
 				front = match[1];
 				const num =  match[2];
 				newNumber = Number(num) + 1;
-
 			}
 			newFileName = `${front}${newNumber}.${ext}`;
 			newFilePath = path.join(path.dirname(filePath),newFileName);
@@ -966,10 +1004,13 @@ export class SequenceView {
 		return true;
 	}
 
-	private openNLP(seqItem: SequenceItem): void {
-		if (seqItem.passNum > 1 && this.notMissing(seqItem) && seqItem.type.localeCompare('folder') && seqItem.type.localeCompare('stub')) {
+	private openPass(seqItem: SequenceItem): void {
+		if (this.notMissing(seqItem) && seqItem.type.localeCompare('folder') && seqItem.type.localeCompare('stub')) {
+			// Mostly for debugging purposes
+			if (seqItem.passNum == 1)
+				seqItem.uri = visualText.analyzer.seqFile.getSequenceFile();
 			this.textFile.setFile(seqItem.uri);
-			if (!this.textFile.isFileType(nlpFileType.NLP)) {
+			if (seqItem.passNum != 1 && !this.textFile.isFileType(nlpFileType.NLP)) {
 				vscode.window.showWarningMessage('Not editable');
 				return;
 			}
@@ -978,7 +1019,7 @@ export class SequenceView {
 			vscode.window.showTextDocument(seqItem.uri);			
 		}
 	}
-	
+
 	private openTree(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
 			if (seqItem.passNum == 1) {

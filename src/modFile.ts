@@ -5,6 +5,7 @@ import { visualText } from './visualText';
 import { TextFile, nlpFileType } from './textFile';
 import { SequenceFile, PassItem } from './sequence';
 import { logView, logLineType } from './logView';
+import { anaSubDir } from './analyzer';
 
 export enum modType { UNKNOWN, INPUT, SPEC, KB }
 
@@ -223,13 +224,13 @@ export class ModFile extends TextFile {
         var dir = '';
         var diff = path.win32.normalize(filepath);
         if (filepath.includes(this.MODFILE_KB)) {
-            dir = path.join('kb','user');
+            dir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
         }
         else if (filepath.includes(this.MODFILE_SPEC)) {
-            dir = 'spec';
+            dir = visualText.analyzer.anaSubDirPath(anaSubDir.SPEC);
         }
         else if (filepath.includes(this.MODFILE_INPUT)) {
-            dir = 'input';
+            dir = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
         }
         var name = path.basename(filePath.fsPath);
         var finalPath = path.join(dir,name);
