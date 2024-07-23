@@ -427,7 +427,7 @@ export class TextFile {
         return this.lines[lineNumber];
     }
 
-    findLineStartsWith(startsWithStr: string) {
+    findLineStartsWith(startsWithStr: string): vscode.Selection {
         let lines = this.getLines();
         let lineCount = 0;
         for (let line of lines) {
@@ -523,4 +523,8 @@ export class TextFile {
             
         return line.toString().trim();
 	}
+
+    replaceLineNumber(lineNum: number, text: string) {
+        this.lines[lineNum] = text;
+    }
 }

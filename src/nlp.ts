@@ -271,17 +271,29 @@ export class NLPFile extends TextFile {
 	}
 
 	replaceContextLine(newContextStr: string, editor: vscode.TextEditor) {
-		let contextSel = this.findLineStartsWith('@NODES');
-		if (contextSel.isEmpty)
-			contextSel = this.findLineStartsWith('@PATH');
-		if (contextSel.isEmpty)
-			contextSel = this.findLineStartsWith('@MULTI');
+		const contextSel = this.findLineSelection(newContextStr);
 		if (!contextSel.isEmpty) {
 			var snippet = new vscode.SnippetString(newContextStr);
 			editor.insertSnippet(snippet,contextSel);
 		}
 	}
-	
+
+	findLineSelection(line: string): vscode.Selection {	
+		let contextSel = this.findLineStartsWith('@NODES');
+		if (contextSel.isEmpty)
+			contextSel = this.findLineStartsWith('@PATH');
+		if (contextSel.isEmpty)
+			contextSel = this.findLineStartsWith('@MULTI');
+		return contextSel;
+	}
+
+	replaceContextLineInFile(newContextStr: string) {
+		const contextSel = this.findLineSelection(newContextStr);
+		const line = contextSel.start.line;
+		this.replaceLineNumber(line,newContextStr);
+		this.saveFileLines();
+	}
+
     searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
@@ -737,5 +749,17 @@ export class NLPFile extends TextFile {
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.replaceContext(editor.document.fileName);
 		}
+	}
+	
+	getContextLine(uri: vscode.Uri) {
+		this.setFile(uri);
+		var contextLine = '';
+		for (let line of this.getLines()) {
+			if (line.startsWith('@NODES') || line.startsWith('@PATH') || line.startsWith('@MULTI')) {
+				contextLine = line;
+				break;
+			}
+		}
+		return contextLine;
 	}
 }
