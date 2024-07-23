@@ -7,6 +7,7 @@ import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
 import { nlpStatusBar, DevMode, FiredMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
+import { anaSubDir } from './analyzer';
 import * as fs from 'fs';
 import * as moment from 'moment';
 import 'moment-duration-format'
@@ -396,11 +397,12 @@ export class TextView {
 					vscode.window.showWarningMessage('You must select an analyzer directory not a folder');
 					return;
 				}
+				const subDir = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
 				if (dirfuncs.isDir(textItem.uri.fsPath)) {
-					let newFolder = vscode.Uri.file(path.join(selection.description,'input',path.basename(textItem.uri.fsPath)));
+					let newFolder = vscode.Uri.file(path.join(selection.description,subDir,path.basename(textItem.uri.fsPath)));
 					visualText.fileOps.addFileOperation(textItem.uri,newFolder,[fileOpRefresh.TEXT],fileOperation.COPY);						
 				} else {
-					let newFile = vscode.Uri.file(path.join(selection.description,'input',path.basename(textItem.uri.fsPath)));
+					let newFile = vscode.Uri.file(path.join(selection.description,subDir,path.basename(textItem.uri.fsPath)));
 					visualText.fileOps.addFileOperation(textItem.uri,newFile,[fileOpRefresh.TEXT],fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();

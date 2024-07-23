@@ -8,6 +8,7 @@ import { dirfuncs, getFileTypes } from './dirfuncs';
 import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
+import { anaSubDir } from './analyzer';
 
 export interface KBItem {
 	uri: vscode.Uri;
@@ -401,7 +402,8 @@ export class KBView {
 	}
 
 	copyToAnalyzer(KBItem: KBItem) {
-		outputView.copyFileToAnalyzer(KBItem.uri,path.join('kb','user'),'Copy file to another analyzer','Copy file to the KB directory of:');
+		const kbPath = visualText.analyzer.constructDir(KBItem.uri,anaSubDir.KB);
+		outputView.copyFileToAnalyzer(kbPath,"","Copy file to another analyzer","Copy file to the KB directory of:");
 	}
 
 	private toggleActive(KBItem: KBItem): void {

@@ -75,6 +75,7 @@ export class VisualText {
     public readonly VISUALTEXT_FILES_ASSET = 'visualtext.zip';
     public readonly ANALYZERS_ASSET = 'analyzers.zip';
     public readonly ANALYZER_SEQUENCE_FILE = 'analyzer.seq';
+    public readonly ANALYZER_SEQUENCE_FOLDER = 'spec';
     public readonly GITHUB_REPOSITORY = 'https://github.com/VisualText/';
     public readonly GITHUB_RELEASE_LATEST = '/releases/latest/';
     public readonly GITHUB_RELEASE_LATEST_DOWNLOAD = '/releases/latest/download/';
@@ -363,7 +364,7 @@ export class VisualText {
                 visualText.zipFiles(op,visualText.NLPENGINE_REPO,'',visualText.NLPENGINE_FILES_ASSET,['data']);
                 break;
             case upComp.VT_FILES:
-                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualtext',visualText.VISUALTEXT_FILES_ASSET,['spec','Help','analyzers']);
+                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualText',visualText.VISUALTEXT_FILES_ASSET,[visualText.ANALYZER_SEQUENCE_FOLDER,'Help','analyzers']);
                 break;
             case upComp.ANALYZER_FILES:
                 visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['']);
@@ -1013,7 +1014,7 @@ export class VisualText {
         });
 	}
 
-    getTemplateAnalyzersPath(): vscode.Uri {
+    getBlockAnalyzersPath(): vscode.Uri {
         return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,visualText.ANALYZERS_REPO));
     }
 
@@ -1057,7 +1058,7 @@ export class VisualText {
 
     getTextFastLoad(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('textView');
-        var version = config.get<string>('visualtext');
+        var version = config.get<string>('visualText');
         return config.get<boolean>('fast');
     }
 
@@ -1069,7 +1070,7 @@ export class VisualText {
 
     getAutoUpdate(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('update');
-        var version = config.get<string>('visualtext');
+        var version = config.get<string>('visualText');
         return config.get<boolean>('auto');
     }
 
@@ -1080,7 +1081,7 @@ export class VisualText {
     setVTFilesVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
-        config.update('visualtext',version,vscode.ConfigurationTarget.Global);
+        config.update('visualText',version,vscode.ConfigurationTarget.Global);
     }
 
     getVTFilesVersion(): string | undefined {
@@ -1157,10 +1158,6 @@ export class VisualText {
         return this.analyzer.getName();
     }
 
-    getAnalyzer(): vscode.Uri {
-        return this.currentAnalyzer;
-    }
-
     hasAnalyzers(): boolean {
         return this.analyzers.length ? true : false;
     }
@@ -1213,7 +1210,7 @@ export class VisualText {
     getVisualTextDirectory(dirName: string=''): string {
         var vtDir = '';
         var engineDir = this.engineDirectory().fsPath;
-        var vtDirName = 'visualtext';
+        var vtDirName = 'visualText';
         if (engineDir) {
             if (dirName.length)
                 vtDir = path.join(engineDir,vtDirName,dirName);
@@ -1230,7 +1227,7 @@ export class VisualText {
         var input = false;
 
         for (let dir of dirs) {
-            if (path.basename(dir.fsPath).localeCompare('spec') == 0) {
+            if (path.basename(dir.fsPath).localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
                 spec = true;
             }
             else if (path.basename(dir.fsPath).localeCompare('kb') == 0) {
@@ -1254,7 +1251,7 @@ export class VisualText {
 
         for (let dir of dirs) {
             let dirname = path.basename(dir.fsPath);
-            if (dirname.localeCompare('spec') == 0) {
+            if (dirname.localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
                 spec = true;
             }
             else if (dirname.localeCompare('kb') == 0) {
@@ -1302,7 +1299,7 @@ export class VisualText {
     }
 
 	convertPatFiles(analyzerDir: vscode.Uri) {
-        var spec = vscode.Uri.file(path.join(analyzerDir.fsPath,'spec'));
+        var spec = vscode.Uri.file(path.join(analyzerDir.fsPath,visualText.ANALYZER_SEQUENCE_FOLDER));
 		var op = visualText.fileOps.addFileOperation(spec,spec,[fileOpRefresh.ANALYZER],fileOperation.RENAME,'pat','nlp');
         op.oneOff = fileOneOff.PAT_TO_NLP;
 		visualText.fileOps.startFileOps();
@@ -1458,15 +1455,14 @@ export class VisualText {
             let basename = path.basename(dir.fsPath);
             let baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
-
                 if (specFlag) {
                     items.push({label: indent + basename, description: '======================='});
-                    seq.choicePasses(path.join(dir.fsPath,'spec'),items,'-' + indent + spacer,false);
+                    seq.choicePasses(path.join(dir.fsPath,visualText.ANALYZER_SEQUENCE_FOLDER),items,'-' + indent + spacer,false);
                 } else {
                     items.push({label: indent + basename, description: dir.fsPath});
                 }
             } else {
-                items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer below)'});
+                items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer bloc(s) below)'});
                 this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
             }
         }
