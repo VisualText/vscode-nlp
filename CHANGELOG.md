@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.42.1
+### 2.42.2
 Allows for selecting multiple analyzer blocks when creating analyzer and to insert analyzer blocks into an existing sequence.
 
 ### 2.40.4
