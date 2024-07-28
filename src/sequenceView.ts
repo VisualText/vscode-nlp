@@ -605,25 +605,52 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.video', () => this.video());
 		vscode.commands.registerCommand('sequenceView.insertAnalyzerBlock', (seqItem) => this.insertAnalyzerBlocks(seqItem));
 		vscode.commands.registerCommand('sequenceView.compareSisters', (seqItem) => this.compareSisters(seqItem));
+		vscode.commands.registerCommand('sequenceView.copyContext', (seqItem) => this.copyContext(seqItem));
+	}
+
+	copyContext(seqItem: SequenceItem) {
+		if (seqItem) {
+			const nlp = new NLPFile();
+			const contextLine = nlp.getContextLine(seqItem.uri);
+			if (!contextLine) {
+				vscode.window.showWarningMessage('No context line found');
+				return;
+			}
+
+			let seq = new SequenceFile;
+			let items: vscode.QuickPickItem[] = [];
+			seq.choiceRulePasses(visualText.analyzer.seqFile.getSpecDirectory().fsPath,items);
+			items = items.filter(item => item.description !== seqItem.uri.fsPath);
+
+			let title = 'Copy Context to Pass(es)';
+			let placeHolder = 'Choose NLP files to insert';
+			vscode.window.showQuickPick(items, {title, canPickMany: true, placeHolder: placeHolder}).then(selections => {
+				if (!selections)
+					return;
+				for (let selection of selections) {
+					if (selection.description) {
+						nlp.setFile(vscode.Uri.file(selection.description));
+						nlp.replaceContextLineInFile(contextLine);
+					}
+				}
+			});
+
+		}
 	}
 
 	compareSisters(seqItem: SequenceItem) {
-		if (visualText.hasWorkspaceFolder()) {
-			let seqFile = visualText.analyzer.seqFile;
-			let items: vscode.QuickPickItem[] = [];
-			let sisters = seqFile.getSisterFiles(seqItem.name);
-			for (let sister of sisters) {
-				items.push({label: sister.name, description: sister.uri.fsPath});
-			}
-			if (items.length == 1 && items[0].description) {
-				vscode.commands.executeCommand('vscode.diff', vscode.Uri.file(items[0].description), seqItem.uri, 'File Comparison');
-			} else {
-				vscode.window.showQuickPick(items, {title: 'Choose Sister to Compare', canPickMany: false, placeHolder: 'Choose sister to compare'}).then(selection => {
-					if (!selection)
-						return;
-					if (selection.description)
-						vscode.commands.executeCommand('vscode.diff', vscode.Uri.file(selection.description), seqItem.uri, 'File Comparison');
-				});
+		if (visualText.getWorkspaceFolder()) {
+			let items: vscode.QuickPickItem[] = visualText.analyzer.seqFile.getSisterFiles(seqItem.uri.fsPath);
+			if (items.length == 1 && items[0].description)
+				vscode.commands.executeCommand("vscode.diff", seqItem.uri, vscode.Uri.file(items[0].description));
+			else {
+				vscode.window.showQuickPick(items, {title: 'Choose file to compare', canPickMany: false, placeHolder: 'Choose sister file to compare'}).then(selection => {
+                    if (!selection || !selection.description)
+                    	return false;
+					vscode.commands.executeCommand("vscode.diff", seqItem.uri, vscode.Uri.file(selection.description));
+					vscode.commands.executeCommand('sequenceView.refreshAll');
+                    return true;
+                });
 			}
 		}
 	}
@@ -675,7 +702,7 @@ export class SequenceView {
 		sequence.getPassFiles(fromDir);
 		let orderCount = 0;
 		for (let pi of sequence.getPassItems()) {
-			if (pi.uri.path.length > 2) {
+			if (pi.uri.path.length > 2 && pi.name != "nil") {
 				const basename = path.basename(pi.uri.path);
 				let toUri = vscode.Uri.file(path.join(toDir,visualText.ANALYZER_SEQUENCE_FOLDER,basename));
 				let fromUri = vscode.Uri.file(path.join(fromDir,basename));
@@ -765,7 +792,7 @@ export class SequenceView {
 			this.insertChosenPasses(seqItem,items,true);
 		}
 	}
-		
+
 	insertChosenPasses(seqItem: SequenceItem, items: vscode.QuickPickItem[], orphanFlag: boolean=false): void {
 		if (visualText.getWorkspaceFolder()) {
 			let title = 'Insert NLP files';
@@ -894,17 +921,10 @@ export class SequenceView {
 		var prevItem = seqFile.prevTop(passItem);
 		var uri = prevItem.uri;
 
-		var nlpFile = new NLPFile(uri.fsPath);
-		var contextLine = '';
-		for (let line of nlpFile.getLines()) {
-			if (line.startsWith('@NODES') || line.startsWith('@PATH') || line.startsWith('@MULTI')) {
-				contextLine = line;
-				break;
-			}
-		}
+		let nlp = new NLPFile();
+		const contextLine = nlp.getContextLine(uri);
 
 		if (contextLine.length) {
-			let nlp = new NLPFile();
 			nlp.setFile(passItem.uri);
 			nlp.replaceContext(contextLine,false);
 		}

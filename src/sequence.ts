@@ -6,6 +6,7 @@ import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { TreeFile } from './treeFile';
+import { NLPFile } from './nlp';
 
 export enum moveDirection { UP, DOWN }
 export enum newPassType { RULES, CODE, DECL }
@@ -130,6 +131,7 @@ export class SequenceFile extends TextFile {
 
 			if (passItem.text.length) {
 				passItem.row = row++;
+				passItem.uri = vscode.Uri.file(path.join(specDir,passItem.name + '.nlp'));
 				this.passItems.push(passItem);
 			}
 		}
@@ -821,18 +823,30 @@ export class SequenceFile extends TextFile {
 		}
 	}
 
-	public getSisterFiles(filename: string): SequenceItem[] {
-		let name = filename;
-		let seqItems: SequenceItem[] = [];
-		let tokens = filename.split('_');
+	choiceRulePasses(specDir: string, items: vscode.QuickPickItem[]) {
+		this.setSpecDir(specDir);
+		this.getPassFiles(specDir);
+		const nlp = new NLPFile();
+		for (let pass of this.getPassItems()) {
+			const contextLine = nlp.getContextLine(pass.uri);
+			if (contextLine.length) {
+				items.push({label: path.basename(pass.uri.fsPath), description: pass.uri.fsPath});				
+			}
+		}
+	}
+
+	public getSisterFiles(filePath: string): vscode.QuickPickItem[] {
+		let items: vscode.QuickPickItem[] = [];
+		let name = path.basename(filePath);
+		let tokens = name.split('_');
 		if (tokens.length > 1) {
 			name = tokens[0];
 		}
 		for (let item of visualText.analyzer.seqFile.getPassItems()) {
-			if (!(item.name === filename) && item.name.startsWith(name))
-				seqItems.push(item);
+			if (!(item.name === name) && item.name.startsWith(name))
+				items.push({label: path.basename(item.uri.fsPath), description: item.uri.fsPath});	
 		}
-		return seqItems;
+		return items;
 	}
 
 	public hasSisterFile(filename: string): boolean {
