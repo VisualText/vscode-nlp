@@ -1081,7 +1081,7 @@ export class VisualText {
     setVTFilesVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
-        config.update('visualText',version,vscode.ConfigurationTarget.Global);
+        config.update('visualtext',version,vscode.ConfigurationTarget.Global);
     }
 
     getVTFilesVersion(): string | undefined {
