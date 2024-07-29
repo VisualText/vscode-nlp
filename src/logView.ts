@@ -155,7 +155,7 @@ export class LogView {
 	public loadMakeAna(): boolean {
 		var errorLog = visualText.analyzer.getOutputDirectory('err.log');
 		var errFlag = this.addLogFile(errorLog,logLineType.LOGFILE);
-		var makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE);
+		var makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE,'',true,true);
 		return errFlag || makeFlag;
 	}
 
@@ -192,9 +192,10 @@ export class LogView {
 		this.logs.push(this.parseLogLine(message, type, uri));
 	}
 
-	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false): boolean {
+	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false, noClear: boolean=false): boolean {
 		if (fs.existsSync(logFileName.fsPath)) {
-			this.clearLogs(false);
+			if (!noClear)
+				this.clearLogs(false);
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
 				line = line.substring(0,line.length);

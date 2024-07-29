@@ -121,7 +121,9 @@ export class NLPFile extends TextFile {
 							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
 						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
-						if (!logView.makeAna())
+						if (syntaxError)
+							logView.loadMakeAna();
+						else if (!logView.makeAna())
 							logView.loadAnalyzerOuts();
 
 						vscode.commands.executeCommand('outputView.refreshAll');
