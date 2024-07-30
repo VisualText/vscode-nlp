@@ -738,6 +738,7 @@ ${ruleStr}
 							fired.str = fired.str + ' ' + rest;
 						}
 						fired.str = fired.str.trim();
+						i--;  // Back up one line
 					}
 				}
 			}
