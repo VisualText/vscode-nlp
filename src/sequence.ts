@@ -13,6 +13,7 @@ export enum newPassType { RULES, CODE, DECL }
 
 export class PassItem {
 	public uri = vscode.Uri.file('');
+	public library = vscode.Uri.file('');
 	public text: string = '';
 	public name: string = '';
 	public comment: string = '';
@@ -103,6 +104,15 @@ export class SequenceFile extends TextFile {
 		this.specDir = vscode.Uri.file(specDir);
 	}
 
+	libraryFileCheck() {
+		for (let passItem of this.passItems) {
+			passItem.library = vscode.Uri.file(this.getLibraryFile(passItem.uri.fsPath));
+			if (passItem.library.fsPath.length > 2) {
+				let moose = 1;
+			}
+		}
+	}
+
 	public getPassFiles(specDir: string, addSpec: boolean = false) {
 		specDir = addSpec ? path.join(specDir,visualText.ANALYZER_SEQUENCE_FOLDER) : specDir;
 		if (addSpec) 
@@ -132,6 +142,7 @@ export class SequenceFile extends TextFile {
 			if (passItem.text.length) {
 				passItem.row = row++;
 				passItem.uri = vscode.Uri.file(path.join(specDir,passItem.name + '.nlp'));
+				passItem.library = vscode.Uri.file(this.getLibraryFile(passItem.uri.fsPath));
 				this.passItems.push(passItem);
 			}
 		}
@@ -568,6 +579,8 @@ export class SequenceFile extends TextFile {
 		if (this.passItems.length == 0) {
 			this.init();
 		}
+		visualText.findFilesWithExtension('.nlp');
+		this.libraryFileCheck();
 		return this.passItems;
 	}
 
@@ -861,5 +874,17 @@ export class SequenceFile extends TextFile {
 
 	compareSisters(filename1: string, filename2: string): boolean {
 		return filename2.length > filename1.length && filename2.startsWith(filename1 + "_");
+	}
+
+	public getLibraryFile(filepath: string): string {
+		let name = path.basename(filepath);
+		let count = visualText.getLibraryFiles().length;
+		for (let file of visualText.getLibraryFiles()) {
+			let base = path.basename(file);
+			if (base === name) {
+				return file;
+			}
+		}
+		return "";
 	}
 }
