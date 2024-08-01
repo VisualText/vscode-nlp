@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.42.4",
+    "version": "2.43.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -280,8 +280,16 @@
                 }
             },
             {
+                "command": "sequenceView.compareLibrary",
+                "title": "Compare with Latest Library File",
+                "icon": {
+                    "light": "resources/light/test.svg",
+                    "dark": "resources/dark/test.svg"
+                }
+            },
+            {
                 "command": "sequenceView.copyContext",
-                "title": "Copy Context to Sisters",
+                "title": "Copy Context to Sister",
                 "icon": {
                     "light": "resources/light/test.svg",
                     "dark": "resources/dark/test.svg"
@@ -2404,9 +2412,14 @@
                     "group": "atop@7"
                 },
                 {
+                    "command": "sequenceView.compareLibrary",
+                    "when": "view == sequenceView && viewItem =~ /.*library.*/",
+                    "group": "atop@8"
+                },
+                {
                     "command": "sequenceView.copyContext",
                     "when": "view == sequenceView",
-                    "group": "atop@8"
+                    "group": "atop@9"
                 },
                 {
                     "command": "sequenceView.openPass",

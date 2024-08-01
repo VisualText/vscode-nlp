@@ -110,6 +110,7 @@ export class VisualText {
     private username: string = '';
     private jsonState = new JsonState();
     private analyzers: vscode.Uri[] = new Array();
+    private libraryFiles: string[] = new Array();
     private extensionDir: vscode.Uri = vscode.Uri.file('');
 
     private analyzerDir: vscode.Uri = vscode.Uri.file('');
@@ -1476,5 +1477,37 @@ export class VisualText {
             items.push({label: basename, description: uri.fsPath});
         }
         return items;
+    }
+    
+	findFilesWithExtension(extension: string) {
+		function explore(dir: string) {
+			try {
+				const files = fs.readdirSync(dir);
+				for (const file of files) {
+					const filePath = path.join(dir, file);
+					const stats = fs.statSync(filePath);
+                    const startsWithNumber = /^\d+\_/.test(file);
+					if (stats.isDirectory()) {
+						explore(filePath);
+					} else if (path.extname(file) === extension && !startsWithNumber) {
+						visualText.libraryFiles.push(filePath);
+					}
+				}
+                let stophere = 1;
+			} catch (err) {
+				console.error('An error occurred while reading the directory:', (err as Error).message);
+			}
+		}
+        
+        if (visualText.libraryFiles.length == 0) {
+            var filepath = path.join(visualText.getVisualTextDirectory(visualText.ANALYZER_SEQUENCE_FOLDER));
+            if (fs.existsSync(filepath)) {
+                explore(filepath)
+            }
+        }
+    }
+
+    getLibraryFiles(): string[] {
+        return this.libraryFiles;
     }
 }
