@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.43.1",
+    "version": "2.43.2",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -15,8 +15,7 @@
         "Linters"
     ],
     "activationEvents": [
-        "onLanguage:nlp",
-        "onView:sequenceView"
+        "onLanguage:nlp"
     ],
     "main": "./dist/extension.js",
     "author": {
@@ -43,7 +42,8 @@
             "visualText": [
                 {
                     "id": "textView",
-                    "name": "Text"
+                    "name": "Text",
+                    "icon": "resources/dark/file.svg"
                 },
                 {
                     "id": "sequenceView",
