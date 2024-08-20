@@ -327,7 +327,7 @@ export class SequenceFile extends TextFile {
 			var dupePath = path.join(path.dirname(passItem.uri.fsPath),newPassName + '.nlp');
 			fs.copyFileSync(passItem.uri.fsPath,dupePath);									
 			var dupeItem = this.createPassItemFromFile(dupePath);
-			this.passItems.splice(passItem.passNum,0,dupeItem);
+			this.passItems.splice(passItem.row+1,0,dupeItem);
 			this.saveFile();
 		}
 	}
@@ -737,6 +737,15 @@ export class SequenceFile extends TextFile {
 			pass = next;
 		}
 		this.passItems;
+	}
+	
+	prevNLP(passItem: PassItem): PassItem {
+		let row = passItem.row;
+		let prev = this.passItems[--row];
+		while (prev.typeStr.localeCompare('nlp') != 0) {
+			prev = this.passItems[--row];
+		}
+		return prev;
 	}
 
 	prevTop(passItem: PassItem): PassItem {

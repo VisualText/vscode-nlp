@@ -470,7 +470,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			var seqFile = visualText.analyzer.seqFile;
 			var seedName = this.incrementEndNumber(seqItem.name);
 			vscode.window.showInputBox({ title: 'Duplicate Pass', value: seedName, prompt: 'Enter name for duplicate pass' }).then(newname => {
-				var original = seqItem.uri;
 				if (newname) {
 					seqFile.duplicatePass(seqItem,newname);
 					vscode.commands.executeCommand('sequenceView.refreshAll');
@@ -958,7 +957,7 @@ export class SequenceView {
 	replaceContext(nlpFilePath: string) {
 		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
 		var seqFile = visualText.analyzer.seqFile;
-		var prevItem = seqFile.prevTop(passItem);
+		var prevItem = seqFile.prevNLP(passItem);
 		var uri = prevItem.uri;
 
 		let nlp = new NLPFile();
