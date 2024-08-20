@@ -633,6 +633,8 @@ export class SequenceFile extends TextFile {
 				pass.active = active;
 			}
 			passItem.active = active;
+			var last = passes[passes.length-1];
+			last.active = active;
 			this.saveFile();
 		}
 		else if (passItem.exists()) {

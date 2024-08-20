@@ -945,13 +945,11 @@ export class SequenceView {
 
 	reveal(nlpFilePath: string) {
 		var passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		// var label = passItem.passNum.toString() + ' ' + passItem.text;
+		// var seqItem: SequenceItem = {uri: passItem.uri, library: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'missing', inFolder: passItem.inFolder,
+		// type: 'nlp', passNum: passItem.passNum, row: passItem.row, collapsibleState: vscode.TreeItemCollapsibleState.Expanded, active: passItem.active};
+		// this.sequenceView.reveal(seqItem, {select: true, focus: true, expand: 2});
 		vscode.commands.executeCommand('logView.refreshAll');
-		/*  WAITING FOR REVEAL UPDATE - IT IS COMING!
-		var label = passItem.passNum.toString() + ' ' + passItem.text;
-		var seqItem: SequenceItem = {uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'missing', inFolder: passItem.inFolder,
-		type: 'nlp', passNum: passItem.passNum, row: passItem.row, collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active};
-		this.sequenceView.reveal(seqItem, {select: true, focus: true, expand: false});
-		*/
 	}
 
 	replaceContext(nlpFilePath: string) {
