@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.43.1
+Fixing duplicate pass with folders, the N("$text",1) snippet, and copying context line from file above.
+
 ### 2.43.0
 Added file comparison to library files in the sequence.
 
@@ -166,15 +169,6 @@ One-level sequence folders should now be working.
 
 ### 2.19.4
 Adding testing files for regression testing.
-
-### 2.18.0
-If a pass exists, replace it when inserting a library pass. This in effect "updates" the file which is often the case with KBFuncs.nlp.
-
-### 2.17.13
-Added mod files allowing for saving and loading multiple files together in one file.
-
-### 2.16.3
-Put active toggle on sequence passes.
 
 # Development
 

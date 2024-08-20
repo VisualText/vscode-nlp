@@ -1,8 +1,8 @@
 {
     "N": {
-        "prefix": ["N(\"$text\",1);"],
+        "prefix": ["N(\"$text\",1)"],
         "body": [
-            "N(\"$text\",${1:1});"
+            "N(\"$$text\",${1:1})"
         ],
         "description": "Node variable with $text value."
     },

@@ -769,7 +769,6 @@ export class VisualText {
                 directory: dir,
                 filename: filename
             });
-            let moose = 1;
             try {
                 visualText.debugMessage('Downloading: ' + url,logLineType.UPDATER);
                 await downloader.download();
