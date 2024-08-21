@@ -634,6 +634,7 @@ export class SequenceFile extends TextFile {
 			}
 			passItem.active = active;
 			var last = passes[passes.length-1];
+			last = this.nextPass(last);
 			last.active = active;
 			this.saveFile();
 		}
@@ -757,6 +758,12 @@ export class SequenceFile extends TextFile {
 			prev = this.passItems[--row];
 		}
 		return prev;
+	}
+
+	nextPass(passItem: PassItem): PassItem {	
+		let row = passItem.row;
+		let next = this.passItems[++row];
+		return next;
 	}
 
 	nextTop(passItem: PassItem): PassItem {
