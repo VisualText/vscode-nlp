@@ -366,13 +366,13 @@ export class OutputView {
 	}
 
 	copytoKB(outputItem: OutputItem) {
-		const kbDir = visualText.analyzer.constructDir(outputItem.uri,anaSubDir.KB);
-		this.copyFileToAnalyzer(kbDir,"",'Copy file to another analyzer','Copy file to the KB directory of:');
+		const kbDir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
+		this.copyFileToAnalyzer(outputItem.uri,kbDir,'Copy file to another analyzer','Copy file to the KB directory of:');
 	}
 
 	copytoText(outputItem: OutputItem) {
-		const out = visualText.analyzer.constructDir(outputItem.uri,anaSubDir.INPUT);
-		this.copyFileToAnalyzer(out,"",'Copy file to another analyzer','Copy file to input directory of:');
+		const out = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
+		this.copyFileToAnalyzer(outputItem.uri,out,'Copy file to another analyzer','Copy file to input directory of:');
 	}
 
 	copyFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {
