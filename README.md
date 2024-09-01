@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.43.4
+### 2.43.5
 Fixing duplicate pass with folders, the N("$text",1) snippet, and copying context line from file above.
 
 ### 2.43.0
