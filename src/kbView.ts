@@ -263,7 +263,7 @@ export class KBView {
 			if (!selection)
 				return;
 			if (selection.label) {
-				this.chooseLibFiles('Dictionary','languages',selection.label,[".dict",".kbb",".nlm"]);
+				this.chooseLibFiles('Dictionaries & Knowledge Bases','languages',selection.label,[".dict",".kbb",".nlm"]);
 			}	
 		});
 	}
