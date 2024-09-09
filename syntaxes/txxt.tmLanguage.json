@@ -19,8 +19,8 @@
             ]
         },
         "angle-match": {
-            "begin": "\\<\\<",
-            "end": "\\>\\>",
+            "begin": "\\<\\<\\<",
+            "end": "\\>\\>\\>",
             "beginCaptures": {
                 "0": { "name": "variable.parameter.txxt" }
             },
@@ -30,8 +30,8 @@
             "name": "keyword.other.txxt"
         },
         "paren-match": {
-            "begin": "\\(\\(",
-            "end": "\\)\\)",
+            "begin": "\\(\\(\\(",
+            "end": "\\)\\)\\)",
             "beginCaptures": {
                 "0": { "name": "variable.parameter.txxt" }
             },

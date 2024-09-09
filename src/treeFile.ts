@@ -688,10 +688,10 @@ ${ruleStr}
 				this.Highlight.push(Highlight);
 			}
 
-			let tok = token.replace(/\<\</g, '');
-			tok = tok.replace(/\>\>/g, '');
-			tok = tok.replace(/\(\(/g, '');
-			tok = tok.replace(/\)\)/g, '');
+			let tok = token.replace(/\<\<\</g, '');
+			tok = tok.replace(/\>\>\>/g, '');
+			tok = tok.replace(/\(\(\(/g, '');
+			tok = tok.replace(/\)\)\)/g, '');
 			len += tok.length;
 			tokencount++;
 			lenBracket += token.length + 2;
@@ -800,9 +800,9 @@ ${ruleStr}
 				var between = new TextDecoder().decode(bt);
 
 				if (built)
-					textfire = textfire.concat(between,'<<',Highlight,'>>');
+					textfire = textfire.concat(between,'<<<',Highlight,'>>>');
 				else if (nlpStatusBar.getFiredMode() == FiredMode.FIRED)
-					textfire = textfire.concat(between,'((',Highlight,'))');
+					textfire = textfire.concat(between,'(((',Highlight,')))');
 				else
 					textfire = textfire.concat(between,Highlight);
 
