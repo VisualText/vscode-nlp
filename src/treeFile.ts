@@ -546,12 +546,12 @@ ${ruleStr}
 		if (end) {
 			text = text.substring(0,end);
 		}
-		var parens = text.split(/\(\(/);
-		var parens2 = text.split(/\)\)/);
-		var angle = text.split(/\<\</);
-		var angle2 = text.split(/\>\>/);
-		var parenCount = ((parens.length + parens2.length - 2))*2;
-		var angleCount = ((angle.length + angle2.length - 2))*2;
+		var parens = text.split(/\(\(\(/);
+		var parens2 = text.split(/\)\)\)/);
+		var angle = text.split(/\<\<\</);
+		var angle2 = text.split(/\>\>\>/);
+		var parenCount = ((parens.length + parens2.length - 3))*3;
+		var angleCount = ((angle.length + angle2.length - 3))*3;
 		return parenCount + angleCount;
 	}
 
@@ -667,8 +667,8 @@ ${ruleStr}
 	}
 
 	parseBracketsRegex(bracket: string): number {
-		var startPattern = bracket === '<' ? '\<\<' : '\(\(';
-		var endPattern = bracket === '<' ? '\>\>' : '\)\)';
+		var startPattern = bracket === '<' ? '\<\<\<' : '\(\(\(';
+		var endPattern = bracket === '<' ? '\>\>\>' : '\)\)\)';
 
 		var file = new TextFile(this.HighlightFile,false);
 		var tokens = file.getText(true).split(startPattern);
@@ -711,7 +711,13 @@ ${ruleStr}
 			var tokens = line.split(',fired');
 			if (tokens.length > 1) {
 				let fired: Fired = {str: '', from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
+
 				var tts = line.split(refire);
+				const firstChar = line.trim().charAt(0);
+				if (/^[\[\],]/i.test(firstChar)) {
+					tts[0] = firstChar;
+					tts.splice(1,1);
+				}
 				fired.built = (tts.length >= 9 && tts[9] === 'blt') ? true : false;
 				if (+tts[2] > lastTo) {
 					fired.str = tts[0].trim();
