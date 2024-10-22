@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.43.7",
+    "version": "2.43.8",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -965,6 +965,14 @@
             {
                 "command": "sequenceView.libraryKBFuncs",
                 "title": "KB Functions",
+                "icon": {
+                    "light": "resources/light/new-file.svg",
+                    "dark": "resources/dark/new-file.svg"
+                }
+            },
+            {
+                "command": "sequenceView.libraryTreeFuncs",
+                "title": "Tree Functions",
                 "icon": {
                     "light": "resources/light/new-file.svg",
                     "dark": "resources/dark/new-file.svg"
@@ -2222,6 +2230,10 @@
             "librarypass": [
                 {
                     "command": "sequenceView.libraryKBFuncs",
+                    "group": "edit@1"
+                },
+                {
+                    "command": "sequenceView.libraryTreeFuncs",
                     "group": "edit@1"
                 },
                 {
