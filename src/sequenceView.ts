@@ -303,6 +303,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		this.insertLibraryFile(seqItem,'','KBFuncs.nlp');
 	}
 
+	libraryTreeFuncs(seqItem: SequenceItem): void {
+		this.insertLibraryFile(seqItem,'','TreeFuncs.nlp');
+	}
+
 	libraryLines(seqItem: SequenceItem): void {
 		this.insertLibraryFile(seqItem,'Formatting','Lines.nlp');
 	}
@@ -589,6 +593,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
+		vscode.commands.registerCommand('sequenceView.libraryTreeFuncs', (seqItem) => treeDataProvider.libraryTreeFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryUtilFuncs', (seqItem) => treeDataProvider.libraryUtilFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryLinesDictTokZ', (seqItem) => treeDataProvider.libraryLinesDictTokZ(seqItem));
