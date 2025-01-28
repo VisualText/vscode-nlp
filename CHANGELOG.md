@@ -3,6 +3,9 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.44.0
+No longer displaying old KB files.
+
 ### 2.43.8
 Fixing duplicate pass with folders, the N("$text",1) snippet, and copying context line from file above.
 

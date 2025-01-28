@@ -68,7 +68,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		var entries = dirfuncs.getDirectoryTypes(dir);
 		visualText.mod.clear();
 		visualText.modFiles = [];
-		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.kb', '.test', '.txt'];
+		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.test', '.txt'];
 
 		for (let ext of order) {
 			for (let entry of entries) {
