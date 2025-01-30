@@ -17,6 +17,8 @@ export interface KBItem {
 
 export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
+	public readonly EMPTY_TEXT = '>> right click for libs <<';
+
 	private _onDidChangeTreeData: vscode.EventEmitter<KBItem | undefined | null | void> = new vscode.EventEmitter<KBItem | undefined | null | void>();
 	readonly onDidChangeTreeData: vscode.Event<KBItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
@@ -39,26 +41,30 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 	getTreeItem(kbItem: KBItem): vscode.TreeItem {
 		const treeItem = new vscode.TreeItem(kbItem.uri, kbItem.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
 
-        let name = path.basename(kbItem.uri.fsPath);
-        treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
-        treeItem.contextValue = 'kb';
-
-		var icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
-
-		treeItem.iconPath = {
-			light: path.join(__filename, '..', '..', 'resources', 'light', icon),
-			dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+		if (treeItem.label != this.EMPTY_TEXT) {
+			let name = path.basename(kbItem.uri.fsPath);
+			treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
+			treeItem.contextValue = 'kb';
+	
+			var icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
+	
+			treeItem.iconPath = {
+				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
+				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+			}
+	
+			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
+				treeItem.contextValue = 'toggle';
+	
+			if (name.endsWith('.kb'))
+				treeItem.contextValue = 'old';
+			else if (!name.endsWith('.nlm'))
+				treeItem.contextValue = treeItem.contextValue + 'nomo';
+			else
+				treeItem.contextValue = treeItem.contextValue + 'mod';
+		} else {
+			treeItem.contextValue = 'empty';
 		}
-
-		if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
-			treeItem.contextValue = 'toggle';
-
-		if (name.endsWith('.kb'))
-			treeItem.contextValue = 'old';
-		else if (!name.endsWith('.nlm'))
-			treeItem.contextValue = treeItem.contextValue + 'nomo';
-		else
-			treeItem.contextValue = treeItem.contextValue + 'mod';
 
 		return treeItem;
 	}
@@ -78,6 +84,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 						visualText.modFiles.push(entry.uri);
 				}
 			}
+		}
+
+		// If there are no files, create a dummy "empty" item to allow for the right-click context menu
+		if (files.length == 0) {
+			files.push({uri: this.EMPTY_TEXT, type: vscode.FileType.Unknown});
 		}
 
 		return files;
@@ -211,7 +222,6 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openKBFile(KBItem));
 		vscode.commands.registerCommand('kbView.openText', () => this.openText());
 		vscode.commands.registerCommand('kbView.search', () => this.search());
-		vscode.commands.registerCommand('kbView.newKBFile', (KBItem) => this.newKBFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem,false));
 		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
@@ -601,24 +611,6 @@ export class KBView {
 					if (path.extname(newname))
 						filepath = path.join(dirPath,newname);
 					dirfuncs.writeFile(filepath,"topconcept\n  child: attr=[value,value2]\n    grandchild one\n    grandchild two\n");
-					this.openFile(vscode.Uri.file(filepath));
-					vscode.commands.executeCommand('kbView.refreshAll');
-				}
-			});
-		}
-	}
-
-	private newKBFile(kbItem: KBItem, top: boolean) {
-		if (visualText.hasWorkspaceFolder()) {
-			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter KB file name' }).then(newname => {
-				if (newname) {
-					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
-					if (kbItem && !top)
-						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
-					var filepath = path.join(dirPath,newname+'.kb');
-					if (path.extname(newname))
-						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"\n\nquit\n\n");
 					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
