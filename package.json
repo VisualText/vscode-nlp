@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.44.0",
+    "version": "2.44.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -477,14 +477,6 @@
                 "icon": {
                     "light": "resources/light/kbb-new.svg",
                     "dark": "resources/dark/kbb-new.svg"
-                }
-            },
-            {
-                "command": "kbView.newKBFile",
-                "title": "New KB File",
-                "icon": {
-                    "light": "resources/light/kb-new.svg",
-                    "dark": "resources/dark/kb-new.svg"
                 }
             },
             {
@@ -1954,7 +1946,7 @@
                 },
                 {
                     "command": "kbView.search",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "navigation@3"
                 },
                 {
@@ -1963,14 +1955,24 @@
                     "group": "navigation@4"
                 },
                 {
-                    "command": "kbView.modCreate",
-                    "when": "view == kbView",
-                    "group": "navigation@5"
-                },
-                {
                     "command": "kbView.video",
                     "when": "view == kbView",
                     "group": "navigation@6"
+                },
+                {
+                    "command": "kbView.langLibs",
+                    "when": "view == kbView",
+                    "group": "second@1"
+                },
+                {
+                    "command": "kbView.miscLibs",
+                    "when": "view == kbView",
+                    "group": "second@2"
+                },
+                {
+                    "command": "kbView.modCreate",
+                    "when": "view == kbView && viewItem != 'empty'",
+                    "group": "second@3"
                 },
                 {
                     "command": "textView.deleteAnalyzerLogs",
@@ -2295,7 +2297,7 @@
                 },
                 {
                     "command": "kbView.rename",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "navigation"
                 },
                 {
@@ -2310,22 +2312,22 @@
                 },
                 {
                     "command": "kbView.mergeDicts",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "special"
                 },
                 {
                     "command": "kbView.generateMain",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "special"
                 },
                 {
                     "command": "kbView.deleteFile",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "navigation"
                 },
                 {
                     "command": "kbView.cleanFiles",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "navigation"
                 },
                 {
@@ -2340,7 +2342,7 @@
                 },
                 {
                     "command": "kbView.copyToAnalyzer",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "inline@0"
                 },
                 {
@@ -2355,12 +2357,12 @@
                 },
                 {
                     "command": "kbView.rename",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "inline@3"
                 },
                 {
                     "command": "kbView.deleteFile",
-                    "when": "view == kbView",
+                    "when": "view == kbView && viewItem != 'empty'",
                     "group": "inline@4"
                 },
                 {
@@ -2370,11 +2372,6 @@
                 },
                 {
                     "command": "kbView.newKBBFile",
-                    "when": "view == kbView",
-                    "group": "new"
-                },
-                {
-                    "command": "kbView.newKBFile",
                     "when": "view == kbView",
                     "group": "new"
                 },
