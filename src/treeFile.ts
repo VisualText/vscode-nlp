@@ -550,8 +550,8 @@ ${ruleStr}
 		var parens2 = text.split(/\)\)\)/);
 		var angle = text.split(/\<\<\</);
 		var angle2 = text.split(/\>\>\>/);
-		var parenCount = ((parens.length + parens2.length - 3))*3;
-		var angleCount = ((angle.length + angle2.length - 3))*3;
+		var parenCount = ((parens.length-1) + (parens2.length-1))*3;
+		var angleCount = ((angle.length-1) + (angle2.length-1))*3;
 		return parenCount + angleCount;
 	}
 
@@ -590,7 +590,8 @@ ${ruleStr}
 				absEnd = absStart + len - selection.start.character - this.bracketCount(line);
 				multiline = true;
 			} else {
-				absStart += len - this.bracketCount(line);
+				let bracket = this.bracketCount(line);
+				absStart += len - bracket;
 				if (len == 0)
 					absStart += 1;
 			}
