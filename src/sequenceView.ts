@@ -622,6 +622,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.compareSisters', (seqItem) => this.compareSisters(seqItem));
 		vscode.commands.registerCommand('sequenceView.copyContext', (seqItem) => this.copyContext(seqItem));
 		vscode.commands.registerCommand('sequenceView.compareLibrary', (seqItem) => this.compareLibrary(seqItem));
+		vscode.commands.registerCommand('sequenceView.updateTitle', () => this.updateTitle());
 	}
 
 	copyContext(seqItem: SequenceItem) {
@@ -1158,6 +1159,15 @@ export class SequenceView {
 				} else
 					vscode.window.showWarningMessage('No KB file for this pass');
 			}
+		}
+	}
+
+	private updateTitle(): void {
+		let analyzerName = visualText.getCurrentAnalyzerName();
+		if (analyzerName.length > 0) {
+			this.sequenceView.title = `ANALYZER (${analyzerName})`;
+		} else {
+			this.sequenceView.title = 'ANALYZER';
 		}
 	}
 }

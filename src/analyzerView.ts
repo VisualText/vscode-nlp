@@ -648,10 +648,11 @@ export class AnalyzerView {
 			var anaChosen = path.basename(uri.fsPath);
 			if (anaChosen.length)
 				this.analyzerView.title = `ANALYZERS (${anaChosen})`;
-			return;
+		} else {
+			this.chosen = undefined;
+			this.analyzerView.title = 'ANALYZERS';
 		}
-		this.chosen = undefined;
-		this.analyzerView.title = 'ANALYZERS';
+		vscode.commands.executeCommand('sequenceView.updateTitle');	
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
