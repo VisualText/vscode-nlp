@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.44.2",
+    "version": "2.44.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -47,7 +47,7 @@
                 },
                 {
                     "id": "sequenceView",
-                    "name": "Analyzer Sequence",
+                    "name": "Analyzer",
                     "icon": "resources/dark/dna.svg"
                 },
                 {
@@ -2052,12 +2052,12 @@
                 {
                     "command": "sequenceView.modAdd",
                     "when": "view == sequenceView",
-                    "group": "navigation@5"
+                    "group": "secondary@1"
                 },
                 {
                     "command": "sequenceView.video",
                     "when": "view == sequenceView",
-                    "group": "navigation@6"
+                    "group": "secondary@2"
                 },
                 {
                     "command": "outputView.all",
