@@ -412,8 +412,8 @@ export class KBView {
 	}
 
 	copyToAnalyzer(KBItem: KBItem) {
-		const kbPath = visualText.analyzer.constructDir(KBItem.uri,anaSubDir.KB);
-		outputView.copyFileToAnalyzer(kbPath,"","Copy file to another analyzer","Copy file to the KB directory of:");
+		const kbDir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
+		outputView.copyFileToAnalyzer(KBItem.uri,kbDir,"Copy file to another analyzer","Copy file to the KB directory of:");
 	}
 
 	private toggleActive(KBItem: KBItem): void {
