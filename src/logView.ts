@@ -80,6 +80,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
 		vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug());
 		vscode.commands.registerCommand('logView.analyzerOuts', () => this.loadAnalyzerOuts());
+		vscode.commands.registerCommand('logView.enginePath', () => this.enginePath());
 
 		this.exists = false;
 		this.ctx = context;
@@ -91,6 +92,11 @@ export class LogView {
             logView = new LogView(ctx);
         }
         return logView;
+	}
+
+	enginePath() {
+		let dir = visualText.engineDirectory();
+		vscode.env.clipboard.writeText(dir.fsPath);
 	}
 
 	updateDebug() {
