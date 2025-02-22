@@ -651,7 +651,6 @@ export class SequenceView {
 					}
 				}
 			});
-
 		}
 	}
 

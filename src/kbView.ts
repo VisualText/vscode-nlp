@@ -362,42 +362,15 @@ export class KBView {
 		});
 	}
 
-	private chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]) {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),dirName,subDir);
-		let items: vscode.QuickPickItem[] = [];
-
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
-		for (let dictFile of dictFiles) {
-			let descr = "";
-
-			let firstLine = this.textFile.readFirstLine(dictFile.fsPath);
-			if (firstLine[0] == '#') {
-				descr = firstLine.substring(1);
-			}
-			let icon = visualText.fileIconFromExt(dictFile.fsPath);
-			let label = path.basename(dictFile.fsPath);
-			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
-			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
-			items.push({label: label, description: descr});
+	async chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]) {
+		let items: vscode.QuickPickItem[] = await visualText.chooseLibFiles(prompt,dirName,subDir,exts);
+		for (let item of items) {
+			if (exts[0] == '.nlm') {
+				var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDir,item.label);
+				visualText.mod.load(vscode.Uri.file(filepath));
+			} else
+				this.insertLibraryFile(path.join(dirName,subDir),item.label);
 		}
-
-		if (items.length == 0) {
-			vscode.window.showWarningMessage('Not created yet and you can help!');
-			return;
-		}
-
-		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, canPickMany: true, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selections => {
-			if (!selections)
-				return;
-
-			for (let selection of selections) {
-				if (exts[0] == '.nlm') {
-					var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDir,selection.label);
-					visualText.mod.load(vscode.Uri.file(filepath));
-				} else
-					this.insertLibraryFile(path.join(dirName,subDir),selection.label);
-			}
-		});
 	}
 
 	insertLibraryFile(dir: string, filename: string) {

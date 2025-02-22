@@ -324,6 +324,7 @@ export class TextView {
 		vscode.commands.registerCommand('textView.runTest', (textItem) => this.runTest(textItem));
 		vscode.commands.registerCommand('textView.deleteTest', (textItem) => this.deleteTest(textItem));
 		vscode.commands.registerCommand('textView.editTest', (textItem) => this.editTest(textItem));
+		vscode.commands.registerCommand('textView.python', (textItem) => this.python(textItem));
 
 		this.folderUri = undefined;
     }
@@ -333,6 +334,21 @@ export class TextView {
             textView = new TextView(ctx);
         }
         return textView;
+	}
+
+	async python(textItem: TextItem) {
+		if (visualText.hasWorkspaceFolder()) {
+			let textFilePath = path.dirname(textItem.uri.fsPath);
+			let items: vscode.QuickPickItem[] = await visualText.chooseLibFiles('Choose python scripts','python','',[".py"]);
+			for (let item of items) {
+				if (item.description) {
+					let original = vscode.Uri.file(path.join(item.description,item.label));
+					let newFile = vscode.Uri.file(path.join(textFilePath,item.label));
+					visualText.fileOps.addFileOperation(original,newFile,[fileOpRefresh.TEXT],fileOperation.COPY);
+				}
+			}
+			visualText.fileOps.startFileOps();
+		}
 	}
 
 	fastLoad(fastFlag: boolean=false) {
