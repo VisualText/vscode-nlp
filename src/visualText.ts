@@ -1509,4 +1509,38 @@ export class VisualText {
     getLibraryFiles(): string[] {
         return this.libraryFiles;
     }
+
+    public async chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]): Promise<vscode.QuickPickItem[]> {
+        var fileDir = path.join(visualText.getVisualTextDirectory(), dirName, subDir);
+        let items: vscode.QuickPickItem[] = [];
+
+        var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts);
+        var textFile = new TextFile();
+        for (let dictFile of dictFiles) {
+            let descr = "";
+
+            let firstLine = textFile.readFirstLine(dictFile.fsPath);
+            if (firstLine[0] == '#') {
+                descr = firstLine.substring(1);
+            }
+            let icon = visualText.fileIconFromExt(dictFile.fsPath);
+            let label = path.basename(dictFile.fsPath);
+            let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
+            let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
+            items.push({ label: label, description: descr });
+        }
+
+        if (items.length == 0) {
+            vscode.window.showWarningMessage('Not created yet and you can help!');
+            return [];
+        } else {
+            const selections = await vscode.window.showQuickPick(items, { title: 'Choose ' + prompt, canPickMany: true, placeHolder: 'Choose ' + prompt + ' to insert' });
+            if (selections) {
+                for (let item of selections) {
+                    item.description = fileDir;
+                }
+            }
+            return selections || [];
+        }
+    }
 }
