@@ -1543,4 +1543,14 @@ export class VisualText {
             return selections || [];
         }
     }
+
+    convertUriToStr(uri: vscode.Uri): string {
+        let pathStr = uri.fsPath;
+        if (os.platform() === 'win32') {
+            pathStr = pathStr.replace(/\\/g, '\\\\');
+        } else {
+            pathStr = pathStr.replace(/\\/g, '/');
+        }
+        return pathStr;
+    }
 }

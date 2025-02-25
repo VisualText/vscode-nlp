@@ -213,6 +213,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyAll', () => this.copyAll());
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 		vscode.commands.registerCommand('analyzerView.video', () => this.video());
+		vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -224,6 +225,11 @@ export class AnalyzerView {
             analyzerView = new AnalyzerView(ctx);
         }
         return analyzerView;
+	}
+
+	copyPath() {
+		let dir = visualText.getAnalyzerDir();
+		vscode.env.clipboard.writeText(dir.fsPath);
 	}
 
 	newECLFile(analyzerItem: AnalyzerItem) {
