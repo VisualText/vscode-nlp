@@ -1372,9 +1372,14 @@ export class VisualText {
         );
     }
 
-    displayHTMLFile(title:string, filename: string) {
-        let htmlFile = path.join(visualText.extensionDirectory().fsPath,filename);
-        if (fs.existsSync(htmlFile)) {
+    displayHelpFile(title: string, filename: string) {
+        let pathFile = path.join(visualText.getVisualTextDirectory("Help"),"helps",filename);
+        let mdFile = pathFile + ".md";
+        let htmlFile = pathFile + ".htm";
+        if (fs.existsSync(mdFile)) {
+            vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(mdFile));
+        }
+        else if (fs.existsSync(htmlFile)) {
             this.displayHTML(title,fs.readFileSync(htmlFile, 'utf8'));
         }
 	}

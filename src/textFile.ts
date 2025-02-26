@@ -43,7 +43,7 @@ export class TextFile {
     }
 
     choosePythonScript(editor: vscode.TextEditor) {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),"python");
+		var fileDir = visualText.getVisualTextDirectory("python");
         if (!fs.existsSync(fileDir)) {
             vscode.window.showWarningMessage("No library Python scripts available");
 			return;
