@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.45.2
+### 2.45.3
 Added load python library files.
 
 ### 2.44.4

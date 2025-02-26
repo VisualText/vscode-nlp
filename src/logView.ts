@@ -121,11 +121,11 @@ export class LogView {
 	}
 
 	downloadHelp() {
-		visualText.displayHTMLFile('Download Help','DOWNLOADHELP.html');
+		visualText.displayHelpFile('Download Help','DOWNLOADHELP.html');
 	}
 
 	updaterHelp() {
-		visualText.displayHTMLFile('Updater Help','UPDATERHELP.html');
+		visualText.displayHelpFile('Updater Help','UPDATERHELP.html');
 	}
 
 	public loadAnalyzerOuts() {
