@@ -196,6 +196,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 				var dir = visualText.analyzer.getInputDirectory().fsPath;
 				if (textItem) {
 					dir = textItem.uri.fsPath;
+					if (textItem.type == vscode.FileType.File) {
+						dir = path.dirname(textItem.uri.fsPath);
+					}
 				}
 				for (let sel of selections) {
 					var filename = path.basename(sel.fsPath);
