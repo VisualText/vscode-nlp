@@ -15,11 +15,11 @@ Many of you have been asking for tutorial videos on NLP++ and here is the first 
 1. Analyzers used in the videos: https://github.com/VisualText/nlp-tutorials
 1. VisualText tutorial videos: http://vttutorials.visualtext.org
 
-## Glitter Chat
+## NLP Discourse Forum
 
-[![Join the chat at https://gitter.im/NLPplusplus/VisualText](https://badges.gitter.im/NLPplusplus/VisualText.svg)](https://gitter.im/NLPplusplus/VisualText?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) Join our glitter chat room for VisualText!
+Because of NLP++ being 100% open-source, [Discourse](https://www.discourse.org/) has donated a free NLP Forum for NLP++: [https://nlp.discourse.group](https://nlp.discourse.group). There, in the coming years, as our NLP++ community continues to grow, we will be discussing everything related to NLP++. Thanks Discourse for supporting our cause!
 
-## Only Computer Language Dedicated to Natural Language Processing
+## Only Computer Language Dedicated to Text and Natural Language Processing
 NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
 
 ## NLP++ and VisualText Now Unicode
@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.45.4
+### 2.45.5
 Added load python library files.
 
 ### 2.44.4
