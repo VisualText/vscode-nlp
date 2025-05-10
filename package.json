@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.45.5",
+    "version": "2.46.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1995,7 +1995,7 @@
                 },
                 {
                     "command": "kbView.modCreate",
-                    "when": "view == kbView && viewItem != 'empty'",
+                    "when": "view == kbView",
                     "group": "second@3"
                 },
                 {
@@ -2074,12 +2074,12 @@
                     "group": "navigation@4"
                 },
                 {
-                    "command": "sequenceView.modAdd",
+                    "command": "sequenceView.video",
                     "when": "view == sequenceView",
-                    "group": "secondary@1"
+                    "group": "secondary@2"
                 },
                 {
-                    "command": "sequenceView.video",
+                    "command": "sequenceView.modAdd",
                     "when": "view == sequenceView",
                     "group": "secondary@2"
                 },
@@ -2415,6 +2415,11 @@
                     "group": "new"
                 },
                 {
+                    "command": "kbView.modCreate",
+                    "when": "view == kbView",
+                    "group": "new"
+                },
+                {
                     "submenu": "sequencetype",
                     "when": "view == sequenceView",
                     "group": "atop@0"
@@ -2487,6 +2492,11 @@
                 {
                     "command": "sequenceView.openTree",
                     "when": "view == sequenceView && viewItem =~ /.*hasLog.*/",
+                    "group": "display"
+                },
+                {
+                    "command": "sequenceView.modAdd",
+                    "when": "view == sequenceView && viewItem =~ /.*file.*/",
                     "group": "display"
                 },
                 {
