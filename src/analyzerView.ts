@@ -35,11 +35,11 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 	async getChildren(analyzerItem?: AnalyzerItem): Promise<AnalyzerItem[]> {
 		visualText.getAnalyzers(false);
 		if (analyzerItem) {
-			return this.getKeepers(analyzerItem.uri); 
+			return this.getKeepers(analyzerItem.uri);
 		}
 		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers()) {
-			return this.getKeepers(visualText.getWorkspaceFolder());  
-        }
+			return this.getKeepers(visualText.getWorkspaceFolder());
+		}
 		return [];
 	}
 
@@ -116,16 +116,16 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 			if (entry.type == vscode.FileType.Directory) {
 				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
 				var hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
-				var hasReadme = dirfuncs.hasFile(entry.uri,"README.md");
-                keepers.push({uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false});
+				var hasReadme = dirfuncs.hasFile(entry.uri, "README.md");
+				keepers.push({ uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false });
 
 			} else if (entry.type == vscode.FileType.File) {
 				type = this.typeFromExtension(entry.uri);
-				keepers.push({uri: entry.uri, type: type, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false});
+				keepers.push({ uri: entry.uri, type: type, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false });
 			}
 		}
 
-		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getWorkspaceFolder(),true);
+		var hasAllLogs = dirfuncs.hasLogDirs(visualText.getWorkspaceFolder(), true);
 		vscode.commands.executeCommand('setContext', 'analyzers.hasLogs', hasAllLogs);
 		return keepers;
 	}
@@ -148,24 +148,24 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 	fileIconFromType(type: analyzerItemType): string {
 
-        let icon = 'file.svg';
+		let icon = 'file.svg';
 		if (type == analyzerItemType.ANALYZER) {
-            icon = 'gear.svg';
-        } else if (type == analyzerItemType.FOLDER) {
-            icon = 'folder.svg';
-        } else if (type == analyzerItemType.NLP) {
-            icon = 'nlp.svg';
-        } else if (type == analyzerItemType.SEQUENCE) {
-            icon = 'seq-circle.svg';
+			icon = 'gear.svg';
+		} else if (type == analyzerItemType.FOLDER) {
+			icon = 'folder.svg';
+		} else if (type == analyzerItemType.NLP) {
+			icon = 'nlp.svg';
+		} else if (type == analyzerItemType.SEQUENCE) {
+			icon = 'seq-circle.svg';
 		} else if (type == analyzerItemType.ECL) {
-            icon = 'ecl.svg';
+			icon = 'ecl.svg';
 		} else if (type == analyzerItemType.MANIFEST) {
-            icon = 'manifest.svg';
+			icon = 'manifest.svg';
 		} else if (type == analyzerItemType.README) {
 			icon = 'readme.svg';
 		}
-        return icon;
-    }
+		return icon;
+	}
 }
 
 export let analyzerView: AnalyzerView;
@@ -218,13 +218,13 @@ export class AnalyzerView {
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
 		this.converting = false;
-    }
-    
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!analyzerView) {
-            analyzerView = new AnalyzerView(ctx);
-        }
-        return analyzerView;
+	}
+
+	static attach(ctx: vscode.ExtensionContext) {
+		if (!analyzerView) {
+			analyzerView = new AnalyzerView(ctx);
+		}
+		return analyzerView;
 	}
 
 	copyPath() {
@@ -232,24 +232,33 @@ export class AnalyzerView {
 		vscode.env.clipboard.writeText(dir.fsPath);
 	}
 
+	checkForECLAnalyzersDir(): vscode.QuickPickItem[] {
+		let items: vscode.QuickPickItem[] = visualText.analyzerList('analyzers');
+		if (items.length == 0) {
+			vscode.window.showWarningMessage('You must have an \'analyzers\' folder containing your NLP analyzers when using the ECL Plugin in order to create an ECL Manifest file.');
+			return [];
+		}
+		return items;
+	}
+
 	newECLFile(analyzerItem: AnalyzerItem) {
-		if (visualText.hasWorkspaceFolder()) {
+		if (visualText.hasWorkspaceFolder() && this.checkForECLAnalyzersDir().length > 0) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter ECL file name' }).then(newname => {
 				if (newname) {
-					var dirPath = visualText.getAnalyzerDir().fsPath;
-					if (analyzerItem) {
-						if (dirfuncs.isDir(analyzerItem.uri.fsPath))
-							dirPath = analyzerItem.uri.fsPath;
-						else
-							dirPath = path.dirname(analyzerItem.uri.fsPath);
-					}
-					this.createNewECLFile(dirPath,newname);
+					var dirPath = visualText.getWorkspaceFolder().fsPath;
+					// if (analyzerItem) {
+					// 	if (dirfuncs.isDir(analyzerItem.uri.fsPath))
+					// 		dirPath = analyzerItem.uri.fsPath;
+					// 	else
+					// 		dirPath = path.dirname(analyzerItem.uri.fsPath);
+					// }
+					this.createNewECLFile(dirPath, newname);
 				}
 			});
 		}
 	}
-	
-    createNewECLFile(dirPath: string, fileName: string): boolean {
+
+	createNewECLFile(dirPath: string, fileName: string): boolean {
 		let items: vscode.QuickPickItem[] = [];
 		var fromDir = path.join(visualText.getVisualTextDirectory('ecl'));
 
@@ -258,44 +267,43 @@ export class AnalyzerView {
 			var textFile = new TextFile();
 			for (let file of files) {
 				let firstLine = textFile.readFirstLine(file.fsPath).trim();
-				firstLine = firstLine.replace("// ","");
-				items.push({label: path.basename(file.fsPath), description: ' ' + firstLine});
+				firstLine = firstLine.replace("// ", "");
+				items.push({ label: path.basename(file.fsPath), description: ' ' + firstLine });
 			}
-			vscode.window.showQuickPick(items, {title: 'Creating New ECL File', canPickMany: false, placeHolder: 'Choose ecl block'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Creating New ECL File', canPickMany: false, placeHolder: 'Choose ecl block' }).then(selection => {
 				if (!selection) {
 					return false;
 				}
-				var name = path.join(fromDir,selection.label);
+				var name = path.join(fromDir, selection.label);
 				textFile.setFile(vscode.Uri.file(name));
 				this.saveECLFile(dirPath, fileName, textFile.getText());
 				return true;
 			});
 		} else {
-			this.saveECLFile(dirPath,fileName,"a := 'Hello world!';\noutput(a);");
+			this.saveECLFile(dirPath, fileName, "a := 'Hello world!';\noutput(a);");
 		}
 
 		return false;
-    }
+	}
 
 	saveECLFile(dirPath: string, fileName: string, text: string) {
-		var filePath = path.join(dirPath,fileName+'.ecl');
+		var filePath = path.join(dirPath, fileName + '.ecl');
 		if (path.extname(fileName))
-			filePath = path.join(dirPath,fileName);
-		dirfuncs.writeFile(filePath,text);
+			filePath = path.join(dirPath, fileName);
+		dirfuncs.writeFile(filePath, text);
 		vscode.commands.executeCommand('analyzerView.refreshAll');
 		vscode.window.showTextDocument(vscode.Uri.file(filePath));
 	}
 
 	manifestGenerate(analyzerItem: AnalyzerItem) {
-		let items: vscode.QuickPickItem[] = visualText.analyzerList('analyzers');
+		let items: vscode.QuickPickItem[] = this.checkForECLAnalyzersDir();
 		if (items.length == 0) {
-			vscode.window.showWarningMessage('You must have an \'analyzers\' folder containing your NLP analyzers');
 			return;
 		}
 		let title = 'Generate HPCC Manifest File';
 		let placeHolder = 'Choose Analyzers to Manifest';
 
-		vscode.window.showQuickPick(items, {title, canPickMany: true, placeHolder: placeHolder}).then(selections => {
+		vscode.window.showQuickPick(items, { title, canPickMany: true, placeHolder: placeHolder }).then(selections => {
 			if (!selections)
 				return;
 
@@ -307,14 +315,14 @@ export class AnalyzerView {
 				if (analyzerPath) {
 					let analyzerFiles = this.getAnalyzerManifestFiles(analyzerPath);
 					for (let file of analyzerFiles) {
-						files.push(this.cleanPath(file,start));
+						files.push(this.cleanPath(file, start));
 					}
-					
+
 					// KB FILES
-					let kbPath = visualText.analyzer.constructDir(vscode.Uri.file(analyzerPath),anaSubDir.KB);
-					let kbFiles = dirfuncs.getFiles(kbPath,['.dict','.kbb','.kb']);
+					let kbPath = visualText.analyzer.constructDir(vscode.Uri.file(analyzerPath), anaSubDir.KB);
+					let kbFiles = dirfuncs.getFiles(kbPath, ['.dict', '.kbb', '.kb']);
 					for (let file of kbFiles) {
-						files.push(this.cleanPath(file.fsPath,start));
+						files.push(this.cleanPath(file.fsPath, start));
 					}
 
 					// ENGINE DATA FILES
@@ -328,7 +336,7 @@ export class AnalyzerView {
 			// Write files to manifest
 			let filepath = path.parse(analyzerItem.uri.fsPath);
 			let manifestFile = this.getManifestFilePath(filepath.name);
-			let mannie = fs.createWriteStream(manifestFile,{flags: 'w'});
+			let mannie = fs.createWriteStream(manifestFile, { flags: 'w' });
 			mannie.write('<Manifest>\n');
 			for (let file of files) {
 				mannie.write('    <Resource filename="' + file + '" />\n');
@@ -343,21 +351,21 @@ export class AnalyzerView {
 
 	cleanPath(file: string, start: number): string {
 		let relative = file.substring(start);
-		relative = relative.replace(new RegExp('\\\\', 'g'),'/');
+		relative = relative.replace(new RegExp('\\\\', 'g'), '/');
 		relative = relative.substring(1);
 		return relative;
 	}
 
 	getManifestFilePath(elcFileName: string): string {
-		return path.join(visualText.getAnalyzerDir().fsPath,elcFileName+'.manifest');
+		return path.join(visualText.getAnalyzerDir().fsPath, elcFileName + '.manifest');
 	}
 
 	getAnalyzerManifestFiles(dir: string): string[] {
 		let files: string[] = [];
-		let specDir = path.join(dir,visualText.ANALYZER_SEQUENCE_FOLDER);
+		let specDir = path.join(dir, visualText.ANALYZER_SEQUENCE_FOLDER);
 		this.sequenceFile.setSpecDir(specDir);
 		this.sequenceFile.getPassFiles(specDir);
-		files.push(path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE));
+		files.push(path.join(specDir, visualText.ANALYZER_SEQUENCE_FILE));
 		for (let item of this.sequenceFile.getPassItems()) {
 			let p = item.uri.fsPath;
 			if (p.length > 2 && fs.existsSync(p))
@@ -369,10 +377,10 @@ export class AnalyzerView {
 	// No longer needed but leaving around JUST IN CASE
 	copyDataFolder(): string[] {
 		let files: string[] = [];
-		var dataFolder = path.join(visualText.getAnalyzerDir().fsPath,'data','rfb',visualText.ANALYZER_SEQUENCE_FOLDER);
+		var dataFolder = path.join(visualText.getAnalyzerDir().fsPath, 'data', 'rfb', visualText.ANALYZER_SEQUENCE_FOLDER);
 		if (!fs.existsSync(dataFolder)) {
-			var engineData = path.join(visualText.engineDirectory().fsPath,'data','rfb',visualText.ANALYZER_SEQUENCE_FOLDER);
-			visualText.fileOps.addFileOperation(vscode.Uri.file(engineData),vscode.Uri.file(dataFolder),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
+			var engineData = path.join(visualText.engineDirectory().fsPath, 'data', 'rfb', visualText.ANALYZER_SEQUENCE_FOLDER);
+			visualText.fileOps.addFileOperation(vscode.Uri.file(engineData), vscode.Uri.file(dataFolder), [fileOpRefresh.ANALYZERS], fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		}
 		var uris = dirfuncs.getFiles(vscode.Uri.file(dataFolder));
@@ -401,9 +409,9 @@ export class AnalyzerView {
 				if (newname) {
 					var original = analyzerItem.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(analyzerItem.uri.fsPath);
-					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
-					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+						newname = newname + path.extname(analyzerItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri, newfile, [fileOpRefresh.ANALYZERS], fileOperation.RENAME);
 					visualText.fileOps.startFileOps();
 				}
 			});
@@ -416,22 +424,22 @@ export class AnalyzerView {
 				if (newname) {
 					var original = analyzerItem.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(analyzerItem.uri.fsPath);
-					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
-					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+						newname = newname + path.extname(analyzerItem.uri.fsPath);
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri, newfile, [fileOpRefresh.ANALYZERS], fileOperation.RENAME);
 					visualText.fileOps.startFileOps();
 				}
 			});
 		}
 	}
-	
+
 	renameFolder(analyzerItem: AnalyzerItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new folder name' }).then(newname => {
 				if (newname) {
 					var original = analyzerItem.uri;
-					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath),newname));
-					visualText.fileOps.addFileOperation(analyzerItem.uri,newfile,[fileOpRefresh.ANALYZERS],fileOperation.RENAME);
+					var newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
+					visualText.fileOps.addFileOperation(analyzerItem.uri, newfile, [fileOpRefresh.ANALYZERS], fileOperation.RENAME);
 					visualText.fileOps.startFileOps();
 				}
 			});
@@ -448,7 +456,7 @@ export class AnalyzerView {
 	}
 
 	openFolder(dir: vscode.Uri) {
-		vscode.commands.executeCommand("vscode.openFolder",dir);
+		vscode.commands.executeCommand("vscode.openFolder", dir);
 		vscode.commands.executeCommand('workbench.action.openPanel');
 	}
 
@@ -477,13 +485,13 @@ export class AnalyzerView {
 				} else {
 					analyzerPath = analyzerItem.uri.fsPath;
 					if (visualText.isAnalyzerDirectory(analyzerItem.uri))
-						analyzerPath = path.dirname(analyzerPath);					
+						analyzerPath = path.dirname(analyzerPath);
 				}
 
 				for (let select of selections) {
 					if (visualText.isAnalyzerDirectory(select)) {
 						var dirname = path.basename(select.fsPath);
-						visualText.fileOps.addFileOperation(select,vscode.Uri.file(path.join(analyzerPath,dirname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
+						visualText.fileOps.addFileOperation(select, vscode.Uri.file(path.join(analyzerPath, dirname)), [fileOpRefresh.ANALYZERS], fileOperation.COPY);
 						analyzerDirExists = true;
 					}
 				}
@@ -508,7 +516,7 @@ export class AnalyzerView {
 						dirPath = path.dirname(analyzerItem.uri.fsPath);
 					}
 
-					dirfuncs.makeDir(path.join(dirPath,newdir));
+					dirfuncs.makeDir(path.join(dirPath, newdir));
 					vscode.commands.executeCommand('analyzerView.refreshAll');
 				}
 			});
@@ -517,8 +525,8 @@ export class AnalyzerView {
 
 	moveToFolder(analyzerItem: AnalyzerItem) {
 		if (this.folderUri) {
-			var to = path.join(this.folderUri.fsPath,path.basename(analyzerItem.uri.fsPath));
-			dirfuncs.rename(analyzerItem.uri.fsPath,to);
+			var to = path.join(this.folderUri.fsPath, path.basename(analyzerItem.uri.fsPath));
+			dirfuncs.rename(analyzerItem.uri.fsPath, to);
 			vscode.commands.executeCommand('analyzerView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('No folder selected');
@@ -526,13 +534,13 @@ export class AnalyzerView {
 	}
 
 	deleteReadMe(analyzerItem: AnalyzerItem) {
-		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath,"README.md"));
+		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath, "README.md"));
 		if (fs.existsSync(readMe.fsPath)) {
 			let items: vscode.QuickPickItem[] = [];
-			items.push({label: 'Yes', description: 'Delete README.md?'});
-			items.push({label: 'No', description: 'Do not delete README.md'});
+			items.push({ label: 'Yes', description: 'Delete README.md?' });
+			items.push({ label: 'No', description: 'Do not delete README.md' });
 
-			vscode.window.showQuickPick(items, {title: 'README.md File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'README.md File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				dirfuncs.delFile(readMe.fsPath);
@@ -548,17 +556,17 @@ export class AnalyzerView {
 		if (!dirfuncs.isDir(dirPath)) {
 			dirPath = path.dirname(analyzerItem.uri.fsPath);
 		}
-		var readMe = path.join(dirPath,"README.md");
+		var readMe = path.join(dirPath, "README.md");
 		if (!fs.existsSync(readMe)) {
 			var content = "# TITLE\n\nDescription here.";
-			dirfuncs.writeFile(readMe,content);
+			dirfuncs.writeFile(readMe, content);
 		}
 		vscode.window.showTextDocument(vscode.Uri.file(readMe));
 		vscode.commands.executeCommand('analyzerView.refreshAll');
 	}
 
 	readMe(analyzerItem: AnalyzerItem) {
-		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath,"README.md"));
+		var readMe = vscode.Uri.file(path.join(analyzerItem.uri.fsPath, "README.md"));
 		if (fs.existsSync(readMe.fsPath)) {
 			vscode.commands.executeCommand("markdown.showPreview", readMe);
 		}
@@ -569,8 +577,8 @@ export class AnalyzerView {
 		var analyzersFolder = visualText.getAnalyzerDir();
 		if (parent != analyzersFolder.fsPath) {
 			parent = path.dirname(parent);
-			var to = path.join(parent,path.basename(analyzerItem.uri.fsPath));
-			dirfuncs.rename(analyzerItem.uri.fsPath,to);
+			var to = path.join(parent, path.basename(analyzerItem.uri.fsPath));
+			dirfuncs.rename(analyzerItem.uri.fsPath, to);
 			vscode.commands.executeCommand('analyzerView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('Already at the top');
@@ -578,14 +586,14 @@ export class AnalyzerView {
 	}
 
 	explore(analyzerItem: AnalyzerItem) {
-        if (fs.existsSync(analyzerItem.uri.fsPath)) {
+		if (fs.existsSync(analyzerItem.uri.fsPath)) {
 			visualText.openFileManager(analyzerItem.uri.fsPath);
 		}
 	}
 
 	exploreAll() {
 		let dir = visualText.getAnalyzerDir();
-        if (fs.existsSync(dir.fsPath)) {
+		if (fs.existsSync(dir.fsPath)) {
 			visualText.openFileManager(dir.fsPath);
 		}
 	}
@@ -607,11 +615,11 @@ export class AnalyzerView {
 				var toFolder = vscode.Uri.file(selection[0].fsPath);
 				for (let analyzer of analyzers) {
 					var folder = path.basename(analyzer.fsPath);
-					visualText.fileOps.addFileOperation(analyzer,vscode.Uri.file(path.join(toFolder.fsPath,folder)),[fileOpRefresh.UNKNOWN],fileOperation.COPY);
+					visualText.fileOps.addFileOperation(analyzer, vscode.Uri.file(path.join(toFolder.fsPath, folder)), [fileOpRefresh.UNKNOWN], fileOperation.COPY);
 				}
-				visualText.fileOps.startFileOps();	
-			});	
-		}		
+				visualText.fileOps.startFileOps();
+			});
+		}
 	}
 
 	copyAnalyzer(analyzerItem: AnalyzerItem) {
@@ -628,9 +636,9 @@ export class AnalyzerView {
 					return;
 				}
 				var folder = path.basename(analyzerItem.uri.fsPath);
-				visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(selection[0].fsPath,folder)),[fileOpRefresh.UNKNOWN],fileOperation.COPY);
-				visualText.fileOps.startFileOps();	
-			});	
+				visualText.fileOps.addFileOperation(analyzerItem.uri, vscode.Uri.file(path.join(selection[0].fsPath, folder)), [fileOpRefresh.UNKNOWN], fileOperation.COPY);
+				visualText.fileOps.startFileOps();
+			});
 		}
 	}
 
@@ -639,15 +647,15 @@ export class AnalyzerView {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter duplicate analyzer name' }).then(newname => {
 				if (newname) {
 					var folder = path.dirname(analyzerItem.uri.fsPath);
-					visualText.fileOps.addFileOperation(analyzerItem.uri,vscode.Uri.file(path.join(folder,newname)),[fileOpRefresh.ANALYZERS],fileOperation.COPY);
-					visualText.fileOps.startFileOps();	
+					visualText.fileOps.addFileOperation(analyzerItem.uri, vscode.Uri.file(path.join(folder, newname)), [fileOpRefresh.ANALYZERS], fileOperation.COPY);
+					visualText.fileOps.startFileOps();
 					vscode.commands.executeCommand('analyzerView.refreshAll');
-					vscode.commands.executeCommand('sequenceView.refreshAll');	
+					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
 		}
 	}
-	
+
 	private updateTitle(uri: vscode.Uri): void {
 		if (uri.fsPath.length > 0) {
 			this.chosen = uri;
@@ -658,7 +666,7 @@ export class AnalyzerView {
 			this.chosen = undefined;
 			this.analyzerView.title = 'ANALYZERS';
 		}
-		vscode.commands.executeCommand('sequenceView.updateTitle');	
+		vscode.commands.executeCommand('sequenceView.updateTitle');
 	}
 
 	private openAnalyzer(analyzerItem: AnalyzerItem): void {
@@ -675,14 +683,14 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(analyzerItem.uri.fsPath),'\' Analyzer');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete analyzer'});
+			deleteDescr = deleteDescr.concat('Delete \'', path.basename(analyzerItem.uri.fsPath), '\' Analyzer');
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete analyzer' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.TEXT,fileOpRefresh.KB,fileOpRefresh.ANALYZERS,fileOpRefresh.ANALYZER],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(analyzerItem.uri, analyzerItem.uri, [fileOpRefresh.TEXT, fileOpRefresh.KB, fileOpRefresh.ANALYZERS, fileOpRefresh.ANALYZER], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -692,26 +700,26 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete file \'',path.basename(analyzerItem.uri.fsPath));
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete file'});
+			deleteDescr = deleteDescr.concat('Delete file \'', path.basename(analyzerItem.uri.fsPath));
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete file' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(analyzerItem.uri, analyzerItem.uri, [fileOpRefresh.ANALYZERS], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
 	}
-	
+
 	private deleteFolder(analyzerItem: AnalyzerItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			var itemCount = fs.readdirSync(analyzerItem.uri.fsPath).length;
 			var yesDescr = '';
 			var noDescr = '';
 			var placeDescr = 'Choose Yes of No';
-			yesDescr = yesDescr.concat('Delete empty folder \'',path.basename(analyzerItem.uri.fsPath),'\'');
+			yesDescr = yesDescr.concat('Delete empty folder \'', path.basename(analyzerItem.uri.fsPath), '\'');
 			noDescr = 'Do not delete empty folder';
 			if (fs.readdirSync(analyzerItem.uri.fsPath).length != 0) {
 				yesDescr = `FOLDER NOT EMPTY: Delete folder and its ${itemCount} items?`;
@@ -719,22 +727,22 @@ export class AnalyzerView {
 				placeDescr = 'FOLDER NOT EMPTY: choose yes or no';
 			}
 			let items: vscode.QuickPickItem[] = [];
-			items.push({label: 'Yes', description: yesDescr});
-			items.push({label: 'No', description: noDescr});
+			items.push({ label: 'Yes', description: yesDescr });
+			items.push({ label: 'No', description: noDescr });
 
-			vscode.window.showQuickPick(items, {title: 'Delete Folder', canPickMany: false, placeHolder: placeDescr}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete Folder', canPickMany: false, placeHolder: placeDescr }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(analyzerItem.uri,analyzerItem.uri,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(analyzerItem.uri, analyzerItem.uri, [fileOpRefresh.ANALYZERS], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
-			});				
+			});
 		}
 	}
 
 	private loadExampleAnalyzers() {
 		this.openFolder(visualText.getBlockAnalyzersPath());
 	}
-	
+
 	private newAnalyzer(analyzerItem: AnalyzerItem) {
 		let uri: vscode.Uri;
 		if (analyzerItem == undefined) {
@@ -753,10 +761,10 @@ export class AnalyzerView {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Delete log directories for all analyzers?');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete analyzers log files'});
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete analyzers log files' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete ALL Analyzer Logs', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete ALL Analyzer Logs', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				this.deleteAllAnalyzerLogDirs();
@@ -770,11 +778,11 @@ export class AnalyzerView {
 			let items: vscode.QuickPickItem[] = [];
 			var deleteDescr = '';
 			var analyzerName = path.basename(analyzerItem.uri.fsPath);
-			deleteDescr = deleteDescr.concat('Delete log directories for \'',analyzerName,'\'?');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete analyzer log files'});
+			deleteDescr = deleteDescr.concat('Delete log directories for \'', analyzerName, '\'?');
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete analyzer log files' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete Analyzer', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 
@@ -785,16 +793,16 @@ export class AnalyzerView {
 	}
 
 	public deleteLogDirs(dir: vscode.Uri) {
-		let outputDir = vscode.Uri.file(path.join(dir.fsPath,"output"));
+		let outputDir = vscode.Uri.file(path.join(dir.fsPath, "output"));
 		this.deleteDirFiles(outputDir);
-		let logDir = vscode.Uri.file(path.join(dir.fsPath,"logs"));
+		let logDir = vscode.Uri.file(path.join(dir.fsPath, "logs"));
 		this.deleteDirFiles(logDir);
 	}
 
 	public deleteDirFiles(dir: vscode.Uri) {
 		let files = dirfuncs.getFiles(dir);
 		for (let file of files) {
-			visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.ANALYZERS],fileOperation.DELETE);
+			visualText.fileOps.addFileOperation(file, file, [fileOpRefresh.ANALYZERS], fileOperation.DELETE);
 		}
 	}
 

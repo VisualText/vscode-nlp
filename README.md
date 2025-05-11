@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.46.0
+### 2.46.1
 Put add mod back into the sequence view.
 
 ### 2.45.5
