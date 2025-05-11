@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.46.0
+### 2.46.1
 Put add mod back into the sequence view.
 
 ### 2.45.5
