@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.47.0
+Fixing display for light themes. This is not complete. There must be a way to make it automatifc for textmate colorization. See settings-light.json.
+
 ### 2.46.1
 Put add mod back into the sequence view.
 
@@ -163,12 +166,6 @@ Added fast load option for the TextView for large number of files
 
 ### 2.24.6
 Can now display fired rules from dictionaries.
-
-### 2.23.0
-Enhanced search for sequence files.
-
-### 2.22.2
-Can now turn off auto updates.
 
 # Development
 

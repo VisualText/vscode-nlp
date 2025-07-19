@@ -3,6 +3,9 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 2.47.0
+Fixing display for light themes. This is not complete. There must be a way to make it automatifc for textmate colorization. See settings-light.json.
+
 ### 2.46.1
 Put add mod back into the sequence view.
 

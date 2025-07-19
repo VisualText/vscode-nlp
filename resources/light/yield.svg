@@ -1,16 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 27.2.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1"
-	 id="svg192" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:svg="http://www.w3.org/2000/svg" inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
-	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 16 16"
-	 style="enable-background:new 0 0 16 16;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#E8EA81;stroke:#E8EA81;stroke-width:1.7697;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
-</style>
-<polygon class="st0" points="15,12.8 8.1,2.3 1.5,12.8 "/>
-<g>
-	<path d="M8.1,4.7C8.5,4.7,9,4.8,9,5.2c0,0.2,0,0.4-0.1,0.6C8.7,7,8.4,8.8,8.3,9.7H8C7.9,8.8,7.5,6.9,7.3,5.8c0-0.2-0.1-0.4-0.1-0.6
-		C7.2,4.8,7.7,4.7,8.1,4.7z M8.1,12.3c-0.4,0-0.7-0.3-0.7-0.8c0-0.4,0.3-0.8,0.7-0.8c0.4,0,0.7,0.3,0.7,0.8
-		C8.9,12,8.6,12.3,8.1,12.3z"/>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Generator: Adobe Illustrator 29.6.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 9)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #e8ea81;
+        stroke: #000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: .75px;
+      }
+    </style>
+  </defs>
+  <g id="svg192" inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)">
+    <polygon class="st0" points="15 12.8 8.1 2.3 1.5 12.8 15 12.8"/>
+    <path d="M8.1,4.7c.4,0,.9.1.9.5,0,.2,0,.4-.1.6-.2,1.2-.5,3-.6,3.9h-.3c-.1-.9-.5-2.8-.7-3.9,0-.2-.1-.4-.1-.6,0-.4.5-.5.9-.5ZM8.1,12.3c-.4,0-.7-.3-.7-.8,0-.4.3-.8.7-.8s.7.3.7.8c.1.5-.2.8-.7.8Z"/>
+  </g>
 </svg>
