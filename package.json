@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.48.0",
+    "version": "2.48.1",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -535,19 +535,19 @@
                 "command": "helpView.windowCHMHelp",
                 "category": "NLP",
                 "title": "Open Full Windows Help",
-                "description": "Open online function help"
+                "description": "Open Browser function help"
             },
             {
-                "command": "helpView.openOnlineFunctionHelp",
+                "command": "helpView.openBrowserFunctionHelp",
                 "category": "NLP",
-                "title": "Open online function help",
-                "description": "Open online function help"
+                "title": "Open Browser Function Help",
+                "description": "Open browser function help"
             },
             {
-                "command": "helpView.openOnlineVariableHelp",
+                "command": "helpView.openBrowserVariableHelp",
                 "category": "NLP",
-                "title": "Open online variable help",
-                "description": "Open online variable help"
+                "title": "Open Browser Variable Help",
+                "description": "Open browser variable help"
             },
             {
                 "command": "nlp.selectSequence",
@@ -1885,12 +1885,12 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.openOnlineFunctionHelp",
+                    "command": "helpView.openBrowserFunctionHelp",
                     "group": "help"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.openOnlineVariableHelp",
+                    "command": "helpView.openBrowserVariableHelp",
                     "group": "help"
                 },
                 {

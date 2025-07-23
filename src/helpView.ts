@@ -16,8 +16,8 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource));
         vscode.commands.registerCommand('helpView.lookupBrowser', (resource) => this.lookupBrowser(resource));
         vscode.commands.registerCommand('helpView.windowCHMHelp', this.windowCHMHelp);
-        vscode.commands.registerCommand('helpView.openOnlineFunctionHelp', this.openOnlineFunctionHelp);
-        vscode.commands.registerCommand('helpView.openOnlineVariableHelp', this.openOnlineVariableHelp);
+        vscode.commands.registerCommand('helpView.openBrowserFunctionHelp', this.openBrowserFunctionHelp);
+        vscode.commands.registerCommand('helpView.openBrowserVariableHelp', this.openBrowserVariableHelp);
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -97,11 +97,11 @@ export class HelpView {
         }
     }
 
-    openOnlineFunctionHelp() {
+    openBrowserFunctionHelp() {
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Functions.htm'));
     }
 
-    openOnlineVariableHelp() {
+    openBrowserVariableHelp() {
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Variable_types.htm'));
     }
 }
