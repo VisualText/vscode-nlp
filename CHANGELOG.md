@@ -3,7 +3,10 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.47.0
+### 2.48.0
+Opens the local html files in the browser instead of online.
+
+### 2.47.1
 Fixing display for light themes. This is not complete. There must be a way to make it automatifc for textmate colorization. See settings-light.json.
 
 ### 2.46.1

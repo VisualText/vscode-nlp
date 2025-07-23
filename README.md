@@ -101,6 +101,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 2.48.0
+Opens the local html files in the browser instead of online.
+
 ### 2.47.0
 Fixing display for light themes. This is not complete. There must be a way to make it automatifc for textmate colorization. See settings-light.json.
 

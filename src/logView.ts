@@ -38,15 +38,15 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 				title: 'Open File with Error'
 			},
 			iconPath: {
-				light: path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon)
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon)),
+				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon))
 			}
 		};
 	}
 
 	public getChildren(element?: LogItem): LogItem[] {
-        if (visualText.hasWorkspaceFolder()) {
-            return logView.getLogs();
+		if (visualText.hasWorkspaceFolder()) {
+			return logView.getLogs();
 		}
 		return [];
 	}
@@ -67,7 +67,7 @@ export class LogView {
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
 		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
 		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('logView.addMessage', (message,type,uri) => this.addMessage(message,type,uri));
+		vscode.commands.registerCommand('logView.addMessage', (message, type, uri) => this.addMessage(message, type, uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
 		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
 		vscode.commands.registerCommand('logView.makeAna', () => this.makeAna());
@@ -84,32 +84,32 @@ export class LogView {
 
 		this.exists = false;
 		this.ctx = context;
-        this.panel = undefined;
-    }
+		this.panel = undefined;
+	}
 
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!logView) {
-            logView = new LogView(ctx);
-        }
-        return logView;
+	static attach(ctx: vscode.ExtensionContext) {
+		if (!logView) {
+			logView = new LogView(ctx);
+		}
+		return logView;
 	}
 
 	enginePath() {
-		let dir = visualText.engineDirectory();
+		const dir = visualText.engineDirectory();
 		vscode.env.clipboard.writeText(dir.fsPath);
 	}
 
 	updateDebug() {
-		let items: vscode.QuickPickItem[] = [];
-		let arfirm = 'Turn ON update debugging';
-        items.push({label: arfirm, description: 'display extra details of updating for debugging purposes'});
-        items.push({label: 'Turn OFF update debugging', description: 'do not display debugging info for updating'});
-        vscode.window.showQuickPick(items, {title: 'Debugging Output', canPickMany: false, placeHolder: 'Choose ON or Off'}).then(selection => {
-            if (!selection) {
-                return;
-            }
-            visualText.debug = selection.label === arfirm ? true : false;
-        });	
+		const items: vscode.QuickPickItem[] = [];
+		const arfirm = 'Turn ON update debugging';
+		items.push({ label: arfirm, description: 'display extra details of updating for debugging purposes' });
+		items.push({ label: 'Turn OFF update debugging', description: 'do not display debugging info for updating' });
+		vscode.window.showQuickPick(items, { title: 'Debugging Output', canPickMany: false, placeHolder: 'Choose ON or Off' }).then(selection => {
+			if (!selection) {
+				return;
+			}
+			visualText.debug = selection.label === arfirm ? true : false;
+		});
 	}
 
 	stopUpdater() {
@@ -121,76 +121,76 @@ export class LogView {
 	}
 
 	downloadHelp() {
-		visualText.displayHelpFile('Download Help','DOWNLOADHELP.html');
+		visualText.displayHelpFile('Download Help', 'DOWNLOADHELP.html');
 	}
 
 	updaterHelp() {
-		visualText.displayHelpFile('Updater Help','UPDATERHELP.html');
+		visualText.displayHelpFile('Updater Help', 'UPDATERHELP.html');
 	}
 
 	public loadAnalyzerOuts() {
 		this.clearLogs();
-		let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
-		let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
-		let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
+		const outputDir = path.join(visualText.getCurrentAnalyzer().fsPath, "output");
+		const outFile = vscode.Uri.file(path.join(outputDir, 'stdout.log'));
+		const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
 		this.addMessage('STD OUT FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
-		this.addLogFile(outFile, logLineType.ANALYER_OUTPUT,'   ');
+		this.addLogFile(outFile, logLineType.ANALYER_OUTPUT, '   ');
 		this.addMessage('ERROR FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
-		this.addLogFile(errFile, logLineType.ANALYER_OUTPUT,'   ');
+		this.addLogFile(errFile, logLineType.ANALYER_OUTPUT, '   ');
 	}
 
 	private loadTimingLog() {
 		this.clearLogs();
-		var cgFile = visualText.analyzer.getOutputDirectory('dbg.log');
-		this.addLogFile(cgFile,logLineType.LOGFILE);
+		const cgFile = visualText.analyzer.getOutputDirectory('dbg.log');
+		this.addLogFile(cgFile, logLineType.LOGFILE);
 	}
 
 	public loadCGLog() {
 		this.clearLogs();
-		this.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE);
+		this.addLogFile(visualText.analyzer.treeFile('cgerr'), logLineType.LOGFILE);
 	}
 
 	public makeAna(): boolean {
 		this.clearLogs();
-		var errFlag = false
+		let errFlag = false
 		if (logView.syntaxErrorsLog('cgerr'))
-			errFlag = logView.addLogFile(visualText.analyzer.treeFile('cgerr'),logLineType.LOGFILE,'',true);
+			errFlag = logView.addLogFile(visualText.analyzer.treeFile('cgerr'), logLineType.LOGFILE, '', true);
 		return errFlag || this.loadMakeAna();
 	}
-	
+
 	public loadMakeAna(): boolean {
-		var errorLog = visualText.analyzer.getOutputDirectory('err.log');
-		var errFlag = this.addLogFile(errorLog,logLineType.LOGFILE);
-		var makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'),logLineType.LOGFILE,'',true,true);
+		const errorLog = visualText.analyzer.getOutputDirectory('err.log');
+		const errFlag = this.addLogFile(errorLog, logLineType.LOGFILE);
+		const makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'), logLineType.LOGFILE, '', true, true);
 		return errFlag || makeFlag;
 	}
 
 	public syntaxErrorsOutput(filename: string): boolean {
-		var errorLog = visualText.analyzer.getOutputDirectory(filename);
+		const errorLog = visualText.analyzer.getOutputDirectory(filename);
 		return this.syntaxErrors(errorLog);
 	}
 
 	public syntaxErrorsLog(filename: string): boolean {
-		var errorLog = visualText.analyzer.treeFile(filename);
+		const errorLog = visualText.analyzer.treeFile(filename);
 		return this.syntaxErrors(errorLog);
 	}
 
 	public syntaxErrors(filepath: vscode.Uri): boolean {
 		const logFile = new TextFile(filepath.fsPath);
-		for (let line of logFile.getLines()) {
-			let parse = this.parseLogLine(line,logLineType.INFO,undefined);
+		for (const line of logFile.getLines()) {
+			const parse = this.parseLogLine(line, logLineType.INFO, undefined);
 			if (parse.type == logLineType.SYNTAX_ERROR)
 				return true;
 		}
 		return false;
 	}
 
-	public clearLogs(force: boolean=true) {
+	public clearLogs(force: boolean = true) {
 		const config = vscode.workspace.getConfiguration('logs');
 		const clear = config.get<boolean>('clear');
 		if (force || clear) {
 			this.logs = [];
-			vscode.commands.executeCommand('logView.refreshAll');				
+			vscode.commands.executeCommand('logView.refreshAll');
 		}
 	}
 
@@ -198,43 +198,43 @@ export class LogView {
 		this.logs.push(this.parseLogLine(message, type, uri));
 	}
 
-	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string='', onlySyntax: boolean=false, noClear: boolean=false): boolean {
+	public addLogFile(logFileName: vscode.Uri, type: logLineType, spaces: string = '', onlySyntax: boolean = false, noClear: boolean = false): boolean {
 		if (fs.existsSync(logFileName.fsPath)) {
 			if (!noClear)
 				this.clearLogs(false);
 			const logFile = new TextFile(logFileName.fsPath);
 			for (let line of logFile.getLines()) {
-				line = line.substring(0,line.length);
+				line = line.substring(0, line.length);
 				if (line.length) {
-					let logItem = this.parseLogLine(spaces+line,type,undefined);
+					const logItem = this.parseLogLine(spaces + line, type, undefined);
 					if (!onlySyntax || logItem.type == logLineType.SYNTAX_ERROR)
 						this.logs.push(logItem);
 				}
 			}
 			return true;
 		}
-		return false;	
+		return false;
 	}
 
 	public getLogs(): LogItem[] {
 		return this.logs;
 	}
 
-	private parseLogLine(line: string, type: logLineType=logLineType.UNKNOWN, uri: vscode.Uri | undefined): LogItem {
-		var passNum = 0;
-		var lineNum = -1;
-		var icon = this.typeIcon(type);
-		var firstTwoNumbers = false;
+	private parseLogLine(line: string, type: logLineType = logLineType.UNKNOWN, uri: vscode.Uri | undefined): LogItem {
+		let passNum = 0;
+		let lineNum = -1;
+		let icon = this.typeIcon(type);
+		let firstTwoNumbers = false;
 		if (uri && type == logLineType.UNKNOWN)
 			type = logLineType.OPEN_PATH;
 
-		var lineTrimmed = line.trim();
+		const lineTrimmed = line.trim();
 		if (lineTrimmed.startsWith('[') && lineTrimmed.endsWith(']')) {
-			line = line.replace('[','');
-			line = line.replace(']','');
+			line = line.replace('[', '');
+			line = line.replace(']', '');
 		}
 
-		let tokens = lineTrimmed.split(/[\t\s]/,5);  
+		let tokens = lineTrimmed.split(/[\t\s]/, 5);
 		if (tokens.length >= 2) {
 			passNum = +tokens[0];
 			lineNum = +tokens[1];
@@ -246,15 +246,15 @@ export class LogView {
 		if (line.length) {
 			if (firstTwoNumbers) {
 				if (lineTrimmed.endsWith('.dict]')) {
-					tokens = line.split(/[\t\s\]]/);  
-					var filename = tokens[tokens.length - 2];
-					var filePath = path.join(visualText.analyzer.getKBDirectory().fsPath,filename);
+					tokens = line.split(/[\t\s\]]/);
+					const filename = tokens[tokens.length - 2];
+					const filePath = path.join(visualText.analyzer.getKBDirectory().fsPath, filename);
 					uri = vscode.Uri.file(filePath);
 					type = logLineType.SYNTAX_ERROR;
 					icon = this.typeIcon(logLineType.SYNTAX_ERROR);
 				}
 				else if (visualText.analyzer.isLoaded()) {
-					var seqFile = visualText.analyzer.seqFile;
+					const seqFile = visualText.analyzer.seqFile;
 					uri = seqFile.getUriByPassNumber(passNum);
 					if (lineTrimmed.toLocaleLowerCase().indexOf("ignor") >= 0) {
 						type = logLineType.WARNING;
@@ -276,9 +276,9 @@ export class LogView {
 		}
 
 		if (!uri) {
-			let i = line.lastIndexOf(' ');
+			const i = line.lastIndexOf(' ');
 			if (i >= 0) {
-				let pather = line.substring(i+1,line.length);
+				const pather = line.substring(i + 1, line.length);
 				if (fs.existsSync(pather)) {
 					type = logLineType.OPEN_PATH;
 					uri = vscode.Uri.file(pather);
@@ -286,14 +286,14 @@ export class LogView {
 			}
 		}
 		if (line.indexOf("Warning") >= 0 || line.indexOf("Unhandled") >= 0 || type == logLineType.WARNING) {
-			icon = 'yield.svg'; 
+			icon = 'yield.svg';
 		}
-		return ({label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type});
+		return ({ label: line, uri: uri, passNum: passNum, line: lineNum, icon: icon, type: type });
 	}
 
 	// INFO, UPDATER, FILE_OP, ANALYER_OUTPUT, LOGFILE, SEQUENCE, SYNTAX_ERROR, DOWNLOAD_ERROR, OPEN_PATH, UPDATER_TIMEOUT, JSON_ERROR
 	private typeIcon(type: logLineType) {
-		var icon = 'dot.svg';
+		let icon = 'dot.svg';
 		switch (type) {
 			case logLineType.UPDATER:
 				icon = 'update.svg';
@@ -320,20 +320,19 @@ export class LogView {
 	}
 
 	private openFile(logItem: LogItem): void {
-		let line = logItem.label;
+		const line = logItem.label;
 		visualText.colorizeAnalyzer();
 
 		switch (logItem.type) {
-			case logLineType.SYNTAX_ERROR: 
-				var seqFile = visualText.analyzer.seqFile;
+			case logLineType.SYNTAX_ERROR:
+				const seqFile = visualText.analyzer.seqFile;
 				if (logItem.uri) {
-					vscode.window.showTextDocument(logItem.uri).then(editor => 
-						{
-							var pos = new vscode.Position(logItem.line-1,0);
-							editor.selections = [new vscode.Selection(pos,pos)]; 
-							var range = new vscode.Range(pos, pos);
-							editor.revealRange(range);
-						});
+					vscode.window.showTextDocument(logItem.uri).then(editor => {
+						const pos = new vscode.Position(logItem.line - 1, 0);
+						editor.selections = [new vscode.Selection(pos, pos)];
+						const range = new vscode.Range(pos, pos);
+						editor.revealRange(range);
+					});
 				}
 				break;
 
@@ -356,9 +355,9 @@ export class LogView {
 				break;
 
 			case logLineType.JSON_ERROR:
-				let pos = line.indexOf('.json');
-				let filepath = line.substring(18,pos+5);
-				let msg = 'Json error(s) in file: ' + filepath;
+				const pos = line.indexOf('.json');
+				const filepath = line.substring(18, pos + 5);
+				const msg = 'Json error(s) in file: ' + filepath;
 				vscode.window.showErrorMessage(msg, "Click to fix file").then(response => {
 					vscode.window.showTextDocument(vscode.Uri.file(filepath));
 				});
@@ -382,7 +381,7 @@ export class LogView {
 	}
 
 	exploreEngineDir() {
-		let dir = visualText.engineDirectory();
+		const dir = visualText.engineDirectory();
 		visualText.openFileManager(dir.fsPath);
 	}
 }

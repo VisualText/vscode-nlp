@@ -15,7 +15,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 	constructor() { }
 
 	public getTreeItem(findItem: FindItem): vscode.TreeItem {
-		var icon = 'file.svg';
+		let icon = 'file.svg';
 		if (findItem.uri.fsPath.endsWith('.nlp') || findItem.uri.fsPath.endsWith('.pat')) {
 			icon = 'gear.svg';
 		}
@@ -31,8 +31,8 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 			},
 
 			iconPath: {
-				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', icon)),
+				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', icon))
 			},
 		};
 	}
@@ -60,13 +60,13 @@ export class FindView {
 		vscode.commands.registerCommand('findView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('findView.updateTitle', () => this.updateTitle());
 		vscode.commands.registerCommand('findView.clearAll', () => this.clearAll());
-    }
-    
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!findView) {
-            findView = new FindView(ctx);
-        }
-        return findView;
+	}
+
+	static attach(ctx: vscode.ExtensionContext) {
+		if (!findView) {
+			findView = new FindView(ctx);
+		}
+		return findView;
 	}
 
 	public getFinds(): FindItem[] {
@@ -82,8 +82,8 @@ export class FindView {
 
 	private updateTitle(): void {
 		if (this.searchWord) {
-			let word = this.searchWord;
-			this.findView.title = `FIND RESULTS: (${word})`;				
+			const word = this.searchWord;
+			this.findView.title = `FIND RESULTS: (${word})`;
 		}
 		else
 			this.findView.title = 'FIND RESULTS';
@@ -96,7 +96,7 @@ export class FindView {
 	public loadFinds(searchWord: string, findItems: FindItem[]) {
 		this.findItems = findItems;
 		if (findItems.length == 0) {
-			findItems.push({uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: '', lineNum: 0, pos: 0, highlighted: ''});
+			findItems.push({ uri: vscode.Uri.file(''), label: 'NOT FOUND:  ' + searchWord, line: '', lineNum: 0, pos: 0, highlighted: '' });
 		} else if (findItems.length == 1) {
 			this.openFile(findItems[0]);
 		}
@@ -105,13 +105,12 @@ export class FindView {
 
 	public openFile(findItem: FindItem): void {
 		visualText.colorizeAnalyzer();
-		vscode.window.showTextDocument(findItem.uri).then(editor => 
-			{
-				var pos = new vscode.Position(findItem.lineNum,findItem.pos);
-				var posEnd = new vscode.Position(findItem.lineNum,findItem.pos+this.searchWord.length);
-				editor.selections = [new vscode.Selection(pos,posEnd)]; 
-				var range = new vscode.Range(pos, pos);
-				editor.revealRange(range);
-			});
+		vscode.window.showTextDocument(findItem.uri).then(editor => {
+			const pos = new vscode.Position(findItem.lineNum, findItem.pos);
+			const posEnd = new vscode.Position(findItem.lineNum, findItem.pos + this.searchWord.length);
+			editor.selections = [new vscode.Selection(pos, posEnd)];
+			const range = new vscode.Range(pos, pos);
+			editor.revealRange(range);
+		});
 	}
 }

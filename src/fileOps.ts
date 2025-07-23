@@ -62,21 +62,21 @@ export class FileOps {
     }
 
     public addFileOperation(uri1: vscode.Uri, uri2: vscode.Uri, refreshes: fileOpRefresh[], operation: fileOperation, extension1: string='', extension2: string='') : fileOp {
-        var type: fileOpType = fileOpType.UNKNOWN
+        let type: fileOpType = fileOpType.UNKNOWN
         if (dirfuncs.isDir(uri1.fsPath))
             type = fileOpType.DIRECTORY;
         else if (fs.existsSync(uri1.fsPath))
             type = fileOpType.FILE;
 
         if (type == fileOpType.DIRECTORY && (operation == fileOperation.RENAME || operation == fileOperation.BREAK || operation == fileOperation.APPEND)) {
-            let files = dirfuncs.getFiles(uri1);
+            const files = dirfuncs.getFiles(uri1);
             if (operation == fileOperation.RENAME) {
                 if (extension1.length && extension2.length) {
-                    for (let file of files) {
+                    for (const file of files) {
                         if (extension1.length && extension2.length) {
                             if (!file.fsPath.endsWith(extension2) && file.fsPath.endsWith(extension1)) {
-                                let u1 = vscode.Uri.file(path.join(uri1.fsPath,path.basename(file.fsPath)));
-                                let u2 = vscode.Uri.file(path.join(uri2.fsPath,path.parse(file.fsPath).name+'.'+extension2));
+                                const u1 = vscode.Uri.file(path.join(uri1.fsPath,path.basename(file.fsPath)));
+                                const u2 = vscode.Uri.file(path.join(uri2.fsPath,path.parse(file.fsPath).name+'.'+extension2));
                                 this.opsQueue.push({uriFile1: u1, uriFile2: u2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
                             }
                         }
@@ -85,28 +85,28 @@ export class FileOps {
                     this.opsQueue.push({uriFile1: uri1, uriFile2: uri2, operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
                 }
             } else if (operation == fileOperation.BREAK) {
-                let filesPerDir: number = +extension1;
-                let numDirs = Math.ceil(files.length / filesPerDir);
-                let zeroLength: number = numDirs.toString().length;
-                let basename = path.basename(uri1.fsPath);
+                const filesPerDir: number = +extension1;
+                const numDirs = Math.ceil(files.length / filesPerDir);
+                const zeroLength: number = numDirs.toString().length;
+                const basename = path.basename(uri1.fsPath);
                 let fileCount = 0;
 
                 for (let i = 0; i < numDirs; i++) {
-                    let newDir = path.join(uri1.fsPath,basename + "_" + this.zeroStr(i,zeroLength));
+                    const newDir = path.join(uri1.fsPath,basename + "_" + this.zeroStr(i,zeroLength));
                     this.opsQueue.push({uriFile1: vscode.Uri.file(newDir), uriFile2: uri2, operation: fileOperation.MKDIR, status: fileOpStatus.UNKNOWN, type: fileOpType.DIRECTORY, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: true})
 
                     for (let i = 0; i < filesPerDir; i++) {
                         if (fileCount >= files.length)
                             break;
-                        let oldFile = files[fileCount++];
-                        let baseFile = path.basename(oldFile.fsPath);
-                        let newFile = path.join(newDir,baseFile);
+                        const oldFile = files[fileCount++];
+                        const baseFile = path.basename(oldFile.fsPath);
+                        const newFile = path.join(newDir,baseFile);
                         this.opsQueue.push({uriFile1: oldFile, uriFile2: vscode.Uri.file(newFile), operation: fileOperation.RENAME, status: fileOpStatus.UNKNOWN, type: fileOpType.FILE, oneOff: fileOneOff.UNKNOWN, extension1: '', extension2: '', refreshes: refreshes, display: false})
                     }
                 }
             } else if (operation == fileOperation.APPEND) {
-                let files = dirfuncs.getFiles(uri1);
-                for (let file of files) {
+                const files = dirfuncs.getFiles(uri1);
+                for (const file of files) {
                     if (file.fsPath == uri2.fsPath) {
                         dirfuncs.delDir(uri2.fsPath);
                     }
@@ -124,9 +124,9 @@ export class FileOps {
      }
 
     zeroStr(num: number, charCount: number): string {
-        let numStr: string = num.toString();
+        const numStr: string = num.toString();
         let retStr = numStr;
-        let zeros: number = charCount - numStr.length;
+        const zeros: number = charCount - numStr.length;
         if (zeros > 0) {
             for (let i = 0; i < zeros; i++) {
                 retStr = "0" + retStr;
@@ -141,10 +141,10 @@ export class FileOps {
             visualText.fileOps.timerStatus = fileQueueStatus.DONE;
         }
         let op = visualText.fileOps.opsQueue[0];
-        let len = visualText.fileOps.opsQueue.length;
+        const len = visualText.fileOps.opsQueue.length;
         let alldone = true;
         let opNum = 0;
-        for (let o of visualText.fileOps.opsQueue) {
+        for (const o of visualText.fileOps.opsQueue) {
             opNum++;
             // visualText.debugMessage("   " + visualText.fileOps.queueStrs[visualText.fileOps.timerStatus] + ' ' + visualText.fileOps.opStrs[o.operation] + ' ' + visualText.fileOps.opStatusStrs[o.status],logLineType.FILE_OP);
             if (o.status == fileOpStatus.UNKNOWN || o.status == fileOpStatus.RUNNING) {
@@ -184,7 +184,7 @@ export class FileOps {
                             }
                             if (op.type == fileOpType.DIRECTORY) {
                                 visualText.debugMessage('Copying directory: ' + op.uriFile1.fsPath,logLineType.FILE_OP);
-                                var copydir = require('copy-dir');
+                                const copydir = require('copy-dir');
                                 copydir(op.uriFile1.fsPath,op.uriFile2.fsPath, (err) => {
                                     if (err) {
                                         op.status = fileOpStatus.FAILED;
@@ -251,7 +251,7 @@ export class FileOps {
                         break;
                     }
                     case fileOperation.APPEND: {
-                        let content = fs.readFileSync(op.uriFile1.fsPath,'utf8');
+                        const content = fs.readFileSync(op.uriFile1.fsPath,'utf8');
                         fs.appendFileSync(op.uriFile2.fsPath,content);
                         visualText.fileOps.doneRefresh(op);
                         if (op.display) visualText.debugMessage('APPEND: ' + op.uriFile1.fsPath + ' => ' + op.uriFile2.fsPath,logLineType.FILE_OP);
@@ -280,7 +280,7 @@ export class FileOps {
                             visualText.analyzer.seqFile.getPassFiles(op.uriFile2.fsPath,true);
                         else
                             visualText.analyzer.seqFile.renumberPasses();
-                        let r = visualText.fileOps.seqRow;
+                        const r = visualText.fileOps.seqRow;
                         visualText.fileOps.seqRow = visualText.analyzer.seqFile.insertNewFolderPass(visualText.fileOps.seqRow,op.extension1,op.extension2);
                         visualText.fileOps.doneRefresh(op);
                     }
@@ -297,7 +297,7 @@ export class FileOps {
                 else
                     visualText.debugMessage('FILE PROCESSING COMPLETE',logLineType.FILE_OP);
 
-                for(let refresh of visualText.fileOps.refreshQueue) {
+                for(const refresh of visualText.fileOps.refreshQueue) {
                     if (refresh == fileOpRefresh.TEXT)
                         vscode.commands.executeCommand('textView.refreshAll');
                     if (refresh == fileOpRefresh.ANALYZERS)
@@ -322,7 +322,7 @@ export class FileOps {
 
     doneRefresh(op: fileOp) {
         op.status = fileOpStatus.DONE;
-        for (let refresh of op.refreshes) {
+        for (const refresh of op.refreshes) {
             if (!this.refreshQueue.includes(refresh))
                 this.refreshQueue.push(refresh);
         }

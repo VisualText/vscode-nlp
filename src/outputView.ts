@@ -25,11 +25,11 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	constructor() { }
 
 	public getTreeItem(outputItem: OutputItem): vscode.TreeItem {
-		var icon = visualText.fileIconFromExt(outputItem.uri.fsPath);
+		const icon = visualText.fileIconFromExt(outputItem.uri.fsPath);
 
-		var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
-		var testFile = path.join(testFolder.fsPath,path.basename(outputItem.uri.fsPath));
-		var value = fs.existsSync(testFile) ? 'test' : '';
+		const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
+		const testFile = path.join(testFolder.fsPath, path.basename(outputItem.uri.fsPath));
+		const value = fs.existsSync(testFile) ? 'test' : '';
 
 		return {
 			resourceUri: outputItem.uri,
@@ -40,22 +40,22 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 				arguments: [outputItem.uri],
 				title: 'Open Output File'
 			},
-			
+
 			iconPath: {
-				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', icon)),
+				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', icon))
 			},
 		};
 	}
 
 	public getChildren(outputItem?: OutputItem): OutputItem[] {
-        if (visualText.hasWorkspaceFolder()) {
+		if (visualText.hasWorkspaceFolder()) {
 			const children: OutputItem[] = new Array();
-            for (let folder of outputView.getOutputFiles()) {
-				children.push({uri: folder});
-            }
-            return children;
-        }
+			for (const folder of outputView.getOutputFiles()) {
+				children.push({ uri: folder });
+			}
+			return children;
+		}
 
 		return [];
 	}
@@ -97,62 +97,62 @@ export class OutputView {
 		this.logDirectory = vscode.Uri.file('');
 		this.testDirectory = vscode.Uri.file('');
 		this.type = outputFileType.ALL;
-    }
-    
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!outputView) {
-            outputView = new OutputView(ctx);
-        }
-        return outputView;
+	}
+
+	static attach(ctx: vscode.ExtensionContext) {
+		if (!outputView) {
+			outputView = new OutputView(ctx);
+		}
+		return outputView;
 	}
 
 	rename(outputItem: OutputItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(outputItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
 				if (newname) {
-					var original = outputItem.uri;
+					const original = outputItem.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(outputItem.uri.fsPath);
-					var newfile = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath),newname));
-					dirfuncs.rename(original.fsPath,newfile.fsPath);
+						newname = newname + path.extname(outputItem.uri.fsPath);
+					const newfile = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath), newname));
+					dirfuncs.rename(original.fsPath, newfile.fsPath);
 					vscode.window.showTextDocument(newfile);
 
-					var logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
+					const logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
 					if (dirfuncs.isDir(logFolderOrig.fsPath)) {
-						var logFolderNew = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath),newname + visualText.LOG_SUFFIX));
-						dirfuncs.rename(logFolderOrig.fsPath,logFolderNew.fsPath);
+						const logFolderNew = vscode.Uri.file(path.join(path.dirname(outputItem.uri.fsPath), newname + visualText.LOG_SUFFIX));
+						dirfuncs.rename(logFolderOrig.fsPath, logFolderNew.fsPath);
 					}
-					vscode.commands.executeCommand('outputView.refreshAll');	
+					vscode.commands.executeCommand('outputView.refreshAll');
 				}
 			});
 		}
 	}
-	
+
 	editTest(outputItem: OutputItem) {
 		if (visualText.getWorkspaceFolder()) {
-			visualText.editTestFiles(outputItem.uri,true);
+			visualText.editTestFiles(outputItem.uri, true);
 		}
 	}
 
 	deleteTest(outputItem: OutputItem) {
-		let items: vscode.QuickPickItem[] = [];
-		items.push({label: 'Yes', description: 'Delete all the test files associated with this test'});
-		items.push({label: 'No', description: 'Do not delete the test files'});
+		const items: vscode.QuickPickItem[] = [];
+		items.push({ label: 'Yes', description: 'Delete all the test files associated with this test' });
+		items.push({ label: 'No', description: 'Do not delete the test files' });
 
-		vscode.window.showQuickPick(items, {title: 'Delete Test Files', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+		vscode.window.showQuickPick(items, { title: 'Delete Test Files', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 			if (!selection || selection.label == 'No')
 				return;
-			var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
-			visualText.fileOps.addFileOperation(testFolder,testFolder,[fileOpRefresh.TEXT,fileOpRefresh.OUTPUT],fileOperation.DELETE);
+			const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
+			visualText.fileOps.addFileOperation(testFolder, testFolder, [fileOpRefresh.TEXT, fileOpRefresh.OUTPUT], fileOperation.DELETE);
 			visualText.fileOps.startFileOps();
 		});
 	}
 
 	runTest(outputItem: OutputItem) {
-		var logDir = path.dirname(outputItem.uri.fsPath);
-		var textFile = path.basename(logDir);
-		textFile = textFile.substring(0,textFile.length-visualText.LOG_SUFFIX.length);
-		var textFilePath = path.join(path.dirname(logDir),textFile);
+		const logDir = path.dirname(outputItem.uri.fsPath);
+		let textFile = path.basename(logDir);
+		textFile = textFile.substring(0, textFile.length - visualText.LOG_SUFFIX.length);
+		const textFilePath = path.join(path.dirname(logDir), textFile);
 		if (fs.existsSync(textFilePath)) {
 			visualText.testInit();
 			dirfuncs.delFile(visualText.regressionTestFile());
@@ -164,10 +164,10 @@ export class OutputView {
 	}
 
 	addTest(outputItem: OutputItem) {
-		var hasTestFile = true;
-		var parent = path.basename(path.dirname(outputItem.uri.fsPath));
-		var textName = parent.substring(0,parent.length-4);
-		var testFolder = visualText.analyzer.testFolder(outputItem.uri,true);
+		let hasTestFile = true;
+		const parent = path.basename(path.dirname(outputItem.uri.fsPath));
+		const textName = parent.substring(0, parent.length - 4);
+		const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
 
 		if (!fs.existsSync(testFolder.fsPath)) {
 			this.testDirectory = testFolder;
@@ -175,57 +175,57 @@ export class OutputView {
 			hasTestFile = false;
 		}
 
-		var testFilePath = vscode.Uri.file(path.join(testFolder.fsPath,path.basename(outputItem.uri.fsPath)));
+		const testFilePath = vscode.Uri.file(path.join(testFolder.fsPath, path.basename(outputItem.uri.fsPath)));
 
 		if (!hasTestFile || !fs.existsSync(outputItem.uri.fsPath)) {
-			visualText.fileOps.addFileOperation(outputItem.uri,testFilePath,[fileOpRefresh.OUTPUT,fileOpRefresh.TEXT],fileOperation.COPY);
+			visualText.fileOps.addFileOperation(outputItem.uri, testFilePath, [fileOpRefresh.OUTPUT, fileOpRefresh.TEXT], fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		} else {
-			let items: vscode.QuickPickItem[] = [];
-			items.push({label: 'Yes', description: 'Overwrite the current test file?'});
-			items.push({label: 'No', description: 'Do not overwrite'});
-	
-			vscode.window.showQuickPick(items, {title: 'Add Test File', placeHolder: 'Choose response'}).then(selection => {
+			const items: vscode.QuickPickItem[] = [];
+			items.push({ label: 'Yes', description: 'Overwrite the current test file?' });
+			items.push({ label: 'No', description: 'Do not overwrite' });
+
+			vscode.window.showQuickPick(items, { title: 'Add Test File', placeHolder: 'Choose response' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-					visualText.fileOps.addFileOperation(outputItem.uri,testFilePath,[fileOpRefresh.OUTPUT,fileOpRefresh.TEXT],fileOperation.COPY);
-					visualText.fileOps.startFileOps();
+				visualText.fileOps.addFileOperation(outputItem.uri, testFilePath, [fileOpRefresh.OUTPUT, fileOpRefresh.TEXT], fileOperation.COPY);
+				visualText.fileOps.startFileOps();
 			});
 		}
 	}
 
 	video() {
-		var url = 'http://vscodeoutviewer.visualtext.org';
+		const url = 'http://vscodeoutviewer.visualtext.org';
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	explore() {
-		let dir = visualText.analyzer.getOutputDirectory();
+		const dir = visualText.analyzer.getOutputDirectory();
 		visualText.openFileManager(dir.fsPath);
 	}
 
 	deleteOrphans(): void {
 		if (visualText.hasWorkspaceFolder()) {
-			let files: vscode.Uri[] = [];
-			var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp']);
-			for (let nlpFile of nlpFiles) {
-				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
-					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
+			const files: vscode.Uri[] = [];
+			const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp']);
+			for (const nlpFile of nlpFiles) {
+				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.nlp')) == true &&
+					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.pat')) == true) {
 					files.push(nlpFile);
 				}
 			}
 
-			let count = files.length;
+			const count = files.length;
 
-			let items: vscode.QuickPickItem[] = [];
-			items.push({label: 'Yes', description: 'Delete all orphan passes'});
-			items.push({label: 'No', description: 'Do not delete file'});
+			const items: vscode.QuickPickItem[] = [];
+			items.push({ label: 'Yes', description: 'Delete all orphan passes' });
+			items.push({ label: 'No', description: 'Do not delete file' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete Orphan Files', placeHolder: 'Delete all '+count.toString()+' file(s)'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete Orphan Files', placeHolder: 'Delete all ' + count.toString() + ' file(s)' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				for (let file of files) {
-					visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				for (const file of files) {
+					visualText.fileOps.addFileOperation(file, file, [fileOpRefresh.OUTPUT], fileOperation.DELETE);
 				}
 				visualText.fileOps.startFileOps();
 			});
@@ -247,7 +247,7 @@ export class OutputView {
 	private loadTxxt() {
 		this.clearOutput(outputFileType.TXXT);
 	}
-	
+
 	private loadTrees() {
 		this.clearOutput(outputFileType.TREE);
 	}
@@ -255,7 +255,7 @@ export class OutputView {
 	private loadKB() {
 		this.clearOutput(outputFileType.KB);
 	}
-	
+
 	private loadOrphans() {
 		this.clearOutput(outputFileType.NLP);
 	}
@@ -273,7 +273,7 @@ export class OutputView {
 		this.logDirectory = vscode.Uri.file(filepath + visualText.LOG_SUFFIX);
 		if (!fs.existsSync(this.logDirectory.fsPath))
 			return false;
-		var stats = fs.lstatSync(this.logDirectory.fsPath);
+		const stats = fs.lstatSync(this.logDirectory.fsPath);
 		if (!stats)
 			return false;
 		return stats.isDirectory();
@@ -286,7 +286,7 @@ export class OutputView {
 		this.logDirectory = vscode.Uri.file(filepath + visualText.TEST_SUFFIX);
 		if (!fs.existsSync(this.testDirectory.fsPath))
 			return false;
-		var stats = fs.lstatSync(this.testDirectory.fsPath);
+		const stats = fs.lstatSync(this.testDirectory.fsPath);
 		if (!stats)
 			return false;
 		return stats.isDirectory();
@@ -296,70 +296,70 @@ export class OutputView {
 		this.outputFiles = [];
 		if (visualText.analyzer.hasText()) {
 			if (this.type == outputFileType.KB) {
-				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'),['.kb']);
-				var kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),['.kbb']);
+				this.outputFiles = dirfuncs.getFiles(visualText.analyzer.getAnalyzerDirectory('kb'), ['.kb']);
+				const kbFiles = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(), ['.kbb']);
 				this.outputFiles = this.outputFiles.concat(kbFiles);
 			}
 			else if (this.type == outputFileType.NLP) {
-				var nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(),['.pat','.nlp']);
-				for (let nlpFile of nlpFiles) {
-					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.nlp')) == true &&
-						visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath,'.pat')) == true) {
+				const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp']);
+				for (const nlpFile of nlpFiles) {
+					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.nlp')) == true &&
+						visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.pat')) == true) {
 						this.outputFiles.push(nlpFile);
 					}
 				}
 			}
 			else if (this.type == outputFileType.TXXT) {
-				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.txxt']);
+				const matchFiles = dirfuncs.getFiles(this.logDirectory, ['.txxt']);
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
 			else if (this.type == outputFileType.TREE) {
-				var finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath,'final.tree'));
+				const finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath, 'final.tree'));
 				if (fs.existsSync(finalTree.fsPath)) {
 					this.outputFiles.push(finalTree);
 				}
-				var matchFiles = dirfuncs.getFiles(this.logDirectory,['.tree']);
+				const matchFiles = dirfuncs.getFiles(this.logDirectory, ['.tree']);
 				this.outputFiles = this.outputFiles.concat(matchFiles);
 			}
 			else {
-				var textPath = visualText.analyzer.getTextPath().fsPath;
+				const textPath = visualText.analyzer.getTextPath().fsPath;
 				this.outputFiles = [];
 				if (textPath.length && this.fileHasLog(textPath)) {
-					var finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath,'final.tree'));
+					const finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath, 'final.tree'));
 					if (fs.existsSync(finalTree.fsPath)) {
 						this.outputFiles.push(finalTree);
 					}
-					var candidates = dirfuncs.getFiles(this.logDirectory);
-					for (let cand of candidates) {
-						let ext = path.parse(cand.fsPath).ext;
+					const candidates = dirfuncs.getFiles(this.logDirectory);
+					for (const cand of candidates) {
+						const ext = path.parse(cand.fsPath).ext;
 						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.txxt') != 0)
 							this.outputFiles.push(cand);
 					}
-				}					
+				}
 			}
 		}
-        return this.outputFiles;
+		return this.outputFiles;
 	}
-	
+
 	private openFile(resource: vscode.Uri): void {
-		var textFile = new TextFile(resource.fsPath);
+		const textFile = new TextFile(resource.fsPath);
 		textFile.cleanZeroZero();
 		visualText.colorizeAnalyzer();
-        vscode.window.showTextDocument(resource);
+		vscode.window.showTextDocument(resource);
 	}
 
 	private deleteOutput(resource: OutputItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
-			deleteDescr = deleteDescr.concat('Delete \'',path.basename(resource.uri.fsPath),'\'');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete file'});
+			const items: vscode.QuickPickItem[] = [];
+			let deleteDescr = '';
+			deleteDescr = deleteDescr.concat('Delete \'', path.basename(resource.uri.fsPath), '\'');
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete file' });
 
-			vscode.window.showQuickPick(items, {title: 'Delete File', placeHolder: 'Select Yes or No?'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete File', placeHolder: 'Select Yes or No?' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(resource.uri,resource.uri,[fileOpRefresh.OUTPUT],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(resource.uri, resource.uri, [fileOpRefresh.OUTPUT], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -367,27 +367,27 @@ export class OutputView {
 
 	copytoKB(outputItem: OutputItem) {
 		const kbDir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
-		this.copyFileToAnalyzer(outputItem.uri,kbDir,'Copy file to another analyzer','Copy file to the KB directory of:');
+		this.copyFileToAnalyzer(outputItem.uri, kbDir, 'Copy file to another analyzer', 'Copy file to the KB directory of:');
 	}
 
 	copytoText(outputItem: OutputItem) {
 		const out = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
-		this.copyFileToAnalyzer(outputItem.uri,out,'Copy file to another analyzer','Copy file to input directory of:');
+		this.copyFileToAnalyzer(outputItem.uri, out, 'Copy file to another analyzer', 'Copy file to input directory of:');
 	}
 
 	copyFileToAnalyzer(uri: vscode.Uri, subdir: string, title: string, placeHolder: string) {
 		if (visualText.getWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = visualText.analyzerFolderList();
+			const items: vscode.QuickPickItem[] = visualText.analyzerFolderList();
 
-			vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
+			vscode.window.showQuickPick(items, { title, canPickMany: false, placeHolder: placeHolder }).then(selection => {
 				if (!selection || !selection.description)
 					return;
 				if (selection.description.startsWith('(FOLDER')) {
 					vscode.window.showWarningMessage('You must select an analyzer directory not a folder');
 					return;
 				}
-				let newFile = vscode.Uri.file(path.join(selection.description,subdir,path.basename(uri.fsPath)));
-				visualText.fileOps.addFileOperation(uri,newFile,[fileOpRefresh.KB,fileOpRefresh.TEXT],fileOperation.COPY);
+				const newFile = vscode.Uri.file(path.join(selection.description, subdir, path.basename(uri.fsPath)));
+				visualText.fileOps.addFileOperation(uri, newFile, [fileOpRefresh.KB, fileOpRefresh.TEXT], fileOperation.COPY);
 				visualText.fileOps.startFileOps();
 			});
 		}
