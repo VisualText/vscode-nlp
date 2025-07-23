@@ -35,7 +35,7 @@ export class TextFile {
 
     runPython(editor: vscode.TextEditor) {
         if (vscode.window.activeTextEditor) {
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 this.choosePythonScript(editor);
             }
@@ -43,26 +43,26 @@ export class TextFile {
     }
 
     choosePythonScript(editor: vscode.TextEditor) {
-		var fileDir = visualText.getVisualTextDirectory("python");
+		const fileDir = visualText.getVisualTextDirectory("python");
         if (!fs.existsSync(fileDir)) {
             vscode.window.showWarningMessage("No library Python scripts available");
 			return;
         }
-		let items: vscode.QuickPickItem[] = [];
+		const items: vscode.QuickPickItem[] = [];
         const exts = [".py"];
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
-		for (let dictFile of dictFiles) {
+		const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
+		for (const dictFile of dictFiles) {
 			let descr = "";
 
-			let firstLine = this.readFirstLine(dictFile.fsPath);
+			const firstLine = this.readFirstLine(dictFile.fsPath);
 			if (firstLine[0] == '#') {
 				descr = firstLine.substring(1);
 			}
-			let icon = visualText.fileIconFromExt(dictFile.fsPath);
-			let label = path.basename(dictFile.fsPath);
-			let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
-			let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
+			const icon = visualText.fileIconFromExt(dictFile.fsPath);
+			const label = path.basename(dictFile.fsPath);
+			const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
+			const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
 			items.push({label: label, description: descr, detail: dictFile.fsPath});
 		}
 
@@ -99,7 +99,7 @@ export class TextFile {
             }
 
             const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
-            var snippet = new vscode.SnippetString(stdout);
+            const snippet = new vscode.SnippetString(stdout);
             editor.insertSnippet(snippet,range);
         });
     }
@@ -114,7 +114,7 @@ export class TextFile {
 
     saveFileLines() {
         let text = '';
-        for (let line of this.lines) {
+        for (const line of this.lines) {
             if (text.length)
                 text += this.sep;
             text += line;
@@ -126,27 +126,27 @@ export class TextFile {
         if (selFlag) {
             if (this.selLines.length) {
                 let text = '';
-                for (let line of this.selLines) {
+                for (const line of this.selLines) {
                     if (text.length)
                         text += this.sep;
                     text += line;
                 }
-                var posStart = editor.selection.active;
-                var posEnd = editor.selection.end;
-                var rang = new vscode.Selection(posStart,posEnd);
-                var snippet = new vscode.SnippetString(text);
+                const posStart = editor.selection.active;
+                const posEnd = editor.selection.end;
+                const rang = new vscode.Selection(posStart,posEnd);
+                const snippet = new vscode.SnippetString(text);
                 editor.insertSnippet(snippet,rang);
 
                 // select new lines
-                var endLine = new vscode.Position(this.selStartLine + this.selLines.length-1,this.selLines[this.selLines.length-1].length);
-                var newRang = new vscode.Selection(posStart,endLine);
+                const endLine = new vscode.Position(this.selStartLine + this.selLines.length-1,this.selLines[this.selLines.length-1].length);
+                const newRang = new vscode.Selection(posStart,endLine);
                 editor.selection = newRang;
             }
         }
         else {
             if (this.lines.length) {
                 this.text = '';
-                for (let line of this.lines) {
+                for (const line of this.lines) {
                     this.text += line + this.sep;
                 }
             }
@@ -166,30 +166,30 @@ export class TextFile {
 
     rollupLines(selFlag: boolean=false) {
         let lastLine = '';
-        let deletes: number[] = new Array();
+        const deletes: number[] = new Array();
         let index: number = 0;
 
         if (selFlag) {
-            for (let line of this.selLines) {
+            for (const line of this.selLines) {
                 if (line == lastLine || line.length == 0)
                     deletes.push(index);
                 lastLine = line;
                 index++;
             }
     
-            for (let del of deletes.reverse()) {
+            for (const del of deletes.reverse()) {
                 this.selLines.splice(del,1);
             }
         }
         else {
-            for (let line of this.lines) {
+            for (const line of this.lines) {
                 if (line == lastLine || line.length == 0)
                     deletes.push(index);
                 lastLine = line;
                 index++;
             }
     
-            for (let del of deletes.reverse()) {
+            for (const del of deletes.reverse()) {
                 this.lines.splice(del,1);
             }
         }
@@ -199,7 +199,7 @@ export class TextFile {
         let lineNum = 0;
         let character = 0;
         let len = 0;
-        for (let line of this.lines) {
+        for (const line of this.lines) {
             if (len + line.length >= offset) {
                 character = offset - len + 1;
                 break;
@@ -212,11 +212,11 @@ export class TextFile {
 
     getSelectedLines(editor: vscode.TextEditor): string[] {
         this.selLines = [];
-        let start = editor.selection.start;
+        const start = editor.selection.start;
         this.selStartLine = start.line;
-        let end = editor.selection.end;
+        const end = editor.selection.end;
         this.selEndLine = end.line;
-        var i = 0;
+        let i = 0;
         for (i=start.line; i<=end.line; i++) {
             this.selLines.push(this.lines[i]);
         }
@@ -280,9 +280,9 @@ export class TextFile {
         this.clear();
         this.uri = editor.document.uri;
         this.filepath = editor.document.uri.fsPath;
-        var firstLine = editor.document.lineAt(0);
-        var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-        var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+        const firstLine = editor.document.lineAt(0);
+        const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+        const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
         this.text = editor.document.getText(textRange);
         this.setFileType(this.filepath);
         this.separation(separateLines);
@@ -346,9 +346,9 @@ export class TextFile {
             this.setFile(this.uri,separateLines);
 
         if (this.text.length) {
-            var counts_rn = this.text.split('\r\n');
-            var counts_r = this.text.split('\r');
-            var counts_n = this.text.split('\n');
+            const counts_rn = this.text.split('\r\n');
+            const counts_r = this.text.split('\r');
+            const counts_n = this.text.split('\n');
 
             this.sepType = separatorType.SEP_UNKNOWN;
             this.sep = '';
@@ -414,7 +414,7 @@ export class TextFile {
     getLines(normalized: boolean = false) {
         if (normalized) {
             if (this.linesNormalized.length == 0) {
-                for (let line of this.lines) {
+                for (const line of this.lines) {
                     this.linesNormalized.push(line.concat(this.sepNormalized));
                 }
             }
@@ -428,18 +428,18 @@ export class TextFile {
     }
 
     findLineStartsWith(startsWithStr: string): vscode.Selection {
-        let lines = this.getLines();
+        const lines = this.getLines();
         let lineCount = 0;
-        for (let line of lines) {
+        for (const line of lines) {
             if (line.startsWith(startsWithStr)) {
-                var posStart = new vscode.Position(lineCount,0);
-                var posEnd = new vscode.Position(lineCount,line.length);
-                var rang = new vscode.Selection(posStart,posEnd);
+                const posStart = new vscode.Position(lineCount,0);
+                const posEnd = new vscode.Position(lineCount,line.length);
+                const rang = new vscode.Selection(posStart,posEnd);
                 return rang;
             }
             lineCount++;
         }
-        var pos = new vscode.Position(0,0);
+        const pos = new vscode.Position(0,0);
         return new vscode.Selection(pos,pos);
     }
 
@@ -460,7 +460,7 @@ export class TextFile {
     }
 
 	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
-		var filename: string = 'ana';
+		let filename: string = 'ana';
 		if (pass > 0) {
 			if (pass < 10)
 				filename = filename + '00';
@@ -476,7 +476,7 @@ export class TextFile {
 	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
         if (!fs.existsSync(uri.fsPath))
             return false;
-		var anaFile = this.anaFile(pass,type);
+		const anaFile = this.anaFile(pass,type);
 		if (type == nlpFileType.TREE) {
 			if (this.fileHasNLines(anaFile.fsPath,6))
 				return true;

@@ -17,36 +17,36 @@ export enum analyzerType { UNKNOWN, FILE, DIRECTORY }
 export enum reformatType { NORMAL, ONELINE, PARENS }
 
 interface analyzerRun {
-    uri: vscode.Uri;
-    operation: analyzerOperation;
-    status: analyzerStatus;
-    type: analyzerType;
+	uri: vscode.Uri;
+	operation: analyzerOperation;
+	status: analyzerStatus;
+	type: analyzerType;
 }
 
 interface ruleParse {
 	suggested: string,
-    rule: string,
-    comment: string
+	rule: string,
+	comment: string
 }
 
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
 
 	public anaQueue: analyzerRun[] = new Array();
-    public timerStatus: anaQueueStatus = anaQueueStatus.UNKNOWN;
+	public timerStatus: anaQueueStatus = anaQueueStatus.UNKNOWN;
 	private timerID = 0;
 	private stopAllFlag: boolean = false;
 
 	constructor(filepath: string = '', separateLines: boolean = true, text: string = '') {
 		super();
-        if (text.length)
-            this.setText(text, separateLines);
-        else if (filepath.length)
-            this.setFile(vscode.Uri.file(filepath),separateLines);
-    }
+		if (text.length)
+			this.setText(text, separateLines);
+		else if (filepath.length)
+			this.setFile(vscode.Uri.file(filepath), separateLines);
+	}
 
 	analyze(filepath: vscode.Uri) {
-		
+
 		if (visualText.processID) {
 			vscode.window.showWarningMessage("Analyzer already running");
 			return;
@@ -57,22 +57,22 @@ export class NLPFile extends TextFile {
 			title: "Analyzer",
 			cancellable: true
 		}, async (progress, token) => {
-            token.onCancellationRequested(() => {
+			token.onCancellationRequested(() => {
 				nlpStatusBar.analyzerButton();
 				visualText.nlp.stopAll();
-                console.log("User canceled analyzer");
+				console.log("User canceled analyzer");
 				return;
-            });
+			});
 
 			// Check to see if the engine executable is there
-			var exe = visualText.exePath().fsPath;
+			const exe = visualText.exePath().fsPath;
 			if (!exe.length || !fs.existsSync(exe)) {
 				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(response => {
 					visualText.startUpdater();
 				});
 			}
 
-			var engineDir = path.dirname(exe);
+			const engineDir = path.dirname(exe);
 			visualText.readState();
 			vscode.commands.executeCommand('workbench.action.files.saveAll');
 
@@ -87,39 +87,39 @@ export class NLPFile extends TextFile {
 			visualText.analyzer.setCurrentTextFile(filepath);
 			visualText.analyzer.saveAnalyzerState();
 
-			var filename = path.basename(filepath.fsPath);
-			var typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
-			logView.addMessage('Analyzing '+typeStr+': '+filename, logLineType.ANALYER_OUTPUT, filepath);
+			const filename = path.basename(filepath.fsPath);
+			const typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
+			logView.addMessage('Analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
 			outputView.setType(outputFileType.ALL);
-	
-			var pos = filestr.search('input');
-			var anapath = filestr.substring(0,pos);
-	
-			var mode = nlpStatusBar.getDevMode();
-			var devFlagStr = mode == DevMode.DEV ? '-DEV' : mode == DevMode.SILENT ? '-SILENT' : '';
-			var args: string[] = ['-ANA','"'+anapath+'"','-WORK','"'+engineDir+'"','"'+filestr+'"',devFlagStr];
 
-			visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.ANALYZING);
+			const pos = filestr.search('input');
+			const anapath = filestr.substring(0, pos);
+
+			const mode = nlpStatusBar.getDevMode();
+			const devFlagStr = mode == DevMode.DEV ? '-DEV' : mode == DevMode.SILENT ? '-SILENT' : '';
+			const args: string[] = ['-ANA', '"' + anapath + '"', '-WORK', '"' + engineDir + '"', '"' + filestr + '"', devFlagStr];
+
+			visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.ANALYZING);
 
 			const cp = require('child_process');
 
 			return new Promise(resolve => {
 				nlpStatusBar.analyzerButton(false);
 				visualText.processID = cp.execFile(exe, args, (err, stdout, stderr) => {
-					let outputDir = path.join(visualText.getCurrentAnalyzer().fsPath,"output");
-					let outFile = vscode.Uri.file(path.join(outputDir,'stdout.log'));
-					let errFile = vscode.Uri.file(path.join(outputDir,'stderr.log'));
-					dirfuncs.writeFile(outFile.fsPath,stdout);
-					dirfuncs.writeFile(errFile.fsPath,stderr);
+					const outputDir = path.join(visualText.getCurrentAnalyzer().fsPath, "output");
+					const outFile = vscode.Uri.file(path.join(outputDir, 'stdout.log'));
+					const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
+					dirfuncs.writeFile(outFile.fsPath, stdout);
+					dirfuncs.writeFile(errFile.fsPath, stderr);
 					logView.loadAnalyzerOuts();
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
-					var syntaxError = logView.syntaxErrorsOutput('err.log');
+					const syntaxError = logView.syntaxErrorsOutput('err.log');
 					if (err || syntaxError) {
 						if (err)
-							logView.addMessage(err.message,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
-						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.FAILED);
+							logView.addMessage(err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						if (syntaxError)
 							logView.loadMakeAna();
@@ -130,15 +130,15 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
 					} else {
-						var typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
-						logView.addMessage('Done analyzing '+typeStr+': '+filename,logLineType.ANALYER_OUTPUT,vscode.Uri.file(filestr));
+						const typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
+						logView.addMessage('Done analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
 						visualText.analyzer.saveCurrentFile(filepath);
 						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('sequenceView.refreshAll');
 						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('kbView.refreshAll');
-						visualText.nlp.setAnalyzerStatus(filepath,analyzerStatus.DONE);
+						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.DONE);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Processed');
 					}
@@ -147,77 +147,77 @@ export class NLPFile extends TextFile {
 		});
 	}
 
-    public stopAll() {
-        visualText.nlp.stopAllFlag = true;
-    }
+	public stopAll() {
+		visualText.nlp.stopAllFlag = true;
+	}
 
 	public setAnalyzerStatus(uri: vscode.Uri, status: analyzerStatus) {
-        for (let o of visualText.nlp.anaQueue) {
-            if (o.uri.fsPath == uri.fsPath) {
-                o.status = status;
+		for (const o of visualText.nlp.anaQueue) {
+			if (o.uri.fsPath == uri.fsPath) {
+				o.status = status;
 				break;
-            }
-        }
+			}
+		}
 	}
-	
+
 	public addAnalyzer(uri: vscode.Uri, type: analyzerType) {
 		if (type == analyzerType.FILE) {
-			this.anaQueue.push({uri: uri, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type});
+			this.anaQueue.push({ uri: uri, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type });
 		} else {
-			this.addDirsRecursive(uri,type);
+			this.addDirsRecursive(uri, type);
 		}
 	}
 
 	private addDirsRecursive(dir: vscode.Uri, type: analyzerType) {
-		var files = dirfuncs.getFiles(dir);
+		const files = dirfuncs.getFiles(dir);
 		if (files.length > 0 && !dirfuncs.directoryIsLog(dir.fsPath)) {
-			this.anaQueue.push({uri: dir, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type});
+			this.anaQueue.push({ uri: dir, operation: analyzerOperation.RUN, status: analyzerStatus.UNKNOWN, type: type });
 		}
-        var dirs = dirfuncs.getDirectories(dir);
-        for (let subdir of dirs) {
-			this.addDirsRecursive(subdir,type);
-        }
-    }
-	
-    public startAnalyzer(mils: number=100) {
-        if (visualText.nlp.timerID == 0) {
+		const dirs = dirfuncs.getDirectories(dir);
+		for (const subdir of dirs) {
+			this.addDirsRecursive(subdir, type);
+		}
+	}
+
+	public startAnalyzer(mils: number = 100) {
+		if (visualText.nlp.timerID == 0) {
 			logView.clearLogs(false);
 			vscode.commands.executeCommand('logView.clear');
-            visualText.debugMessage('Analyzing...',logLineType.ANALYER_OUTPUT);
-            visualText.nlp.timerID = +setInterval(this.analyzerTimer,mils);
-        }
-    }
+			visualText.debugMessage('Analyzing...', logLineType.ANALYER_OUTPUT);
+			visualText.nlp.timerID = +setInterval(this.analyzerTimer, mils);
+		}
+	}
 
 	analyzerTimer() {
-        let op: analyzerRun = visualText.nlp.anaQueue[0];
-        let len = visualText.nlp.anaQueue.length;
-        let alldone = true;
-        let opNum = 0;
+		let op: analyzerRun = visualText.nlp.anaQueue[0];
+		const len = visualText.nlp.anaQueue.length;
+		let alldone = true;
+		let opNum = 0;
 
 		if (visualText.nlp.stopAllFlag) {
 			visualText.nlp.shutDown();
 			return;
 		}
 
-        for (let o of visualText.nlp.anaQueue) {
-            opNum++;
-            if (o.status == analyzerStatus.UNKNOWN || o.status == analyzerStatus.ANALYZING) {
-                op = o;
-                alldone = false;
-                break;
-            }
-            else if (o.status != analyzerStatus.FAILED && o.status != analyzerStatus.DONE) {
-                alldone = false;
-            }
-        }
-        if (alldone) {
-            vscode.commands.executeCommand('setContext', 'anaOps.running', false);
-            visualText.nlp.stopAllFlag = false;
-            visualText.nlp.timerStatus = anaQueueStatus.DONE;
-        } else {
-            vscode.commands.executeCommand('setContext', 'anaOps.running', true);
-            visualText.nlp.timerStatus = anaQueueStatus.RUNNING;
-        }
+		for (const o of visualText.nlp.anaQueue) {
+			opNum++;
+			if (o.status == analyzerStatus.UNKNOWN || o.status == analyzerStatus.ANALYZING) {
+				op = o;
+				alldone = false;
+				break;
+			}
+			else if (o.status != analyzerStatus.FAILED && o.status != analyzerStatus.DONE) {
+				alldone = false;
+			}
+		}
+		if (alldone) {
+			vscode.commands.executeCommand('setContext', 'anaOps.running', false);
+			visualText.nlp.stopAllFlag = false;
+			visualText.nlp.timerStatus = anaQueueStatus.DONE;
+		} else {
+			vscode.commands.executeCommand('setContext', 'anaOps.running', true);
+			visualText.nlp.timerStatus = anaQueueStatus.RUNNING;
+		}
 
 		//SIMPLE STATE MACHINE
 		switch (visualText.nlp.timerStatus) {
@@ -242,7 +242,7 @@ export class NLPFile extends TextFile {
 
 	shutDown() {
 		clearInterval(visualText.nlp.timerID);
-		visualText.debugMessage('Analyzing done',logLineType.ANALYER_OUTPUT);
+		visualText.debugMessage('Analyzing done', logLineType.ANALYER_OUTPUT);
 		visualText.nlp.stopAllFlag = false;
 		visualText.nlp.timerID = 0;
 		visualText.nlp.anaQueue = [];
@@ -251,23 +251,23 @@ export class NLPFile extends TextFile {
 	insertRule(ruleStr: string) {
 		visualText.colorizeAnalyzer();
 		vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
-			let len = this.getText().length
-			let pos = editor.document.positionAt(len);
+			const len = this.getText().length
+			const pos = editor.document.positionAt(len);
 			editor.edit(edit => {
 				edit.insert(pos, ruleStr);
 			});
 		});
 	}
 
-	replaceContext(newContextStr: string, beside: boolean=true) {
+	replaceContext(newContextStr: string, beside: boolean = true) {
 		visualText.colorizeAnalyzer();
 		if (beside) {
 			vscode.window.showTextDocument(this.getUri(), { viewColumn: vscode.ViewColumn.Beside }).then(editor => {
-				this.replaceContextLine(newContextStr,editor);
+				this.replaceContextLine(newContextStr, editor);
 			});
 		} else {
 			vscode.window.showTextDocument(this.getUri()).then(editor => {
-				this.replaceContextLine(newContextStr,editor);
+				this.replaceContextLine(newContextStr, editor);
 			});
 		}
 	}
@@ -275,12 +275,12 @@ export class NLPFile extends TextFile {
 	replaceContextLine(newContextStr: string, editor: vscode.TextEditor) {
 		const contextSel = this.findLineSelection(newContextStr);
 		if (!contextSel.isEmpty) {
-			var snippet = new vscode.SnippetString(newContextStr);
-			editor.insertSnippet(snippet,contextSel);
+			const snippet = new vscode.SnippetString(newContextStr);
+			editor.insertSnippet(snippet, contextSel);
 		}
 	}
 
-	findLineSelection(line: string): vscode.Selection {	
+	findLineSelection(line: string): vscode.Selection {
 		let contextSel = this.findLineStartsWith('@NODES');
 		if (contextSel.isEmpty)
 			contextSel = this.findLineStartsWith('@PATH');
@@ -292,17 +292,17 @@ export class NLPFile extends TextFile {
 	replaceContextLineInFile(newContextStr: string) {
 		const contextSel = this.findLineSelection(newContextStr);
 		const line = contextSel.start.line;
-		this.replaceLineNumber(line,newContextStr);
+		this.replaceLineNumber(line, newContextStr);
 		this.saveFileLines();
 	}
 
-    searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
+	searchWord(editor: vscode.TextEditor, functionFlag: boolean = false) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
-			let cursorPosition = editor.selection.start;
-			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
-			let highlight = editor.document.getText(wordRange);
-			sequenceView.search(highlight,functionFlag);
+			const cursorPosition = editor.selection.start;
+			const wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+			const highlight = editor.document.getText(wordRange);
+			sequenceView.search(highlight, functionFlag);
 		}
 	}
 
@@ -312,38 +312,38 @@ export class NLPFile extends TextFile {
 			sequenceView.reveal(editor.document.fileName);
 		}
 	}
-		
+
 	passTree(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.passTree(editor.document.fileName);
 		} else if (this.getFileType() == nlpFileType.TXXT) {
-			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
+			const passNum = this.passNumberFromAna(editor.document.uri.fsPath);
 			sequenceView.openTreeFile(passNum);
 		}
 	}
-			
+
 	openRuleMatchesText(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
 			sequenceView.openTreeFileFromPath(editor.document.fileName);
 		} else if (this.getFileType() == nlpFileType.TREE) {
-			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
+			const passNum = this.passNumberFromAna(editor.document.uri.fsPath);
 			sequenceView.openRuleMatchFile(passNum);
 		}
 	}
 
 	passNumberFromAna(filePath: string): number {
-		return parseInt(filePath.substring(filePath.length-8,filePath.length-5));
+		return parseInt(filePath.substring(filePath.length - 8, filePath.length - 5));
 	}
 
 	openPassFile(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.TREE || this.getFileType() == nlpFileType.TXXT) {
-			let passNum = this.passNumberFromAna(editor.document.uri.fsPath);
-			var seqFile = new SequenceFile();
+			const passNum = this.passNumberFromAna(editor.document.uri.fsPath);
+			const seqFile = new SequenceFile();
 			seqFile.init();
-			let passFileUri: vscode.Uri = seqFile.getUriByPassNumber(passNum);
+			const passFileUri: vscode.Uri = seqFile.getUriByPassNumber(passNum);
 			if (fs.existsSync(passFileUri.fsPath)) {
 				visualText.colorizeAnalyzer();
 				vscode.window.showTextDocument(passFileUri);
@@ -353,24 +353,24 @@ export class NLPFile extends TextFile {
 		}
 	}
 
-    commentLines(editor: vscode.TextEditor) {
+	commentLines(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
-			var start = editor.selection.start;
-			var end = editor.selection.end;
-			var startLine = start.line;
-			var newLineStr: string = '';
-			var lastLineLength = 0;
+			const start = editor.selection.start;
+			const end = editor.selection.end;
+			let startLine = start.line;
+			let newLineStr: string = '';
+			let lastLineLength = 0;
 
-			var lines = this.getSelectedLines(editor);
+			const lines = this.getSelectedLines(editor);
 			if (lines.length) {
-				var addingFlag: boolean = false;
+				let addingFlag: boolean = false;
 				for (let line of lines) {
 					// Use first line to determine adding or removing
 					if (startLine == start.line) {
 						addingFlag = line.charAt(0) == '#' ? false : true;
 					}
-					var commented: boolean = line.charAt(0) == '#' ? true : false;
+					const commented: boolean = line.charAt(0) == '#' ? true : false;
 					if (addingFlag && !commented && line.length) {
 						line = '#' + line;
 					} if (!addingFlag && commented) {
@@ -385,13 +385,13 @@ export class NLPFile extends TextFile {
 				}
 
 				if (newLineStr.length) {
-					var posStart = new vscode.Position(start.line,0);
-					var posEnd = new vscode.Position(end.line,lastLineLength+1);
-					var range = new vscode.Range(posStart, posEnd);
-	
-					newLineStr = newLineStr.replace(/\$/g,'\\$');
-					var snippet = new vscode.SnippetString(newLineStr);
-					editor.insertSnippet(snippet,range);
+					const posStart = new vscode.Position(start.line, 0);
+					const posEnd = new vscode.Position(end.line, lastLineLength + 1);
+					const range = new vscode.Range(posStart, posEnd);
+
+					newLineStr = newLineStr.replace(/\$/g, '\\$');
+					const snippet = new vscode.SnippetString(newLineStr);
+					editor.insertSnippet(snippet, range);
 				}
 
 			}
@@ -401,48 +401,48 @@ export class NLPFile extends TextFile {
 	reformatRule(editor: vscode.TextEditor, type: reformatType) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP) {
-			var rulevars = this.findRuleText(editor);
+			const rulevars = this.findRuleText(editor);
 
 			if (rulevars[0].length) {
-				var formattedRule = this.formatRule(rulevars[0],type);
-				var rang = new vscode.Selection(rulevars[1].start,rulevars[1].end);
-				var snippet = new vscode.SnippetString(formattedRule);
-				editor.insertSnippet(snippet,rang);
-			}			
+				const formattedRule = this.formatRule(rulevars[0], type);
+				const rang = new vscode.Selection(rulevars[1].start, rulevars[1].end);
+				const snippet = new vscode.SnippetString(formattedRule);
+				editor.insertSnippet(snippet, rang);
+			}
 		}
 	}
 
 	duplicateLine(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP || this.getFileType() == nlpFileType.DICT || this.getFileType() == nlpFileType.KBB) {
-			var rulestr = '';
-			var position = editor.selection.active;
-			var lines = this.getLines(true);
-			var line = lines[position.line];
-			var posEnd = new vscode.Position(position.line+1,0);
-			var rang = new vscode.Selection(posEnd,posEnd);
-			line = line.replace(/\$/g,'\\$');
-			var snippet = new vscode.SnippetString(line);
-			editor.insertSnippet(snippet,rang);
+			const rulestr = '';
+			const position = editor.selection.active;
+			const lines = this.getLines(true);
+			let line = lines[position.line];
+			const posEnd = new vscode.Position(position.line + 1, 0);
+			const rang = new vscode.Selection(posEnd, posEnd);
+			line = line.replace(/\$/g, '\\$');
+			const snippet = new vscode.SnippetString(line);
+			editor.insertSnippet(snippet, rang);
 			editor.selection = rang;
 		}
 	}
 
 	findRuleText(editor: vscode.TextEditor): [string, vscode.Range, boolean, boolean] {
-		var rulestr = '';
-		var position = editor.selection.active;
-		var lineStart = position.line;
-		var charStart = position.character;
-		var lineEnd = position.line;
-		var charEnd = position.character;
+		let rulestr = '';
+		const position = editor.selection.active;
+		let lineStart = position.line;
+		let charStart = position.character;
+		let lineEnd = position.line;
+		let charEnd = position.character;
 
-		var lines = this.getLines(true);
-		var line = lines[lineStart];
-		var lastline = line;
-		var multilined = false;
-		var arrowFlag = false;
-		var atSignFlag = false;
-		var pos = 0;
+		const lines = this.getLines(true);
+		let line = lines[lineStart];
+		let lastline = line;
+		let multilined = false;
+		let arrowFlag = false;
+		let atSignFlag = false;
+		let pos = 0;
 
 		while ((pos = line.search('<-')) < 0) {
 			rulestr = line + rulestr;
@@ -455,11 +455,11 @@ export class NLPFile extends TextFile {
 		if (lineStart < position.line)
 			charStart = 0;
 		else
-			charStart = pos+3;
+			charStart = pos + 3;
 
 		multilined = false;
 		line = lines[lineEnd];
-		var firsttime = true;
+		let firsttime = true;
 		while ((pos = line.search('@@')) < 0) {
 			if (!firsttime)
 				rulestr = rulestr + line;
@@ -469,15 +469,15 @@ export class NLPFile extends TextFile {
 			atSignFlag = true;
 		}
 		rulestr += line;
-		charEnd = pos + 2;			
+		charEnd = pos + 2;
 
 		charStart = 0;
-		var posStart = new vscode.Position(lineStart,charStart);
-		var posEnd = new vscode.Position(lineEnd,charEnd);
-		var range = new vscode.Range(posStart, posEnd);
+		const posStart = new vscode.Position(lineStart, charStart);
+		const posEnd = new vscode.Position(lineEnd, charEnd);
+		const range = new vscode.Range(posStart, posEnd);
 
 		if (rulestr.length == 0) {
-			rulestr = lastline.substring(charStart,charEnd-charStart);
+			rulestr = lastline.substring(charStart, charEnd - charStart);
 		}
 
 		return [rulestr, range, arrowFlag, atSignFlag];
@@ -486,24 +486,24 @@ export class NLPFile extends TextFile {
 	formatRule(ruleStr: string, type: reformatType = reformatType.NORMAL): string {
 		enum state { UNKNOWN, SUGGESTED, ARROW, NODE, NODE_DONE, ATTR, ATTR_END, COMMENT, ATAT };
 
-		var formattedRule = ruleStr.replace(this.getSeparatorNormalized(),' ');
+		let formattedRule = ruleStr.replace(this.getSeparatorNormalized(), ' ');
 
-		var rules: ruleParse[] = [];
-		var rulelinesFinal = new Array();
-		var words = new Array();
-		var currentState = state.UNKNOWN;
-		var word = '';
-		var isSpace = false;
-		var lastSpace = false;
-		var backSlash = false;
-		var suggested = false;
-		var c = '';
-		var cNext = '';
+		const rules: ruleParse[] = [];
+		const rulelinesFinal = new Array();
+		let words = new Array();
+		let currentState = state.UNKNOWN;
+		let word = '';
+		let isSpace = false;
+		let lastSpace = false;
+		let backSlash = false;
+		let suggested = false;
+		let c = '';
+		let cNext = '';
 
 		// Parse rule string
-		for (let i=0; i < ruleStr.length; i++) {
+		for (let i = 0; i < ruleStr.length; i++) {
 			c = ruleStr[i];
-			cNext = i < ruleStr.length - 1 ? ruleStr[i+1] : '';
+			cNext = i < ruleStr.length - 1 ? ruleStr[i + 1] : '';
 			isSpace = !/\S/.test(c);
 
 			if (backSlash) {
@@ -522,29 +522,29 @@ export class NLPFile extends TextFile {
 				currentState = suggested ? state.NODE : state.SUGGESTED;
 				suggested = true;
 
-			// @@
+				// @@
 			} else if (c == '@' && cNext == '@') {
 				if (word.length)
 					words.push(word);
 				break;
-		
-			// <-
+
+				// <-
 			} else if (currentState == state.SUGGESTED && c == '<' && cNext == '-') {
 				if (word.length)
 					words.push(word);
 				words.push('<-');
-				rules.push({suggested: words[0], rule: '', comment: ''});
+				rules.push({ suggested: words[0], rule: '', comment: '' });
 				words = [];
 				word = '';
 				currentState = state.ARROW;
 				i++;
 				continue;
-				
-			// First node after arrow
+
+				// First node after arrow
 			} else if (currentState == state.ARROW && !isSpace) {
 				currentState = state.NODE;
 
-			// Finished picking up the first node in a rule line
+				// Finished picking up the first node in a rule line
 			} else if (currentState == state.NODE && (isSpace || c == '[')) {
 				currentState = state.NODE_DONE;
 				words.push(word);
@@ -556,24 +556,24 @@ export class NLPFile extends TextFile {
 					continue;
 				}
 
-			// Found starting attribute bracket
+				// Found starting attribute bracket
 			} else if (currentState == state.NODE_DONE && c == '[') {
 				words.push(c);
 				currentState = state.ATTR;
 				word = '';
 				continue;
 
-			// If you have one node followed immediately by another or a new line
+				// If you have one node followed immediately by another or a new line
 			} else if (currentState == state.NODE_DONE && (c == '\n' || (!isSpace && c != '[' && c != '#'))) {
 				if (word.length) {
 					words.push(word);
 				}
-				this.constructLine(rules,words,type);
+				this.constructLine(rules, words, type);
 				words = [];
 				word = '';
 				currentState = state.NODE;
 
-			// Ending a bracketed attribute area
+				// Ending a bracketed attribute area
 			} else if (currentState == state.ATTR && c == ']') {
 				if (word.length)
 					words.push(word);
@@ -582,7 +582,7 @@ export class NLPFile extends TextFile {
 				currentState = state.ATTR_END;
 				continue;
 
-			// Ending a bracketed attribute area
+				// Ending a bracketed attribute area
 			} else if (currentState == state.ATTR && (c == ')' || c == '(')) {
 				if (word.length)
 					words.push(word);
@@ -590,22 +590,22 @@ export class NLPFile extends TextFile {
 				word = '';
 				continue;
 
-			// Is a comment
+				// Is a comment
 			} else if (currentState == state.ATTR_END && c == '#') {
 				currentState = state.COMMENT;
 
-			// New line
+				// New line
 			} else if ((currentState == state.NODE || currentState == state.COMMENT || currentState == state.ATTR_END) && c == '\n') {
 				if (word.length)
 					words.push(word);
-				this.constructLine(rules,words,type);
+				this.constructLine(rules, words, type);
 				words = [];
 				word = '';
 				currentState = state.NODE;
-			
-			// Is a new node on the same line?
+
+				// Is a new node on the same line?
 			} else if (currentState == state.ATTR_END && !isSpace) {
-				this.constructLine(rules,words,type);
+				this.constructLine(rules, words, type);
 				words = [];
 				word = '';
 				currentState = state.UNKNOWN;
@@ -624,12 +624,12 @@ export class NLPFile extends TextFile {
 		}
 
 		if (words.length)
-			this.constructLine(rules,words,type);
+			this.constructLine(rules, words, type);
 
 		// Find longest line
-		var maxLine = 0;
-		var maxComment = 0;
-		for (let rule of rules) {
+		let maxLine = 0;
+		let maxComment = 0;
+		for (const rule of rules) {
 			let total = rule.rule.length;
 			if (total > maxLine)
 				maxLine = total;
@@ -641,61 +641,61 @@ export class NLPFile extends TextFile {
 			maxComment += 1;  // For space after user comment
 
 		// Construct reformated string
-		var tabsize = 4;
-		var tabsMax = Math.floor(maxLine / tabsize);
-		var tabsCommentMax = Math.floor(maxComment / tabsize);
-		var nodeNumber = 1;
-		var ruleLine = '';
-		var hasAtAt = false;
-		for (let rule of rules) {
+		const tabsize = 4;
+		const tabsMax = Math.floor(maxLine / tabsize);
+		const tabsCommentMax = Math.floor(maxComment / tabsize);
+		let nodeNumber = 1;
+		let ruleLine = '';
+		let hasAtAt = false;
+		for (const rule of rules) {
 			if (rule.rule == '@@') {
 				ruleLine = type == reformatType.ONELINE ? '@@' : '\t@@';
 				hasAtAt = true;
 			} else if (rule.suggested.length) {
 				ruleLine = rule.suggested + ' <-';
 			} else {
-				let tabstr = this.tabString(rule.rule.length,tabsize,tabsMax);
-				let tabCommentStr = this.tabString(rule.comment.length,tabsize,tabsCommentMax);
-				let commentStr = rule.comment.length ? rule.comment + ' \t' : tabsCommentMax > 0 ? tabCommentStr : '';
+				const tabstr = this.tabString(rule.rule.length, tabsize, tabsMax);
+				const tabCommentStr = this.tabString(rule.comment.length, tabsize, tabsCommentMax);
+				const commentStr = rule.comment.length ? rule.comment + ' \t' : tabsCommentMax > 0 ? tabCommentStr : '';
 				if (type == reformatType.ONELINE)
 					ruleLine = rule.rule;
 				else
-					ruleLine = '\t' + rule.rule + tabstr + '### ' + commentStr + '(' + nodeNumber.toString() + ')';	
-				nodeNumber++;			
+					ruleLine = '\t' + rule.rule + tabstr + '### ' + commentStr + '(' + nodeNumber.toString() + ')';
+				nodeNumber++;
 			}
 			rulelinesFinal.push(ruleLine);
 		}
 		if (!hasAtAt)
 			rulelinesFinal.push('\t@@');
 
-		var sep = type == reformatType.ONELINE ? '' : this.getSeparator();
+		const sep = type == reformatType.ONELINE ? '' : this.getSeparator();
 		formattedRule = rulelinesFinal.join(sep);
 
 		return formattedRule;
 	}
 
 	tabString(length: number, tabsize: number, tabsmax: number): string {
-		var tabsline = Math.floor(length) / tabsize;
-		var tabs = tabsmax - tabsline + 1;
-		var tabstr = '\t';
-		for (let i=1; i<tabs; i++) {
+		const tabsline = Math.floor(length) / tabsize;
+		const tabs = tabsmax - tabsline + 1;
+		let tabstr = '\t';
+		for (let i = 1; i < tabs; i++) {
 			tabstr = tabstr + '\t';
 		}
 		return tabstr;
 	}
 
-	constructLine(rules, words: string[], type: reformatType)  {
+	constructLine(rules, words: string[], type: reformatType) {
 		// Check for user  or auto-generated comment
-		var lastOne = words[words.length-1];
-		var second = lastOne.substring(1,lastOne.length-1);
+		const lastOne = words[words.length - 1];
+		const second = lastOne.substring(1, lastOne.length - 1);
 		const parsed = parseInt(second);
-		var isNumeric = isNaN(parsed) ? false : true;
-		var lastIsNodeNumber = lastOne.startsWith('(') && lastOne.endsWith(')') && isNumeric ? true : false;
-		var commentStart = 0;
-		var userComment = '';
-		var found = false;
+		const isNumeric = isNaN(parsed) ? false : true;
+		const lastIsNodeNumber = lastOne.startsWith('(') && lastOne.endsWith(')') && isNumeric ? true : false;
+		let commentStart = 0;
+		let userComment = '';
+		let found = false;
 		commentStart = words.length - 1;
-		for (let word of words.reverse()) {
+		for (const word of words.reverse()) {
 			if (word.startsWith('#')) {
 				found = true;
 				break;
@@ -703,30 +703,30 @@ export class NLPFile extends TextFile {
 			commentStart--;
 		}
 		words.reverse();
+		let word = '';  // Declare word here
 		if (found) {
-			var end = lastIsNodeNumber ? words.length - 1 : words.length;
-			for (let i=commentStart+1; i < end; i++) {
+			const end = lastIsNodeNumber ? words.length - 1 : words.length;
+			for (let i = commentStart + 1; i < end; i++) {
 				word = words[i];
 				if (userComment.length)
 					userComment += ' ';
 				userComment += word;
-			}			
+			}
 		}
 
 		// Construct Line
 		if (!words.length)
 			return '';
-		var line = '';
-		var word = '';
-		var nextWord = '';
-		var lastWord = '';
-		var parenFlag = false;
+		let line = '';
+		let nextWord = '';
+		let lastWord = '';
+		let parenFlag = false;
 
-		for (let i=0; i < words.length; i++) {
+		for (let i = 0; i < words.length; i++) {
 			if (commentStart && i == commentStart)
 				break;
 			word = words[i];
-			nextWord = i < words.length-1 ? words[i+1] : '';
+			nextWord = i < words.length - 1 ? words[i + 1] : '';
 
 			if (type == reformatType.PARENS && (word == '(' || word == ')')) {
 				parenFlag = word == '(' ? true : false;
@@ -736,14 +736,14 @@ export class NLPFile extends TextFile {
 				line += '\n\t\t\t';
 			}
 			line += word;
-			if (i < words.length-1 && word != '[' && word != '(' && !word.endsWith('=')
-				 && nextWord != ')' && nextWord != ']' && nextWord != '='
-				 && lastWord != '=')
+			if (i < words.length - 1 && word != '[' && word != '(' && !word.endsWith('=')
+				&& nextWord != ')' && nextWord != ']' && nextWord != '='
+				&& lastWord != '=')
 				line += ' ';
 			lastWord = word;
 		}
-		var ruleLine = type == reformatType.ONELINE ? line : line.trimEnd();
-		rules.push({suggested: '', rule: ruleLine, comment: userComment});
+		const ruleLine = type == reformatType.ONELINE ? line : line.trimEnd();
+		rules.push({ suggested: '', rule: ruleLine, comment: userComment });
 	}
 
 	copyContext(editor: vscode.TextEditor) {
@@ -752,11 +752,11 @@ export class NLPFile extends TextFile {
 			sequenceView.replaceContext(editor.document.fileName);
 		}
 	}
-	
+
 	getContextLine(uri: vscode.Uri) {
 		this.setFile(uri);
-		var contextLine = '';
-		for (let line of this.getLines()) {
+		let contextLine = '';
+		for (const line of this.getLines()) {
 			if (line.startsWith('@NODES') || line.startsWith('@PATH') || line.startsWith('@MULTI')) {
 				contextLine = line;
 				break;

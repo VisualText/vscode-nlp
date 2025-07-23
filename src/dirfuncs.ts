@@ -10,7 +10,7 @@ export enum getFileTypes { UNKNOWN, FILES, FILES_DIRS, DIRS }
 export namespace dirfuncs {
 
     export function copyDirectory(fromPath: string, toPath: string): boolean {
-        var copydir = require('copy-dir');
+        const copydir = require('copy-dir');
         if (!fs.existsSync(toPath)) {
             if (!makeDir(toPath))
                 return false;
@@ -79,19 +79,19 @@ export namespace dirfuncs {
     }
 
     export function findFolder(dirPath: vscode.Uri, folderToFind: string): vscode.Uri {
-        var parentDir = path.dirname(dirPath.fsPath);
+        const parentDir = path.dirname(dirPath.fsPath);
         if (path.basename(parentDir).localeCompare(folderToFind) == 0) {
             return vscode.Uri.file(parentDir);
         }
 
         if (parentDir && parentDir?.length > 1) {
-            var found = findFolder(vscode.Uri.file(parentDir), folderToFind);
+            const found = findFolder(vscode.Uri.file(parentDir), folderToFind);
             if (found.fsPath.length > 2)
                 return found;
         }
 
-        var dirs = getDirectories(dirPath);
-        for (let dir of dirs) {
+        const dirs = getDirectories(dirPath);
+        for (const dir of dirs) {
             if (path.basename(dir.fsPath).localeCompare(folderToFind) == 0) {
                 return dir;
             }
@@ -101,13 +101,13 @@ export namespace dirfuncs {
     }
 
     export function analyzerFolderCount(dirPath: vscode.Uri): number {
-        var specCount = 0;
-        var dirs = getDirectories(dirPath);
-        for (let dir of dirs) {
-            var subDirs = getDirectories(dir);
-            for (let subDir of subDirs) {
+        let specCount = 0;
+        const dirs = getDirectories(dirPath);
+        for (const dir of dirs) {
+            const subDirs = getDirectories(dir);
+            for (const subDir of subDirs) {
                 if (path.basename(subDir.fsPath).localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
-                    let specfile = path.join(subDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE);
+                    const specfile = path.join(subDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE);
                     if (fs.existsSync(specfile))
                         specCount++;
                 }
@@ -121,9 +121,9 @@ export namespace dirfuncs {
         const dirUris: vscode.Uri[] = new Array();
         if (dirfuncs.isDir(folder.fsPath)) {
             const filenames = fs.readdirSync(folder.fsPath);
-            for (let filename of filenames) {
+            for (const filename of filenames) {
                 if (!filename.startsWith('.')) {
-                    var filepath = path.join(folder.fsPath,filename);
+                    const filepath = path.join(folder.fsPath,filename);
                     try {
                         const stats = fs.statSync(filepath);
                         if (stats.isDirectory())
@@ -138,14 +138,14 @@ export namespace dirfuncs {
     }
 
     export function getDirectoryTypes(folder: vscode.Uri): {uri: vscode.Uri, type: vscode.FileType}[] {
-        var dirsAndTypes = Array();
+        const dirsAndTypes = Array();
         const filenames = fs.readdirSync(folder.fsPath);
-        for (let filename of filenames) {
+        for (const filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filepath = path.join(folder.fsPath,filename);
+                const filepath = path.join(folder.fsPath,filename);
                 try {
                     const stats = fs.statSync(filepath);
-                    var type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
+                    const type = stats.isDirectory() ? vscode.FileType.Directory : vscode.FileType.File;
                     dirsAndTypes.push({uri: vscode.Uri.file(filepath), type: type, hasLogs: false});
                 } catch (err: any) {
                     console.error(err)
@@ -172,16 +172,16 @@ export namespace dirfuncs {
     export function getFiles(folder: vscode.Uri, filter: string[]=[], getType: getFileTypes=getFileTypes.FILES, recurse: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.fsPath);
-        for (let filename of filenames) {
+        for (const filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filePath = path.join(folder.fsPath,filename);
-                var ext = path.extname(filePath);
+                const filePath = path.join(folder.fsPath,filename);
+                const ext = path.extname(filePath);
                 const stats = fs.statSync(filePath);
                 if ((getType == getFileTypes.DIRS && stats.isDirectory()) || filter.length == 0 || filter.includes(ext))
                     fileUris.push(vscode.Uri.file(filePath));
                 if (stats.isDirectory() && recurse) {
-                    var children = getFiles(vscode.Uri.file(filename),filter,getType,recurse);
-                    for (let child of children) {
+                    const children = getFiles(vscode.Uri.file(filename),filter,getType,recurse);
+                    for (const child of children) {
                         fileUris.push(child);
                     }
                 }
@@ -201,7 +201,7 @@ export namespace dirfuncs {
     }
 
     export function writeFile(filePath: string, content: string): boolean {
-        var dir = path.dirname(filePath);
+        const dir = path.dirname(filePath);
         if (!fs.existsSync(dir)) {
             try {
                 fs.mkdirSync(dir);
@@ -258,10 +258,10 @@ export namespace dirfuncs {
     export function deleteFiles(folder: vscode.Uri, filter: string[]=[]): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
         const filenames = fs.readdirSync(folder.fsPath);
-        for (let filename of filenames) {
+        for (const filename of filenames) {
             if (!filename.startsWith('.')) {
-                var filePath = path.join(folder.fsPath,filename);
-                var ext = path.extname(filePath);
+                const filePath = path.join(folder.fsPath,filename);
+                const ext = path.extname(filePath);
                 const stats = fs.statSync(filePath);
                 if (!stats.isDirectory() && (filter.length == 0 || filter.includes(ext)))
                     delFile(filePath);
@@ -284,13 +284,13 @@ export namespace dirfuncs {
     }
 
     export function analyzerHasLogFiles(dir: vscode.Uri): boolean {
-        var outputDir = visualText.analyzer.constructDir(dir,anaSubDir.OUTPUT);
+        const outputDir = visualText.analyzer.constructDir(dir,anaSubDir.OUTPUT);
         if (fs.existsSync(outputDir.fsPath) && dirfuncs.directoryHasFiles(outputDir))
             return true;
-        var logsDir = visualText.analyzer.constructDir(dir,anaSubDir.LOGS);
+        const logsDir = visualText.analyzer.constructDir(dir,anaSubDir.LOGS);
         if (fs.existsSync(logsDir.fsPath) && dirfuncs.directoryHasFiles(logsDir))
             return true;
-        var inputDir = visualText.analyzer.constructDir(dir,anaSubDir.INPUT);
+        const inputDir = visualText.analyzer.constructDir(dir,anaSubDir.INPUT);
         if (fs.existsSync(inputDir.fsPath)) {
             return dirfuncs.hasLogDirs(inputDir,false);
         }
@@ -304,16 +304,16 @@ export namespace dirfuncs {
 
     export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
         if (dirfuncs.isDir(dir.fsPath)) {
-            var entries = dirfuncs.getDirectoryTypes(dir);
+            const entries = dirfuncs.getDirectoryTypes(dir);
 
-            for (let entry of entries) {
+            for (const entry of entries) {
                 if (entry.type == vscode.FileType.Directory) {
                     if (visualText.isAnalyzerDirectory(entry.uri) && dirfuncs.analyzerHasLogFiles(entry.uri))
                         return true;
                     if (dirfuncs.directoryIsLog(entry.uri.fsPath))
                         return true;
                     else {
-                        var has = dirfuncs.hasLogDirs(entry.uri,false);
+                        const has = dirfuncs.hasLogDirs(entry.uri,false);
                         if (has)
                             return true;
                     }
@@ -350,9 +350,9 @@ export namespace dirfuncs {
 
     export function hasDirs(dir: vscode.Uri): boolean {
         if (dirfuncs.isDir(dir.fsPath)) {
-            var entries = dirfuncs.getDirectoryTypes(dir);
+            const entries = dirfuncs.getDirectoryTypes(dir);
 
-            for (let entry of entries) {
+            for (const entry of entries) {
                 if (entry.type == vscode.FileType.Directory && !visualText.isAnalyzerDirectory(entry.uri)) {
                     return true;
                 }
@@ -362,12 +362,12 @@ export namespace dirfuncs {
 	}
 
     export function parentHasOtherDirs(uri: vscode.Uri): boolean {
-        var parent = path.dirname(uri.fsPath);
-        var basename = path.basename(uri.fsPath);
+        const parent = path.dirname(uri.fsPath);
+        const basename = path.basename(uri.fsPath);
         if (parent.length) {
-            var entries = dirfuncs.getDirectoryTypes(vscode.Uri.file(parent));
+            const entries = dirfuncs.getDirectoryTypes(vscode.Uri.file(parent));
 
-            for (let entry of entries) {
+            for (const entry of entries) {
                 if (entry.type == vscode.FileType.Directory
                     && path.basename(entry.uri.fsPath) != basename
                     && !visualText.isAnalyzerDirectory(entry.uri)

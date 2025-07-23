@@ -69,17 +69,17 @@ export class TreeFile extends TextFile {
 			this.setFile(editor.document.uri);
 			this.parseTreeLines(editor);
 			if (this.selStart >= 0) {
-				var tline = this.selectedLines[0];
-				var passNum = tline.passNum;
+				const tline = this.selectedLines[0];
+				const passNum = tline.passNum;
 				if (passNum) {
-					var seqFile = new SequenceFile();
+					const seqFile = new SequenceFile();
 					seqFile.init();
-					var passFile = seqFile.getUriByPassNumber(passNum);
+					const passFile = seqFile.getUriByPassNumber(passNum);
 					visualText.colorizeAnalyzer();
 					vscode.window.showTextDocument(passFile, { viewColumn: vscode.ViewColumn.Beside }).then(edit => 
 						{
-							var pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
-							var range = new vscode.Range(pos,pos);
+							const pos = new vscode.Position(this.selectedLines[0].ruleLine-1,0);
+							const range = new vscode.Range(pos,pos);
 							edit.selections = [new vscode.Selection(pos,pos)]; 
 							edit.revealRange(range);
 						});
@@ -93,9 +93,9 @@ export class TreeFile extends TextFile {
 	}
 
 	searchInDictionaries(word: string) {
-		var finalMatches: FindItem[] = [];
-		var searchWord = word.toLowerCase();
-		var str = searchWord;
+		const finalMatches: FindItem[] = [];
+		let searchWord = word.toLowerCase();
+		let str = searchWord;
 
 		if (searchWord.startsWith('_')) {
 			searchWord = word.substring(1);
@@ -108,9 +108,9 @@ export class TreeFile extends TextFile {
 		}
 
 		this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.dict'],0,false,false);
-		var matches = this.findFile.getMatches();
+		const matches = this.findFile.getMatches();
 
-		for (let match of matches) {
+		for (const match of matches) {
 			if (this.matchDictLine(str,match.highlighted)) {
 				finalMatches.push(match);
 			}
@@ -127,25 +127,25 @@ export class TreeFile extends TextFile {
 	}
 
 	matchDictLine(original: string, line: string): boolean {
-		var tokens = line.split('=');
+		const tokens = line.split('=');
 		if (tokens.length > 1) {
-			var toks = tokens[0].split('\s');
-			let lastIndex: number = tokens[0].lastIndexOf(" ");
-			let str = tokens[0].substring(0, lastIndex);
+			const toks = tokens[0].split('\s');
+			const lastIndex: number = tokens[0].lastIndexOf(" ");
+			const str = tokens[0].substring(0, lastIndex);
 			return str.localeCompare(original, undefined, { sensitivity: 'base' }) == 0;
 		}
 		return false;
 	}
 
 	gatherChildrenText(): string {
-		var str = '';
-		var lines = this.getLines();
+		let str = '';
+		const lines = this.getLines();
 		if (lines.length > this.selStartLine) {
-			var i = this.selStartLine+1;
-			var indent = this.selectedLines[0].indent;
+			let i = this.selStartLine+1;
+			const indent = this.selectedLines[0].indent;
 			while (i < lines.length) {
-				var line = lines[i++];
-				var treeLine = this.parseTreeLine(line);
+				const line = lines[i++];
+				const treeLine = this.parseTreeLine(line);
 				if (treeLine.indent > indent) {
 					str += ' ' + treeLine.node;
 				} else {
@@ -165,10 +165,10 @@ export class TreeFile extends TextFile {
 				visualText.colorizeAnalyzer();
 				vscode.window.showTextDocument(visualText.analyzer.getTextPath(), { viewColumn: vscode.ViewColumn.Beside }).then(edit => 
 					{
-						var txt = new TextFile(visualText.analyzer.getTextPath().fsPath);
-						var posStart = txt.positionAt(this.selStart-1);
-						var posEnd = txt.positionAt(this.selEnd);
-						var range = new vscode.Range(posStart,posEnd);
+						const txt = new TextFile(visualText.analyzer.getTextPath().fsPath);
+						const posStart = txt.positionAt(this.selStart-1);
+						const posEnd = txt.positionAt(this.selEnd);
+						const range = new vscode.Range(posStart,posEnd);
 						edit.selections = [new vscode.Selection(posStart,posEnd)]; 
 						edit.revealRange(range);
 					});
@@ -178,7 +178,7 @@ export class TreeFile extends TextFile {
 
 	generatePath(editor: vscode.TextEditor) {
 		if (visualText.analyzer.hasText()) {
-			let passFileUri = this.getPassFromPath(editor);
+			const passFileUri = this.getPassFromPath(editor);
 			if (passFileUri.fsPath.length > 2) {
 				this.setFile(editor.document.uri);
 				this.parseTreeLines(editor);
@@ -191,7 +191,7 @@ export class TreeFile extends TextFile {
 						let start = this.getStartLine();
 						let lastIndent = treeLine.indent + 1;
 						while ( treeLine.indent > 0) {
-							let line = this.getLines()[start--];
+							const line = this.getLines()[start--];
 							treeLine = this.parseTreeLine(line);
 							if (treeLine.indent < lastIndent) {
 								pathStr = treeLine.node + ' ' + pathStr;
@@ -201,7 +201,7 @@ export class TreeFile extends TextFile {
 					}
 					pathStr = '@PATH ' + pathStr.trim();
 	
-					let nlp = new NLPFile();
+					const nlp = new NLPFile();
 					nlp.setFile(passFileUri);
 					nlp.replaceContext(pathStr);
 				}
@@ -215,23 +215,23 @@ export class TreeFile extends TextFile {
 	}
 
 	public getPassFromPath(editor: vscode.TextEditor): vscode.Uri {
-		let filePath = editor.document.uri.fsPath;
-		let passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
-		var seqFile = new SequenceFile();
+		const filePath = editor.document.uri.fsPath;
+		const passNum = parseInt(filePath.substring(filePath.length-8,filePath.length-5));
+		const seqFile = new SequenceFile();
 		seqFile.init();
 		return seqFile.getUriByPassNumber(passNum);
 	}
 
 	parseTreeLines(editor: vscode.TextEditor) {
-		let lines = this.getSelectedLines(editor);
+		const lines = this.getSelectedLines(editor);
 		this.selectedLines = [];
 		this.selStart = -1;
 		this.selEnd = -1;
 		let lineCount = 0;
 
-		for (let line of lines) {
+		for (const line of lines) {
 			lineCount++;
-			let treeLine = this.parseTreeLine(line);
+			const treeLine = this.parseTreeLine(line);
 			if (this.selStart < 0 || treeLine.ustart < this.selStart) {
 				this.selStart = treeLine.ustart;
 			}
@@ -249,21 +249,21 @@ export class TreeFile extends TextFile {
 
 			if (this.parseBrackets()) {
 				this.parseFireds(this.treeFile);
-				var absolute = this.lineCharacterToAbsolute(editor.selection.active);
+				const absolute = this.lineCharacterToAbsolute(editor.selection.active);
 
 				if (absolute >= 0) {
-					var firedNumber = this.findMatchByAbsolute(absolute);
+					const firedNumber = this.findMatchByAbsolute(absolute);
 
 					if (firedNumber >= 0) {
-						var chosen = this.getFired(firedNumber);
+						const chosen = this.getFired(firedNumber);
 						if (chosen.rulenum > 0) {
-							var ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rulenum);
+							const ruleFileUri = visualText.analyzer.seqFile.getUriByPassNumber(chosen.rulenum);
 							visualText.colorizeAnalyzer();
 							vscode.window.showTextDocument(ruleFileUri, { viewColumn: vscode.ViewColumn.Beside }).then(editor => 
 							{
-								var pos = new vscode.Position(chosen.ruleline-1,0);
+								const pos = new vscode.Position(chosen.ruleline-1,0);
 								editor.selections = [new vscode.Selection(pos,pos)]; 
-								var range = new vscode.Range(pos, pos);
+								const range = new vscode.Range(pos, pos);
 								editor.revealRange(range);
 							});							
 						} else {
@@ -279,12 +279,12 @@ export class TreeFile extends TextFile {
 	}
 
 	getFired(firedNumber: number): Fired {
-		var chosen = this.fireds[firedNumber];
+		const chosen = this.fireds[firedNumber];
 		while (chosen.rulenum == 0 && firedNumber > 0) {
 			firedNumber--;
 			if (firedNumber < 0)
 				break;
-			let parent: Fired = this.fireds[firedNumber];
+			const parent: Fired = this.fireds[firedNumber];
 			if (parent.to < chosen.from)
 				break;
 		}
@@ -317,7 +317,7 @@ export class TreeFile extends TextFile {
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
 		this.selectedTreeStr = '';
-		let type: nlpFileType = this.getFileType();
+		const type: nlpFileType = this.getFileType();
 		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
 			if (this.getFileType() == nlpFileType.TXT) {
 				this.setFilesNames(visualText.analyzer.getTreeFile().fsPath);
@@ -333,29 +333,29 @@ export class TreeFile extends TextFile {
 
 	generateRule(editor: vscode.TextEditor, genType: generateType) {
 		if (visualText.analyzer.hasText()) {
-			let ruleStr = '';
-			let type = this.getFileType();
-			let nlp = new NLPFile();
+			const ruleStr = '';
+			const type = this.getFileType();
+			const nlp = new NLPFile();
 
 			if (type == nlpFileType.NLP || type == nlpFileType.UNKNOWN) {
-				var range = new vscode.Range(editor.selection.start, editor.selection.end);
-				let str = editor.document.getText(range);
+				const range = new vscode.Range(editor.selection.start, editor.selection.end);
+				const str = editor.document.getText(range);
 				let ruleStr = this.generateRuleFromStr(str, genType);
 				ruleStr = this.ruleStrOutput(ruleStr);
-				var snippet = new vscode.SnippetString(ruleStr);
+				const snippet = new vscode.SnippetString(ruleStr);
 				editor.insertSnippet(snippet,range);
 
 			} else {
-				let passFilePath = visualText.analyzer.getPassPath();
-				let passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
-				let passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
+				const passFilePath = visualText.analyzer.getPassPath();
+				const passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
+				const passItem = visualText.analyzer.seqFile.findPass('nlp',passName);
 				this.treeFile = this.anaFile(passItem.passNum).fsPath;
 	
 				if (this.findSelectedTreeStr(editor)) {
 					let ruleStr = this.ruleFromLines(genType);
 					nlp.setStr(ruleStr);
 					ruleStr = nlp.formatRule(ruleStr);
-					let ruleStrFinal = this.ruleStrOutput(ruleStr);
+					const ruleStrFinal = this.ruleStrOutput(ruleStr);
 					nlp.setFile(passFilePath);
 					nlp.insertRule(ruleStrFinal);
 				}
@@ -381,7 +381,7 @@ ${ruleStr}
 		let lastend = 0;
 		let indent = -1;
 
-		for (let line of this.selectedLines) {
+		for (const line of this.selectedLines) {
 			if (line.node.localeCompare('_ROOT') == 0)
 				continue;
 			let node = line.node;
@@ -401,7 +401,7 @@ ${ruleStr}
 				} else if (node.length == 1) {
 					node = `\\${node}`;
 				}
-				let newRuleStr = `\t${node}\t### (${num})`;
+				const newRuleStr = `\t${node}\t### (${num})`;
 				if (ruleStr.length)
 					ruleStr += '\n';
 				ruleStr += newRuleStr;
@@ -415,11 +415,11 @@ ${ruleStr}
 	generateRuleFromStr(str: string, genType: generateType): string {
 		let ruleStr = '';
 		let node = '';
-		var tokens = this.nlpppSplitter(str.toLowerCase());
+		const tokens = this.nlpppSplitter(str.toLowerCase());
 		let num = 1;
-		for (let token of tokens) {
+		for (const token of tokens) {
 			node = token;
-			let isint = !isNaN(parseInt(token));
+			const isint = !isNaN(parseInt(token));
 			if (genType == generateType.GENERAL) {
 				if (isint) {
 					node = '_xNUM';
@@ -434,7 +434,7 @@ ${ruleStr}
 				node = '\\' + token;
 			}
 
-			let nodeStr = `\t${node}\t### (${num})`;
+			const nodeStr = `\t${node}\t### (${num})`;
 			if (ruleStr.length)
 				ruleStr += '\n';
 			ruleStr += nodeStr;
@@ -444,17 +444,17 @@ ${ruleStr}
 	}
 
 	nlpppSplitter(str: string): string[] {
-		let len = str.length;
+		const len = str.length;
 		let i = 0;
-		let tokens: string[] = [];
+		const tokens: string[] = [];
 		let tok = '';
-		let isDigit: boolean = false;
+		const isDigit: boolean = false;
 		enum charType { UNKNOWN, ALPHA, DIGIT, SPACE, SPECIAL }
 		let type: charType = charType.UNKNOWN;
 		let lastType: charType = charType.UNKNOWN;
 
 		while (i < len) {
-			let c = str[i++];
+			const c = str[i++];
 			if (c >= '0' && c <= '9') {
 				type = charType.DIGIT;
 			} else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
@@ -483,8 +483,8 @@ ${ruleStr}
 	}
 
 	parseTreeLine(line: string): TreeLine {
-		let treeLine: TreeLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
-		var tokens = line.split('[');
+		const treeLine: TreeLine = {node: '', start: 0, end: 0, ustart: 0, uend: 0, passNum: 0, ruleLine: 0, type: '', fired: false, built: false, rest: '', indent: 0};
+		const tokens = line.split('[');
 		let firstTok = 1;
 		if (tokens.length > 1) {
 			// Exception when the character is an open square bracket
@@ -496,7 +496,7 @@ ${ruleStr}
 				treeLine.node = tokens[0].trim();
 				treeLine.indent = tokens[0].search(/\S/) - 1;
 			}
-			var toks = tokens[firstTok].split(/[,\]]/);
+			const toks = tokens[firstTok].split(/[,\]]/);
 			if (toks.length >= 4) {
 				treeLine.start = +toks[0];
 				treeLine.end = +toks[1];
@@ -520,7 +520,7 @@ ${ruleStr}
 
 	findSelectedTree(editor: vscode.TextEditor) {
 		if (this.findSelectedTreeStr(editor)) {
-			var filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.tree';
+			const filename = this.basename + '-' + this.selStart.toString() + '-' + this.selEnd.toString() + '.tree';
 			this.openTemporaryFile(filename,this.selectedTreeStr);
 		}
 		else {
@@ -534,7 +534,7 @@ ${ruleStr}
             vscode.workspace
                 .getConfiguration('createtmpfile')
                 .get('tmpDir') || os.tmpdir());
-		var filePath = vscode.Uri.file(path.join(tempDir,filepath));
+		const filePath = vscode.Uri.file(path.join(tempDir,filepath));
 		fs.writeFileSync(filePath.fsPath, content);
 		vscode.workspace.openTextDocument(filePath).then(document => {
 			visualText.colorizeAnalyzer();
@@ -546,12 +546,12 @@ ${ruleStr}
 		if (end) {
 			text = text.substring(0,end);
 		}
-		var parens = text.split(/\(\(\(/);
-		var parens2 = text.split(/\)\)\)/);
-		var angle = text.split(/\<\<\</);
-		var angle2 = text.split(/\>\>\>/);
-		var parenCount = ((parens.length-1) + (parens2.length-1))*3;
-		var angleCount = ((angle.length-1) + (angle2.length-1))*3;
+		const parens = text.split(/\(\(\(/);
+		const parens2 = text.split(/\)\)\)/);
+		const angle = text.split(/\<\<\</);
+		const angle2 = text.split(/\>\>\>/);
+		const parenCount = ((parens.length-1) + (parens2.length-1))*3;
+		const angleCount = ((angle.length-1) + (angle2.length-1))*3;
 		return parenCount + angleCount;
 	}
 
@@ -560,14 +560,14 @@ ${ruleStr}
 	}
 
 	absoluteRangeFromSelection(textfile: string, selection: vscode.Selection) {
-		var absStart = 0;
-		var absEnd = 0;
-		var file = new TextFile(textfile);
-		var linecount = 0;
-		var multiline = false;
+		let absStart = 0;
+		let absEnd = 0;
+		const file = new TextFile(textfile);
+		let linecount = 0;
+		let multiline = false;
 
-		for (let line of file.getLines(true)) {
-			var len = this.getCharacterLength(line);
+		for (const line of file.getLines(true)) {
+			const len = this.getCharacterLength(line);
 			if (multiline) {
 				if (selection.end.line == linecount) {
 					absEnd += selection.end.character - this.bracketCount(line,selection.end.character) - 1;
@@ -578,19 +578,19 @@ ${ruleStr}
 					absEnd += 1;
 			}
 			else if (selection.start.line == linecount) {
-				var beforeStr = line.substring(0,selection.start.character);
-				var bLen = this.getCharacterLength(beforeStr);
+				const beforeStr = line.substring(0,selection.start.character);
+				const bLen = this.getCharacterLength(beforeStr);
 				absStart += bLen - this.bracketCount(line,selection.start.character);
 				if (selection.end.line == linecount) {
-					var selStr = line.substring(selection.start.character,selection.end.character);
-					// var selStr = line.substring(selection.start.character,selection.end.character-selection.start.character);
+					const selStr = line.substring(selection.start.character,selection.end.character);
+					// let selStr = line.substring(selection.start.character,selection.end.character-selection.start.character);
 					absEnd = absStart + selStr.length - this.bracketCount(selStr);
 					break;
 				}
 				absEnd = absStart + len - selection.start.character - this.bracketCount(line);
 				multiline = true;
 			} else {
-				let bracket = this.bracketCount(line);
+				const bracket = this.bracketCount(line);
 				absStart += len - bracket;
 				if (len == 0)
 					absStart += 1;
@@ -603,22 +603,22 @@ ${ruleStr}
 	}
 
 	findTreeFileLines() {
-		var file = new TextFile(this.treeFile);
-		var sep = file.getSeparatorNormalized();
-		var from = 0;
-		var to = 0;
-		var add = false;
+		const file = new TextFile(this.treeFile);
+		const sep = file.getSeparatorNormalized();
+		let from = 0;
+		let to = 0;
+		let add = false;
 		this.selectedLines = [];
 		this.selectedTreeStr = '';
 
-		for (let line of file.getLines()) {
+		for (const line of file.getLines()) {
 			from = 0;
 			to = 0;
 			add = false;
 
-			var tokens = line.split('[');
+			const tokens = line.split('[');
 			if (tokens.length > 1) {
-				var toks = tokens[1].split(/[,\]]/);
+				const toks = tokens[1].split(/[,\]]/);
 				if (toks.length > 4) {
 					from = +toks[2];
 					to = +toks[3];
@@ -632,9 +632,9 @@ ${ruleStr}
 	}
 
 	findMatchByAbsolute(absolute: number): number {
-		var firedNumber = 0;
+		let firedNumber = 0;
 
-		for (let Highlight of this.Highlight) {
+		for (const Highlight of this.Highlight) {
 			if (Highlight.startb <= absolute && absolute <= Highlight.endb) {
 				return firedNumber;
 			}
@@ -645,11 +645,11 @@ ${ruleStr}
 	}
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
-		var file = new TextFile(this.HighlightFile);
-		var lineCount = 0;
-		var absolute = 0;
+		const file = new TextFile(this.HighlightFile);
+		let lineCount = 0;
+		let absolute = 0;
 
-		for (let line of file.getLines()) {
+		for (const line of file.getLines()) {
 			if (lineCount == position.line) {
 				return absolute + position.character;
 			}
@@ -661,27 +661,27 @@ ${ruleStr}
 
 	parseBrackets(): number {
 		this.Highlight = [];
-		var squares = this.parseBracketsRegex('(');
-		var curlies = this.parseBracketsRegex('<');
+		const squares = this.parseBracketsRegex('(');
+		const curlies = this.parseBracketsRegex('<');
 		this.Highlight.sort(function(a,b){return a.start - b.start});
 		return squares + curlies;
 	}
 
 	parseBracketsRegex(bracket: string): number {
-		var startPattern = bracket === '<' ? '\<\<\<' : '\(\(\(';
-		var endPattern = bracket === '<' ? '\>\>\>' : '\)\)\)';
+		const startPattern = bracket === '<' ? '\<\<\<' : '\(\(\(';
+		const endPattern = bracket === '<' ? '\>\>\>' : '\)\)\)';
 
-		var file = new TextFile(this.HighlightFile,false);
-		var tokens = file.getText(true).split(startPattern);
-		var tokencount = 0;
-		var len = 0;
-		var lenBracket = 0;
+		const file = new TextFile(this.HighlightFile,false);
+		const tokens = file.getText(true).split(startPattern);
+		let tokencount = 0;
+		let len = 0;
+		let lenBracket = 0;
 
 		for (let token of tokens) {
 			token = token.replace(/[\n\r]/g, '');
 			if (tokencount) {
-				let Highlight: Highlight = {start: 0, end: 0, startb: 0, endb: 0};
-				var toks = token.split(endPattern);
+				const Highlight: Highlight = {start: 0, end: 0, startb: 0, endb: 0};
+				const toks = token.split(endPattern);
 				Highlight.start = len;
 				Highlight.end = len + toks[0].length - 1;
 				Highlight.startb = lenBracket;
@@ -701,19 +701,19 @@ ${ruleStr}
 	}
 	
 	parseFireds(treeFile: string) {
-		var refire = /[\[,\]]/g;
+		const refire = /[\[,\]]/g;
 		this.fireds = [];
 
-		var file = new TextFile(treeFile);
-		var lastTo = 0;
+		const file = new TextFile(treeFile);
+		let lastTo = 0;
 
 		for (let i=0; i < file.getLines().length; i++) {
-			let line = file.getLine(i);
-			var tokens = line.split(',fired');
+			const line = file.getLine(i);
+			const tokens = line.split(',fired');
 			if (tokens.length > 1) {
-				let fired: Fired = {str: '', from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
+				const fired: Fired = {str: '', from: 0, to: 0, ufrom: 0, uto: 0, rulenum: 0, ruleline: 0, built: false};
 
-				var tts = line.split(refire);
+				const tts = line.split(refire);
 				const firstChar = line.trim().charAt(0);
 				if (/^[\[\],]/i.test(firstChar)) {
 					tts[0] = firstChar;
@@ -732,16 +732,16 @@ ${ruleStr}
 						this.fireds.push(fired);
 					
 					if (fired.str.startsWith('_')) {
-						let indent = line.search(/\S/);
+						const indent = line.search(/\S/);
 						fired.str = '';
 						while (indent > 0) {
 							i++;
-							let nextLine = file.getLine(i);
-							let pos = nextLine.search(/\S/);
+							const nextLine = file.getLine(i);
+							const pos = nextLine.search(/\S/);
 							if (pos <= indent)
 								break;
-							let ts = nextLine.split(/\s+/);
-							let rest = ts[1].trim();
+							const ts = nextLine.split(/\s+/);
+							const rest = ts[1].trim();
 							fired.str = fired.str + ' ' + rest;
 						}
 						fired.str = fired.str.trim();
@@ -754,9 +754,9 @@ ${ruleStr}
 	}
 
 	firedFile(pass: number, rewrite: boolean=false): vscode.Uri {
-		var firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
+		const firefile: vscode.Uri = this.anaFile(pass,nlpFileType.TXXT);
 		if (!fs.existsSync(firefile.fsPath) || rewrite) {
-			var treeFile = this.anaFile(pass);
+			const treeFile = this.anaFile(pass);
 			if (fs.existsSync(treeFile.fsPath)) {
 				this.parseFireds(treeFile.fsPath);
 				this.writeFiredText(treeFile,rewrite);
@@ -767,7 +767,7 @@ ${ruleStr}
     
 	fileCreateTime(filepath: string): Date {
 		if (fs.existsSync(filepath)) {
-			var stats = fs.statSync(filepath);
+			const stats = fs.statSync(filepath);
 			if (stats)
 				return stats.ctime;
 		}
@@ -776,35 +776,35 @@ ${ruleStr}
 
 	writeFiredText(treeFile: vscode.Uri, rewrite: boolean=false): vscode.Uri {
 		this.setFilesNames(treeFile.fsPath);
-		var logDate: Date = this.fileCreateTime(treeFile.fsPath);
-		var inputDate: Date = this.fileCreateTime(this.inputFile);
+		const logDate: Date = this.fileCreateTime(treeFile.fsPath);
+		const inputDate: Date = this.fileCreateTime(this.inputFile);
 		if (!rewrite && inputDate < logDate && fs.existsSync(this.HighlightFile))
 			return vscode.Uri.file(this.HighlightFile);
 		else if (!rewrite && !fs.existsSync(this.inputFile))
 			return treeFile;
 
-		var file = new TextFile(this.inputFile,false);
+		const file = new TextFile(this.inputFile,false);
 
-		var textfire = '';
-		var lastTo = 0;
-		var between = '';
-		var Highlight = '';
-		var from = 0;
-		var to = 0;
-		var built = false;
-		var byteText = new TextEncoder().encode(file.getText(true));
+		let textfire = '';
+		let lastTo = 0;
+		const between = '';
+		const Highlight = '';
+		let from = 0;
+		let to = 0;
+		let built = false;
+		const byteText = new TextEncoder().encode(file.getText(true));
 
 		if (this.fireds.length) {
-			for (var i = 0; i < this.fireds.length; i++) {
+			for (let i = 0; i < this.fireds.length; i++) {
 				from = this.fireds[i].from;
 				to = this.fireds[i].to;
 				built = this.fireds[i].built;
 
-				var hl = byteText.slice(from,to+1);
-				var Highlight = new TextDecoder().decode(hl);
+				const hl = byteText.slice(from,to+1);
+				const Highlight = new TextDecoder().decode(hl);
 
-				var bt = byteText.slice(lastTo,from);
-				var between = new TextDecoder().decode(bt);
+				const bt = byteText.slice(lastTo,from);
+				const between = new TextDecoder().decode(bt);
 
 				if (built)
 					textfire = textfire.concat(between,'<<<',Highlight,'>>>');
@@ -815,8 +815,8 @@ ${ruleStr}
 
 				lastTo = to + 1;
 			}
-			var tx = byteText.slice(lastTo,byteText.length);
-			var rest = new TextDecoder().decode(tx);
+			const tx = byteText.slice(lastTo,byteText.length);
+			const rest = new TextDecoder().decode(tx);
 			textfire = textfire.concat(rest);
 		} else {
 			textfire = file.getText(true);
@@ -828,11 +828,11 @@ ${ruleStr}
 	}
 
 	updateTxxtFiles(fileType: nlpFileType) {
-		var exts = new Array('.'+this.getExtension(fileType));
-		var files = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),exts);
-		for (let file of files) {
-			var numStr = path.basename(file.fsPath).substring(3,3);
-			var passNum = Number.parseInt(numStr);
+		const exts = new Array('.'+this.getExtension(fileType));
+		const files = dirfuncs.getFiles(visualText.analyzer.getOutputDirectory(),exts);
+		for (const file of files) {
+			const numStr = path.basename(file.fsPath).substring(3,3);
+			const passNum = Number.parseInt(numStr);
 			this.firedFile(passNum,true);
 		}
 	}

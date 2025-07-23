@@ -58,7 +58,7 @@ export class JsonState {
     }
 
     writeFile() {
-        var jsonStr = JSON.stringify(this.json,null,this.tabSize);
+        const jsonStr = JSON.stringify(this.json,null,this.tabSize);
         if (!fs.existsSync(this.dirPath)) {
             try {
                 fs.mkdirSync(this.dirPath);

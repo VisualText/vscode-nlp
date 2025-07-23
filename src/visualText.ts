@@ -6,8 +6,8 @@ import { Analyzer } from './analyzer';
 import { dirfuncs } from './dirfuncs';
 import { JsonState } from './jsonState';
 import { nlpStatusBar } from './status';
-import { logView,logLineType } from './logView';
-import { FileOps,fileOperation,fileOpRefresh,fileOneOff } from './fileOps';
+import { logView, logLineType } from './logView';
+import { FileOps, fileOperation, fileOpRefresh, fileOneOff } from './fileOps';
 import { NLPFile } from './nlp';
 import { ModFile } from './modFile';
 import { SequenceFile } from './sequence';
@@ -46,7 +46,7 @@ interface TestItem {
 
 // HOW TO CALL IT
 //(async() => { await closeFileIfOpen(original); })();
-export async function closeFileIfOpen(file:vscode.Uri) : Promise<void> {
+export async function closeFileIfOpen(file: vscode.Uri): Promise<void> {
     const tabs: vscode.Tab[] = vscode.window.tabGroups.all.map(tg => tg.tabs).flat();
     const index = tabs.findIndex(tab => tab.input instanceof vscode.TabInputText && tab.input.uri.path === file.path);
     if (index !== -1) {
@@ -58,10 +58,10 @@ export let visualText: VisualText;
 export class VisualText {
     _ctx: vscode.ExtensionContext;
     public opsQueue: updateOp[] = new Array();
-    public statusStrs = [ 'UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE' ];
-    public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE' ];
-    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES' ];
-    
+    public statusStrs = ['UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE'];
+    public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE'];
+    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES'];
+
     public readonly LOG_SUFFIX = '_log';
     public readonly TEST_SUFFIX = '_test';
     public readonly EXTENSION_NAME = 'dehilster.nlp';
@@ -123,12 +123,12 @@ export class VisualText {
     private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
 
-    private testItem: TestItem = {fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0};
+    private testItem: TestItem = { fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0 };
 
-	constructor(ctx: vscode.ExtensionContext) {
+    constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
     }
-    
+
     static attach(ctx: vscode.ExtensionContext): VisualText {
         if (!visualText) {
             visualText = new VisualText(ctx);
@@ -147,20 +147,20 @@ export class VisualText {
         return visualText;
     }
 
-    editTestFiles(uri: vscode.Uri, outputPathFlag: boolean=false) {
-		if (visualText.getWorkspaceFolder()) {
-            var testFolder = this.analyzer.testFolder(uri,outputPathFlag);
-			let files = dirfuncs.getFiles(testFolder);
+    editTestFiles(uri: vscode.Uri, outputPathFlag: boolean = false) {
+        if (visualText.getWorkspaceFolder()) {
+            const testFolder = this.analyzer.testFolder(uri, outputPathFlag);
+            const files = dirfuncs.getFiles(testFolder);
             if (files.length > 1) {
-                let items: vscode.QuickPickItem[] = [];
-                for (let file of files) {
-                    items.push({label: path.basename(file.fsPath), description: file.fsPath});
+                const items: vscode.QuickPickItem[] = [];
+                for (const file of files) {
+                    items.push({ label: path.basename(file.fsPath), description: file.fsPath });
                 }
-            
-                let title = 'Edit Test Files';
-                let placeHolder = 'Choose test file to edit';
 
-                vscode.window.showQuickPick(items, {title, canPickMany: false, placeHolder: placeHolder}).then(selection => {
+                const title = 'Edit Test Files';
+                const placeHolder = 'Choose test file to edit';
+
+                vscode.window.showQuickPick(items, { title, canPickMany: false, placeHolder: placeHolder }).then(selection => {
                     if (!selection || !selection.description)
                         return;
                     if (selection.description)
@@ -169,21 +169,21 @@ export class VisualText {
             } else {
                 vscode.window.showTextDocument(vscode.Uri.file(files[0].fsPath));
             }
-		}
-	}
+        }
+    }
 
     regressionTestFile(): string {
-        return path.join(visualText.analyzer.getKBDirectory().fsPath,'regression.test');
+        return path.join(visualText.analyzer.getKBDirectory().fsPath, 'regression.test');
     }
-    
+
     testInit() {
-        this.testItem = {fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0};
+        this.testItem = { fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0 };
     }
 
     closeTest() {
-        var regressFile = this.regressionTestFile();
-        var content = fs.readFileSync(regressFile,'utf8');
-        var header = 'Files: ' + this.testItem.fileCount + '\n';
+        const regressFile = this.regressionTestFile();
+        let content = fs.readFileSync(regressFile, 'utf8');
+        let header = 'Files: ' + this.testItem.fileCount + '\n';
         header += 'File matches: ' + this.testItem.matchFiles + '\n';
         header += 'File mismatches: ' + this.testItem.misFiles + '\n';
         header += 'Total line matches: ' + this.testItem.matchLines + '\n';
@@ -191,47 +191,47 @@ export class VisualText {
         header += '\n\n';
 
         content = header + content;
-        fs.writeFileSync(regressFile,content,'utf8');
+        fs.writeFileSync(regressFile, content, 'utf8');
     }
-    
+
     runTest(textFile: vscode.Uri) {
-        var inputDir = visualText.analyzer.getInputDirectory().fsPath;
-        var relPath = textFile.fsPath.substring(inputDir.length+1,textFile.fsPath.length);
-        var outputFolder = path.join(inputDir,relPath + visualText.LOG_SUFFIX);
-        var testFolder = path.join(inputDir,relPath + visualText.TEST_SUFFIX);
-        var files = dirfuncs.getFiles(vscode.Uri.file(testFolder));
-        for (let testFile of files) {
-            var outputFile = path.join(outputFolder,path.basename(testFile.fsPath));
+        const inputDir = visualText.analyzer.getInputDirectory().fsPath;
+        const relPath = textFile.fsPath.substring(inputDir.length + 1, textFile.fsPath.length);
+        const outputFolder = path.join(inputDir, relPath + visualText.LOG_SUFFIX);
+        const testFolder = path.join(inputDir, relPath + visualText.TEST_SUFFIX);
+        const files = dirfuncs.getFiles(vscode.Uri.file(testFolder));
+        for (const testFile of files) {
+            const outputFile = path.join(outputFolder, path.basename(testFile.fsPath));
             if (fs.existsSync(outputFile)) {
-                this.testDiff(path.basename(textFile.fsPath),outputFile,testFile.fsPath);
+                this.testDiff(path.basename(textFile.fsPath), outputFile, testFile.fsPath);
             }
         }
         // vscode.commands.executeCommand("vscode.diff", testFolder, uri);
     }
 
-	testDiff(textFile: string, file: string, testFile: string) {
-		var testResults = this.regressionTestFile();
-		var fileText = new TextFile(file);
-		var testText = new TextFile(testFile);
-		var numLines = testText.getLines().length;
-		var match = 0;
-		var mismatch = 0;
-		var report = '';
-		var mismatches = '';
+    testDiff(textFile: string, file: string, testFile: string) {
+        const testResults = this.regressionTestFile();
+        const fileText = new TextFile(file);
+        const testText = new TextFile(testFile);
+        const numLines = testText.getLines().length;
+        let match = 0;
+        let mismatch = 0;
+        let report = '';
+        let mismatches = '';
 
-		for (let i = 0; i < numLines; i++) {
-			var lineFile = fileText.getLines()[i];
-			var lineTest = testText.getLines()[i];
-			if (lineFile == lineTest) {
-				match++;
-			} else {
-				mismatch++;
-				mismatches += lineFile + '\n' + lineTest + '\n\n';
-			}
-		}
-		report = textFile + ' Linesss: ' + numLines + ' ' + 'Matches: ' + match + ' ' + 'Mismatches: ' + mismatch + '\n';
-		if (mismatches.length)
-			report += mismatches + '\n';
+        for (let i = 0; i < numLines; i++) {
+            const lineFile = fileText.getLines()[i];
+            const lineTest = testText.getLines()[i];
+            if (lineFile == lineTest) {
+                match++;
+            } else {
+                mismatch++;
+                mismatches += lineFile + '\n' + lineTest + '\n\n';
+            }
+        }
+        report = textFile + ' Linesss: ' + numLines + ' ' + 'Matches: ' + match + ' ' + 'Mismatches: ' + mismatch + '\n';
+        if (mismatches.length)
+            report += mismatches + '\n';
 
         this.testItem.fileCount++;
         this.testItem.matchLines += match;
@@ -241,8 +241,8 @@ export class VisualText {
         } else {
             this.testItem.matchFiles++;
         }
-		fs.appendFileSync(testResults,report);
-	}
+        fs.appendFileSync(testResults, report);
+    }
 
     setModFile(filePath: vscode.Uri) {
         this.mod.setFile(filePath);
@@ -256,19 +256,19 @@ export class VisualText {
         if (this.updaterID == 0) {
             logView.clearLogs(false);
             this.platform = os.platform();
-            let plat = this.platform == 'darwin' ? 'mac' : this.platform;
+            const plat = this.platform == 'darwin' ? 'mac' : this.platform;
             this.homeDir = os.homedir();
-            var rootPath = this.getLatestExtPath(this.extensionParentDirectory());
+            const rootPath = this.getLatestExtPath(this.extensionParentDirectory());
             if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
             this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
 
             if (preInfoFlag) {
-                this.debugMessage('Platform: ' + plat,logLineType.UPDATER);
-                this.debugMessage('User profile path: ' + this.homeDir,logLineType.UPDATER);
-                this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath,logLineType.UPDATER);
+                this.debugMessage('Platform: ' + plat, logLineType.UPDATER);
+                this.debugMessage('User profile path: ' + this.homeDir, logLineType.UPDATER);
+                this.debugMessage('VSCode NLP++ Extension path: ' + this.extensionDir.fsPath, logLineType.UPDATER);
             }
 
-            this.debugMessage('Checking for updates or repairs...',logLineType.UPDATER);
+            this.debugMessage('Checking for updates or repairs...', logLineType.UPDATER);
             this.pushCheckVersions();
             this.startTimer();
         }
@@ -276,13 +276,13 @@ export class VisualText {
 
     startTimer() {
         if (this.updaterID == 0) {
-            this.updaterID = +setInterval(this.updaterTimer,1000);           
+            this.updaterID = +setInterval(this.updaterTimer, 1000);
         }
     }
 
     stopUpdater() {
-        this.debugMessage('STOP requested by user',logLineType.UPDATER);
-        for (let o of visualText.opsQueue) {
+        this.debugMessage('STOP requested by user', logLineType.UPDATER);
+        for (const o of visualText.opsQueue) {
             if (o.status != upStat.RUNNING) {
                 o.status = upStat.DONE;
             }
@@ -297,61 +297,61 @@ export class VisualText {
     }
 
     pushCheckVTFiles() {
-        let op = visualText.emptyOp();
-        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.VT_FILES);
+        const op = visualText.emptyOp();
+        visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.VT_FILES);
     }
 
     pushCheckAnalyzerFiles() {
-        let op = visualText.emptyOp();
-        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.ANALYZER_FILES);
+        const op = visualText.emptyOp();
+        visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.ANALYZER_FILES);
     }
 
     pushCheckEngineFiles() {
-        let op = visualText.emptyOp();
+        const op = visualText.emptyOp();
         if (visualText.platform == 'win32') {
-            visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU1);
-            visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.ICU2);
+            visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.ICU1);
+            visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.ICU2);
         }
-        visualText.addUpdateOperation(op,upPush.BACK,upType.DOWNLOAD,upStat.START,upOp.CHECK_EXISTS,upComp.NLP_EXE);
-        visualText.addUpdateOperation(op,upPush.BACK,upType.UNZIP,upStat.START,upOp.CHECK_EXISTS,upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.NLP_EXE);
+        visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.ENGINE_FILES);
     }
 
     pushDeleteEngineFiles(op: updateOp, push: upPush) {
         if (visualText.platform == 'win32') {
-            visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU1);
-            visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ICU2);
+            visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ICU1);
+            visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ICU2);
         }
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.NLP_EXE);
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.NLP_EXE);
+        visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ENGINE_FILES);
     }
-    
+
     pushDeleteVTFiles(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.VT_FILES);
+        visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.VT_FILES);
     }
 
     pushDeleteAnalyzers(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.DELETE,upStat.START,upOp.DELETE,upComp.ANALYZER_FILES);
+        visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ANALYZER_FILES);
     }
 
     pushDownloadEngineFiles(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ENGINE_FILES);
-        visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.NLP_EXE);
+        visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.NLP_EXE);
         if (visualText.platform == 'win32') {
-            visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU2);
-            visualText.addUpdateOperation(op,push,upType.DOWNLOAD,upStat.START,upOp.DOWNLOAD,upComp.ICU1);            
+            visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.ICU2);
+            visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.ICU1);
         }
     }
 
     pushDownloadVTFiles(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.VT_FILES);
+        visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.VT_FILES);
     }
 
     pushDownloadAnalyzers(op: updateOp, push: upPush) {
-        visualText.addUpdateOperation(op,push,upType.UNZIP,upStat.START,upOp.DOWNLOAD,upComp.ANALYZER_FILES);
+        visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.ANALYZER_FILES);
     }
 
     addUpdateOperation(opIn: updateOp, push: upPush, type: upType, status: upStat, operation: upOp, component: upComp) {
-        var op = {type: type, status: status, operation: operation, component: component, remote: '', local: '', folders: [], version: opIn.version};
+        const op = { type: type, status: status, operation: operation, component: component, remote: '', local: '', folders: [], version: opIn.version };
 
         switch (component) {
             case upComp.ICU1:
@@ -362,13 +362,13 @@ export class VisualText {
                 visualText.nlpExe(op);
                 break;
             case upComp.ENGINE_FILES:
-                visualText.zipFiles(op,visualText.NLPENGINE_REPO,'',visualText.NLPENGINE_FILES_ASSET,['data']);
+                visualText.zipFiles(op, visualText.NLPENGINE_REPO, '', visualText.NLPENGINE_FILES_ASSET, ['data']);
                 break;
             case upComp.VT_FILES:
-                visualText.zipFiles(op,visualText.VISUALTEXT_FILES_REPO,'visualText',visualText.VISUALTEXT_FILES_ASSET,[visualText.ANALYZER_SEQUENCE_FOLDER,'Help','analyzers']);
+                visualText.zipFiles(op, visualText.VISUALTEXT_FILES_REPO, 'visualText', visualText.VISUALTEXT_FILES_ASSET, [visualText.ANALYZER_SEQUENCE_FOLDER, 'Help', 'analyzers']);
                 break;
             case upComp.ANALYZER_FILES:
-                visualText.zipFiles(op,visualText.ANALYZERS_REPO,'analyzers',visualText.ANALYZERS_ASSET,['']);
+                visualText.zipFiles(op, visualText.ANALYZERS_REPO, 'analyzers', visualText.ANALYZERS_ASSET, ['']);
                 break;
         }
 
@@ -381,15 +381,15 @@ export class VisualText {
     zipFiles(op: updateOp, repo: string, folder: string, download: string, folders: string[]) {
         op.remote = visualText.GITHUB_REPOSITORY + repo + visualText.GITHUB_RELEASE_LATEST_DOWNLOAD + download;
         const engDir = visualText.engineDirectory().fsPath;
-        op.local = path.join(engDir,folder,download);
+        op.local = path.join(engDir, folder, download);
         op.folders = [];
-        for (let f of folders) {
-            op.folders.push(path.join(folder,f));
+        for (const f of folders) {
+            op.folders.push(path.join(folder, f));
         }
     }
-    
+
     nlpExe(op: updateOp) {
-        var exe = '';
+        let exe = '';
         switch (visualText.platform) {
             case 'win32':
                 exe = 'nlpw.exe';
@@ -402,13 +402,13 @@ export class VisualText {
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + exe;
         const engDir = visualText.engineDirectory().fsPath;
-        op.local = path.join(engDir,visualText.NLP_EXE);
+        op.local = path.join(engDir, visualText.NLP_EXE);
     }
 
     libFilenames(op: updateOp) {
-        var libRelease = '';
-        var lib = '';
-        var icu1 = op.component == upComp.ICU1 ? 1 : 0;
+        let libRelease = '';
+        let lib = '';
+        const icu1 = op.component == upComp.ICU1 ? 1 : 0;
         switch (visualText.platform) {
             case 'win32':
                 libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
@@ -416,14 +416,14 @@ export class VisualText {
                 break;
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
-        var engDir = visualText.engineDirectory().fsPath;
-        op.local = path.join(engDir,lib);
+        const engDir = visualText.engineDirectory().fsPath;
+        op.local = path.join(engDir, lib);
     }
 
     getLatestExtPath(dir: vscode.Uri): string {
-        var files = dirfuncs.getFiles(dir);
-        for (let file of files.reverse()) {
-            let filename = path.basename(file.fsPath);
+        const files = dirfuncs.getFiles(dir);
+        for (const file of files.reverse()) {
+            const filename = path.basename(file.fsPath);
             if (filename.startsWith(this.EXTENSION_NAME)) {
                 this.version = this.versionFromPath(file);
                 return file.fsPath;
@@ -434,10 +434,10 @@ export class VisualText {
 
     updaterTimer() {
         let op = visualText.opsQueue[0];
-        let q = visualText.opsQueue;
+        const q = visualText.opsQueue;
         let allDone = true;
 
-        for (let o of visualText.opsQueue) {
+        for (const o of visualText.opsQueue) {
             if (visualText.stopAll) {
                 if (o.status == upStat.RUNNING)
                     allDone = false;
@@ -461,9 +461,9 @@ export class VisualText {
             clearInterval(visualText.updaterID);
             visualText.updaterID = 0;
             if (visualText.stopAll)
-                visualText.debugMessage('UPDATE STOPPED BY USER',logLineType.UPDATER);
+                visualText.debugMessage('UPDATE STOPPED BY USER', logLineType.UPDATER);
             else
-                visualText.debugMessage('UPDATE CHECK COMPLETE',logLineType.UPDATER);
+                visualText.debugMessage('UPDATE CHECK COMPLETE', logLineType.UPDATER);
             visualText.stopAll = false;
             vscode.commands.executeCommand('status.update');
             return;
@@ -474,17 +474,17 @@ export class VisualText {
             return;
 
         if (visualText.debug)
-            visualText.debugMessage(visualText.statusStrs[op.status] + ' ' + visualText.opStrs[op.operation] + ' ' + visualText.compStrs[op.component],logLineType.UPDATER);
+            visualText.debugMessage(visualText.statusStrs[op.status] + ' ' + visualText.opStrs[op.operation] + ' ' + visualText.compStrs[op.component], logLineType.UPDATER);
 
         switch (op.status) {
             case upStat.START:
                 switch (op.operation) {
                     case upOp.CHECK_EXISTS:
-                        var endDir = path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO);
+                        const endDir = path.join(visualText.getExtensionPath().fsPath, visualText.NLPENGINE_REPO);
                         if (op.folders.length && endDir) {
-                            var missingOne = false;
-                            for (let folder of op.folders) {
-                                let f = path.join(endDir,folder);
+                            let missingOne = false;
+                            for (const folder of op.folders) {
+                                const f = path.join(endDir, folder);
                                 if (!fs.existsSync(f)) {
                                     missingOne = true;
                                     break;
@@ -521,15 +521,15 @@ export class VisualText {
                             visualText.download(op);
                         }
                         break;
-                        
+
                     case upOp.DELETE:
                         if (fs.existsSync(op.local)) {
-                            visualText.debugMessage('Deleting: ' + op.local,logLineType.UPDATER);
+                            visualText.debugMessage('Deleting: ' + op.local, logLineType.UPDATER);
                             fs.unlinkSync(op.local);
                         }
                         if (op.folders.length) {
-                            for (let folder of op.folders) {
-                                let f = path.join(path.dirname(op.local),folder);
+                            for (const folder of op.folders) {
+                                const f = path.join(path.dirname(op.local), folder);
                                 if (fs.existsSync(f)) {
                                     dirfuncs.delDir(f);
                                 }
@@ -548,27 +548,27 @@ export class VisualText {
                             visualText.updateVersion(op);
                             op.status = upStat.DONE;
                         } else {
-                            switch(op.component) {
+                            switch (op.component) {
                                 case upComp.NLP_EXE:
                                     visualText.checkExeVersion(op);
                                     break;
-                                
+
                                 case upComp.VT_FILES:
                                     visualText.checkVTFilesVersion(op);
                                     break;
-                                                                
+
                                 case upComp.ANALYZER_FILES:
-                                    if (visualText.debug) visualText.debugMessage('VERSION CHECK: Analyzers',logLineType.UPDATER);
+                                    if (visualText.debug) visualText.debugMessage('VERSION CHECK: Analyzers', logLineType.UPDATER);
                                     visualText.checkAnalyzersVersion(op);
                                     break;
                             }
                         }
-                    break;
+                        break;
                 }
                 break;
-            
+
             case upStat.RUNNING:
-                let donothing = 1;
+                const donothing = 1;
                 break;
         }
     }
@@ -578,7 +578,7 @@ export class VisualText {
     }
 
     emptyOp(): updateOp {
-        return {type: upType.UNKNOWN, status: upStat.UNKNOWN, operation: upOp.UNKNOWN, component: upComp.UNKNOWN, remote: '', local: '', folders: [], version: ''};
+        return { type: upType.UNKNOWN, status: upStat.UNKNOWN, operation: upOp.UNKNOWN, component: upComp.UNKNOWN, remote: '', local: '', folders: [], version: '' };
     }
 
     updateVersion(op: updateOp) {
@@ -600,45 +600,45 @@ export class VisualText {
     checkExeVersion(op: updateOp) {
         visualText.fetchExeVersion(op)?.then(version => {
             visualText.checkEngineVersionRepo(op)
-            .then(newerVersion => {
-                if (newerVersion) {
-                    visualText.pushDownloadEngineFiles(op,upPush.FRONT);
-                    visualText.pushDeleteEngineFiles(op,upPush.FRONT);
-                }
-                op.status = upStat.DONE;
-                visualText.updateVersion(op);
-            })
+                .then(newerVersion => {
+                    if (newerVersion) {
+                        visualText.pushDownloadEngineFiles(op, upPush.FRONT);
+                        visualText.pushDeleteEngineFiles(op, upPush.FRONT);
+                    }
+                    op.status = upStat.DONE;
+                    visualText.updateVersion(op);
+                })
         })
-        .catch(error => {
-            op.status = upStat.FAILED;
-        });
+            .catch(error => {
+                op.status = upStat.FAILED;
+            });
         op.status = upStat.RUNNING;
     }
-    
+
     checkEngineVersionRepo(op: updateOp) {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
 
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
-                    var newer = false;
+                    let newer = false;
                     if (op.status != upStat.DONE) {
-                        let url = res.responseUrl;
+                        const url = res.responseUrl;
                         visualText.repoEngineVersion = url.substring(url.lastIndexOf('/') + 1);
-                        let exeVersion = visualText.exeEngineVersion;
-                        let repoVersion = visualText.repoEngineVersion;
+                        const exeVersion = visualText.exeEngineVersion;
+                        const repoVersion = visualText.repoEngineVersion;
                         op.version = visualText.repoEngineVersion;
-                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion,logLineType.UPDATER);
-                        
+                        if (visualText.debug) visualText.debugMessage('NLP.EXE Versions: ' + exeVersion + ' == ' + repoVersion, logLineType.UPDATER);
+
                         if (exeVersion && repoVersion) {
-                            if (visualText.versionCompare(repoVersion,exeVersion) > 0) {
+                            if (visualText.versionCompare(repoVersion, exeVersion) > 0) {
                                 newer = true;
                             }
                         } else {
                             newer = true;
                         }
-                        op.status = upStat.DONE;           
+                        op.status = upStat.DONE;
                     }
                     resolve(newer);
                 });
@@ -650,12 +650,12 @@ export class VisualText {
     }
 
     checkVTFilesVersion(op: updateOp) {
-        let statusFlag = op.status == upStat.UNKNOWN ? true : false;
+        const statusFlag = op.status == upStat.UNKNOWN ? true : false;
         visualText.checkVTFilesVersionRepo(op)
             .then(newerVersion => {
                 if (newerVersion) {
-                    visualText.pushDownloadVTFiles(op,upPush.FRONT);
-                    visualText.pushDeleteVTFiles(op,upPush.FRONT);
+                    visualText.pushDownloadVTFiles(op, upPush.FRONT);
+                    visualText.pushDeleteVTFiles(op, upPush.FRONT);
                     if (statusFlag) {
                         op.component = upComp.VT_FILES;
                         visualText.startTimer();
@@ -669,7 +669,7 @@ export class VisualText {
     }
 
     checkVTFilesVersionRepo(op: updateOp) {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
 
             const https = require('follow-redirects').https;
 
@@ -677,18 +677,18 @@ export class VisualText {
                 res.on('data', function (chunk) {
                     let newer = false;
                     if (op.status != upStat.DONE) {
-                        let url = res.responseUrl;
+                        const url = res.responseUrl;
                         visualText.repoVTFilesVersion = url.substring(url.lastIndexOf('/') + 1);
                         op.version = visualText.repoVTFilesVersion;
-                        let currentVersion = visualText.getVTFilesVersion();
+                        const currentVersion = visualText.getVTFilesVersion();
                         if (visualText.debug)
-                            visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion,logLineType.UPDATER);
+                            visualText.debugMessage('VisualText Files Versions: ' + currentVersion + ' == ' + visualText.repoVTFilesVersion, logLineType.UPDATER);
 
                         if (currentVersion) {
                             visualText.vtFilesVersion = currentVersion;
-                            if (visualText.versionCompare(visualText.repoVTFilesVersion,currentVersion) > 0) {
+                            if (visualText.versionCompare(visualText.repoVTFilesVersion, currentVersion) > 0) {
                                 newer = true;
-                            }                       
+                            }
                         }
                         else {
                             newer = true;
@@ -705,15 +705,15 @@ export class VisualText {
     }
 
     checkAnalyzersVersion(op: updateOp) {
-        let statusFlag = op.status == upStat.UNKNOWN ? true : false;
+        const statusFlag = op.status == upStat.UNKNOWN ? true : false;
         visualText.checkAnalyzersVersionRepo(op)
             .then(newerVersion => {
                 if (newerVersion) {
-                    visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);  
-                    visualText.pushDownloadAnalyzers(op,upPush.FRONT);
-                    visualText.pushDeleteAnalyzers(op,upPush.FRONT);
+                    visualText.setAnalyzersVersion(visualText.repoAnalyzersVersion);
+                    visualText.pushDownloadAnalyzers(op, upPush.FRONT);
+                    visualText.pushDeleteAnalyzers(op, upPush.FRONT);
                     op.status = upStat.DONE;
-                    visualText.updateVersion(op);       
+                    visualText.updateVersion(op);
                 } else if (statusFlag) {
                     vscode.window.showInformationMessage('Analyzers verion ' + visualText.repoAnalyzersVersion + ' is the latest');
                 }
@@ -723,29 +723,29 @@ export class VisualText {
     }
 
     checkAnalyzersVersionRepo(op: updateOp) {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
                 res.on('data', function (chunk) {
                     let newer = false;
                     if (op.status != upStat.DONE) {
-                        let url = res.responseUrl;
+                        const url = res.responseUrl;
                         visualText.repoAnalyzersVersion = url.substring(url.lastIndexOf('/') + 1);
                         op.version = visualText.repoAnalyzersVersion;
-                        let currentVersion = visualText.getAnalyzersVersion();
+                        const currentVersion = visualText.getAnalyzersVersion();
                         if (visualText.debug)
-                            visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion,logLineType.UPDATER);
+                            visualText.debugMessage('Analyzers Versions: ' + currentVersion + ' == ' + visualText.repoAnalyzersVersion, logLineType.UPDATER);
                         if (currentVersion) {
                             visualText.analyzersVersion = currentVersion;
-                            if (visualText.versionCompare(visualText.repoAnalyzersVersion,currentVersion) > 0) {
+                            if (visualText.versionCompare(visualText.repoAnalyzersVersion, currentVersion) > 0) {
                                 newer = true;
-                            }                       
+                            }
                         }
                         else {
                             newer = true;
                         }
-                        op.status = upStat.DONE;             
+                        op.status = upStat.DONE;
                     }
                     resolve(newer);
                 });
@@ -760,19 +760,19 @@ export class VisualText {
         const Downloader = require('nodejs-file-downloader');
 
         (async () => {
-            var dir = path.dirname(op.local);
-            var filename = path.basename(op.local);
-            var url = op.remote;
+            const dir = path.dirname(op.local);
+            const filename = path.basename(op.local);
+            const url = op.remote;
 
             const downloader = new Downloader({
-                url: url,   
+                url: url,
                 directory: dir,
                 filename: filename
             });
             try {
-                visualText.debugMessage('Downloading: ' + url,logLineType.UPDATER);
+                visualText.debugMessage('Downloading: ' + url, logLineType.UPDATER);
                 await downloader.download();
-                visualText.debugMessage('DONE DOWNLOAD: ' + url,logLineType.UPDATER);
+                visualText.debugMessage('DONE DOWNLOAD: ' + url, logLineType.UPDATER);
                 if (op.type == upType.UNZIP && !visualText.stopAll) {
                     op.operation = upOp.UNZIP;
                     op.status = upStat.START;
@@ -785,9 +785,9 @@ export class VisualText {
             }
             catch (error) {
                 op.status = upStat.FAILED;
-                visualText.debugMessage('FAILED download: ' + url + '\n' + error,logLineType.UPDATER);
+                visualText.debugMessage('FAILED download: ' + url + '\n' + error, logLineType.UPDATER);
             }
-        })();  
+        })();
     }
 
     unzip(op: updateOp) {
@@ -797,38 +797,38 @@ export class VisualText {
 
             const extract = require('extract-zip')
             try {
-                this.debugMessage('Unzipping: ' + toPath,logLineType.UPDATER);
+                this.debugMessage('Unzipping: ' + toPath, logLineType.UPDATER);
                 await extract(toPath, { dir: vtFileDir });
-                this.debugMessage('UNZIPPED: ' + toPath,logLineType.UPDATER);
+                this.debugMessage('UNZIPPED: ' + toPath, logLineType.UPDATER);
                 op.status = upStat.DONE;
                 dirfuncs.delFile(toPath);
             }
             catch (err) {
-                this.debugMessage('Could not unzip file: ' + toPath + '\n' + err,logLineType.UPDATER);
+                this.debugMessage('Could not unzip file: ' + toPath + '\n' + err, logLineType.UPDATER);
                 op.status = upStat.FAILED;
             }
         })();
     }
 
-    public debugMessage(msg: string, type: logLineType=logLineType.INFO) {
-        logView.addMessage(msg,type,undefined);
+    public debugMessage(msg: string, type: logLineType = logLineType.INFO) {
+        logView.addMessage(msg, type, undefined);
         vscode.commands.executeCommand('logView.refreshAll');
     }
 
-	readState(): boolean {
+    readState(): boolean {
         if (vscode.workspace.workspaceFolders) {
             this.analyzerDir = this.workspaceFold;
             this.getAnalyzers(false);
-            if (this.jsonState.jsonParse(this.analyzerDir,'state')) {
-                var saveit = false;
-                var parse = this.jsonState.json.visualText[0];
-                var currAnalyzer = parse.currentAnalyzer;
+            if (this.jsonState.jsonParse(this.analyzerDir, 'state')) {
+                let saveit = false;
+                const parse = this.jsonState.json.visualText[0];
+                let currAnalyzer = parse.currentAnalyzer;
 
                 if (currAnalyzer.length > 0 && !fs.existsSync(currAnalyzer)) {
                     this.setCurrentAnalyzer(vscode.Uri.file(''));
                 }
                 else if (currAnalyzer.length == 0) {
-                    var analyzers = dirfuncs.getDirectories(this.workspaceFold);
+                    const analyzers = dirfuncs.getDirectories(this.workspaceFold);
                     currAnalyzer = analyzers[0].fsPath;
                     saveit = true;
                 }
@@ -837,7 +837,7 @@ export class VisualText {
                     if (fs.existsSync(currAnalyzer))
                         this.currentAnalyzer = vscode.Uri.file(currAnalyzer);
                     else
-                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.fsPath,currAnalyzer));
+                        this.currentAnalyzer = vscode.Uri.file(path.join(this.analyzerDir.fsPath, currAnalyzer));
 
                     if (saveit)
                         this.saveCurrentAnalyzer(this.analyzerDir);
@@ -852,28 +852,28 @@ export class VisualText {
     }
 
     initSettings(): boolean {
-        var fromDir = path.join(visualText.getExtensionPath().fsPath,'.vscode');
+        const fromDir = path.join(visualText.getExtensionPath().fsPath, '.vscode');
         if (fs.existsSync(fromDir)) {
-            var toDir = path.join(this.analyzerDir.fsPath,'.vscode');
+            const toDir = path.join(this.analyzerDir.fsPath, '.vscode');
             if (!fs.existsSync(toDir)) {
-                if (!dirfuncs.copyDirectory(fromDir,toDir)) {
+                if (!dirfuncs.copyDirectory(fromDir, toDir)) {
                     vscode.window.showWarningMessage('Copy settings file failed');
                     return false;
                 }
-                return true;           
+                return true;
             }
-            this.ensureExists('settings.json',toDir,fromDir);
-            this.ensureExists('state.json',toDir,fromDir);
+            this.ensureExists('settings.json', toDir, fromDir);
+            this.ensureExists('state.json', toDir, fromDir);
         }
         return false;
     }
 
     ensureExists(fileName: string, toDir: string, fromDir: string) {
-        var toFile = path.join(toDir,fileName);
+        const toFile = path.join(toDir, fileName);
         if (!fs.existsSync(toFile)) {
-            var fromFile = path.join(fromDir,fileName);
-           fs.copyFileSync(fromFile,toFile);
-        }   
+            const fromFile = path.join(fromDir, fileName);
+            fs.copyFileSync(fromFile, toFile);
+        }
     }
 
     readConfig() {
@@ -885,35 +885,36 @@ export class VisualText {
 
     configCurrentAnalzyer() {
         if (vscode.workspace.workspaceFolders) {
-            const config = vscode.workspace.getConfiguration('analyzer',this.workspaceFold);
-            var current = config.get<string>('current');
+            const config = vscode.workspace.getConfiguration('analyzer', this.workspaceFold);
+            const current = config.get<string>('current');
             if (!current) {
                 if (this.analyzers.length) {
                     this.currentAnalyzer = this.analyzers[0];
-                    config.update('current',this.currentAnalyzer.fsPath,vscode.ConfigurationTarget.WorkspaceFolder);
-                    this.debugMessage('Current analyzer: '+this.currentAnalyzer.fsPath,logLineType.UPDATER);
+                    config.update('current', this.currentAnalyzer.fsPath, vscode.ConfigurationTarget.WorkspaceFolder);
+                    this.debugMessage('Current analyzer: ' + this.currentAnalyzer.fsPath, logLineType.UPDATER);
                 }
             } else {
                 this.currentAnalyzer = vscode.Uri.file(current);
-            }            
+            }
         }
     }
 
     configAnalzyerDirectory() {
         const config = vscode.workspace.getConfiguration('analyzer');
+        let directory: string;
 
         if (vscode.workspace.workspaceFolders && dirfuncs.analyzerFolderCount(this.workspaceFold)) {
             directory = this.workspaceFold.fsPath;
         } else {
-            var directory = config.get<string>('directory');
+            directory = config.get<string>('directory') || '';
             if (!directory) {
-                directory = path.join(this.engineDir.fsPath,'analyzers');
+                directory = path.join(this.engineDir.fsPath, 'analyzers');
             }
         }
 
-        this.analyzerDir = vscode.Uri.file(directory);    
+        this.analyzerDir = vscode.Uri.file(directory);
         if (directory.length > 1)
-            config.update('directory',directory,vscode.ConfigurationTarget.Global);
+            config.update('directory', directory, vscode.ConfigurationTarget.Global);
     }
 
     failedWarning() {
@@ -921,10 +922,11 @@ export class VisualText {
             logView.downloadHelp();
         });
     }
-    
+
     findExtensionIndex(engDir: string): number {
-        var index = 0;
-        for (let ext of this.extensionItems) {visualText.stopAll
+        let index = 0;
+        for (const ext of this.extensionItems) {
+            visualText.stopAll
             if (engDir.startsWith(ext.uri.fsPath))
                 break;
             index++;
@@ -933,8 +935,8 @@ export class VisualText {
     }
 
     versionFromPath(extDir: vscode.Uri): string {
-        var dir = extDir.fsPath;
-        var version = dir.substring(dir.lastIndexOf(this.EXTENSION_NAME) + 1 + this.EXTENSION_NAME.length);
+        const dir = extDir.fsPath;
+        const version = dir.substring(dir.lastIndexOf(this.EXTENSION_NAME) + 1 + this.EXTENSION_NAME.length);
         return version;
     }
 
@@ -942,12 +944,12 @@ export class VisualText {
         if (!version1.length || !version2.length)
             return 0;
 
-        var toks1 = version1.split('.');
-        var toks2 = version2.split('.');
-        var num = toks1.length > toks2.length ? toks1.length : toks2.length;
+        const toks1 = version1.split('.');
+        const toks2 = version2.split('.');
+        const num = toks1.length > toks2.length ? toks1.length : toks2.length;
         for (let i = 0; i < num; i++) {
-            let v1 = parseInt(visualText.trimV(toks1[i]));
-            let v2 = parseInt(visualText.trimV(toks2[i]));
+            const v1 = parseInt(visualText.trimV(toks1[i]));
+            const v2 = parseInt(visualText.trimV(toks2[i]));
             if (v1 > v2) return 1;
             if (v2 > v1) return -1;
         }
@@ -955,67 +957,67 @@ export class VisualText {
     }
 
     trimV(version: string): string {
-        var ret = version;
-        if (version.substring(0,1) == 'v') {
-            ret = version.substring(1,version.length);
+        let ret = version;
+        if (version.substring(0, 1) == 'v') {
+            ret = version.substring(1, version.length);
         }
         return ret;
     }
 
     exePath() {
-        return vscode.Uri.file(path.join(visualText.engineDirectory().fsPath,visualText.NLP_EXE));
+        return vscode.Uri.file(path.join(visualText.engineDirectory().fsPath, visualText.NLP_EXE));
     }
 
     engineDirectory() {
-        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath,this.NLPENGINE_REPO));
+        return vscode.Uri.file(path.join(this.extensionDirectory().fsPath, this.NLPENGINE_REPO));
     }
 
     extensionDirectory() {
-        return vscode.Uri.file(path.join(this.extensionParentDirectory().fsPath,this.EXTENSION_NAME+'-'+this.version));
+        return vscode.Uri.file(path.join(this.extensionParentDirectory().fsPath, this.EXTENSION_NAME + '-' + this.version));
     }
 
     extensionParentDirectory() {
-        let dir = path.join(this.homeDir,'.vscode','extensions');
+        let dir = path.join(this.homeDir, '.vscode', 'extensions');
         if (!fs.existsSync(dir)) {
             if (this.platform == 'linux') {
-                dir = path.join(this.homeDir,'.vscode-server','extensions') ;
+                dir = path.join(this.homeDir, '.vscode-server', 'extensions');
             }
         }
         return vscode.Uri.file(dir);
     }
 
     visualTextFilesDirectory() {
-        return vscode.Uri.file(path.join(this.engineDirectory().fsPath,this.VISUALTEXT_FILES_REPO));
+        return vscode.Uri.file(path.join(this.engineDirectory().fsPath, this.VISUALTEXT_FILES_REPO));
     }
-  
-    fetchExeVersion(op: updateOp, debug: boolean=false) {
-        dirfuncs.changeMod(op.local,755);
+
+    fetchExeVersion(op: updateOp, debug: boolean = false) {
+        dirfuncs.changeMod(op.local, 755);
         visualText.exeEngineVersion = '';
-		const cp = require('child_process');
-        return new Promise((resolve,reject) => {
+        const cp = require('child_process');
+        return new Promise((resolve, reject) => {
             const child = cp.spawn(op.local, ['--version']);
-            let stdOut = "";
-            let stdErr = "";
+            const stdOut = "";
+            const stdErr = "";
             child.stdout.on("data", (data) => {
-                let versionStr = data.toString();
-                if (debug) visualText.debugMessage('version str: ' + versionStr,logLineType.UPDATER);
-                let tokens = versionStr.split('\r\n');
+                const versionStr = data.toString();
+                if (debug) visualText.debugMessage('version str: ' + versionStr, logLineType.UPDATER);
+                const tokens = versionStr.split('\r\n');
                 if (tokens.length) {
                     if (tokens.length == 1)
                         visualText.exeEngineVersion = versionStr;
                     else
                         visualText.exeEngineVersion = tokens[tokens.length - 2];
-                    if (debug) visualText.debugMessage('version found: ' + visualText.exeEngineVersion,logLineType.UPDATER);
+                    if (debug) visualText.debugMessage('version found: ' + visualText.exeEngineVersion, logLineType.UPDATER);
                 }
                 resolve(visualText.exeEngineVersion);
             });
         }).catch(err => {
-            visualText.debugMessage(err,logLineType.UPDATER);
+            visualText.debugMessage(err, logLineType.UPDATER);
         });
-	}
+    }
 
     getBlockAnalyzersPath(): vscode.Uri {
-        return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,visualText.NLPENGINE_REPO,visualText.ANALYZERS_REPO));
+        return vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, visualText.NLPENGINE_REPO, visualText.ANALYZERS_REPO));
     }
 
     getExtensionPath(): vscode.Uri {
@@ -1023,54 +1025,54 @@ export class VisualText {
     }
 
     getExtensionDirs() {
-        var parentDir = this.extensionParentDirectory();
-        var dirs: vscode.Uri[] = new Array();
+        const parentDir = this.extensionParentDirectory();
+        let dirs: vscode.Uri[] = new Array();
         this.extensionItems = [];
         dirs = dirfuncs.getDirectories(parentDir);
-        var latestVersion = '';
+        let latestVersion = '';
         this.latestExtIndex = -1;
-        var counter = 0;
+        let counter = 0;
 
-        for (let dir of dirs) {
-            var name = path.basename(dir.fsPath);
+        for (const dir of dirs) {
+            const name = path.basename(dir.fsPath);
             if (name.startsWith(this.EXTENSION_NAME)) {
-                let version = this.versionFromPath(dir);
+                const version = this.versionFromPath(dir);
                 if (latestVersion.length == 0 || this.versionCompare(version, latestVersion) > 0) {
                     latestVersion = version;
                     this.latestExtIndex = counter;
                 }
-                this.extensionItems.push({uri: dir, version: version, latest: false});
+                this.extensionItems.push({ uri: dir, version: version, latest: false });
                 counter++;
             }
         }
 
         if (this.latestExtIndex >= 0) {
-            this.extensionItems[this.latestExtIndex].latest = true; 
+            this.extensionItems[this.latestExtIndex].latest = true;
         }
     }
 
     setTextFastLoad(fastFlag: boolean) {
         this.autoUpdateFlag = fastFlag;
         const config = vscode.workspace.getConfiguration('textView');
-        config.update('fast',fastFlag,vscode.ConfigurationTarget.Global);
+        config.update('fast', fastFlag, vscode.ConfigurationTarget.Global);
         vscode.commands.executeCommand('setContext', 'textView.fastload', fastFlag);
     }
 
     getTextFastLoad(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('textView');
-        var version = config.get<string>('visualText');
+        const version = config.get<string>('visualText');
         return config.get<boolean>('fast');
     }
 
     setAutoUpdate(autoUpdateFlag: boolean) {
         this.autoUpdateFlag = autoUpdateFlag;
         const config = vscode.workspace.getConfiguration('update');
-        config.update('auto',autoUpdateFlag,vscode.ConfigurationTarget.Global);
+        config.update('auto', autoUpdateFlag, vscode.ConfigurationTarget.Global);
     }
 
     getAutoUpdate(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('update');
-        var version = config.get<string>('visualText');
+        const version = config.get<string>('visualText');
         return config.get<boolean>('auto');
     }
 
@@ -1081,24 +1083,24 @@ export class VisualText {
     setVTFilesVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
-        config.update('visualtext',version,vscode.ConfigurationTarget.Global);
+        config.update('visualtext', version, vscode.ConfigurationTarget.Global);
     }
 
     getVTFilesVersion(): string | undefined {
         const config = vscode.workspace.getConfiguration('engine');
-        var version = config.get<string>('visualtext');
+        const version = config.get<string>('visualtext');
         return config.get<string>('visualtext');
     }
 
     setAnalyzersVersion(version: string) {
         this.vtFilesVersion = version;
         const config = vscode.workspace.getConfiguration('engine');
-        config.update('analyzers',version,vscode.ConfigurationTarget.Global);
+        config.update('analyzers', version, vscode.ConfigurationTarget.Global);
     }
 
     getAnalyzersVersion(): string | undefined {
         const config = vscode.workspace.getConfiguration('engine');
-        var version = config.get<string>('analyzers');
+        const version = config.get<string>('analyzers');
         return config.get<string>('analyzers');
     }
 
@@ -1110,7 +1112,7 @@ export class VisualText {
                 vscode.window.showInputBox({ value: 'Your Name', prompt: 'Enter author name for comments' }).then(username => {
                     if (username) {
                         visualText.username = username;
-                        config.update("name",username,vscode.ConfigurationTarget.Global);
+                        config.update("name", username, vscode.ConfigurationTarget.Global);
                     }
                 });
             });
@@ -1120,17 +1122,17 @@ export class VisualText {
     }
 
     saveCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
-        var stateJsonDefault: any = {
+        const stateJsonDefault: any = {
             "visualText": [
                 {
                     "name": "Analyzer",
                     "type": "state",
-                    "currentAnalyzer": currentAnalyzer.fsPath   
+                    "currentAnalyzer": currentAnalyzer.fsPath
                 }
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.fsPath, 'state', stateJsonDefault);
-        this.setCurrentAnalyzer(currentAnalyzer);       
+        this.setCurrentAnalyzer(currentAnalyzer);
     }
 
     loadAnalyzer(analyzerDirectory: vscode.Uri) {
@@ -1144,7 +1146,7 @@ export class VisualText {
 
     setCurrentAnalyzer(currentAnalyzer: vscode.Uri) {
         if (this.jsonState.json) {
-            var parse = this.jsonState.json.visualText[0];
+            const parse = this.jsonState.json.visualText[0];
             parse.currentAnalyzer = currentAnalyzer.fsPath;
             this.jsonState.writeFile();
         }
@@ -1153,7 +1155,7 @@ export class VisualText {
     getCurrentAnalyzer(): vscode.Uri {
         return this.currentAnalyzer;
     }
-    
+
     getCurrentAnalyzerName(): string {
         return this.analyzer.getName();
     }
@@ -1169,36 +1171,36 @@ export class VisualText {
     getAnalyzers(testForLogs: boolean): vscode.Uri[] {
         if (this.analyzerDir.fsPath.length) {
             this.analyzers = [];
-            this.getAnalyzersRecursive(testForLogs,this.analyzerDir);
+            this.getAnalyzersRecursive(testForLogs, this.analyzerDir);
         }
         return this.analyzers;
     }
 
     getAnalyzersRecursive(testForLogs: boolean, dir: vscode.Uri) {
         if (dir.fsPath.length) {
-            var anas: vscode.Uri[] = [];
+            let anas: vscode.Uri[] = [];
             if (!fs.existsSync(dir.fsPath)) {
                 dir = this.workspaceFold;
             }
             anas = dirfuncs.getDirectories(dir);
-            for (let ana of anas) {
+            for (const ana of anas) {
                 if (visualText.isAnalyzerDirectory(ana)) {
                     if (!testForLogs || dirfuncs.analyzerHasLogFiles(ana))
                         this.analyzers.push(ana);
                 } else {
-                    this.getAnalyzersRecursive(testForLogs,ana);
+                    this.getAnalyzersRecursive(testForLogs, ana);
                 }
             }
         }
     }
 
-	hasWorkspaceFolder(): boolean {
-		return this.workspaceFold?.fsPath.length ? true : false;
-	}
+    hasWorkspaceFolder(): boolean {
+        return this.workspaceFold?.fsPath.length ? true : false;
+    }
 
-	getWorkspaceFolder(): vscode.Uri {
+    getWorkspaceFolder(): vscode.Uri {
         if (this.workspaceFold) {
-		    return this.workspaceFold;            
+            return this.workspaceFold;
         }
         return vscode.Uri.file('');
     }
@@ -1207,26 +1209,26 @@ export class VisualText {
         return fs.existsSync(this.getVisualTextDirectory());
     }
 
-    getVisualTextDirectory(dirName: string=''): string {
-        var vtDir = '';
-        var engineDir = this.engineDirectory().fsPath;
-        var vtDirName = 'visualText';
+    getVisualTextDirectory(dirName: string = ''): string {
+        let vtDir = '';
+        const engineDir = this.engineDirectory().fsPath;
+        const vtDirName = 'visualText';
         if (engineDir) {
             if (dirName.length)
-                vtDir = path.join(engineDir,vtDirName,dirName);
+                vtDir = path.join(engineDir, vtDirName, dirName);
             else
-                vtDir = path.join(engineDir,vtDirName);
+                vtDir = path.join(engineDir, vtDirName);
         }
         return vtDir;
     }
 
     isAnalyzerDirectory(dirPath: vscode.Uri): boolean {
-        var dirs = dirfuncs.getDirectories(dirPath);
-        var spec = false;
-        var kb = false;
-        var input = false;
+        const dirs = dirfuncs.getDirectories(dirPath);
+        let spec = false;
+        let kb = false;
+        let input = false;
 
-        for (let dir of dirs) {
+        for (const dir of dirs) {
             if (path.basename(dir.fsPath).localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
                 spec = true;
             }
@@ -1242,15 +1244,15 @@ export class VisualText {
     }
 
     hasLogFiles(dirPath: vscode.Uri): boolean {
-        var dirs = dirfuncs.getDirectories(dirPath);
-        var spec = false;
-        var kb = false;
-        var input = false;
-        var output = false;
-        var logs = false;
+        const dirs = dirfuncs.getDirectories(dirPath);
+        let spec = false;
+        let kb = false;
+        let input = false;
+        let output = false;
+        let logs = false;
 
-        for (let dir of dirs) {
-            let dirname = path.basename(dir.fsPath);
+        for (const dir of dirs) {
+            const dirname = path.basename(dir.fsPath);
             if (dirname.localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
                 spec = true;
             }
@@ -1272,94 +1274,94 @@ export class VisualText {
     }
 
     setUpdateEngine(): boolean {
-        var uri = visualText.getExtensionPath();
+        const uri = visualText.getExtensionPath();
         if (uri) {
-            this.debugMessage('NLP Engine updating version',logLineType.UPDATER);
-            return true;   
+            this.debugMessage('NLP Engine updating version', logLineType.UPDATER);
+            return true;
         }
         return false;
     }
-    
+
     updateEngine() {
-        visualText.pushDownloadEngineFiles(visualText.emptyOp(),upPush.FRONT);
-        visualText.pushDeleteEngineFiles(visualText.emptyOp(),upPush.FRONT);
-        visualText.startUpdater();          
+        visualText.pushDownloadEngineFiles(visualText.emptyOp(), upPush.FRONT);
+        visualText.pushDeleteEngineFiles(visualText.emptyOp(), upPush.FRONT);
+        visualText.startUpdater();
     }
 
     updateVTFiles() {
-        visualText.pushDeleteVTFiles(visualText.emptyOp(),upPush.BACK);
-        visualText.pushDownloadVTFiles(visualText.emptyOp(),upPush.BACK);
-        this.startUpdater(); 
+        visualText.pushDeleteVTFiles(visualText.emptyOp(), upPush.BACK);
+        visualText.pushDownloadVTFiles(visualText.emptyOp(), upPush.BACK);
+        this.startUpdater();
     }
 
     updateAnalyzersFiles() {
-        visualText.pushDeleteAnalyzers(visualText.emptyOp(),upPush.BACK);
-        visualText.pushDownloadAnalyzers(visualText.emptyOp(),upPush.BACK);
-        this.startUpdater(); 
+        visualText.pushDeleteAnalyzers(visualText.emptyOp(), upPush.BACK);
+        visualText.pushDownloadAnalyzers(visualText.emptyOp(), upPush.BACK);
+        this.startUpdater();
     }
 
-	convertPatFiles(analyzerDir: vscode.Uri) {
-        var spec = vscode.Uri.file(path.join(analyzerDir.fsPath,visualText.ANALYZER_SEQUENCE_FOLDER));
-		var op = visualText.fileOps.addFileOperation(spec,spec,[fileOpRefresh.ANALYZER],fileOperation.RENAME,'pat','nlp');
+    convertPatFiles(analyzerDir: vscode.Uri) {
+        const spec = vscode.Uri.file(path.join(analyzerDir.fsPath, visualText.ANALYZER_SEQUENCE_FOLDER));
+        const op = visualText.fileOps.addFileOperation(spec, spec, [fileOpRefresh.ANALYZER], fileOperation.RENAME, 'pat', 'nlp');
         op.oneOff = fileOneOff.PAT_TO_NLP;
-		visualText.fileOps.startFileOps();
-	}
+        visualText.fileOps.startFileOps();
+    }
 
     stopFileOps() {
         visualText.fileOps.stopAll();
     }
 
-	colorizeAnalyzer(overwrite: boolean=false) {
-		if (vscode.workspace.workspaceFolders) {
+    colorizeAnalyzer(overwrite: boolean = false) {
+        if (vscode.workspace.workspaceFolders) {
             let add = false;
-            var toDir = vscode.workspace.workspaceFolders[0].uri;
-			var toFile = path.join(toDir.fsPath,'.vscode','settings.json');
-            var fromDir = visualText.extensionDirectory();
-            var fromFile = path.join(fromDir.fsPath,'.vscode','settings.json');
-			if (fs.existsSync(toFile)) {
-                if (this.jsonState.jsonParse(toDir,'settings')) {
+            const toDir = vscode.workspace.workspaceFolders[0].uri;
+            const toFile = path.join(toDir.fsPath, '.vscode', 'settings.json');
+            const fromDir = visualText.extensionDirectory();
+            const fromFile = path.join(fromDir.fsPath, '.vscode', 'settings.json');
+            if (fs.existsSync(toFile)) {
+                if (this.jsonState.jsonParse(toDir, 'settings')) {
                     if (!this.jsonState.json.hasOwnProperty('editor.tokenColorCustomizations')) {
                         const settingsObj1 = this.jsonState.json;
-                        this.jsonState.jsonParse(fromDir,'settings')
+                        this.jsonState.jsonParse(fromDir, 'settings')
                         const settingsObj2 = this.jsonState.json;
-                         
+
                         const mergedObj = {
-                          ...settingsObj1,
-                          ...settingsObj2
+                            ...settingsObj1,
+                            ...settingsObj2
                         };
-                        this.jsonState.saveFile(toDir.fsPath,"settings",mergedObj);
-                    }             
+                        this.jsonState.saveFile(toDir.fsPath, "settings", mergedObj);
+                    }
                 }
-			} else
+            } else
                 add = true;
 
             if (add || overwrite) {
-				dirfuncs.copyFile(fromFile,toFile);
-                this.debugMessage('Copying settings file with colorization: ' + fromFile + ' => ' + toFile,logLineType.UPDATER); 
+                dirfuncs.copyFile(fromFile, toFile);
+                this.debugMessage('Copying settings file with colorization: ' + fromFile + ' => ' + toFile, logLineType.UPDATER);
             }
-		}
-	}
+        }
+    }
 
-	openFileManager(dir: string) {
-		let platformCmd = '';
-		if (os.platform() == 'win32') {
-			platformCmd = 'explorer.exe';
-		} else if (os.platform() == 'linux') {
-			platformCmd = 'xdg-open';
-		} else if (os.platform() == 'darwin') {
-			platformCmd = 'open';
-		}
-		if (platformCmd != '') {
-			let cmd = platformCmd + ' ' + dir;
-			const cp = require('child_process');
-			cp.exec(cmd, (err, stdout, stderr) => {
+    openFileManager(dir: string) {
+        let platformCmd = '';
+        if (os.platform() == 'win32') {
+            platformCmd = 'explorer.exe';
+        } else if (os.platform() == 'linux') {
+            platformCmd = 'xdg-open';
+        } else if (os.platform() == 'darwin') {
+            platformCmd = 'open';
+        }
+        if (platformCmd != '') {
+            const cmd = platformCmd + ' ' + dir;
+            const cp = require('child_process');
+            cp.exec(cmd, (err, stdout, stderr) => {
                 console.log('stdout: ' + stdout);
                 console.log('stderr: ' + stderr);
             });
         } else {
             vscode.window.showInformationMessage('Couldn\'t open nlp engine folder');
-		}
-	}
+        }
+    }
 
     createPanel(title: string): vscode.WebviewPanel {
         return vscode.window.createWebviewPanel(
@@ -1373,26 +1375,26 @@ export class VisualText {
     }
 
     displayHelpFile(title: string, filename: string) {
-        let pathFile = path.join(visualText.getVisualTextDirectory("Help"),"helps",filename);
-        let mdFile = pathFile + ".md";
-        let htmlFile = pathFile + ".htm";
+        const pathFile = path.join(visualText.getVisualTextDirectory("Help"), "helps", filename);
+        const mdFile = pathFile + ".md";
+        const htmlFile = pathFile + ".htm";
         if (fs.existsSync(mdFile)) {
             vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(mdFile));
         }
         else if (fs.existsSync(htmlFile)) {
-            this.displayHTML(title,fs.readFileSync(htmlFile, 'utf8'));
+            this.displayHTML(title, fs.readFileSync(htmlFile, 'utf8'));
         }
-	}
+    }
 
-	displayHTML(title: string, html: string) {
-		const panel = this.createPanel(title);
-		if (panel) {
-			panel.webview.html = html;
-		}
-	}
+    displayHTML(title: string, html: string) {
+        const panel = this.createPanel(title);
+        if (panel) {
+            panel.webview.html = html;
+        }
+    }
 
     fileIconFromExt(filepath: string): string {
-        let filename = path.basename(filepath);
+        const filename = path.basename(filepath);
 
         let icon = 'file.svg';
         if (filename.endsWith('.tree')) {
@@ -1429,82 +1431,82 @@ export class VisualText {
     analyzerList(subdir: string): vscode.QuickPickItem[] {
         let dirs: vscode.Uri[] = [];
         if (subdir.length) {
-            let pather = path.join(visualText.getWorkspaceFolder().fsPath,subdir);
+            const pather = path.join(visualText.getWorkspaceFolder().fsPath, subdir);
             dirs = dirfuncs.getDirectories(vscode.Uri.file(pather));
         } else
             dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
-        let items: vscode.QuickPickItem[] = [];
-        for (let dir of dirs) {
-            let filename = path.basename(dir.fsPath);
-            items.push({label: filename, description: dir.fsPath});
+        const items: vscode.QuickPickItem[] = [];
+        for (const dir of dirs) {
+            const filename = path.basename(dir.fsPath);
+            items.push({ label: filename, description: dir.fsPath });
         }
         return items;
     }
 
-    analyzerFolderList(specFlag: boolean=false): vscode.QuickPickItem[] {
-        let dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
-        let items: vscode.QuickPickItem[] = [];
-        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(),items,0,specFlag);
+    analyzerFolderList(specFlag: boolean = false): vscode.QuickPickItem[] {
+        const dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
+        const items: vscode.QuickPickItem[] = [];
+        return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(), items, 0, specFlag);
     }
-    
-    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number=0, specFlag: boolean=false): vscode.QuickPickItem[] {
-        let dirs = dirfuncs.getDirectories(dir);
+
+    analyzerFolderListRecurse(dir: vscode.Uri, items: vscode.QuickPickItem[], level: number = 0, specFlag: boolean = false): vscode.QuickPickItem[] {
+        const dirs = dirfuncs.getDirectories(dir);
         let indent = '';
-        let spacer = '   ';
-        for (var i = 0; i < level; i++) {
+        const spacer = '   ';
+        for (let i = 0; i < level; i++) {
             indent = indent + spacer;
         }
         if (indent.length > 0) indent = '-' + indent;
-        let seq = new SequenceFile;
-        for (let dir of dirs) {
-            let basename = path.basename(dir.fsPath);
-            let baseUpper = basename.toUpperCase();
+        const seq = new SequenceFile;
+        for (const dir of dirs) {
+            const basename = path.basename(dir.fsPath);
+            const baseUpper = basename.toUpperCase();
             if (visualText.isAnalyzerDirectory(dir)) {
                 if (specFlag) {
-                    items.push({label: indent + basename, description: '======================='});
-                    seq.choicePasses(path.join(dir.fsPath,visualText.ANALYZER_SEQUENCE_FOLDER),items,'-' + indent + spacer,false);
+                    items.push({ label: indent + basename, description: '=======================' });
+                    seq.choicePasses(path.join(dir.fsPath, visualText.ANALYZER_SEQUENCE_FOLDER), items, '-' + indent + spacer, false);
                 } else {
-                    items.push({label: indent + basename, description: dir.fsPath});
+                    items.push({ label: indent + basename, description: dir.fsPath });
                 }
             } else {
-                items.push({label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer bloc(s) below)'});
-                this.analyzerFolderListRecurse(dir,items,level+1,specFlag);
+                items.push({ label: indent + '(FOLDER) ' + baseUpper, description: '(FOLDER - choose analyzer bloc(s) below)' });
+                this.analyzerFolderListRecurse(dir, items, level + 1, specFlag);
             }
         }
         return items;
     }
 
     modFileList(): vscode.QuickPickItem[] {
-        let items: vscode.QuickPickItem[] = [];
-        for (let uri of this.modFiles) {
-            let basename = path.basename(uri.fsPath);
-            items.push({label: basename, description: uri.fsPath});
+        const items: vscode.QuickPickItem[] = [];
+        for (const uri of this.modFiles) {
+            const basename = path.basename(uri.fsPath);
+            items.push({ label: basename, description: uri.fsPath });
         }
         return items;
     }
-    
-	findFilesWithExtension(extension: string) {
-		function explore(dir: string) {
-			try {
-				const files = fs.readdirSync(dir);
-				for (const file of files) {
-					const filePath = path.join(dir, file);
-					const stats = fs.statSync(filePath);
+
+    findFilesWithExtension(extension: string) {
+        function explore(dir: string) {
+            try {
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                    const filePath = path.join(dir, file);
+                    const stats = fs.statSync(filePath);
                     const startsWithNumber = /^\d+\_/.test(file);
-					if (stats.isDirectory()) {
-						explore(filePath);
-					} else if (path.extname(file) === extension && !startsWithNumber) {
-						visualText.libraryFiles.push(filePath);
-					}
-				}
-                let stophere = 1;
-			} catch (err) {
-				console.error('An error occurred while reading the directory:', (err as Error).message);
-			}
-		}
-        
+                    if (stats.isDirectory()) {
+                        explore(filePath);
+                    } else if (path.extname(file) === extension && !startsWithNumber) {
+                        visualText.libraryFiles.push(filePath);
+                    }
+                }
+                const stophere = 1;
+            } catch (err) {
+                console.error('An error occurred while reading the directory:', (err as Error).message);
+            }
+        }
+
         if (visualText.libraryFiles.length == 0) {
-            var filepath = path.join(visualText.getVisualTextDirectory(visualText.ANALYZER_SEQUENCE_FOLDER));
+            const filepath = path.join(visualText.getVisualTextDirectory(visualText.ANALYZER_SEQUENCE_FOLDER));
             if (fs.existsSync(filepath)) {
                 explore(filepath)
             }
@@ -1516,22 +1518,22 @@ export class VisualText {
     }
 
     public async chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]): Promise<vscode.QuickPickItem[]> {
-        var fileDir = path.join(visualText.getVisualTextDirectory(), dirName, subDir);
-        let items: vscode.QuickPickItem[] = [];
+        const fileDir = path.join(visualText.getVisualTextDirectory(), dirName, subDir);
+        const items: vscode.QuickPickItem[] = [];
 
-        var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts);
-        var textFile = new TextFile();
-        for (let dictFile of dictFiles) {
+        const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts);
+        const textFile = new TextFile();
+        for (const dictFile of dictFiles) {
             let descr = "";
 
-            let firstLine = textFile.readFirstLine(dictFile.fsPath);
+            const firstLine = textFile.readFirstLine(dictFile.fsPath);
             if (firstLine[0] == '#') {
                 descr = firstLine.substring(1);
             }
-            let icon = visualText.fileIconFromExt(dictFile.fsPath);
-            let label = path.basename(dictFile.fsPath);
-            let light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
-            let dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
+            const icon = visualText.fileIconFromExt(dictFile.fsPath);
+            const label = path.basename(dictFile.fsPath);
+            const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
+            const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
             items.push({ label: label, description: descr });
         }
 
@@ -1541,7 +1543,7 @@ export class VisualText {
         } else {
             const selections = await vscode.window.showQuickPick(items, { title: 'Choose ' + prompt, canPickMany: true, placeHolder: 'Choose ' + prompt + ' to insert' });
             if (selections) {
-                for (let item of selections) {
+                for (const item of selections) {
                     item.description = fileDir;
                 }
             }

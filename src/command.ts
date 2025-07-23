@@ -52,25 +52,25 @@ export class NLPCommands {
     }
 
     video() {
-		var url = 'http://vscode2.visualtext.org';
+		const url = 'http://vscode2.visualtext.org';
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
     
     sortText() {
         if (vscode.window.activeTextEditor) {
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
-                let textFile = new TextFile(editor.document.uri.fsPath,true,editor.document.getText());
-                let selFlag = editor.selection.isEmpty ? false : true;
+                const textFile = new TextFile(editor.document.uri.fsPath,true,editor.document.getText());
+                const selFlag = editor.selection.isEmpty ? false : true;
                 if (selFlag)
                     textFile.getSelectedLines(editor);
                 textFile.sortLines(selFlag);
                 textFile.rollupLines(selFlag);
                 textFile.linesToText(editor,selFlag);
 
-                var firstLine = editor.document.lineAt(0);
-                var lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-                var textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+                const firstLine = editor.document.lineAt(0);
+                const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+                const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
                 editor.edit(function (editBuilder) {
                     editBuilder.replace(textRange, textFile.getText());
                 });
@@ -80,11 +80,11 @@ export class NLPCommands {
 
     lowerCase() {
         if (vscode.window.activeTextEditor) {
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
-                var range = new vscode.Range(editor.selection.start, editor.selection.end);
-				let str = editor.document.getText(range);
-				var snippet = new vscode.SnippetString(str.toLowerCase());
+                const range = new vscode.Range(editor.selection.start, editor.selection.end);
+				const str = editor.document.getText(range);
+				const snippet = new vscode.SnippetString(str.toLowerCase());
 				editor.insertSnippet(snippet,range);
             }
         }
@@ -92,12 +92,12 @@ export class NLPCommands {
 
     removeAccents() {
         if (vscode.window.activeTextEditor) {
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const text = editor.document.getText();
                 const textNoAccents = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
-                var snippet = new vscode.SnippetString(textNoAccents);
+                const snippet = new vscode.SnippetString(textNoAccents);
                 editor.insertSnippet(snippet,range);
             }
         }
@@ -115,121 +115,121 @@ export class NLPCommands {
 
     passTree() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.passTree(vscode.window.activeTextEditor);
         }
     }
 
     displayMatchedRulesNLP() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.openRuleMatchesText(vscode.window.activeTextEditor);
         }
     }
 
     selectSequence() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.selectSequence(vscode.window.activeTextEditor);
         }
     }
 
     commentLines() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.commentLines(vscode.window.activeTextEditor);
         }
     }
 
     duplicateLine() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.duplicateLine(vscode.window.activeTextEditor);
         }
     }
 
     searchWord() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.searchWord(vscode.window.activeTextEditor);
         }
     }
 
     goToFunction() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.searchWord(vscode.window.activeTextEditor,true);
         }
     }
 
     reformatRule() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.reformatRule(vscode.window.activeTextEditor, reformatType.NORMAL);
         }
     }
 
     reformatOneLine() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.ONELINE);
         }
     }
 
     reformatParens() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.PARENS);
         }
     }
 
     ruleFired() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.findRule(vscode.window.activeTextEditor);
         }
     }
 
     openSelTree() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.findSelectedTree(vscode.window.activeTextEditor);
         }
     }
 
     copyContext() {
         if (vscode.window.activeTextEditor) {
-            var nlpFile = new NLPFile();
+            const nlpFile = new NLPFile();
             nlpFile.copyContext(vscode.window.activeTextEditor);
         }
     }
         
     generateRule() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.generateRule(vscode.window.activeTextEditor,generateType.GENERAL);
         }
     }
 
     generateExactRule() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.generateRule(vscode.window.activeTextEditor,generateType.EXACT);
         }
     }
 
     analyze() {
         if (vscode.window.activeTextEditor) {
-            var nlp = new NLPFile();
-            var uri = vscode.window.activeTextEditor.document.uri;
+            const nlp = new NLPFile();
+            const uri = vscode.window.activeTextEditor.document.uri;
             nlp.analyze(uri);
         }
     }
 
     analyzeDir() {
         if (vscode.window.activeTextEditor) {
-            var nlp = new NLPFile();
-            var uri = vscode.window.activeTextEditor.document.uri;
+            const nlp = new NLPFile();
+            const uri = vscode.window.activeTextEditor.document.uri;
             nlp.analyze(uri);
         }
     }
@@ -261,28 +261,28 @@ export class NLPCommands {
     
     highlightText() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.highlightText(vscode.window.activeTextEditor);
         }
     }
     
     ruleFiredLog() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.ruleFired(vscode.window.activeTextEditor);
         }
     }
 
     generatePath() {
         if (vscode.window.activeTextEditor) {
-            var logFile = new TreeFile();
+            const logFile = new TreeFile();
             logFile.generatePath(vscode.window.activeTextEditor);
         }
     }
 
     openPassFile() {
         if (vscode.window.activeTextEditor) {
-            var nlp = new NLPFile();
+            const nlp = new NLPFile();
             nlp.openPassFile(vscode.window.activeTextEditor);
         }
     }

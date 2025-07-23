@@ -32,10 +32,10 @@ export class FindFile {
 	searchSequenceFiles(searchTerm: string, topFlag: boolean): boolean {
 		this.finds = [];
 		const fileUris = visualText.analyzer.seqFile.getPassFileUris(topFlag);
-		var context: number = 60;
-		var escaped = this.escapeRegExp(searchTerm);
+		const context: number = 60;
+		const escaped = this.escapeRegExp(searchTerm);
 
-		for (let uri of fileUris) {
+		for (const uri of fileUris) {
 			this.searchFile(uri, searchTerm, escaped, context, false);
 		}
 
@@ -47,15 +47,15 @@ export class FindFile {
 			this.finds = [];
 
 		const files = dirfuncs.getFiles(dir);
-		var context: number = 60;
-		var escaped = this.escapeRegExp(searchTerm);
+		const context: number = 60;
+		const escaped = this.escapeRegExp(searchTerm);
 
-		for (let file of files) {
+		for (const file of files) {
 			if ((!functionFlag && dirfuncs.directoryIsLog(file.fsPath)) || (functionFlag && file.fsPath.toLowerCase().indexOf('func') < 0))
 				continue;
 			if (extensions.length) {
 				let found: boolean = false;
-				for (let extension of extensions) {
+				for (const extension of extensions) {
 					if (file.fsPath.endsWith(extension)) {
 						found = true;
 						break;
@@ -65,14 +65,14 @@ export class FindFile {
 					continue;
 			}
 
-			var filename = path.basename(file.fsPath);
-			var uri = vscode.Uri.file(path.join(dir.fsPath,filename));
+			const filename = path.basename(file.fsPath);
+			const uri = vscode.Uri.file(path.join(dir.fsPath,filename));
 			this.searchFile(uri, searchTerm, escaped, context, bracketsFlag);
 		}
 
 		const dirs = dirfuncs.getDirectories(dir);
 
-		for (let dir of dirs) {
+		for (const dir of dirs) {
 			if (!dirfuncs.directoryIsLog(dir.fsPath))
 				this.searchFiles(dir, searchTerm, extensions, level+1)
 		}
@@ -84,17 +84,17 @@ export class FindFile {
 		if (dirfuncs.isDir(uri.fsPath))
 			return;
 		this.textFile.setFile(uri);
-		let filename = path.basename(uri.fsPath);
+		const filename = path.basename(uri.fsPath);
 		const escapedLower = escaped.toLowerCase();
 
 		if (this.textFile.getText().toLowerCase().search(escapedLower) >= 0) {
 			let num = 0;
 			for (let line of this.textFile.getLines()) {
-				var lineLower = line.toLowerCase();
-				var pos = lineLower.search(escapedLower);
+				const lineLower = line.toLowerCase();
+				const pos = lineLower.search(escapedLower);
 				if (pos >= 0) {
 					if (line.length + escapedLower.length > context) {
-						let half = context / 2;
+						const half = context / 2;
 						if (line.length - pos < half) {
 							line = line.substring(line.length-context-1,context);
 						} else if (pos > half) {
@@ -106,7 +106,7 @@ export class FindFile {
 					let text = line;
 					if (bracketsFlag)
 						text = line.replace(searchTerm,` <<${searchTerm}>> `);
-					var label = `${filename} [${num} ${pos}] ${line}`;
+					const label = `${filename} [${num} ${pos}] ${line}`;
 					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: text});
 				}
 				num++;

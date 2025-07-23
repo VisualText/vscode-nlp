@@ -22,7 +22,7 @@ export class HelpView {
         this.ctx = context;
         this.panel = undefined;
     }
-        
+
     static attach(ctx: vscode.ExtensionContext) {
         if (!helpView) {
             helpView = new HelpView(ctx);
@@ -34,46 +34,51 @@ export class HelpView {
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let cursorPosition = editor.selection.start;
-			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+            let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
             if (wordRange) {
-                let text = this.getTerm(editor,wordRange);
-                var url = 'http://visualtext.org/help/' + text + '.htm';
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+                let text = this.getTerm(editor, wordRange);
+                let helpPath = visualText.getVisualTextDirectory('Help');
+                var filePath = path.join(helpPath, 'helps', text + '.htm');
+                if (!fs.existsSync(filePath)) {
+                    vscode.window.showErrorMessage(`File does not exist: ${filePath}`);
+                    return;
+                }
+                vscode.env.openExternal(vscode.Uri.file(filePath));
             }
         }
     }
-    
+
     lookup(resource: vscode.Uri) {
-        let editor = vscode.window.activeTextEditor;
+        const editor = vscode.window.activeTextEditor;
         if (editor) {
-            let cursorPosition = editor.selection.start;
-			let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
+            const cursorPosition = editor.selection.start;
+            const wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
 
             if (wordRange) {
-                let word = this.getTerm(editor,wordRange);
-                visualText.displayHelpFile(word,word);
-            }                
-         }
+                const word = this.getTerm(editor, wordRange);
+                visualText.displayHelpFile(word, word);
+            }
+        }
     }
 
     getTerm(editor: vscode.TextEditor, wordRange: vscode.Range): string {
         let term = editor.document.getText(wordRange);
         if (wordRange.start.character > 0) {
-            var startPos = new vscode.Position(wordRange.start.line,wordRange.start.character-1);
-            var endPos = new vscode.Position(wordRange.end.line,wordRange.end.character);
-            var dollarRange = new vscode.Range(startPos, endPos);
-            let dollarWord = editor.document.getText(dollarRange);
+            const startPos = new vscode.Position(wordRange.start.line, wordRange.start.character - 1);
+            const endPos = new vscode.Position(wordRange.end.line, wordRange.end.character);
+            const dollarRange = new vscode.Range(startPos, endPos);
+            const dollarWord = editor.document.getText(dollarRange);
             if (dollarWord[0] == '$')
-                term = dollarWord;            
+                term = dollarWord;
         }
         return term;
     }
 
     getWebviewContent(term: string): string {
-        let dir = path.join(visualText.getVisualTextDirectory('Help'),'helps');
-        let htmlFile = path.join(dir,term+'.htm');
+        const dir = path.join(visualText.getVisualTextDirectory('Help'), 'helps');
+        const htmlFile = path.join(dir, term + '.htm');
         if (fs.existsSync(htmlFile)) {
-            var html = fs.readFileSync(htmlFile, 'utf8');
+            const html = fs.readFileSync(htmlFile, 'utf8');
             return html + '<br><br><br>';
         }
         return 'Not found: ' + term;
@@ -81,9 +86,9 @@ export class HelpView {
 
     windowCHMHelp() {
         if (os.platform() == 'win32') {
-            let cmd = path.join(visualText.getVisualTextDirectory('Help'),'Help.chm');
-			const cp = require('child_process');
-			cp.exec(cmd, (err, stdout, stderr) => {
+            const cmd = path.join(visualText.getVisualTextDirectory('Help'), 'Help.chm');
+            const cp = require('child_process');
+            cp.exec(cmd, (err, stdout, stderr) => {
                 console.log('stdout: ' + stdout);
                 console.log('stderr: ' + stderr);
             });

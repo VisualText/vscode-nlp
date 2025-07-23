@@ -26,15 +26,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		this._onDidChangeTreeData.fire();
 	}
 
-	constructor() {}
+	constructor() { }
 
 	async getChildren(kbItem?: KBItem): Promise<KBItem[]> {
 		if (kbItem) {
-			return this.getKBFiles(kbItem.uri); 
+			return this.getKBFiles(kbItem.uri);
 		}
 		if (visualText.hasWorkspaceFolder() && visualText.hasAnalyzers() && visualText.analyzer.isLoaded()) {
-			return this.getKBFiles(visualText.analyzer.getKBDirectory());  
-        }
+			return this.getKBFiles(visualText.analyzer.getKBDirectory());
+		}
 		return [];
 	}
 
@@ -42,20 +42,20 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		const treeItem = new vscode.TreeItem(kbItem.uri, kbItem.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
 
 		if (treeItem.label != this.EMPTY_TEXT) {
-			let name = path.basename(kbItem.uri.fsPath);
+			const name = path.basename(kbItem.uri.fsPath);
 			treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
 			treeItem.contextValue = 'kb';
-	
-			var icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
-	
+
+			const icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
+
 			treeItem.iconPath = {
-				light: path.join(__filename, '..', '..', 'resources', 'light', icon),
-				dark: path.join(__filename, '..', '..', 'resources', 'dark', icon)
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', icon)),
+				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', icon))
 			}
-	
+
 			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
 				treeItem.contextValue = 'toggle';
-	
+
 			if (name.endsWith('.kb'))
 				treeItem.contextValue = 'old';
 			else if (!name.endsWith('.nlm'))
@@ -70,16 +70,16 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 	}
 
 	getKBFiles(dir: vscode.Uri): KBItem[] {
-		var files = Array();
-		var entries = dirfuncs.getDirectoryTypes(dir);
+		const files = Array();
+		const entries = dirfuncs.getDirectoryTypes(dir);
 		visualText.mod.clear();
 		visualText.modFiles = [];
 		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.test', '.txt'];
 
-		for (let ext of order) {
-			for (let entry of entries) {
+		for (const ext of order) {
+			for (const entry of entries) {
 				if (entry.type != vscode.FileType.Directory && entry.uri.fsPath.endsWith(ext)) {
-					files.push({uri: entry.uri, type: entry.type});
+					files.push({ uri: entry.uri, type: entry.type });
 					if (entry.uri.fsPath.endsWith('.nlm'))
 						visualText.modFiles.push(entry.uri);
 				}
@@ -88,7 +88,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 		// If there are no files, create a dummy "empty" item to allow for the right-click context menu
 		if (files.length == 0) {
-			files.push({uri: this.EMPTY_TEXT, type: vscode.FileType.Unknown});
+			files.push({ uri: this.EMPTY_TEXT, type: vscode.FileType.Unknown });
 		}
 
 		return files;
@@ -96,7 +96,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 	dirHasNonText(dir: vscode.Uri): boolean {
 		const files = dirfuncs.getFiles(dir);
-		for (let file of files) {
+		for (const file of files) {
 			if (!file.fsPath.endsWith('.txt'))
 				return true;
 		}
@@ -112,32 +112,32 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				canSelectFiles: true,
 				canSelectFolders: false,
 				filters: {
-					'Text files': ['txt','xml','html','csv'],
+					'Text files': ['txt', 'xml', 'html', 'csv'],
 					'All files': ['*']
 				}
 			};
-			
+
 			vscode.window.showOpenDialog(options).then(selections => {
 				if (!selections) {
 					return;
 				}
-				for (let sel of selections) {
-					var filename = path.basename(sel.fsPath);
-					var dir = visualText.analyzer.getInputDirectory().fsPath;
+				for (const sel of selections) {
+					const filename = path.basename(sel.fsPath);
+					let dir = visualText.analyzer.getInputDirectory().fsPath;
 					if (kbItem) {
 						dir = path.dirname(kbItem.uri.fsPath);
 					} else if (visualText.analyzer.getTextPath()) {
-						var textPath = visualText.analyzer.getTextPath().fsPath;
+						const textPath = visualText.analyzer.getTextPath().fsPath;
 						if (fs.existsSync(textPath))
 							dir = path.dirname(textPath);
 						else
 							dir = visualText.analyzer.getInputDirectory().fsPath;
 					}
-					var newPath = vscode.Uri.file(path.join(dir,filename));
-					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
+					const newPath = vscode.Uri.file(path.join(dir, filename));
+					visualText.fileOps.addFileOperation(sel, newPath, [fileOpRefresh.KB], fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();
-			});	
+			});
 		}
 	}
 
@@ -150,53 +150,53 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				canSelectFiles: false,
 				canSelectFolders: true,
 			};
-			
+
 			vscode.window.showOpenDialog(options).then(selections => {
 				if (!selections) {
 					return;
 				}
-				for (let sel of selections) {
-					var dirname = path.basename(sel.fsPath);
-					var dir = visualText.analyzer.getInputDirectory().fsPath;
+				for (const sel of selections) {
+					const dirname = path.basename(sel.fsPath);
+					let dir = visualText.analyzer.getInputDirectory().fsPath;
 					if (kbItem) {
 						dir = path.dirname(kbItem.uri.fsPath);
 					}
-					var newPath = vscode.Uri.file(path.join(dir,dirname));
-					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
+					const newPath = vscode.Uri.file(path.join(dir, dirname));
+					visualText.fileOps.addFileOperation(sel, newPath, [fileOpRefresh.KB], fileOperation.COPY);
 				}
-				visualText.fileOps.startFileOps();	
-			});	
+				visualText.fileOps.startFileOps();
+			});
 		}
 	}
-	
+
 	rename(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(kbItem.uri.fsPath), prompt: 'Enter new name for file' }).then(newname => {
 				if (newname) {
-					var original = kbItem.uri;
+					const original = kbItem.uri;
 					if (path.extname(newname).length == 0)
-						newname = newname+path.extname(kbItem.uri.fsPath);
-					var newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname));
-					dirfuncs.rename(original.fsPath,newfile.fsPath);	
-					var logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
+						newname = newname + path.extname(kbItem.uri.fsPath);
+					const newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath), newname));
+					dirfuncs.rename(original.fsPath, newfile.fsPath);
+					const logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
 					if (dirfuncs.isDir(logFolderOrig.fsPath)) {
-						var logFolderNew = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname + visualText.LOG_SUFFIX));
-						dirfuncs.rename(logFolderOrig.fsPath,logFolderNew.fsPath);
+						const logFolderNew = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath), newname + visualText.LOG_SUFFIX));
+						dirfuncs.rename(logFolderOrig.fsPath, logFolderNew.fsPath);
 					}
-					vscode.commands.executeCommand('kbView.refreshAll');	
+					vscode.commands.executeCommand('kbView.refreshAll');
 				}
 			});
 		}
 	}
-		
+
 	renameDir(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(kbItem.uri.fsPath), prompt: 'Enter new name for directory' }).then(newname => {
 				if (newname) {
-					var original = kbItem.uri;
-					var newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath),newname));
-					dirfuncs.rename(original.fsPath,newfile.fsPath);						
-					vscode.commands.executeCommand('kbView.refreshAll');	
+					const original = kbItem.uri;
+					const newfile = vscode.Uri.file(path.join(path.dirname(kbItem.uri.fsPath), newname));
+					dirfuncs.rename(original.fsPath, newfile.fsPath);
+					vscode.commands.executeCommand('kbView.refreshAll');
 				}
 			});
 		}
@@ -222,8 +222,8 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openKBFile(KBItem));
 		vscode.commands.registerCommand('kbView.openText', () => this.openText());
 		vscode.commands.registerCommand('kbView.search', () => this.search());
-		vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem,false));
-		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem,false));
+		vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem, false));
+		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem, false));
 		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
 		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
@@ -240,28 +240,28 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
 		vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
 		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
-    }
-    
-    static attach(ctx: vscode.ExtensionContext) {
-        if (!kbView) {
-            kbView = new KBView(ctx);
-        }
-        return kbView;
 	}
-	
-	langLibs() {
-		var fileDir = path.join(visualText.getVisualTextDirectory(),"languages");
-		let items: vscode.QuickPickItem[] = [];
 
-		var exts: string[] = [];
+	static attach(ctx: vscode.ExtensionContext) {
+		if (!kbView) {
+			kbView = new KBView(ctx);
+		}
+		return kbView;
+	}
+
+	langLibs() {
+		const fileDir = path.join(visualText.getVisualTextDirectory(), "languages");
+		const items: vscode.QuickPickItem[] = [];
+
+		const exts: string[] = [];
 		exts.push(".dict");
 		exts.push(".kbb");
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts, getFileTypes.DIRS);
-		for (let dictFile of dictFiles) {
-			let descr = "";
+		const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts, getFileTypes.DIRS);
+		for (const dictFile of dictFiles) {
+			const descr = "";
 
-			let language = path.basename(dictFile.fsPath);
-			items.push({label: language, description: `${language} language dictionaries, knowledge bases, mod files`});
+			const language = path.basename(dictFile.fsPath);
+			items.push({ label: language, description: `${language} language dictionaries, knowledge bases, mod files` });
 		}
 
 		if (items.length == 0) {
@@ -269,17 +269,17 @@ export class KBView {
 			return;
 		}
 
-		vscode.window.showQuickPick(items, {title: 'Choose Language', canPickMany: false, placeHolder: 'Choose Language to see dictionaries and KB'}).then(selection => {
+		vscode.window.showQuickPick(items, { title: 'Choose Language', canPickMany: false, placeHolder: 'Choose Language to see dictionaries and KB' }).then(selection => {
 			if (!selection)
 				return;
 			if (selection.label) {
-				this.chooseLibFiles('Dictionaries & Knowledge Bases','languages',selection.label,[".dict",".kbb",".nlm"]);
-			}	
+				this.chooseLibFiles('Dictionaries & Knowledge Bases', 'languages', selection.label, [".dict", ".kbb", ".nlm"]);
+			}
 		});
 	}
 
 	miscLibs() {
-		this.chooseLibFiles('Choose File','misc','',[".dict",".kbb",".nlm"]);
+		this.chooseLibFiles('Choose File', 'misc', '', [".dict", ".kbb", ".nlm"]);
 	}
 
 	modLoad(kbItem: KBItem) {
@@ -287,39 +287,39 @@ export class KBView {
 	}
 
 	modCreate() {
-		var uri = visualText.analyzer.getKBDirectory();
+		const uri = visualText.analyzer.getKBDirectory();
 		visualText.analyzer.modCreate(uri);
 	}
 
 	modAdd(kbItem: KBItem): void {
-		visualText.mod.addFile(kbItem.uri,true);
+		visualText.mod.addFile(kbItem.uri, true);
 	}
 
 	video() {
-		var url = 'http://vscodekbviewer.visualtext.org';
+		const url = 'http://vscodekbviewer.visualtext.org';
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 	}
 
 	cleanFiles() {
-		var fileDir = visualText.analyzer.getKBDirectory().fsPath;
-		let items: vscode.QuickPickItem[] = [];
-		let files: vscode.Uri[] = [];
-		let allStr = 'ALL FILES BELOW';
-		let allButValidStr = 'ALL BUT VALID KB FILES';
+		const fileDir = visualText.analyzer.getKBDirectory().fsPath;
+		const items: vscode.QuickPickItem[] = [];
+		const files: vscode.Uri[] = [];
+		const allStr = 'ALL FILES BELOW';
+		const allButValidStr = 'ALL BUT VALID KB FILES';
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],getFileTypes.FILES);
+		const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), [], getFileTypes.FILES);
 		if (dictFiles.length == 0) {
 			vscode.window.showWarningMessage('No KB files to delete');
 			return;
 		}
-		items.push({label: allStr, description: 'All the files listed below (non .KB files)'});
-		items.push({label: allButValidStr, description: 'All files except .KB, .KBB, and .DICT files'});
+		items.push({ label: allStr, description: 'All the files listed below (non .KB files)' });
+		items.push({ label: allButValidStr, description: 'All files except .KB, .KBB, and .DICT files' });
 
-		var dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),[],getFileTypes.FILES);
-		for (let dictFile of dictFiles) {
+		const dictFiles2 = dirfuncs.getFiles(vscode.Uri.file(fileDir), [], getFileTypes.FILES);
+		for (const dictFile of dictFiles2) {
 			if (path.extname(dictFile.fsPath) == '.kb')
 				continue;
-			items.push({label: path.basename(dictFile.fsPath), description: dictFile.fsPath});
+			items.push({ label: path.basename(dictFile.fsPath), description: dictFile.fsPath });
 			files.push(dictFile);
 		}
 
@@ -328,29 +328,29 @@ export class KBView {
 			return;
 		}
 
-		vscode.window.showQuickPick(items, {title: 'Clean Dictionary', canPickMany: true, placeHolder: 'Choose files to delete'}).then(selections => {
+		vscode.window.showQuickPick(items, { title: 'Clean Dictionary', canPickMany: true, placeHolder: 'Choose files to delete' }).then(selections => {
 			if (!selections)
 				return;
 			let found = false;
 			if (selections[0].label == allStr) {
-				for (let file of files) {
+				for (const file of files) {
 					found = true;
-					visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.KB],fileOperation.DELETE);
+					visualText.fileOps.addFileOperation(file, file, [fileOpRefresh.KB], fileOperation.DELETE);
 				}
 			} else if (selections[0].label == allButValidStr) {
-				for (let file of files) {
-					let ext = path.extname(file.fsPath);
+				for (const file of files) {
+					const ext = path.extname(file.fsPath);
 					if (ext != '.kb' && ext != '.kbb' && ext != '.dict') {
 						found = true;
-						visualText.fileOps.addFileOperation(file,file,[fileOpRefresh.KB],fileOperation.DELETE);
+						visualText.fileOps.addFileOperation(file, file, [fileOpRefresh.KB], fileOperation.DELETE);
 					}
 				}
 			} else {
-				for (let selection of selections) {
+				for (const selection of selections) {
 					if (selection.description) {
-						let uri = vscode.Uri.file(selection.description);
+						const uri = vscode.Uri.file(selection.description);
 						found = true;
-						visualText.fileOps.addFileOperation(uri,uri,[fileOpRefresh.KB],fileOperation.DELETE);							
+						visualText.fileOps.addFileOperation(uri, uri, [fileOpRefresh.KB], fileOperation.DELETE);
 					}
 				}
 			}
@@ -363,37 +363,37 @@ export class KBView {
 	}
 
 	async chooseLibFiles(prompt: string, dirName: string, subDir: string, exts: string[]) {
-		let items: vscode.QuickPickItem[] = await visualText.chooseLibFiles(prompt,dirName,subDir,exts);
-		for (let item of items) {
+		const items: vscode.QuickPickItem[] = await visualText.chooseLibFiles(prompt, dirName, subDir, exts);
+		for (const item of items) {
 			if (exts[0] == '.nlm') {
-				var filepath = path.join(visualText.getVisualTextDirectory(),dirName,subDir,item.label);
+				const filepath = path.join(visualText.getVisualTextDirectory(), dirName, subDir, item.label);
 				visualText.mod.load(vscode.Uri.file(filepath));
 			} else
-				this.insertLibraryFile(path.join(dirName,subDir),item.label);
+				this.insertLibraryFile(path.join(dirName, subDir), item.label);
 		}
 	}
 
 	insertLibraryFile(dir: string, filename: string) {
-		var filepath = path.join(visualText.getVisualTextDirectory(),dir,filename);
-		var newfile = path.join(visualText.analyzer.getKBDirectory().fsPath,filename);
+		const filepath = path.join(visualText.getVisualTextDirectory(), dir, filename);
+		const newfile = path.join(visualText.analyzer.getKBDirectory().fsPath, filename);
 		if (!fs.existsSync(filepath)) {
 			vscode.window.showWarningMessage("Not created yet and YOU can help: " + filename);
 		} else {
-			visualText.fileOps.addFileOperation(vscode.Uri.file(filepath),vscode.Uri.file(newfile),[fileOpRefresh.KB],fileOperation.COPY);
+			visualText.fileOps.addFileOperation(vscode.Uri.file(filepath), vscode.Uri.file(newfile), [fileOpRefresh.KB], fileOperation.COPY);
 			visualText.fileOps.startFileOps();
 		}
 	}
 
 	copyToAnalyzer(KBItem: KBItem) {
 		const kbDir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
-		outputView.copyFileToAnalyzer(KBItem.uri,kbDir,"Copy file to another analyzer","Copy file to the KB directory of:");
+		outputView.copyFileToAnalyzer(KBItem.uri, kbDir, "Copy file to another analyzer", "Copy file to the KB directory of:");
 	}
 
 	private toggleActive(KBItem: KBItem): void {
-		var filepath = KBItem.uri.fsPath;
+		const filepath = KBItem.uri.fsPath;
 		if (KBItem && filepath.length) {
-			var filename = path.basename(filepath);
-			var parsed = path.parse(filename);
+			const filename = path.basename(filepath);
+			const parsed = path.parse(filename);
 			let ext = '.kbb';
 			if (filename.endsWith('.kbb')) {
 				ext = '.kbbb';
@@ -407,8 +407,8 @@ export class KBView {
 			else if (filename.endsWith('.dictt')) {
 				ext = '.dict';
 			}
-			var newFilename = path.join(path.dirname(filepath),parsed.name + ext);
-			visualText.fileOps.addFileOperation(KBItem.uri,vscode.Uri.file(newFilename),[fileOpRefresh.KB],fileOperation.RENAME);
+			const newFilename = path.join(path.dirname(filepath), parsed.name + ext);
+			visualText.fileOps.addFileOperation(KBItem.uri, vscode.Uri.file(newFilename), [fileOpRefresh.KB], fileOperation.RENAME);
 			visualText.fileOps.startFileOps();
 		}
 		this.kbView.title = 'KB';
@@ -423,28 +423,28 @@ export class KBView {
 				canSelectFiles: true,
 				canSelectFolders: false,
 				filters: {
-					'KB files': ['dict','kb','kbb','nlm'],
+					'KB files': ['dict', 'kb', 'kbb', 'nlm'],
 					'All files': ['*']
 				}
 			};
-			
+
 			vscode.window.showOpenDialog(options).then(selections => {
 				if (!selections) {
 					return;
 				}
-				var kbdir = visualText.analyzer.getKBDirectory().fsPath;
-				for (let sel of selections) {
-					var filename = path.basename(sel.fsPath);
-					var newPath = vscode.Uri.file(path.join(kbdir,filename));
-					visualText.fileOps.addFileOperation(sel,newPath,[fileOpRefresh.KB],fileOperation.COPY);
+				const kbdir = visualText.analyzer.getKBDirectory().fsPath;
+				for (const sel of selections) {
+					const filename = path.basename(sel.fsPath);
+					const newPath = vscode.Uri.file(path.join(kbdir, filename));
+					visualText.fileOps.addFileOperation(sel, newPath, [fileOpRefresh.KB], fileOperation.COPY);
 				}
 				visualText.fileOps.startFileOps();
-			});	
-		}		
+			});
+		}
 	}
 
 	explore() {
-		let kbDir = visualText.analyzer.getKBDirectory().fsPath;
+		const kbDir = visualText.analyzer.getKBDirectory().fsPath;
 		if (dirfuncs.isDir(kbDir))
 			visualText.openFileManager(kbDir);
 	}
@@ -454,8 +454,8 @@ export class KBView {
 			if (visualText.hasWorkspaceFolder()) {
 				vscode.window.showInputBox({ value: 'searchword', prompt: 'Enter term to search' }).then(searchWord => {
 					if (searchWord) {
-						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(),searchWord,['.kb','.kbb','.dict','.nlm']);
-						findView.loadFinds(searchWord,this.findFile.getMatches());
+						this.findFile.searchFiles(visualText.analyzer.getKBDirectory(), searchWord, ['.kb', '.kbb', '.dict', '.nlm']);
+						findView.loadFinds(searchWord, this.findFile.getMatches());
 						findView.setSearchWord(searchWord);
 						vscode.commands.executeCommand('findView.updateTitle');
 						vscode.commands.executeCommand('findView.refreshAll');
@@ -468,35 +468,35 @@ export class KBView {
 	private openText() {
 		if (visualText.analyzer.hasText())
 			visualText.colorizeAnalyzer();
-			vscode.window.showTextDocument(visualText.analyzer.getTextPath());
-			vscode.commands.executeCommand('status.update');
+		vscode.window.showTextDocument(visualText.analyzer.getTextPath());
+		vscode.commands.executeCommand('status.update');
 	}
-	
+
 	private updateTitle(resource: vscode.Uri): void {
-		var filepath = resource.fsPath;
+		const filepath = resource.fsPath;
 		if (resource && filepath.length) {
-			var filename = path.basename(resource.fsPath);
+			const filename = path.basename(resource.fsPath);
 			if (filename.length) {
-				this.kbView.title = `KB (${filename})`;	
-				return;					
+				this.kbView.title = `KB (${filename})`;
+				return;
 			}
 		}
 		this.kbView.title = 'KB';
 	}
-	
+
 	private mergeDicts(): void {
 		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
-			items.push({label: 'Yes', description: 'Merge all the dictionary files into all.dict?'});
-			items.push({label: 'No', description: 'Do not merge dictionary files' });
+			const items: vscode.QuickPickItem[] = [];
+			const deleteDescr = '';
+			items.push({ label: 'Yes', description: 'Merge all the dictionary files into all.dict?' });
+			items.push({ label: 'No', description: 'Do not merge dictionary files' });
 
-			vscode.window.showQuickPick(items, {title: 'Dict Files Merge', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Dict Files Merge', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var kbDir = visualText.analyzer.getKBDirectory();
-				var appFile = vscode.Uri.file(path.join(visualText.analyzer.getKBDirectory().fsPath,"all.dict"));
-				visualText.fileOps.addFileOperation(kbDir,appFile,[fileOpRefresh.KB],fileOperation.APPEND,".dict","");
+				const kbDir = visualText.analyzer.getKBDirectory();
+				const appFile = vscode.Uri.file(path.join(visualText.analyzer.getKBDirectory().fsPath, "all.dict"));
+				visualText.fileOps.addFileOperation(kbDir, appFile, [fileOpRefresh.KB], fileOperation.APPEND, ".dict", "");
 				visualText.fileOps.startFileOps();
 			});
 		}
@@ -504,28 +504,28 @@ export class KBView {
 
 	private generateMain(): void {
 		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
+			const items: vscode.QuickPickItem[] = [];
+			let deleteDescr = '';
 			deleteDescr = deleteDescr.concat('Generate main.kb file');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not generate main.kb' });
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not generate main.kb' });
 
-			vscode.window.showQuickPick(items, {title: 'Generate main.kb', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Generate main.kb', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				var kbPath = visualText.analyzer.getKBDirectory();
-				var filePath = path.join(kbPath.fsPath,'main.kb');
-				var files = dirfuncs.getFiles(kbPath);
-				var attrs = '';
-				var words = '';
+				const kbPath = visualText.analyzer.getKBDirectory();
+				const filePath = path.join(kbPath.fsPath, 'main.kb');
+				const files = dirfuncs.getFiles(kbPath);
+				let attrs = '';
+				let words = '';
 
-				for (let file of files) {
-					let filename = path.basename(file.fsPath);
+				for (const file of files) {
+					const filename = path.basename(file.fsPath);
 					if (filename.startsWith('attr')) {
-						attrs += "take \"kb/user/" +  filename + "\"\n";
+						attrs += "take \"kb/user/" + filename + "\"\n";
 					}
 					else if (filename.startsWith('word')) {
-						words += "take \"kb/user/" +  filename + "\"\n";
+						words += "take \"kb/user/" + filename + "\"\n";
 					}
 				}
 				let content = '';
@@ -535,7 +535,7 @@ export class KBView {
 				content += attrs;
 				content += "quit\n";
 
-				dirfuncs.writeFile(filePath,content);
+				dirfuncs.writeFile(filePath, content);
 				visualText.debugMessage('main.kb generated');
 			});
 		}
@@ -557,33 +557,33 @@ export class KBView {
 
 	private deleteFile(kbItem: KBItem): void {
 		if (visualText.hasWorkspaceFolder()) {
-			let items: vscode.QuickPickItem[] = [];
-			var deleteDescr = '';
-			var filename = path.basename(kbItem.uri.fsPath);
-			deleteDescr = deleteDescr.concat('Delete \'',filename,'\'?');
-			items.push({label: 'Yes', description: deleteDescr});
-			items.push({label: 'No', description: 'Do not delete '+filename });
+			const items: vscode.QuickPickItem[] = [];
+			let deleteDescr = '';
+			const filename = path.basename(kbItem.uri.fsPath);
+			deleteDescr = deleteDescr.concat('Delete \'', filename, '\'?');
+			items.push({ label: 'Yes', description: deleteDescr });
+			items.push({ label: 'No', description: 'Do not delete ' + filename });
 
-			vscode.window.showQuickPick(items, {title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
+			vscode.window.showQuickPick(items, { title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(kbItem.uri,kbItem.uri,[fileOpRefresh.KB],fileOperation.DELETE);
+				visualText.fileOps.addFileOperation(kbItem.uri, kbItem.uri, [fileOpRefresh.KB], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
 	}
-	
+
 	private newKBBFile(kbItem: KBItem, top: boolean) {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter KBB file name' }).then(newname => {
 				if (newname) {
-					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
+					let dirPath = visualText.analyzer.getKBDirectory().fsPath;
 					if (kbItem && !top)
 						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
-					var filepath = path.join(dirPath,newname+'.kbb');
+					let filepath = path.join(dirPath, newname + '.kbb');
 					if (path.extname(newname))
-						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"topconcept\n  child: attr=[value,value2]\n    grandchild one\n    grandchild two\n");
+						filepath = path.join(dirPath, newname);
+					dirfuncs.writeFile(filepath, "topconcept\n  child: attr=[value,value2]\n    grandchild one\n    grandchild two\n");
 					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}
@@ -595,13 +595,13 @@ export class KBView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter Dictionary file name' }).then(newname => {
 				if (newname) {
-					var dirPath = visualText.analyzer.getKBDirectory().fsPath;
+					let dirPath = visualText.analyzer.getKBDirectory().fsPath;
 					if (kbItem && !top)
 						dirPath = dirfuncs.getDirPath(kbItem.uri.fsPath);
-					var filepath = path.join(dirPath,newname+'.dict');
+					let filepath = path.join(dirPath, newname + '.dict');
 					if (path.extname(newname))
-						filepath = path.join(dirPath,newname);
-					dirfuncs.writeFile(filepath,"word s=suggestedNode attr=value");
+						filepath = path.join(dirPath, newname);
+					dirfuncs.writeFile(filepath, "word s=suggestedNode attr=value");
 					this.openFile(vscode.Uri.file(filepath));
 					vscode.commands.executeCommand('kbView.refreshAll');
 				}

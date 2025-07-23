@@ -33,9 +33,9 @@ export class ModFile extends TextFile {
 	}
 
     async getMod(): Promise<boolean> {
-        var retVal = false;
+        let retVal = false;
         if (visualText.modFiles.length == 0) {
-            let items: vscode.QuickPickItem[] = [];
+            const items: vscode.QuickPickItem[] = [];
 			items.push({label: 'Create', description: 'Create a new mod file'});
 			items.push({label: 'Abort', description: 'Abort this attempt' });
 
@@ -48,11 +48,11 @@ export class ModFile extends TextFile {
                 }
 			});
         } else {
-            let items: vscode.QuickPickItem[] = visualText.modFileList();
+            const items: vscode.QuickPickItem[] = visualText.modFileList();
             await vscode.window.showQuickPick(items, {title: 'Add to Mod File', canPickMany: false, placeHolder: 'choose mod file'}).then(selection => {
                 if (!selection || !selection.description)
                     return false;
-                let modUri = vscode.Uri.file(selection.description);
+                const modUri = vscode.Uri.file(selection.description);
                 visualText.setModFile(modUri);
                 retVal = true;
             });
@@ -72,21 +72,21 @@ export class ModFile extends TextFile {
 
     async load(filePath: vscode.Uri) {
         this.setFile(filePath);
-        var relFilePath = '';
-        var filepath = '';
-        var content = '';
+        const relFilePath = '';
+        const filepath = '';
+        const content = '';
         this.seqInsertPoint = '';
-        var kb = false;
-        var spec = false;
-        var input = false;
+        let kb = false;
+        let spec = false;
+        let input = false;
 
         if (this.parseFiles(filePath)) {
             await this.selectInsertPoint(filePath);
             if (this.seqInsertPoint == 'abort')
                 return;
-            var textFile = new TextFile();
+            const textFile = new TextFile();
 
-            for (let mod of this.files) {
+            for (const mod of this.files) {
                 textFile.setFile(mod.uri);
                 textFile.setText(mod.content);
                 textFile.saveFile();
@@ -95,7 +95,7 @@ export class ModFile extends TextFile {
                 if (mod.type == modType.SPEC) spec = true;
         
                 if (mod.type == modType.SPEC) {
-                    var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(this.seqInsertPoint);
+                    const seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(this.seqInsertPoint);
                     visualText.analyzer.seqFile.insertPass(seqItem.passNum,mod.uri);
                 }
             }
@@ -109,15 +109,15 @@ export class ModFile extends TextFile {
     }
 
     saveSection(filepath: string, content: string) {
-        var textFile = new TextFile();
-        var uri = vscode.Uri.file(filepath);
+        const textFile = new TextFile();
+        const uri = vscode.Uri.file(filepath);
 
         textFile.setFile(uri);
         textFile.setText(content);
         textFile.saveFile();
 
         if (filepath.includes('\\spec\\')) {
-            var seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(filepath);
+            const seqItem: PassItem = visualText.analyzer.seqFile.findPassFromUri(filepath);
             visualText.analyzer.seqFile.insertPass(seqItem.passNum,uri);
         }
     }
@@ -133,23 +133,23 @@ export class ModFile extends TextFile {
 
     parseFiles(filePath: vscode.Uri): boolean {
         this.setFile(filePath);
-        var good = true;
-        var content = '';
-        var started = false;
-        var modItem: ModItem = {uri: vscode.Uri.file(''), parentDir: '', filename: '', type: modType.UNKNOWN, content: '', exists: false};
+        let good = true;
+        let content = '';
+        let started = false;
+        const modItem: ModItem = {uri: vscode.Uri.file(''), parentDir: '', filename: '', type: modType.UNKNOWN, content: '', exists: false};
         this.files = [];
 
-        for (let line of this.getLines()) {
+        for (const line of this.getLines()) {
             if (line.indexOf(this.MODFILE_HEADER) == 0) {
                 started = true;
                 if (content.length > 0) {
-                    var mod = this.files[this.files.length - 1];
+                    const mod = this.files[this.files.length - 1];
                     mod.content = content;
                 }
                 content = '';
-                var tokens = line.split(/[\<\t\s\>]/);
-                var relFilePath = tokens[2];
-                var modItem = this.getModItem(relFilePath);
+                const tokens = line.split(/[\<\t\s\>]/);
+                const relFilePath = tokens[2];
+                const modItem = this.getModItem(relFilePath);
                 this.files.push(modItem);
                 if (modItem.exists) {
                     logView.addMessage('Mod exists: ' + path.join(modItem.parentDir,modItem.filename), logLineType.WARNING, modItem.uri);
@@ -160,7 +160,7 @@ export class ModFile extends TextFile {
             }
         }
         if (content.length > 0) {
-            var mod = this.files[this.files.length - 1];
+            const mod = this.files[this.files.length - 1];
             mod.content = content;
         }
         if (!good) {
@@ -170,10 +170,10 @@ export class ModFile extends TextFile {
     }
 
     getModItem(relFilePath: string): ModItem {
-        var filepath = path.join(visualText.analyzer.getAnalyzerDirectory().fsPath,relFilePath);
-        var type: modType = modType.UNKNOWN;
-        var filename = path.basename(filepath);
-        var parentDir = path.dirname(relFilePath);
+        const filepath = path.join(visualText.analyzer.getAnalyzerDirectory().fsPath,relFilePath);
+        let type: modType = modType.UNKNOWN;
+        const filename = path.basename(filepath);
+        const parentDir = path.dirname(relFilePath);
         if (filepath.includes(this.MODFILE_KB)) {
             type = modType.KB;
         }
@@ -188,15 +188,15 @@ export class ModFile extends TextFile {
 
     async selectInsertPoint(filePath: vscode.Uri): Promise<string> {
         this.setFile(filePath);
-        var filepath = '';
-        for (let line of this.getLines()) {
+        let filepath = '';
+        for (const line of this.getLines()) {
             if (line.indexOf(this.MODFILE_HEADER) == 0) {
-                var tokens = line.split(/[\<\t\s\>]/);
-                var relFilePath = tokens[2];
+                const tokens = line.split(/[\<\t\s\>]/);
+                const relFilePath = tokens[2];
                 filepath = path.join(visualText.getAnalyzerDir().fsPath,relFilePath);
                 if (filepath.includes(this.MODFILE_SPEC)) {
-                    let seq = new SequenceFile;
-                    let items: vscode.QuickPickItem[] = [];
+                    const seq = new SequenceFile;
+                    const items: vscode.QuickPickItem[] = [];
                     seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,'');
                     await vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: false, placeHolder: 'Choose pass to insert after'}).then(selection => {
                         if (typeof selection === undefined || !selection) {
@@ -212,17 +212,17 @@ export class ModFile extends TextFile {
     }
 
     appendFile(filePath: vscode.Uri) {
-        var fileContent: string = fs.readFileSync(filePath.fsPath,'utf8');
+        const fileContent: string = fs.readFileSync(filePath.fsPath,'utf8');
         this.appendText(this.headerLine(filePath));
         this.appendText(fileContent);
         this.saveFile();
     }
 
     headerLine(filePath: vscode.Uri) {
-        var header = '';
-        var filepath = filePath.fsPath;
-        var dir = '';
-        var diff = path.win32.normalize(filepath);
+        let header = '';
+        const filepath = filePath.fsPath;
+        let dir = '';
+        const diff = path.win32.normalize(filepath);
         if (filepath.includes(this.MODFILE_KB)) {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
         }
@@ -232,8 +232,8 @@ export class ModFile extends TextFile {
         else if (filepath.includes(this.MODFILE_INPUT)) {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
         }
-        var name = path.basename(filePath.fsPath);
-        var finalPath = path.join(dir,name);
+        const name = path.basename(filePath.fsPath);
+        const finalPath = path.join(dir,name);
         header = '\n' + this.MODFILE_HEADER + ' ' + finalPath + '>\n';
         return header;
     }

@@ -104,7 +104,7 @@ export class NLPStatusBar {
     public analyzerButton(statusBarClick: boolean=true) {
         if (visualText.processID) {
             let taskKill = "";
-            let exe = visualText.NLP_EXE;
+            const exe = visualText.NLP_EXE;
             switch (os.platform()) {
                 case 'win32':
                     taskKill = `taskkill /IM "${exe}" /F`;
@@ -124,35 +124,35 @@ export class NLPStatusBar {
     }
 
     openVisualTextVersionSettings() {
-        var filepath = path.join(visualText.extensionDirectory().fsPath,'CHANGELOG.md');
+        const filepath = path.join(visualText.extensionDirectory().fsPath,'CHANGELOG.md');
         if (fs.existsSync(filepath)) {
             vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(filepath));
         } else {
-            var url = 'https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md';
+            const url = 'https://github.com/VisualText/vscode-nlp/blob/master/CHANGELOG.md';
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         }
     }
 
     openFilesVersionSettings() {
-        var url = 'https://github.com/VisualText/visualtext-files/pulls?q=is%3Apr+is%3Aclosed';
+        const url = 'https://github.com/VisualText/visualtext-files/pulls?q=is%3Apr+is%3Aclosed';
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.checkVTFilesVersion(visualText.emptyOp())
     }
 
     openAnalyzersVersionSettings() {
-        var url = 'https://github.com/VisualText/analyzers/pulls?q=is%3Apr+is%3Aclosed';
+        const url = 'https://github.com/VisualText/analyzers/pulls?q=is%3Apr+is%3Aclosed';
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.checkAnalyzersVersion(visualText.emptyOp());
     }
 
     openEngineVersionSettings() {
-        var url = 'https://github.com/VisualText/nlp-engine/pulls?q=is%3Apr+is%3Aclosed';
+        const url = 'https://github.com/VisualText/nlp-engine/pulls?q=is%3Apr+is%3Aclosed';
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
         visualText.startUpdater();
     }
 
     chooseDev() {
-        let items: vscode.QuickPickItem[] = [];
+        const items: vscode.QuickPickItem[] = [];
         items.push({label: 'All logging on', description: 'generate all log files when analyzing'});
         items.push({label: 'Final logs only', description: 'generate the final log files when analyzing'});
         items.push({label: 'All logging off', description: 'do not generate any log files when analyzing'});
@@ -160,7 +160,7 @@ export class NLPStatusBar {
             if (!selection) {
                 return;
             }
-            var mode: DevMode = DevMode.NORMAL;
+            let mode: DevMode = DevMode.NORMAL;
             if (selection.label === 'All logging on')
                 mode = DevMode.DEV
             else if (selection.label === 'Final logs only')
@@ -172,14 +172,14 @@ export class NLPStatusBar {
     }
     
     chooseFired() {
-        let items: vscode.QuickPickItem[] = [];
+        const items: vscode.QuickPickItem[] = [];
         items.push({label: 'Display Built Only', description: 'Display only built rules matched'});
         items.push({label: 'Display All Matches', description: 'Display all fired rules matched'});
         vscode.window.showQuickPick(items, {title: 'Display Type', canPickMany: false, placeHolder: 'Choose Yes or No'}).then(selection => {
             if (!selection) {
                 return;
             }
-            var mode: FiredMode = selection.label === 'Display Built Only' ? FiredMode.BUILT : FiredMode.FIRED;
+            const mode: FiredMode = selection.label === 'Display Built Only' ? FiredMode.BUILT : FiredMode.FIRED;
             nlpStatusBar.setFiredState(mode);
         });	
     }
@@ -208,7 +208,7 @@ export class NLPStatusBar {
     }
 
     setFiredState(firedMode: FiredMode) {
-        var changed = this.firedMode == firedMode ? false : true;
+        const changed = this.firedMode == firedMode ? false : true;
         this.firedMode = firedMode;
         this.updateFiredState();
         this.logFile.updateTxxtFiles(nlpFileType.TXXT);
@@ -225,8 +225,8 @@ export class NLPStatusBar {
 
     update() {
         if (visualText.analyzer.hasText()) {
-            var filepath = visualText.analyzer.getTextPath().fsPath;
-            var namepath = path.basename(filepath);
+            const filepath = visualText.analyzer.getTextPath().fsPath;
+            const namepath = path.basename(filepath);
             nlpStatusBarText.text = namepath;
             nlpStatusBarText.show();
 
