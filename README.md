@@ -101,7 +101,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 2.48.1
+### 2.48.2
 Opens the local html files in the browser instead of online.
 
 ### 2.47.0

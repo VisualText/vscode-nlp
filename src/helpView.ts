@@ -36,14 +36,14 @@ export class HelpView {
             let cursorPosition = editor.selection.start;
             let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
             if (wordRange) {
-                let text = this.getTerm(editor, wordRange);
-                let helpPath = visualText.getVisualTextDirectory('Help');
-                var filePath = path.join(helpPath, 'helps', text + '.htm');
-                if (!fs.existsSync(filePath)) {
-                    vscode.window.showErrorMessage(`File does not exist: ${filePath}`);
+                const text = this.getTerm(editor, wordRange);
+                var helpPath = visualText.getVisualTextDirectory('Help');
+                helpPath = path.join(helpPath, 'helps', text + '.htm');
+                if (!fs.existsSync(helpPath)) {
+                    vscode.window.showErrorMessage(`File does not exist: ${helpPath}`);
                     return;
                 }
-                vscode.env.openExternal(vscode.Uri.file(filePath));
+                vscode.env.openExternal(vscode.Uri.file(helpPath));
             }
         }
     }
@@ -98,10 +98,15 @@ export class HelpView {
     }
 
     openBrowserFunctionHelp() {
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Functions.htm'));
+        var helpPath = visualText.getVisualTextDirectory('Help');
+        helpPath = path.join(helpPath, 'helps', 'NLP_PP_Stuff', 'Functions' + '.htm');
+        vscode.env.openExternal(vscode.Uri.file(helpPath));
+
     }
 
     openBrowserVariableHelp() {
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse('http://visualtext.org/help/NLP_PP_Stuff/Variable_types.htm'));
+        var helpPath = visualText.getVisualTextDirectory('Help');
+        helpPath = path.join(helpPath, 'helps', 'NLP_PP_Stuff', 'Variable_types' + '.htm');
+        vscode.env.openExternal(vscode.Uri.file(helpPath));
     }
 }
