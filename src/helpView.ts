@@ -15,7 +15,7 @@ export class HelpView {
     constructor(private context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource));
         vscode.commands.registerCommand('helpView.lookupBrowser', (resource) => this.lookupBrowser(resource));
-        vscode.commands.registerCommand('helpView.windowCHMHelp', this.windowCHMHelp);
+        vscode.commands.registerCommand('helpView.windowCHMHelp', (resource) => this.windowCHMHelp(resource));
         vscode.commands.registerCommand('helpView.openBrowserFunctionHelp', this.openBrowserFunctionHelp);
         vscode.commands.registerCommand('helpView.openBrowserVariableHelp', this.openBrowserVariableHelp);
         this.exists = false;
@@ -84,14 +84,24 @@ export class HelpView {
         return 'Not found: ' + term;
     }
 
-    windowCHMHelp() {
+    windowCHMHelp(resource: vscode.Uri) {
         if (os.platform() == 'win32') {
-            const cmd = path.join(visualText.getVisualTextDirectory('Help'), 'Help.chm');
-            const cp = require('child_process');
-            cp.exec(cmd, (err, stdout, stderr) => {
-                console.log('stdout: ' + stdout);
-                console.log('stderr: ' + stderr);
-            });
+            const helpPath = path.join(visualText.getVisualTextDirectory('Help'), 'Help.chm');
+            if (fs.existsSync(helpPath)) {
+                const cp = require('child_process');
+                cp.exec(`"${helpPath}"`, (err, stdout, stderr) => {
+                    if (err) {
+                        console.error('Error opening help file:', err);
+                        vscode.window.showErrorMessage(`Failed to open help file: ${err.message}`);
+                        return;
+                    }
+                    console.log('stdout: ' + stdout);
+                    console.log('stderr: ' + stderr);
+                });
+            } else {
+                vscode.window.showErrorMessage(`File does not exist: ${helpPath}`);
+            }
+
         } else {
             vscode.window.showInformationMessage('Couldn\'t open Windows help file');
         }
