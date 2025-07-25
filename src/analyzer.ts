@@ -141,20 +141,25 @@ export class Analyzer {
             let fromDir = path.join(visualText.getVisualTextDirectory("analyzers"));
             if (dirfuncs.isDir(fromDir)) {
                 const files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
+                const dirMap: { [key: string]: string } = {};
                 for (const file of files) {
+                    const basename = path.basename(file.fsPath);
                     if (dirfuncs.isDir(file.fsPath)) {
                         const readme = path.join(file.fsPath, "README.MD");
                         let descr: string, tit: string;
                         ({ title: tit, description: descr } = this.readDescription(readme));
                         items.push({ label: tit, description: descr });
+                        dirMap[tit] = basename;
                     }
                 }
+
                 vscode.window.showQuickPick(items, { title: "Creating New Analyzer", canPickMany: true, placeHolder: "Choose analyzer block" }).then(selections => {
                     if (!selections) {
                         return false;
                     }
                     if (selections.length == 1) {
-                        this.makeNewAnalyzer(fromDir, selections[0].label);
+                        let dirName = dirMap[selections[0].label];
+                        this.makeNewAnalyzer(fromDir, dirName);
                         visualText.fileOps.startFileOps();
                         this.loaded = true;
                         return true;
