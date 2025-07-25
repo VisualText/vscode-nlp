@@ -716,8 +716,9 @@ export class SequenceView {
 				for (const file of files) {
 					if (dirfuncs.isDir(file.fsPath)) {
 						const readme = path.join(file.fsPath, "README.MD");
-						const descr = visualText.analyzer.readDescription(readme);
-						items.push({ label: path.basename(file.fsPath), description: descr });
+						let descr: string, tit: string;
+						({ title: tit, description: descr } = visualText.analyzer.readDescription(readme));
+						items.push({ label: tit, description: descr });
 					}
 				}
 				vscode.window.showQuickPick(items, { title: 'Insert Analyzer', canPickMany: true, placeHolder: 'Choose analyzer blocks to insert' }).then(selections => {

@@ -144,11 +144,12 @@ export class Analyzer {
                 for (const file of files) {
                     if (dirfuncs.isDir(file.fsPath)) {
                         const readme = path.join(file.fsPath, "README.MD");
-                        const descr = this.readDescription(readme);
-                        items.push({ label: path.basename(file.fsPath), description: descr });
+                        let descr: string, tit: string;
+                        ({ title: tit, description: descr } = this.readDescription(readme));
+                        items.push({ label: tit, description: descr });
                     }
                 }
-                vscode.window.showQuickPick(items, { title: "Creating New Analzyer", canPickMany: true, placeHolder: "Choose analyzer block" }).then(selections => {
+                vscode.window.showQuickPick(items, { title: "Creating New Analyzer", canPickMany: true, placeHolder: "Choose analyzer block" }).then(selections => {
                     if (!selections) {
                         return false;
                     }
@@ -179,27 +180,33 @@ export class Analyzer {
         return false;
     }
 
-    public readDescription(filepath: string): string {
+    public readDescription(filepath: string): { title: string, description: string } {
         if (!fs.existsSync(filepath))
-            return "";
-        const lineByLine = require("n-readlines");
-        const liner = new lineByLine(filepath);
+            return { title: "", description: "" };
+        const textFile = new TextFile(filepath);
 
         let line = "";
-        let l = "";
+        let description = "";
         let count = 0;
+        let title = "";
+        const lines = textFile.getLines();
 
-        while (line = liner.next()) {
-            l = line.toString().trim();
-            if (count > 0 && l.length > 5)
-                break;
+        for (const line of lines) {
+            let l = line.toString().trim();
+            if (title.length == 0 && l.length > 0) {
+                if (l.startsWith("# ")) {
+                    l = l.substring(2);
+                }
+                title = l;
+            } else if (title.length > 0 && l.length > 0) {
+                description += l;
+                if (count > 0 && description.length > 5)
+                    break;
+            }
             count++;
         }
 
-        if (liner.next())
-            liner.close();
-
-        return l;
+        return { title, description };
     }
 
     makeNewAnalyzer(fromDir: string, analyzer: string) {
