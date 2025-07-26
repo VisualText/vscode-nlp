@@ -9,9 +9,16 @@
                     }
                 },
                 {
+                    "scope": "entity.name.function.nlp",
+                    "settings": {
+                        "foreground": "#000000"
+                    }
+                },
+                {
                     "scope": "variable.parameter.nlp",
                     "settings": {
-                        "foreground": "#696969"
+                        "foreground": "#696969",
+                        "fontStyle": "bold"
                     }
                 },
                 {
@@ -113,9 +120,17 @@
                     }
                 },
                 {
+                    "scope": "entity.name.function.nlp",
+                    "settings": {
+                        "foreground": "#8f8f8f",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
                     "scope": "variable.parameter.nlp",
                     "settings": {
-                        "foreground": "#f8fa87"
+                        "foreground": "#f8fa87",
+                        "fontStyle": "bold"
                     }
                 },
                 {
