@@ -29,19 +29,22 @@
                 {
                     "scope": "keyword.fired.tree",
                     "settings": {
-                        "foreground": "#dc1b1b"
+                        "foreground": "#dc1b1b",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.rewrite.tree",
                     "settings": {
-                        "foreground": "#000000"
+                        "foreground": "#000000",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.node.tree",
                     "settings": {
-                        "foreground": "#4e8e3c"
+                        "foreground": "#4e8e3c",
+                        "fontStyle": "bold"
                     }
                 },
                 {
@@ -72,27 +75,31 @@
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb1",
+                    "scope": "keyword.other.kbb",
                     "settings": {
-                        "foreground": "#909228"
+                        "foreground": "#5d00d6",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb",
                     "settings": {
-                        "foreground": "#7e7e7e"
+                        "foreground": "#7e7e7e",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb1",
                     "settings": {
-                        "foreground": "#2eb657"
+                        "foreground": "#2eb657",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb2",
                     "settings": {
-                        "foreground": "#e049d9"
+                        "foreground": "#e049d9",
+                        "fontStyle": "bold"
                     }
                 }
             ]
@@ -126,19 +133,28 @@
                 {
                     "scope": "keyword.fired.tree",
                     "settings": {
-                        "foreground": "#dc1b1b"
+                        "foreground": "#dc1b1b",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.rewrite.tree",
                     "settings": {
-                        "foreground": "#f8fa87"
+                        "foreground": "#f8fa87",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.node.tree",
                     "settings": {
-                        "foreground": "#4e8e3c"
+                        "foreground": "#4e8e3c",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": "source.txxt",
+                    "settings": {
+                        "foreground": "#7e7e7e"
                     }
                 },
                 {
@@ -148,27 +164,31 @@
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb1",
+                    "scope": "keyword.other.kbb",
                     "settings": {
-                        "foreground": "#909228"
+                        "foreground": "#896eff",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb",
                     "settings": {
-                        "foreground": "#e3ee50"
+                        "foreground": "#e3ee50",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb1",
                     "settings": {
-                        "foreground": "#2eb657"
+                        "foreground": "#2eb657",
+                        "fontStyle": "bold"
                     }
                 },
                 {
                     "scope": "keyword.concept.kbb2",
                     "settings": {
-                        "foreground": "#e049d9"
+                        "foreground": "#e049d9",
+                        "fontStyle": "bold"
                     }
                 }
             ]
