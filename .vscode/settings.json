@@ -1,79 +1,178 @@
 {
     "editor.tokenColorCustomizations": {
-        "textMateRules": [
-            {
-                "scope": "entity.name.function.letter.nlp",
-                "settings": {
-                    "foreground": "#dc1b1b"
+        "[*Light*]": {
+            "textMateRules": [
+                {
+                    "scope": "entity.name.function.letter.nlp",
+                    "settings": {
+                        "foreground": "#dc1b1b"
+                    }
+                },
+                {
+                    "scope": "variable.parameter.nlp",
+                    "settings": {
+                        "foreground": "#696969"
+                    }
+                },
+                {
+                    "scope": "keyword.attribute.nlp",
+                    "settings": {
+                        "foreground": "#e655f3"
+                    }
+                },
+                {
+                    "scope": "constant.numeric.tree",
+                    "settings": {
+                        "foreground": "#5596f0"
+                    }
+                },
+                {
+                    "scope": "keyword.fired.tree",
+                    "settings": {
+                        "foreground": "#dc1b1b"
+                    }
+                },
+                {
+                    "scope": "keyword.rewrite.tree",
+                    "settings": {
+                        "foreground": "#000000"
+                    }
+                },
+                {
+                    "scope": "keyword.node.tree",
+                    "settings": {
+                        "foreground": "#4e8e3c"
+                    }
+                },
+                {
+                    "scope": "source.txxt",
+                    "settings": {
+                        "foreground": "#a5a5a5"
+                    }
+                },
+                {
+                    "scope": "keyword.other.txxt",
+                    "settings": {
+                        "foreground": "#6e60eb",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": "comment.line.txxt",
+                    "settings": {
+                        "foreground": "#dd2c2c",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": "variable.parameter.txxt",
+                    "settings": {
+                        "foreground": "#535353",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb1",
+                    "settings": {
+                        "foreground": "#909228"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb",
+                    "settings": {
+                        "foreground": "#7e7e7e"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb1",
+                    "settings": {
+                        "foreground": "#2eb657"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb2",
+                    "settings": {
+                        "foreground": "#e049d9"
+                    }
                 }
-            },
-            {
-                "scope": "variable.parameter.nlp",
-                "settings": {
-                    "foreground": "#f8fa87"
+            ]
+        },
+        "[*Dark*]": {
+            "textMateRules": [
+                {
+                    "scope": "entity.name.function.letter.nlp",
+                    "settings": {
+                        "foreground": "#dc1b1b"
+                    }
+                },
+                {
+                    "scope": "variable.parameter.nlp",
+                    "settings": {
+                        "foreground": "#f8fa87"
+                    }
+                },
+                {
+                    "scope": "keyword.attribute.nlp",
+                    "settings": {
+                        "foreground": "#f293fb"
+                    }
+                },
+                {
+                    "scope": "constant.numeric.tree",
+                    "settings": {
+                        "foreground": "#93bffb"
+                    }
+                },
+                {
+                    "scope": "keyword.fired.tree",
+                    "settings": {
+                        "foreground": "#dc1b1b"
+                    }
+                },
+                {
+                    "scope": "keyword.rewrite.tree",
+                    "settings": {
+                        "foreground": "#f8fa87"
+                    }
+                },
+                {
+                    "scope": "keyword.node.tree",
+                    "settings": {
+                        "foreground": "#4e8e3c"
+                    }
+                },
+                {
+                    "scope": "variable.parameter.txxt",
+                    "settings": {
+                        "foreground": "#f8fa87"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb1",
+                    "settings": {
+                        "foreground": "#909228"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb",
+                    "settings": {
+                        "foreground": "#e3ee50"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb1",
+                    "settings": {
+                        "foreground": "#2eb657"
+                    }
+                },
+                {
+                    "scope": "keyword.concept.kbb2",
+                    "settings": {
+                        "foreground": "#e049d9"
+                    }
                 }
-            },
-            {
-                "scope": "keyword.attribute.nlp",
-                "settings": {
-                    "foreground": "#f293fb"
-                }
-            },
-            {
-                "scope": "constant.numeric.tree",
-                "settings": {
-                    "foreground": "#93bffb"
-                }
-            },
-            {
-                "scope": "keyword.fired.tree",
-                "settings": {
-                    "foreground": "#dc1b1b"
-                }
-            },
-            {
-                "scope": "keyword.rewrite.tree",
-                "settings": {
-                    "foreground": "#f8fa87"
-                }
-            },
-            {
-                "scope": "keyword.node.tree",
-                "settings": {
-                    "foreground": "#4e8e3c"
-                }
-            },
-            {
-                "scope": "variable.parameter.txxt",
-                "settings": {
-                    "foreground": "#f8fa87"
-                }
-            },
-            {
-                "scope": "keyword.concept.kbb1",
-                "settings": {
-                    "foreground": "#909228"
-                }
-            },
-            {
-                "scope": "keyword.concept.kbb",
-                "settings": {
-                    "foreground": "#e3ee50"
-                }
-            },
-            {
-                "scope": "keyword.concept.kbb1",
-                "settings": {
-                    "foreground": "#2eb657"
-                }
-            },
-            {
-                "scope": "keyword.concept.kbb2",
-                "settings": {
-                    "foreground": "#e049d9"
-                }
-            }
-        ]
+            ]
+        }
     },
     "editor.suggest.snippetsPreventQuickSuggestions": false,
     "git.ignoreLimitWarning": true
