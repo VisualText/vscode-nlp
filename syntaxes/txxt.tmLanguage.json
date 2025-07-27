@@ -4,8 +4,11 @@
         "txxt"
     ],
     "name": "TXXT",
-    "patterns": [{ "include": "#expression" }],
-
+    "patterns": [
+        {
+            "include": "#expression"
+        }
+    ],
     "repository": {
         "expression": {
             "name": "meta.expression.tree",
@@ -15,17 +18,21 @@
                 },
                 {
                     "include": "#paren-match"
-                }               
+                }
             ]
         },
         "angle-match": {
             "begin": "\\<\\<\\<",
-            "end": "\\>\\>\\>",
+            "end": "\\>\\>\\>(?=[^>])",
             "beginCaptures": {
-                "0": { "name": "variable.parameter.txxt" }
+                "0": {
+                    "name": "variable.parameter.txxt"
+                }
             },
             "endCaptures": {
-                "0": { "name": "variable.parameter.txxt" }
+                "0": {
+                    "name": "variable.parameter.txxt"
+                }
             },
             "name": "keyword.other.txxt"
         },
@@ -33,10 +40,14 @@
             "begin": "\\(\\(\\(",
             "end": "\\)\\)\\)",
             "beginCaptures": {
-                "0": { "name": "variable.parameter.txxt" }
+                "0": {
+                    "name": "variable.parameter.txxt"
+                }
             },
             "endCaptures": {
-                "0": { "name": "variable.parameter.txxt" }
+                "0": {
+                    "name": "variable.parameter.txxt"
+                }
             },
             "name": "comment.line.txxt"
         }
