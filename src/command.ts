@@ -52,21 +52,21 @@ export class NLPCommands {
     }
 
     video() {
-		const url = 'http://vscode2.visualtext.org';
-		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
-	}
-    
+        const url = 'http://vscode2.visualtext.org';
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+    }
+
     sortText() {
         if (vscode.window.activeTextEditor) {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
-                const textFile = new TextFile(editor.document.uri.fsPath,true,editor.document.getText());
+                const textFile = new TextFile(editor.document.uri.fsPath, true, editor.document.getText());
                 const selFlag = editor.selection.isEmpty ? false : true;
                 if (selFlag)
                     textFile.getSelectedLines(editor);
                 textFile.sortLines(selFlag);
                 textFile.rollupLines(selFlag);
-                textFile.linesToText(editor,selFlag);
+                textFile.linesToText(editor, selFlag);
 
                 const firstLine = editor.document.lineAt(0);
                 const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
@@ -83,9 +83,9 @@ export class NLPCommands {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const range = new vscode.Range(editor.selection.start, editor.selection.end);
-				const str = editor.document.getText(range);
-				const snippet = new vscode.SnippetString(str.toLowerCase());
-				editor.insertSnippet(snippet,range);
+                const str = editor.document.getText(range);
+                const snippet = new vscode.SnippetString(str.toLowerCase());
+                editor.insertSnippet(snippet, range);
             }
         }
     }
@@ -98,7 +98,7 @@ export class NLPCommands {
                 const textNoAccents = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
                 const snippet = new vscode.SnippetString(textNoAccents);
-                editor.insertSnippet(snippet,range);
+                editor.insertSnippet(snippet, range);
             }
         }
     }
@@ -158,7 +158,7 @@ export class NLPCommands {
     goToFunction() {
         if (vscode.window.activeTextEditor) {
             const nlpFile = new NLPFile();
-            nlpFile.searchWord(vscode.window.activeTextEditor,true);
+            nlpFile.searchWord(vscode.window.activeTextEditor, true);
         }
     }
 
@@ -172,28 +172,28 @@ export class NLPCommands {
     reformatOneLine() {
         if (vscode.window.activeTextEditor) {
             const nlpFile = new NLPFile();
-            nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.ONELINE);
+            nlpFile.reformatRule(vscode.window.activeTextEditor, reformatType.ONELINE);
         }
     }
 
     reformatParens() {
         if (vscode.window.activeTextEditor) {
             const nlpFile = new NLPFile();
-            nlpFile.reformatRule(vscode.window.activeTextEditor,  reformatType.PARENS);
+            nlpFile.reformatRule(vscode.window.activeTextEditor, reformatType.PARENS);
         }
     }
 
     ruleFired() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.findRule(vscode.window.activeTextEditor);
+            const treeFile = new TreeFile();
+            treeFile.findRule(vscode.window.activeTextEditor);
         }
     }
 
     openSelTree() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.findSelectedTree(vscode.window.activeTextEditor);
+            const treeFile = new TreeFile();
+            treeFile.findSelectedTree(vscode.window.activeTextEditor);
         }
     }
 
@@ -203,18 +203,18 @@ export class NLPCommands {
             nlpFile.copyContext(vscode.window.activeTextEditor);
         }
     }
-        
+
     generateRule() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.generateRule(vscode.window.activeTextEditor,generateType.GENERAL);
+            const treeFile = new TreeFile();
+            treeFile.generateRule(vscode.window.activeTextEditor, generateType.GENERAL);
         }
     }
 
     generateExactRule() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.generateRule(vscode.window.activeTextEditor,generateType.EXACT);
+            const treeFile = new TreeFile();
+            treeFile.generateRule(vscode.window.activeTextEditor, generateType.EXACT);
         }
     }
 
@@ -239,7 +239,7 @@ export class NLPCommands {
             vscode.commands.executeCommand('editor.foldAll');
         }
     }
-    
+
     unfoldAll() {
         if (vscode.window.activeTextEditor) {
             vscode.commands.executeCommand('editor.unfoldAll');
@@ -251,32 +251,32 @@ export class NLPCommands {
             vscode.commands.executeCommand('editor.foldRecursively');
         }
     }
-    
+
     unfoldRecursively() {
         if (vscode.window.activeTextEditor) {
             vscode.commands.executeCommand('editor.unfoldRecursively');
         }
     }
-    
-    
+
+
     highlightText() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.highlightText(vscode.window.activeTextEditor);
+            const treeFile = new TreeFile();
+            treeFile.highlightText(vscode.window.activeTextEditor);
         }
     }
-    
+
     ruleFiredLog() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.ruleFired(vscode.window.activeTextEditor);
+            const treeFile = new TreeFile();
+            treeFile.ruleFired(vscode.window.activeTextEditor);
         }
     }
 
     generatePath() {
         if (vscode.window.activeTextEditor) {
-            const logFile = new TreeFile();
-            logFile.generatePath(vscode.window.activeTextEditor);
+            const treeFile = new TreeFile();
+            treeFile.generatePath(vscode.window.activeTextEditor);
         }
     }
 

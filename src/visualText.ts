@@ -1486,12 +1486,31 @@ export class VisualText {
     }
 
     findFilesWithExtension(extension: string) {
+        const protectedFiles = [
+            'C:\\DumpStack.log.tmp',
+            'C:\\hiberfil.sys',
+            'C:\\pagefile.sys',
+            'C:\\swapfile.sys'
+        ];
         function explore(dir: string) {
             try {
                 const files = fs.readdirSync(dir);
                 for (const file of files) {
                     const filePath = path.join(dir, file);
-                    const stats = fs.statSync(filePath);
+                    if (protectedFiles.includes(filePath)) {
+                        continue;
+                    }
+                    let stats;
+                    try {
+                        stats = fs.statSync(filePath);
+                    } catch (err: any) {
+                        if (err.code === 'EPERM') {
+                            // Skip protected system files
+                            continue;
+                        } else {
+                            throw err;
+                        }
+                    }
                     const startsWithNumber = /^\d+\_/.test(file);
                     if (stats.isDirectory()) {
                         explore(filePath);
@@ -1499,7 +1518,6 @@ export class VisualText {
                         visualText.libraryFiles.push(filePath);
                     }
                 }
-                const stophere = 1;
             } catch (err) {
                 console.error('An error occurred while reading the directory:', (err as Error).message);
             }
