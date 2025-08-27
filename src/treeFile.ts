@@ -644,11 +644,10 @@ ${ruleStr}
 	}
 
 	lineCharacterToAbsolute(position: vscode.Position): number {
-		const file = new TextFile(this.HighlightFile);
 		let lineCount = 0;
 		let absolute = 0;
 
-		for (const line of file.getLines()) {
+		for (const line of this.getLines()) {
 			if (lineCount == position.line) {
 				return absolute + position.character;
 			}

@@ -30,7 +30,7 @@ export class TextFile {
         if (text.length)
             this.setText(text, separateLines);
         else if (filepath.length)
-            this.setFile(vscode.Uri.file(filepath),separateLines);
+            this.setFile(vscode.Uri.file(filepath), separateLines);
     }
 
     runPython(editor: vscode.TextEditor) {
@@ -43,44 +43,44 @@ export class TextFile {
     }
 
     choosePythonScript(editor: vscode.TextEditor) {
-		const fileDir = visualText.getVisualTextDirectory("python");
+        const fileDir = visualText.getVisualTextDirectory("python");
         if (!fs.existsSync(fileDir)) {
             vscode.window.showWarningMessage("No library Python scripts available");
-			return;
+            return;
         }
-		const items: vscode.QuickPickItem[] = [];
+        const items: vscode.QuickPickItem[] = [];
         const exts = [".py"];
 
-		const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir),exts);
-		for (const dictFile of dictFiles) {
-			let descr = "";
+        const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts);
+        for (const dictFile of dictFiles) {
+            let descr = "";
 
-			const firstLine = this.readFirstLine(dictFile.fsPath);
-			if (firstLine[0] == '#') {
-				descr = firstLine.substring(1);
-			}
-			const icon = visualText.fileIconFromExt(dictFile.fsPath);
-			const label = path.basename(dictFile.fsPath);
-			const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","light",icon));
-			const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath,"resources","dark",icon));
-			items.push({label: label, description: descr, detail: dictFile.fsPath});
-		}
+            const firstLine = this.readFirstLine(dictFile.fsPath);
+            if (firstLine[0] == '#') {
+                descr = firstLine.substring(1);
+            }
+            const icon = visualText.fileIconFromExt(dictFile.fsPath);
+            const label = path.basename(dictFile.fsPath);
+            const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
+            const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
+            items.push({ label: label, description: descr, detail: dictFile.fsPath });
+        }
 
-		if (items.length == 0) {
-			vscode.window.showWarningMessage('Not created yet and you can help!');
-			return;
-		}
+        if (items.length == 0) {
+            vscode.window.showWarningMessage('Not created yet and you can help!');
+            return;
+        }
 
         const prompt = "Python Script";
 
-		vscode.window.showQuickPick(items, {title: 'Choose ' + prompt, placeHolder: 'Choose ' + prompt + ' to insert'}).then(selection => {
+        vscode.window.showQuickPick(items, { title: 'Choose ' + prompt, placeHolder: 'Choose ' + prompt + ' to insert' }).then(selection => {
             if (!selection)
                 return;
-			if (selection.detail) {
-				this.runPythonCode(editor, selection.detail);
-			}	
-		});
-	}
+            if (selection.detail) {
+                this.runPythonCode(editor, selection.detail);
+            }
+        });
+    }
 
     runPythonCode(editor: vscode.TextEditor, pythonScriptPath: string) {
         const inputFilePath = editor.document.uri.fsPath;
@@ -92,7 +92,7 @@ export class TextFile {
                 console.error(`Error executing the Python script: ${error.message}`);
                 return;
             }
-        
+
             if (stderr) {
                 console.error(`Python script STDERR: ${stderr}`);
                 return;
@@ -100,7 +100,7 @@ export class TextFile {
 
             const range = new vscode.Range(editor.document.lineAt(0).range.start, editor.document.lineAt(editor.document.lineCount - 1).range.end);
             const snippet = new vscode.SnippetString(stdout);
-            editor.insertSnippet(snippet,range);
+            editor.insertSnippet(snippet, range);
         });
     }
 
@@ -109,7 +109,7 @@ export class TextFile {
     }
 
     saveFile() {
-        fs.writeFileSync(this.uri.fsPath,this.getText(),{flag:'w+'});
+        fs.writeFileSync(this.uri.fsPath, this.getText(), { flag: 'w+' });
     }
 
     saveFileLines() {
@@ -119,10 +119,10 @@ export class TextFile {
                 text += this.sep;
             text += line;
         }
-        fs.writeFileSync(this.uri.fsPath,text,{flag:'w+'});
+        fs.writeFileSync(this.uri.fsPath, text, { flag: 'w+' });
     }
 
-    linesToText(editor: vscode.TextEditor, selFlag: boolean=false) {
+    linesToText(editor: vscode.TextEditor, selFlag: boolean = false) {
         if (selFlag) {
             if (this.selLines.length) {
                 let text = '';
@@ -133,13 +133,13 @@ export class TextFile {
                 }
                 const posStart = editor.selection.active;
                 const posEnd = editor.selection.end;
-                const rang = new vscode.Selection(posStart,posEnd);
+                const rang = new vscode.Selection(posStart, posEnd);
                 const snippet = new vscode.SnippetString(text);
-                editor.insertSnippet(snippet,rang);
+                editor.insertSnippet(snippet, rang);
 
                 // select new lines
-                const endLine = new vscode.Position(this.selStartLine + this.selLines.length-1,this.selLines[this.selLines.length-1].length);
-                const newRang = new vscode.Selection(posStart,endLine);
+                const endLine = new vscode.Position(this.selStartLine + this.selLines.length - 1, this.selLines[this.selLines.length - 1].length);
+                const newRang = new vscode.Selection(posStart, endLine);
                 editor.selection = newRang;
             }
         }
@@ -153,7 +153,7 @@ export class TextFile {
         }
     }
 
-    sortLines(selFlag: boolean=false) {
+    sortLines(selFlag: boolean = false) {
         if (selFlag)
             this.selLines.sort(function (a, b) {
                 return a.toLowerCase().localeCompare(b.toLowerCase());
@@ -164,7 +164,7 @@ export class TextFile {
             });
     }
 
-    rollupLines(selFlag: boolean=false) {
+    rollupLines(selFlag: boolean = false) {
         let lastLine = '';
         const deletes: number[] = new Array();
         let index: number = 0;
@@ -176,9 +176,9 @@ export class TextFile {
                 lastLine = line;
                 index++;
             }
-    
+
             for (const del of deletes.reverse()) {
-                this.selLines.splice(del,1);
+                this.selLines.splice(del, 1);
             }
         }
         else {
@@ -188,9 +188,9 @@ export class TextFile {
                 lastLine = line;
                 index++;
             }
-    
+
             for (const del of deletes.reverse()) {
-                this.lines.splice(del,1);
+                this.lines.splice(del, 1);
             }
         }
     }
@@ -217,7 +217,7 @@ export class TextFile {
         const end = editor.selection.end;
         this.selEndLine = end.line;
         let i = 0;
-        for (i=start.line; i<=end.line; i++) {
+        for (i = start.line; i <= end.line; i++) {
             this.selLines.push(this.lines[i]);
         }
         return this.selLines;
@@ -226,12 +226,12 @@ export class TextFile {
     public cleanZeroZero(): boolean {
         if (this.text.length) {
             if (this.text.indexOf('\x00') >= 0) {
-                this.text = this.text.replace(/\x00/g, ''); 
+                this.text = this.text.replace(/\x00/g, '');
                 try {
-                    fs.writeFileSync(this.uri.fsPath,this.text,{flag:'w'});
+                    fs.writeFileSync(this.uri.fsPath, this.text, { flag: 'w' });
                     return true;
                 } catch (err: any) {
-                    console.log('Error writing file ' + this.uri.fsPath+ ': ' + err.message);
+                    console.log('Error writing file ' + this.uri.fsPath + ': ' + err.message);
                     return false;
                 }
             }
@@ -275,7 +275,7 @@ export class TextFile {
             this.exists = true;
         }
     }
-    
+
     setDocument(editor: vscode.TextEditor, separateLines: boolean = true) {
         this.clear();
         this.uri = editor.document.uri;
@@ -287,29 +287,29 @@ export class TextFile {
         this.setFileType(this.filepath);
         this.separation(separateLines);
     }
-    
-	setFileType(filename: string) {
-		this.basename = path.basename(filename, '.nlp');
-        
+
+    setFileType(filename: string) {
+        this.basename = path.basename(filename, '.nlp');
+
         this.filetype = nlpFileType.NLP
         if (path.extname(filename) == '.seq')
             this.filetype = nlpFileType.SEQ;
         else if (path.extname(filename) == '.txt')
             this.filetype = nlpFileType.TXT;
-		else if (path.extname(filename) == '.txxt')
-			this.filetype = nlpFileType.TXXT;
-		else if (path.extname(filename) == '.kb')
+        else if (path.extname(filename) == '.txxt')
+            this.filetype = nlpFileType.TXXT;
+        else if (path.extname(filename) == '.kb')
             this.filetype = nlpFileType.KB;
         else if (path.extname(filename) == '.kbb')
-			this.filetype = nlpFileType.KBB;
-		else if (path.extname(filename) == '.tree')
-			this.filetype = nlpFileType.TREE;
-		else if (path.extname(filename) == '.log')
-			this.filetype = nlpFileType.LOG;
+            this.filetype = nlpFileType.KBB;
+        else if (path.extname(filename) == '.tree')
+            this.filetype = nlpFileType.TREE;
+        else if (path.extname(filename) == '.log')
+            this.filetype = nlpFileType.LOG;
         else if (path.extname(filename) == '.dict')
-			this.filetype = nlpFileType.DICT;
+            this.filetype = nlpFileType.DICT;
         else if (path.extname(filename) == '.nlm')
-			this.filetype = nlpFileType.NLM;
+            this.filetype = nlpFileType.NLM;
     }
 
     fileExists(): boolean {
@@ -320,30 +320,30 @@ export class TextFile {
         return type == this.filetype;
     }
 
-	getFileType(): nlpFileType {
-		return this.filetype;
-	}
-    
+    getFileType(): nlpFileType {
+        return this.filetype;
+    }
+
     getUri(): vscode.Uri {
         return this.uri;
     }
-    
-	getBasename(): string {
-		return this.basename;
+
+    getBasename(): string {
+        return this.basename;
     }
 
     clear() {
-        this.uri  = vscode.Uri.file('');
+        this.uri = vscode.Uri.file('');
         this.filepath = '';
         this.text = '';
         this.sepType = separatorType.SEP_UNKNOWN;
         this.sep = '';
         this.lines = [];
     }
-    
-    separation(separateLines: boolean=true) {
+
+    separation(separateLines: boolean = true) {
         if (this.text.length == 0)
-            this.setFile(this.uri,separateLines);
+            this.setFile(this.uri, separateLines);
 
         if (this.text.length) {
             const counts_rn = this.text.split('\r\n');
@@ -364,14 +364,14 @@ export class TextFile {
                 this.sep = '\n';
             }
             if (separateLines)
-                this.separateLines();      
+                this.separateLines();
         }
     }
 
     normalizeText(): string {
         if (this.sepType == separatorType.SEP_RN) {
             const regReplace = new RegExp(this.sep, 'g');
-            this.textNormalized = this.text.replace(regReplace, this.sepNormalized);            
+            this.textNormalized = this.text.replace(regReplace, this.sepNormalized);
         } else {
             this.textNormalized = this.text;
         }
@@ -381,7 +381,7 @@ export class TextFile {
     unnormalizeText(text: string): string {
         if (this.sepType == separatorType.SEP_RN) {
             const regReplace = new RegExp(this.sepNormalized, 'g');
-            this.textNormalized = text.replace(regReplace, this.sep);            
+            this.textNormalized = text.replace(regReplace, this.sep);
         } else {
             this.textNormalized = text;
         }
@@ -432,15 +432,15 @@ export class TextFile {
         let lineCount = 0;
         for (const line of lines) {
             if (line.startsWith(startsWithStr)) {
-                const posStart = new vscode.Position(lineCount,0);
-                const posEnd = new vscode.Position(lineCount,line.length);
-                const rang = new vscode.Selection(posStart,posEnd);
+                const posStart = new vscode.Position(lineCount, 0);
+                const posEnd = new vscode.Position(lineCount, line.length);
+                const rang = new vscode.Selection(posStart, posEnd);
                 return rang;
             }
             lineCount++;
         }
-        const pos = new vscode.Position(0,0);
-        return new vscode.Selection(pos,pos);
+        const pos = new vscode.Position(0, 0);
+        return new vscode.Selection(pos, pos);
     }
 
     getSeparatorLength(): number {
@@ -450,7 +450,7 @@ export class TextFile {
     getSeparator(): string {
         return this.sep;
     }
-    
+
     getSeparatorNormalized(): string {
         return this.sep;
     }
@@ -459,42 +459,42 @@ export class TextFile {
         return this.selStartLine;
     }
 
-	anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
-		let filename: string = 'ana';
-		if (pass > 0) {
-			if (pass < 10)
-				filename = filename + '00';
-			else if (pass < 100)
-				filename = filename + '0';
-			filename = filename + pass.toString() + '.' + this.getExtension(type);
-		} else {
-			filename = 'final.tree';
-		}
-		return visualText.analyzer.getOutputDirectory(filename);
+    anaFile(pass: number, type: nlpFileType = nlpFileType.TREE): vscode.Uri {
+        let filename: string = 'ana';
+        if (pass > 0) {
+            if (pass < 10)
+                filename = filename + '00';
+            else if (pass < 100)
+                filename = filename + '0';
+            filename = filename + pass.toString() + '.' + this.getExtension(type);
+        } else {
+            filename = 'final.tree';
+        }
+        return visualText.analyzer.getOutputDirectory(filename);
     }
 
-	hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
+    hasFileType(uri: vscode.Uri, pass: number, type: nlpFileType = nlpFileType.TREE): boolean {
         if (!fs.existsSync(uri.fsPath))
             return false;
-		const anaFile = this.anaFile(pass,type);
-		if (type == nlpFileType.TREE) {
-			if (this.fileHasNLines(anaFile.fsPath,6))
-				return true;
-			return false;
-		}
-		return fs.existsSync(anaFile.fsPath);
-	}
+        const anaFile = this.anaFile(pass, type);
+        if (type == nlpFileType.TREE) {
+            if (this.fileHasNLines(anaFile.fsPath, 6))
+                return true;
+            return false;
+        }
+        return fs.existsSync(anaFile.fsPath);
+    }
 
-	fileHasNLines(filepath: string, max: number): boolean {
+    fileHasNLines(filepath: string, max: number): boolean {
         if (!fs.existsSync(filepath))
             return false;
         const lineByLine = require('n-readlines');
         const liner = new lineByLine(filepath);
-         
+
         let line;
         let lineNumber = 0;
         let found = false;
-         
+
         while (line = liner.next()) {
             if (lineNumber++ >= max) {
                 found = true;
@@ -504,25 +504,25 @@ export class TextFile {
         if (liner.next())
             liner.close();
         return found;
-	}
+    }
 
-	public readFirstLine(filepath: string): string {
+    public readFirstLine(filepath: string): string {
         if (!fs.existsSync(filepath))
             return '';
         const lineByLine = require('n-readlines');
         const liner = new lineByLine(filepath);
-         
+
         let line = '';
-         
+
         while (line = liner.next()) {
             break;
         }
 
         if (liner.next())
             liner.close();
-            
+
         return line.toString().trim();
-	}
+    }
 
     replaceLineNumber(lineNum: number, text: string) {
         this.lines[lineNum] = text;
