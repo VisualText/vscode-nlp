@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 2.49.4
+### 2.49.5
 Now has different colorization for light and dark themes.
 
 ### 2.48.5
