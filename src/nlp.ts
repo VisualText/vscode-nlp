@@ -112,10 +112,11 @@ export class NLPFile extends TextFile {
 					const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
 					dirfuncs.writeFile(outFile.fsPath, stdout);
 					dirfuncs.writeFile(errFile.fsPath, stderr);
-					logView.loadAnalyzerOuts();
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
-					const syntaxError = logView.syntaxErrorsOutput('err.log');
+					let syntaxError = logView.syntaxErrorsOutput('err.log');
+					if (!syntaxError)
+						syntaxError = logView.syntaxErrorsLog('make_ana');
 					if (err || syntaxError) {
 						if (err)
 							logView.addMessage(err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
@@ -130,6 +131,7 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
 					} else {
+						logView.loadAnalyzerOuts();
 						const typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
 						logView.addMessage('Done analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
 						visualText.analyzer.saveCurrentFile(filepath);
