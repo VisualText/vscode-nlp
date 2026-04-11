@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as rimraf from 'rimraf';
+import { deleteSync } from 'del';
 import { visualText } from './visualText';
 import { anaSubDir } from './analyzer';
 
@@ -247,7 +247,7 @@ export namespace dirfuncs {
         if (!fs.existsSync(dirPath) || dirPath.length <= 2)
             return false;
         try {
-            rimraf.sync(dirPath);
+            deleteSync(dirPath);
             return true;
         } catch (err: any) {
             vscode.window.showInformationMessage('Error deleting folder ' + dirPath + ': ' + err.message);
@@ -274,7 +274,7 @@ export namespace dirfuncs {
         if (!fs.existsSync(dirPath) || dirPath.length <= 2)
             return false;
         try {
-            rimraf.sync(dirPath);
+            deleteSync(dirPath);
             fs.mkdirSync(dirPath);
             return true;
         } catch (err: any) {
