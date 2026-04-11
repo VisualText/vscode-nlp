@@ -9,7 +9,7 @@ import { nlpStatusBar, DevMode, FiredMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import { anaSubDir } from './analyzer';
 import * as fs from 'fs';
-import * as moment from 'moment';
+import moment from 'moment';
 import 'moment-duration-format'
 
 export interface TextItem {

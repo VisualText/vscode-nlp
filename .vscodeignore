@@ -1,66 +1,38 @@
-# Ignore everything
-*
-*/**
+# Source files - bundled by webpack
+src/**
+tsconfig.json
+webpack.config.js
 
-# Whitelist required files
-!dist/**/*
-!resources/**/*
-!snippets/**/*
-!syntaxes/**/*
-!themes/**/*
-!.vscode/settings.json
+# Build artifacts we don't need  
+*.vsix
+.vscode/launch.json
+.vscode/tasks.json
 
+# Node modules - bundled by webpack
+node_modules/**
+
+# Development files
+.git*
+.eslintrc.json
+npm-debug.log*
+.nyc_output
+coverage
+
+# Test files
+test/**
+*.test.ts
+*.test.js
+
+# Keep only what's needed for the extension
+!dist/extension.js
+!dist/extension.js.map
+!resources/**
+!snippets/**
+!syntaxes/**
+!themes/**
+!*.md
+!*.html
+!*-configuration.json
 !.vscodeignore
-!CHANGELOG.md
-!DOWNLOADHELP.html
-!UPDATERHELP.html
-!node_modules/agent-base/**/*
-!node_modules/balanced-match/**/*
-!node_modules/brace-expansion/**/*
-!node_modules/buffer-crc32/**/*
-!node_modules/concat-map/**/*
-!node_modules/copy-dir/**/*
-!node_modules/debug/**/*
-!node_modules/download-file/**/*
-!node_modules/end-of-stream/**/*
-!node_modules/extract-zip/**/*
-!node_modules/fd-slicer/**/*
-!node_modules/files.txt/**/*
-!node_modules/follow-redirects/**/*
-!node_modules/fs.realpath/**/*
-!node_modules/get-stream/**/*
-!node_modules/glob/**/*
-!node_modules/https-proxy-agent/**/*
-!node_modules/inflight/**/*
-!node_modules/inherits/**/*
-!node_modules/mime-db/**/*
-!node_modules/mime-types/**/*
-!node_modules/minimatch/**/*
-!node_modules/mkdirp/**/*
-!node_modules/moment/**/*
-!node_modules/moment-duration-format/**/*
-!node_modules/ms/**/*
-!node_modules/n-readlines/**/*
-!node_modules/nodejs-file-downloader/**/*
-!node_modules/once/**/*
-!node_modules/os/**/*
-!node_modules/path-is-absolute/**/*
-!node_modules/pend/**/*
-!node_modules/pump/**/*
-!node_modules/rimraf/**/*
-!node_modules/sanitize-filename/**/*
-!node_modules/truncate-utf8-bytes/**/*
-!node_modules/tslib/**/*
-!node_modules/utf8-byte-length/**/*
-!node_modules/wrappy/**/*
-!node_modules/yauzl/**/*
-
-!nlp-configuration.json
-!tree-configuration.json
-!txxt-configuration.json
-!kb-configuration.json
-!kbb-configuration.json
-!dict-configuration.json
-!LICENSE
 !package.json
-!README.md
+!LICENSE*
