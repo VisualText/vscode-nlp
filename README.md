@@ -53,7 +53,7 @@ The VSCode NLP++ Language Extension allows for the fast development of NLP++ ana
 * Display the syntax tree in insightful ways
 * Highlight text that has matched rules in each pass
 * Display the knowledge base at strategic places in the analyzer sequence
-* Easily edit and modify the pass sequence and texts to be analyze
+* Easily edit and modify the pass sequence and texts to be analyzed
 * Display syntax errors to NLP++
 * Compile analyzers and KBs to C++ libraries for faster execution and source-code protection in customer deployments
 * Auto generate rules
