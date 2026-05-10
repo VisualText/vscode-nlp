@@ -1,6 +1,6 @@
 # NLP++ Language Extension
 
-![Natural Langauge Understanding Global Initiative](resources/NLUGlobLogoBanner.png)
+![Natural Language Understanding Global Initiative](resources/NLUGlobLogoBanner.png)
 
 In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org) in the open-source natural language understanding community.
 
