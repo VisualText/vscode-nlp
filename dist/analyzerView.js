@@ -12,6 +12,7 @@ const fileOps_1 = require("./fileOps");
 const sequence_1 = require("./sequence");
 const textFile_1 = require("./textFile");
 const analyzer_1 = require("./analyzer");
+const compile_1 = require("./compile");
 var analyzerItemType;
 (function (analyzerItemType) {
     analyzerItemType[analyzerItemType["ANALYZER"] = 0] = "ANALYZER";
@@ -204,6 +205,7 @@ class AnalyzerView {
         vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
         vscode.commands.registerCommand('analyzerView.video', () => this.video());
         vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
+        vscode.commands.registerCommand('analyzerView.compileAnalyzer', resource => this.compileAnalyzer(resource));
         visualText_1.visualText.colorizeAnalyzer();
         this.folderUri = undefined;
         this.converting = false;
@@ -697,6 +699,23 @@ class AnalyzerView {
                 uri = vscode.Uri.file(path.dirname(uri.fsPath));
         }
         visualText_1.visualText.analyzer.newAnalyzer(uri);
+    }
+    compileAnalyzer(analyzerItem) {
+        return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            let analyzerDir;
+            if (analyzerItem && analyzerItem.uri) {
+                analyzerDir = dirfuncs_1.dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+            }
+            else if (visualText_1.visualText.analyzer.isLoaded()) {
+                analyzerDir = visualText_1.visualText.analyzer.getAnalyzerDirectory();
+            }
+            else {
+                vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+                return;
+            }
+            const compile = compile_1.NLPCompile.attach();
+            yield compile.compileAnalyzer(analyzerDir);
+        });
     }
     deleteAllAnalyzerLogs() {
         if (visualText_1.visualText.hasWorkspaceFolder()) {

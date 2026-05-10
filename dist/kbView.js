@@ -13,6 +13,7 @@ const textFile_1 = require("./textFile");
 const fileOps_1 = require("./fileOps");
 const fs = tslib_1.__importStar(require("fs"));
 const analyzer_1 = require("./analyzer");
+const compile_1 = require("./compile");
 class FileSystemProvider {
     refresh() {
         this._onDidChangeTreeData.fire();
@@ -216,6 +217,7 @@ class KBView {
         vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
         vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
         vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
+        vscode.commands.registerCommand('kbView.compileKB', () => this.compileKB());
     }
     static attach(ctx) {
         if (!exports.kbView) {
@@ -490,6 +492,17 @@ class KBView {
                 visualText_1.visualText.debugMessage('main.kb generated');
             });
         }
+    }
+    compileKB() {
+        return tslib_1.__awaiter(this, void 0, void 0, function* () {
+            if (!visualText_1.visualText.analyzer.isLoaded()) {
+                vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+                return;
+            }
+            const analyzerDir = visualText_1.visualText.analyzer.getAnalyzerDirectory();
+            const compile = compile_1.NLPCompile.attach();
+            yield compile.compileKB(analyzerDir);
+        });
     }
     openKBFile(kbItem) {
         if (kbItem.uri.fsPath.endsWith('.nlm'))
