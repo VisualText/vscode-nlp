@@ -66,7 +66,7 @@ class NLPCompile {
                 }
                 progress.report({ increment: 30, message: 'Detecting C++ compiler...' });
                 // 3. Detect C++ compiler
-                const compiler = yield this.detectCppCompiler();
+                let compiler = yield this.detectCppCompiler();
                 if (!compiler) {
                     const installed = yield this.promptAndInstallCompiler();
                     if (!installed) {
@@ -75,16 +75,15 @@ class NLPCompile {
                         return;
                     }
                     // Try detecting again after install
-                    const compilerAfterInstall = yield this.detectCppCompiler();
-                    if (!compilerAfterInstall) {
+                    compiler = yield this.detectCppCompiler();
+                    if (!compiler) {
                         vscode.window.showErrorMessage('C++ compiler still not found after install attempt. Please restart VS Code and try again.');
                         return;
                     }
                 }
                 progress.report({ increment: 20, message: 'Compiling C++ library...' });
                 // 4. Compile the generated C++ into a shared library
-                const compilerPath = compiler !== null && compiler !== void 0 ? compiler : (yield this.detectCppCompiler());
-                const success = yield this.compileCpp(anapath, compilerPath);
+                const success = yield this.compileCpp(anapath, compiler);
                 if (success) {
                     const libName = this.sharedLibraryName(path.basename(anapath));
                     logView_1.logView.addMessage(`Compile ${targetLabel} succeeded: ${libName}`, logView_1.logLineType.ANALYER_OUTPUT, analyzerDir);

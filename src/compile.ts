@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
-import { dirfuncs } from './dirfuncs';
 
 export enum compileTarget { ANALYZER, KB }
 
@@ -70,7 +69,7 @@ export class NLPCompile {
             progress.report({ increment: 30, message: 'Detecting C++ compiler...' });
 
             // 3. Detect C++ compiler
-            const compiler = await this.detectCppCompiler();
+            let compiler = await this.detectCppCompiler();
             if (!compiler) {
                 const installed = await this.promptAndInstallCompiler();
                 if (!installed) {
@@ -79,8 +78,8 @@ export class NLPCompile {
                     return;
                 }
                 // Try detecting again after install
-                const compilerAfterInstall = await this.detectCppCompiler();
-                if (!compilerAfterInstall) {
+                compiler = await this.detectCppCompiler();
+                if (!compiler) {
                     vscode.window.showErrorMessage('C++ compiler still not found after install attempt. Please restart VS Code and try again.');
                     return;
                 }
@@ -89,8 +88,7 @@ export class NLPCompile {
             progress.report({ increment: 20, message: 'Compiling C++ library...' });
 
             // 4. Compile the generated C++ into a shared library
-            const compilerPath = compiler ?? (await this.detectCppCompiler())!;
-            const success = await this.compileCpp(anapath, compilerPath);
+            const success = await this.compileCpp(anapath, compiler);
 
             if (success) {
                 const libName = this.sharedLibraryName(path.basename(anapath));
