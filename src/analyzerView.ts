@@ -8,6 +8,7 @@ import { fileOpRefresh, fileOperation } from './fileOps';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 import { anaSubDir } from './analyzer';
+import { NLPCompile } from './compile';
 
 export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE, README }
 
@@ -214,6 +215,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.updateColorizer', () => this.updateColorizer());
 		vscode.commands.registerCommand('analyzerView.video', () => this.video());
 		vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
+		vscode.commands.registerCommand('analyzerView.compileAnalyzer', resource => this.compileAnalyzer(resource));
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -753,6 +755,20 @@ export class AnalyzerView {
 				uri = vscode.Uri.file(path.dirname(uri.fsPath));
 		}
 		visualText.analyzer.newAnalyzer(uri);
+	}
+
+	async compileAnalyzer(analyzerItem: AnalyzerItem) {
+		let analyzerDir: vscode.Uri;
+		if (analyzerItem && analyzerItem.uri) {
+			analyzerDir = dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+		} else if (visualText.analyzer.isLoaded()) {
+			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		} else {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		const compile = NLPCompile.attach();
+		await compile.compileAnalyzer(analyzerDir);
 	}
 
 	public deleteAllAnalyzerLogs() {

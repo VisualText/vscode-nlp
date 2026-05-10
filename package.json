@@ -214,7 +214,7 @@
             },
             {
                 "command": "textView.fastLoadOff",
-                "title": "✓ Fast Load (ON)",
+                "title": "\u2713 Fast Load (ON)",
                 "icon": {
                     "light": "resources/light/test.svg",
                     "dark": "resources/dark/test.svg"
@@ -1686,6 +1686,22 @@
                     "light": "resources/light/gear.svg",
                     "dark": "resources/dark/gear.svg"
                 }
+            },
+            {
+                "command": "analyzerView.compileAnalyzer",
+                "title": "Compile Analyzer to C++ Library",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
+            },
+            {
+                "command": "kbView.compileKB",
+                "title": "Compile KB to C++ Library",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
             }
         ],
         "keybindings": [
@@ -2244,6 +2260,16 @@
                     "command": "findView.refreshAll",
                     "when": "view == findView",
                     "group": "navigation"
+                },
+                {
+                    "command": "analyzerView.compileAnalyzer",
+                    "when": "view == analyzerView",
+                    "group": "secondary"
+                },
+                {
+                    "command": "kbView.compileKB",
+                    "when": "view == kbView",
+                    "group": "second@4"
                 }
             ],
             "sequencetype": [
@@ -3000,6 +3026,16 @@
                     "command": "outputView.deleteOutput",
                     "when": "view == outputView",
                     "group": "inline@4"
+                },
+                {
+                    "command": "analyzerView.compileAnalyzer",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "compile"
+                },
+                {
+                    "command": "kbView.compileKB",
+                    "when": "view == kbView",
+                    "group": "compile"
                 }
             ]
         },

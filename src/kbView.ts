@@ -9,6 +9,7 @@ import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
 import { anaSubDir } from './analyzer';
+import { NLPCompile } from './compile';
 
 export interface KBItem {
 	uri: vscode.Uri;
@@ -240,6 +241,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
 		vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
 		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
+		vscode.commands.registerCommand('kbView.compileKB', () => this.compileKB());
 	}
 
 	static attach(ctx: vscode.ExtensionContext) {
@@ -539,6 +541,16 @@ export class KBView {
 				visualText.debugMessage('main.kb generated');
 			});
 		}
+	}
+
+	async compileKB() {
+		if (!visualText.analyzer.isLoaded()) {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		const analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		const compile = NLPCompile.attach();
+		await compile.compileKB(analyzerDir);
 	}
 
 	private openKBFile(kbItem: KBItem): void {
