@@ -1,10 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JsonState = exports.jsonState = void 0;
-const tslib_1 = require("tslib");
-const path = tslib_1.__importStar(require("path"));
-const fs = tslib_1.__importStar(require("fs"));
-const visualText_1 = require("./visualText");
+const path = require("path");
+const fs = require("fs");
 class JsonState {
     constructor() {
         this.json = undefined;
@@ -29,18 +27,12 @@ class JsonState {
     getFilePath() {
         return this.filePath;
     }
-    jsonParse(dirPath, filename) {
-        if (this.setFilePath(dirPath.fsPath, filename)) {
+    jsonParse(dirPath, filename, label) {
+        if (this.setFilePath(dirPath.path, filename)) {
             this.jsonStr = fs.readFileSync(this.filePath, 'utf8');
             if (this.jsonStr.length) {
-                try {
-                    this.json = JSON.parse(this.jsonStr);
-                    return true;
-                }
-                catch (e) {
-                    visualText_1.visualText.debugMessage('Jason file error: ' + this.filePath + ' -- ' + e);
-                    return false;
-                }
+                this.json = JSON.parse(this.jsonStr);
+                return true;
             }
         }
         return false;
@@ -52,7 +44,7 @@ class JsonState {
         return true;
     }
     writeFile() {
-        const jsonStr = JSON.stringify(this.json, null, this.tabSize);
+        var jsonStr = JSON.stringify(this.json, null, this.tabSize);
         if (!fs.existsSync(this.dirPath)) {
             try {
                 fs.mkdirSync(this.dirPath);
