@@ -6,11 +6,11 @@ In November of 2023, the [Natural Language Understanding Global Initiative](http
 
 ## Version 3 announcement
 
-Version 3 adds support for compiling analyzers and the knowledge base (KB).
+Version 3 introduces support for compiling analyzers and the knowledge base (KB).
 
-Benefits:
+This provides two major advantages:
 - Faster execution.
-- Hides the native NLP++ code for teams distributing NLP++ analyzers to customers who do not have access to NLP++ source code.
+- Protection of native NLP++ source code when delivering analyzers to customers who do not have access to NLP++ source.
 
 ## Version 2 Released
 
@@ -108,6 +108,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 ## Release Notes
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
+
+### 3.0.0
+Added support for compiling analyzers and the knowledge base (KB). This improves execution speed and helps protect native NLP++ source code when analyzers are delivered to customers without access to the NLP++ source.
 
 ### 2.49.6
 Now has different colorization for light and dark themes.
