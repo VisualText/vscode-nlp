@@ -3,6 +3,10 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.0.0
+Added support for compiling analyzers and the knowledge base (KB).
+Benefits: faster execution and protection of native NLP++ source code when analyzers are distributed to customers without access to the NLP++ source.
+
 ### 2.49.6
 Now has different colorization for light and dark themes.
 
