@@ -2,11 +2,19 @@
 
 ![Natural Langauge Understanding Global Initiative](resources/NLUGlobLogoBanner.png)
 
-In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org/category/people/) from around the world who are developing dictionaries, knowledge bases, and analyzers using NLP++, VisualText, and the Conceptual Grammar.
+In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org) in the open-source natural language understanding community.
+
+## Version 3 announcement
+
+Version 3 adds support for compiling analyzers and the knowledge base (KB).
+
+Benefits:
+- Faster execution.
+- Hides the native NLP++ code for teams distributing NLP++ analyzers to customers who do not have access to NLP++ source code.
 
 ## Version 2 Released
 
-On December 29, 2022, version 2 was released. Since the NLP++ language extension is updated frequently, the new version is more of a formality. The major change is the ability to build and use the .kbb files to load a knowledge base. This is in conjunction with version 2 of the NLP Engine which is necessary for reading .kbb files into the knowledge base.
+On December 29, 2022, version 2 was released. Since the NLP++ language extension is updated frequently, the new version is more of a formality. The major change is the ability to build and use the analyzer view together with the updated NLP-ENGINE.
 
 ## Tutorial Videos
 
@@ -17,10 +25,10 @@ Many of you have been asking for tutorial videos on NLP++ and here is the first 
 
 ## NLP Discourse Forum
 
-Because of NLP++ being 100% open-source, [Discourse](https://www.discourse.org/) has donated a free NLP Forum for NLP++: [https://nlp.discourse.group](https://nlp.discourse.group). There, in the coming years, as our NLP++ community continues to grow, we will be discussing everything related to NLP++. Thanks Discourse for supporting our cause!
+Because of NLP++ being 100% open-source, [Discourse](https://www.discourse.org/) has donated a free NLP Forum for NLP++: [https://nlp.discourse.group](https://nlp.discourse.group). There, in the community, users can ask questions and discuss NLP++ and VisualText.
 
 ## Only Computer Language Dedicated to Text and Natural Language Processing
-NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse and understand text. Whether it be for extracting or marking up "messy" text or full-blown NLP understanding, this language allows for "anything thinkable".
+NLP++ is the only computer language in the world exclusively dedicated to natural language processing. It allows for creating digital human readers that use linguistic and world knowledge to parse, tag, interpret, and extract information from text.
 
 ## NLP++ and VisualText Now Unicode
 
@@ -33,7 +41,7 @@ Find [quick video guides](http://tutorials.visualtext.org/) on how to install an
 
 ## Introduction
 
-This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language specifically dedicated to creating text analyzers that mimic human readers and includes the NLP++ language and knowledge based system called the "conceptual grammar". NLP++ is used for any type of text processing from simple tagging or extraction, to full language parsing. There is a full english parser that is free an available for use (see information below).
+This is a VSCode Language Extension for NLP++ that recreates the functionality of [VisualText](http://visualtext.org) which has run on Microsoft Windows for the last two decades. NLP++ is a open source computer language designed specifically for text and natural language processing. This extension runs on Linux, Windows, and MacOS.
 
 The language extension and the required NLP-ENGINE run on Linux, Windows, and MacOS.
 
@@ -63,7 +71,7 @@ In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in 
 
 ## NLP Engine Overview
 
-The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://github.com/VisualText/nlp-engine). The engine can run as a standalone executable (nlp.exe) that runs on Linux, Windows, and MacOS or it can be embedded into c++ code.
+The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://github.com/VisualText/nlp-engine). The engine can run as a stand alone executable outside of the language extension.
 
 ### Types of Analyzers Commonly Written Using NLP++
 
@@ -188,9 +196,8 @@ At which point you can edit the sources and launch debug sessions via F5 and inc
 
 ## NLP Engine
 
-The NLP Engine which is written in C++ is also open source and can be downloaded in development mode. You can find how to download and develop the NLP Engine code at: [https://github.com/VisualText/nlp-engine](https://github.com/VisualText/nlp-engine).
+The NLP Engine which is written in C++ is also open source and can be downloaded in development mode. You can find how to download and develop the NLP Engine code at: [https://github.com/VisualText/nlp-engine](https://github.com/VisualText/nlp-engine)
 
 # License
 
 [MIT](https://github.com/VisualText/vscode-nlp/blob/master/LICENSE)
-
