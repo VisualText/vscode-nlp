@@ -1,9 +1,9 @@
 {
     "name": "nlp",
     "displayName": "NLP",
-    "description": "NLP++: dedicated computer language for NLP - Anything Thinkable",
+    "description": "NLP++ language extension with compiled analyzer and compiled KB support for faster execution and protection of native NLP++ source code when distributing analyzers.",
     "icon": "resources/NLPppLogo.png",
-    "version": "2.49.7",
+    "version": "3.0.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -334,7 +334,7 @@
             },
             {
                 "command": "nlp.video",
-                "title": "Help Video VisualText Version 2",
+                "title": "Help Video VisualText Version 3",
                 "icon": {
                     "light": "resources/light/video.svg",
                     "dark": "resources/dark/video.svg"

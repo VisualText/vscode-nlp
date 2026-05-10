@@ -6,15 +6,15 @@ In November of 2023, the [Natural Language Understanding Global Initiative](http
 
 ## Version 3 announcement
 
-Version 3 introduces support for compiling analyzers and the knowledge base (KB).
+Version 3 adds support for compiling analyzers and the knowledge base (KB).
 
 This provides two major advantages:
 - Faster execution.
 - Protection of native NLP++ source code when delivering analyzers to customers who do not have access to NLP++ source.
 
-## Version 2 Released
+## Version 2 milestone
 
-On December 29, 2022, version 2 was released. Since the NLP++ language extension is updated frequently, the new version is more of a formality. The major change is the ability to build and use the analyzer view together with the updated NLP-ENGINE.
+On December 29, 2022, Version 2 introduced the ability to build and use the analyzer view together with the updated NLP-ENGINE.
 
 ## Tutorial Videos
 
@@ -55,6 +55,7 @@ The VSCode NLP++ Language Extension allows for the fast development of NLP++ ana
 * Display the knowledge base at strategic places in the analyzer sequence
 * Easily edit and modify the pass sequence and texts to be analyze
 * Display syntax errors to NLP++
+* Compile analyzers and KBs to C++ libraries for faster execution and source-code protection in customer deployments
 * Auto generate rules
 * Extensive snippets
 * Help lookup
@@ -110,7 +111,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
 ### 3.0.0
-Added support for compiling analyzers and the knowledge base (KB). This improves execution speed and helps protect native NLP++ source code when analyzers are delivered to customers without access to the NLP++ source.
+Added support for compiling analyzers and the knowledge base (KB). Benefits include faster execution and protection of native NLP++ source code when analyzers are distributed to customers without access to the NLP++ source.
 
 ### 2.49.6
 Now has different colorization for light and dark themes.
