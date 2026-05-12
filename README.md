@@ -1,5 +1,11 @@
 # NLP++ Language Extension
 
+[![NLP++ Textbook](https://github.com/VisualText/vscode-nlp/raw/main/resources/TextbookLaunch01_LinkedIn%20Banner.png)](https://book.visualtext.org)
+
+## First Textbook on the NLP++ Programming Langauge
+
+The first textbook on NLP++ is now available world-wide by [BPB Online](https://book.visualtext.org). NLP++ can replace LLMs when used in agentic flows. The code must be written by a human like any other programming language and this book will facilitate this process. NLP++ is no a statistical system that needs training. It relies on the ingenuity of the programmer to create a program that can parse text and extract information in a deterministic way.
+
 ![Natural Language Understanding Global Initiative](resources/NLUGlobLogoBanner.png)
 
 In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org) in the open-source natural language understanding community.
