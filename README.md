@@ -1,6 +1,6 @@
 # NLP++ Language Extension
 
-[![NLP++ Textbook](https://github.com/VisualText/vscode-nlp/raw/main/resources/TextbookLaunch01_LinkedIn%20Banner.png)](https://book.visualtext.org)
+[![NLP++ Textbook](https://raw.githubusercontent.com/VisualText/vscode-nlp/master/resources/TextbookLaunch01_LinkedIn%20Banner.png)](https://book.visualtext.org)
 
 ## First Textbook on the NLP++ Programming Langauge
 
