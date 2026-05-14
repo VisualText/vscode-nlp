@@ -254,6 +254,9 @@ export class NLPCompile {
         }
 
         const requiredLibs = ['prim', 'kbm', 'consh', 'words', 'lite'];
+        if (os.platform() === 'win32') {
+            requiredLibs.push('icuuc78', 'icudt78');
+        }
         const requiredHeaders = [
             'prim/libprim.h',
             'prim/prim.h',
@@ -438,7 +441,16 @@ export class NLPCompile {
 
         fs.mkdirSync(sourceDir, { recursive: true });
 
-        const cmakeContent = this.generateCompileCMakeLists(anapath, analyzerName, support);
+        const stdAfxStub = path.join(sourceDir, 'StdAfx.h');
+        const stdAfxContent =
+            '// Auto-generated stub. Engine-generated .cpp files include "StdAfx.h" by convention.\n' +
+            '// Pull in my_tchar.h so types like _TCHAR are available in cpp files that only\n' +
+            '// include StdAfx.h (e.g. kb/St*.cpp).\n' +
+            '#pragma once\n' +
+            '#include "my_tchar.h"\n';
+        fs.writeFileSync(stdAfxStub, stdAfxContent, { encoding: 'utf8' });
+
+        const cmakeContent = this.generateCompileCMakeLists(anapath, analyzerName, support, sourceDir);
         fs.writeFileSync(cmakeFile, cmakeContent, { encoding: 'utf8' });
 
         const outputChannel = vscode.window.createOutputChannel('NLP++ Compile');
@@ -479,8 +491,9 @@ export class NLPCompile {
         return true;
     }
 
-    private generateCompileCMakeLists(anapath: string, analyzerName: string, support: EngineCompileSupport): string {
+    private generateCompileCMakeLists(anapath: string, analyzerName: string, support: EngineCompileSupport, stubDir: string): string {
         const toCMakePath = (filePath: string) => filePath.replace(/\\/g, '/');
+        const stubDirCMake = toCMakePath(stubDir);
         const includeLines = support.includeDirs
             .map(dir => `    "${toCMakePath(dir)}"`)
             .join('\n');
@@ -499,6 +512,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(ANALYZER_DIR "${analyzerPath}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${analyzerPath}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${analyzerPath}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${analyzerPath}")
+foreach(OUTPUTCONFIG \${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER \${OUTPUTCONFIG} OUTPUTCONFIG_UPPER)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_\${OUTPUTCONFIG_UPPER} "${analyzerPath}")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_\${OUTPUTCONFIG_UPPER} "${analyzerPath}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_\${OUTPUTCONFIG_UPPER} "${analyzerPath}")
+endforeach()
 
 file(GLOB GENERATED_CPP "${analyzerPath}/cpp/*.cpp" "${analyzerPath}/kb/*.cpp")
 if(NOT GENERATED_CPP)
@@ -509,6 +529,7 @@ add_library(nlp_generated SHARED \${GENERATED_CPP})
 set_target_properties(nlp_generated PROPERTIES OUTPUT_NAME "${analyzerName}")
 
 target_include_directories(nlp_generated PRIVATE
+    "${stubDirCMake}"
     "${analyzerPath}"
     "${analyzerPath}/cpp"
     "${analyzerPath}/kb"
@@ -523,6 +544,9 @@ target_link_libraries(nlp_generated PRIVATE \${NLP_ENGINE_LIBRARIES})
 
 if(WIN32)
     target_compile_definitions(nlp_generated PRIVATE _CRT_SECURE_NO_WARNINGS)
+    if(MSVC)
+        target_compile_options(nlp_generated PRIVATE /wd4005)
+    endif()
 else()
     find_library(DL_LIBRARY dl)
     if(DL_LIBRARY)
