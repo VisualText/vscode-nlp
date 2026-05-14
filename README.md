@@ -80,6 +80,27 @@ In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in 
 
 The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://github.com/VisualText/nlp-engine). The engine can run as a stand alone executable outside of the language extension.
 
+### Compile Asset Requirements
+
+To enable `-COMPILE` analyzer and KB builds from the VSCode extension, the `VisualText/nlp-engine` latest release must include this additional asset:
+
+- `nlpengine-compile-libs.zip`
+
+The archive should extract under the extension's `nlp-engine` folder and include:
+
+- `include/` (engine headers)
+- `lib/` (compiled engine libraries for the target platform)
+
+Expected library set in `lib/`:
+
+- `prim`
+- `kbm`
+- `consh`
+- `words`
+- `lite`
+
+The updater in `vscode-nlp` now checks for and downloads this asset so the compile commands can build generated analyzer/KB C++ with CMake.
+
 ### Types of Analyzers Commonly Written Using NLP++
 
 There are many types of analyzers that are written by NLP++ programmers including:
