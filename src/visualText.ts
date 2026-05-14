@@ -16,7 +16,7 @@ import { TextFile } from './textFile';
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
 export enum upType { UNKNOWN, VERSION, DOWNLOAD, DELETE, UNZIP }
-export enum upComp { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ANALYZER_FILES, VT_FILES }
+export enum upComp { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ENGINE_COMPILE_FILES, ANALYZER_FILES, VT_FILES }
 export enum upPush { FRONT, BACK }
 
 export interface updateOp {
@@ -60,7 +60,7 @@ export class VisualText {
     public opsQueue: updateOp[] = new Array();
     public statusStrs = ['UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE'];
     public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE'];
-    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ANALYZER_FILES', 'VT_FILES'];
+    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ENGINE_COMPILE_FILES', 'ANALYZER_FILES', 'VT_FILES'];
 
     public readonly LOG_SUFFIX = '_log';
     public readonly TEST_SUFFIX = '_test';
@@ -69,6 +69,7 @@ export class VisualText {
     public readonly ICU1_WIN = 'icudt78.dll';
     public readonly ICU2_WIN = 'icuuc78.dll';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
+    public readonly NLPENGINE_COMPILE_FILES_ASSET = 'nlpengine-compile-libs.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
     public readonly VISUALTEXT_FILES_REPO = 'visualtext-files';
     public readonly ANALYZERS_REPO = 'analyzers';
@@ -314,6 +315,7 @@ export class VisualText {
         }
         visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.NLP_EXE);
         visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.ENGINE_COMPILE_FILES);
     }
 
     pushDeleteEngineFiles(op: updateOp, push: upPush) {
@@ -323,6 +325,7 @@ export class VisualText {
         }
         visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.NLP_EXE);
         visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ENGINE_FILES);
+        visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ENGINE_COMPILE_FILES);
     }
 
     pushDeleteVTFiles(op: updateOp, push: upPush) {
@@ -334,6 +337,7 @@ export class VisualText {
     }
 
     pushDownloadEngineFiles(op: updateOp, push: upPush) {
+        visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.ENGINE_COMPILE_FILES);
         visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.ENGINE_FILES);
         visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.NLP_EXE);
         if (visualText.platform == 'win32') {
@@ -363,6 +367,9 @@ export class VisualText {
                 break;
             case upComp.ENGINE_FILES:
                 visualText.zipFiles(op, visualText.NLPENGINE_REPO, '', visualText.NLPENGINE_FILES_ASSET, ['data']);
+                break;
+            case upComp.ENGINE_COMPILE_FILES:
+                visualText.zipFiles(op, visualText.NLPENGINE_REPO, '', visualText.NLPENGINE_COMPILE_FILES_ASSET, ['include', 'lib']);
                 break;
             case upComp.VT_FILES:
                 visualText.zipFiles(op, visualText.VISUALTEXT_FILES_REPO, 'visualText', visualText.VISUALTEXT_FILES_ASSET, [visualText.ANALYZER_SEQUENCE_FOLDER, 'Help', 'analyzers']);
