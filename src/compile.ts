@@ -5,7 +5,7 @@ import * as os from 'os';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 
-export enum compileTarget { ANALYZER, KB }
+export enum compileTarget { ANALYZER, KB_ONLY }
 
 interface NlpCompileResult {
     ok: boolean;
@@ -49,8 +49,8 @@ export class NLPCompile {
         await this.runCompile(analyzerDir, compileTarget.ANALYZER);
     }
 
-    async compileKB(analyzerDir: vscode.Uri): Promise<void> {
-        await this.runCompile(analyzerDir, compileTarget.KB);
+    async compileKBOnly(analyzerDir: vscode.Uri): Promise<void> {
+        await this.runCompile(analyzerDir, compileTarget.KB_ONLY);
     }
 
     // ---------------------------------------------------------------------------
@@ -58,7 +58,8 @@ export class NLPCompile {
     // ---------------------------------------------------------------------------
 
     private async runCompile(analyzerDir: vscode.Uri, target: compileTarget): Promise<void> {
-        const targetLabel = target === compileTarget.KB ? 'KB' : 'Analyzer';
+        const targetLabel = target === compileTarget.KB_ONLY ? 'KB' : 'Analyzer and KB';
+        const compileFlag = target === compileTarget.KB_ONLY ? '-COMPILEKB' : '-COMPILE';
 
         // 1. Check NLP engine executable
         const exe = visualText.exePath().fsPath;
@@ -67,6 +68,19 @@ export class NLPCompile {
                 visualText.startUpdater();
             });
             return;
+        }
+
+        // KB-only compile needs at least one .kbb or .dict source under <analyzer>/kb/.
+        // The engine would otherwise produce no kb cpp files and the build would fail late.
+        if (target === compileTarget.KB_ONLY) {
+            const kbSources = this.findKBSourceFiles(analyzerDir.fsPath);
+            if (kbSources.length === 0) {
+                const analyzerName = path.basename(analyzerDir.fsPath.replace(/[\\/]+$/, ''));
+                const message = `No .kbb or .dict files found under ${analyzerName}/kb/user. Add KB sources before compiling the KB.`;
+                logView.addMessage(message, logLineType.ANALYER_OUTPUT, analyzerDir);
+                vscode.window.showWarningMessage(message);
+                return;
+            }
         }
 
         vscode.window.withProgress({
@@ -81,7 +95,13 @@ export class NLPCompile {
             // 2. Run nlp.exe -COMPILE to generate C++ code
             const engineDir = path.dirname(exe);
             const anapath = analyzerDir.fsPath;
-            const compileResult = await this.runNlpCompile(exe, anapath, engineDir);
+            // The engine writes the analyzer body to <ana>/run/ via std::ofstream and
+            // will not create the parent directory itself; pre-create it.
+            const runDir = path.join(anapath, 'run');
+            if (!fs.existsSync(runDir)) {
+                fs.mkdirSync(runDir, { recursive: true });
+            }
+            const compileResult = await this.runNlpCompile(exe, anapath, engineDir, compileFlag);
             const cppFiles = this.findGeneratedCppFiles(anapath);
 
             if (cppFiles.length === 0) {
@@ -103,6 +123,13 @@ export class NLPCompile {
 
             progress.report({ increment: 30, message: 'Checking CMake and NLP-engine compile libraries...' });
 
+            // On Windows, the engine release ships ICU as DLLs only. Generate matching .lib
+            // import libraries from those DLLs (using dumpbin + lib) so the link step can
+            // resolve icu_78::* references from prim.lib.
+            if (os.platform() === 'win32') {
+                await this.ensureIcuImportLibs(engineDir, anapath);
+            }
+
             const compileSupport = await this.resolveCompileSupport(anapath);
             if (!compileSupport) {
                 vscode.commands.executeCommand('logView.refreshAll');
@@ -112,10 +139,11 @@ export class NLPCompile {
             progress.report({ increment: 20, message: 'Compiling C++ library...' });
 
             // 3. Compile generated C++ using CMake and NLP-engine static libraries.
-            const success = await this.compileCppWithCMake(anapath, compileSupport);
+            const libBaseName = target === compileTarget.KB_ONLY ? 'kb' : path.basename(anapath);
+            const success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName);
 
             if (success) {
-                const libName = this.sharedLibraryName(path.basename(anapath));
+                const libName = this.sharedLibraryName(libBaseName);
                 logView.addMessage(`Compile ${targetLabel} succeeded: ${libName}`, logLineType.ANALYER_OUTPUT, analyzerDir);
                 vscode.window.showInformationMessage(`Compile ${targetLabel} succeeded: ${libName}`);
             } else {
@@ -134,18 +162,18 @@ export class NLPCompile {
     // Step 1: Run nlp.exe -COMPILE
     // ---------------------------------------------------------------------------
 
-    private runNlpCompile(exe: string, anapath: string, engineDir: string): Promise<NlpCompileResult> {
+    private runNlpCompile(exe: string, anapath: string, engineDir: string, compileFlag: string = '-COMPILE'): Promise<NlpCompileResult> {
         const cp = require('child_process');
         const compileAnaPath = this.pathForNlpExe(anapath);
         const compileWorkPath = this.pathForNlpExe(engineDir);
-        const args: string[] = ['-COMPILE', '-ANA', compileAnaPath, '-WORK', compileWorkPath];
+        const args: string[] = [compileFlag, '-ANA', compileAnaPath, '-WORK', compileWorkPath];
 
         logView.addMessage(`Running: ${exe} ${args.join(' ')}`, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
 
         if (os.platform() === 'win32') {
             const vsDevCmd = this.findVsDevCmdScript();
             if (vsDevCmd) {
-                return this.runNlpCompileWithVsDevCmd(vsDevCmd, exe, args, anapath);
+                return this.runNlpCompileWithVsDevCmd(vsDevCmd, exe, args, anapath, compileFlag);
             }
         }
 
@@ -161,7 +189,7 @@ export class NLPCompile {
                     logView.addMessage('nlp.exe stderr: ' + errOut, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
                 }
                 if (err) {
-                    logView.addMessage('nlp.exe -COMPILE error: ' + err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
+                    logView.addMessage(`nlp.exe ${compileFlag} error: ` + err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
                     vscode.window.showErrorMessage('C++ code generation failed: ' + err.message);
                     resolve({ ok: false, stdout: out, stderr: errOut.length ? errOut : err.message });
                 } else {
@@ -171,7 +199,7 @@ export class NLPCompile {
         });
     }
 
-    private runNlpCompileWithVsDevCmd(setupScript: string, exe: string, args: string[], anapath: string): Promise<NlpCompileResult> {
+    private runNlpCompileWithVsDevCmd(setupScript: string, exe: string, args: string[], anapath: string, compileFlag: string = '-COMPILE'): Promise<NlpCompileResult> {
         const cp = require('child_process');
         const exeArg = this.formatCmdArg(args.length ? exe : exe);
         const commandArgs = args.map(arg => this.formatCmdArg(arg)).join(' ');
@@ -189,7 +217,7 @@ export class NLPCompile {
                     logView.addMessage('nlp.exe stderr: ' + errOut, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
                 }
                 if (err) {
-                    logView.addMessage('nlp.exe -COMPILE error: ' + err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
+                    logView.addMessage(`nlp.exe ${compileFlag} error: ` + err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
                     resolve({ ok: false, stdout: out, stderr: errOut.length ? errOut : err.message });
                 } else {
                     resolve({ ok: true, stdout: out, stderr: errOut });
@@ -254,9 +282,11 @@ export class NLPCompile {
         }
 
         const requiredLibs = ['prim', 'kbm', 'consh', 'words', 'lite'];
-        if (os.platform() === 'win32') {
-            requiredLibs.push('icuuc78', 'icudt78');
-        }
+        // ICU import libs are optional: the engine release ships ICU as DLLs next to nlp.exe
+        // (icuuc78.dll, icudt78.dll). The link step only needs the matching .lib files if the
+        // engine static libs actually reference ICU symbols. If they don't, the link succeeds
+        // without them; if they do, the linker surfaces a clear unresolved-symbols error.
+        const optionalLibs = os.platform() === 'win32' ? ['icuuc78', 'icudt78'] : [];
         const requiredHeaders = [
             'prim/libprim.h',
             'prim/prim.h',
@@ -297,6 +327,13 @@ export class NLPCompile {
                 libraryFiles.push(libFile);
             } else {
                 missingLibraries.push(libName);
+            }
+        }
+
+        for (const libName of optionalLibs) {
+            const libFile = this.findEngineLibrary(engineRoot, libName);
+            if (libFile) {
+                libraryFiles.push(libFile);
             }
         }
 
@@ -424,7 +461,7 @@ export class NLPCompile {
     // Step 3: Compile C++ into a shared library with CMake
     // ---------------------------------------------------------------------------
 
-    private async compileCppWithCMake(anapath: string, support: EngineCompileSupport): Promise<boolean> {
+    private async compileCppWithCMake(anapath: string, support: EngineCompileSupport, libBaseName?: string): Promise<boolean> {
         const cppFiles = this.findGeneratedCppFiles(anapath);
 
         if (cppFiles.length === 0) {
@@ -432,7 +469,7 @@ export class NLPCompile {
             return false;
         }
 
-        const analyzerName = path.basename(anapath);
+        const analyzerName = libBaseName && libBaseName.length ? libBaseName : path.basename(anapath);
         const outputLib = path.join(anapath, this.sharedLibraryName(analyzerName));
         const cmakeRoot = path.join(anapath, '.nlp-compile');
         const sourceDir = path.join(cmakeRoot, 'src');
@@ -444,9 +481,22 @@ export class NLPCompile {
         const stdAfxStub = path.join(sourceDir, 'StdAfx.h');
         const stdAfxContent =
             '// Auto-generated stub. Engine-generated .cpp files include "StdAfx.h" by convention.\n' +
-            '// Pull in my_tchar.h so types like _TCHAR are available in cpp files that only\n' +
-            '// include StdAfx.h (e.g. kb/St*.cpp).\n' +
             '#pragma once\n' +
+            '#ifdef _WIN32\n' +
+            '// Reduce <windows.h> footprint before pulling it in. consh/cg.h references HINSTANCE\n' +
+            '// (and other Windows types) without including <windows.h> itself.\n' +
+            '#ifndef WIN32_LEAN_AND_MEAN\n' +
+            '#define WIN32_LEAN_AND_MEAN\n' +
+            '#endif\n' +
+            '#ifndef NOMINMAX\n' +
+            '#define NOMINMAX\n' +
+            '#endif\n' +
+            '#include <windows.h>\n' +
+            '// <tchar.h> defines _TCHAR (mapped to char or wchar_t based on _UNICODE). The engine\n' +
+            '// header prim/str.h uses _TCHAR but does not include <tchar.h> itself.\n' +
+            '#include <tchar.h>\n' +
+            '#endif\n' +
+            '// Pull in my_tchar.h for the engine\'s _t_* stream/cstring aliases.\n' +
             '#include "my_tchar.h"\n';
         fs.writeFileSync(stdAfxStub, stdAfxContent, { encoding: 'utf8' });
 
@@ -520,9 +570,9 @@ foreach(OUTPUTCONFIG \${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_\${OUTPUTCONFIG_UPPER} "${analyzerPath}")
 endforeach()
 
-file(GLOB GENERATED_CPP "${analyzerPath}/cpp/*.cpp" "${analyzerPath}/kb/*.cpp")
+file(GLOB GENERATED_CPP "${analyzerPath}/run/*.cpp" "${analyzerPath}/kb/*.cpp")
 if(NOT GENERATED_CPP)
-    message(FATAL_ERROR "No generated C++ sources found in cpp/ or kb/.")
+    message(FATAL_ERROR "No generated C++ sources found in run/ or kb/.")
 endif()
 
 add_library(nlp_generated SHARED \${GENERATED_CPP})
@@ -531,7 +581,7 @@ set_target_properties(nlp_generated PROPERTIES OUTPUT_NAME "${analyzerName}")
 target_include_directories(nlp_generated PRIVATE
     "${stubDirCMake}"
     "${analyzerPath}"
-    "${analyzerPath}/cpp"
+    "${analyzerPath}/run"
     "${analyzerPath}/kb"
 ${includeLines}
 )
@@ -545,9 +595,10 @@ target_link_libraries(nlp_generated PRIVATE \${NLP_ENGINE_LIBRARIES})
 if(WIN32)
     target_compile_definitions(nlp_generated PRIVATE _CRT_SECURE_NO_WARNINGS)
     if(MSVC)
-        target_compile_options(nlp_generated PRIVATE /wd4005)
+        target_compile_options(nlp_generated PRIVATE /wd4005 /FI"StdAfx.h")
     endif()
 else()
+    target_compile_options(nlp_generated PRIVATE -include StdAfx.h)
     find_library(DL_LIBRARY dl)
     if(DL_LIBRARY)
         target_link_libraries(nlp_generated PRIVATE \${DL_LIBRARY})
@@ -642,7 +693,7 @@ endif()
     }
 
     private findGeneratedCppFiles(anapath: string): string[] {
-        const candidateDirs = ['cpp', 'kb'];
+        const candidateDirs = ['run', 'kb'];
         const cppFiles: string[] = [];
 
         for (const dirName of candidateDirs) {
@@ -658,6 +709,165 @@ endif()
         }
 
         return cppFiles;
+    }
+
+    private findKBSourceFiles(anapath: string): string[] {
+        // KB sources live under <analyzer>/kb/user/ — matches anaSubDirPath(anaSubDir.KB).
+        const kbDir = path.join(anapath, 'kb', 'user');
+        if (!fs.existsSync(kbDir) || !fs.statSync(kbDir).isDirectory()) {
+            return [];
+        }
+        return fs.readdirSync(kbDir)
+            .filter(file => {
+                const lower = file.toLowerCase();
+                return lower.endsWith('.kbb') || lower.endsWith('.dict');
+            })
+            .map(file => path.join(kbDir, file));
+    }
+
+    private async ensureIcuImportLibs(engineRoot: string, anapath: string): Promise<void> {
+        const targets = ['icuuc78', 'icudt78'];
+        const libDir = path.join(engineRoot, 'lib');
+        if (!fs.existsSync(libDir)) {
+            try { fs.mkdirSync(libDir, { recursive: true }); } catch { return; }
+        }
+
+        const missing = targets.filter(name => !fs.existsSync(path.join(libDir, `${name}.lib`)));
+        if (missing.length === 0) {
+            return;
+        }
+
+        const vsDevCmd = this.findVsDevCmdScript();
+        if (!vsDevCmd) {
+            logView.addMessage(
+                'Cannot generate ICU import libraries: VsDevCmd.bat not found. Install Visual Studio Build Tools (Desktop C++).',
+                logLineType.ANALYER_OUTPUT,
+                vscode.Uri.file(anapath)
+            );
+            return;
+        }
+
+        const machine = process.arch === 'arm64' ? 'ARM64' : 'X64';
+
+        for (const name of missing) {
+            const dll = path.join(engineRoot, `${name}.dll`);
+            if (!fs.existsSync(dll)) {
+                logView.addMessage(
+                    `Cannot generate ${name}.lib: ${dll} not found.`,
+                    logLineType.ANALYER_OUTPUT,
+                    vscode.Uri.file(anapath)
+                );
+                continue;
+            }
+
+            const outLib = path.join(libDir, `${name}.lib`);
+            const defFile = path.join(libDir, `${name}.def`);
+
+            logView.addMessage(
+                `Generating ${name}.lib from ${name}.dll (one-time per install)...`,
+                logLineType.ANALYER_OUTPUT,
+                vscode.Uri.file(anapath)
+            );
+
+            const exports = await this.runDumpbinExports(vsDevCmd, dll);
+            if (exports.length === 0) {
+                logView.addMessage(
+                    `Failed to enumerate exports of ${name}.dll via dumpbin.`,
+                    logLineType.ANALYER_OUTPUT,
+                    vscode.Uri.file(anapath)
+                );
+                continue;
+            }
+
+            const defContent = `LIBRARY ${name}\nEXPORTS\n` + exports.map(s => `    ${s}`).join('\n') + '\n';
+            try {
+                fs.writeFileSync(defFile, defContent, { encoding: 'utf8' });
+            } catch (err: any) {
+                logView.addMessage(
+                    `Failed to write ${defFile}: ${err && err.message ? err.message : String(err)}`,
+                    logLineType.ANALYER_OUTPUT,
+                    vscode.Uri.file(anapath)
+                );
+                continue;
+            }
+
+            const ok = await this.runLibFromDef(vsDevCmd, defFile, outLib, machine);
+            if (!ok) {
+                logView.addMessage(
+                    `lib.exe failed to produce ${outLib}.`,
+                    logLineType.ANALYER_OUTPUT,
+                    vscode.Uri.file(anapath)
+                );
+            } else {
+                logView.addMessage(
+                    `Generated ${outLib}`,
+                    logLineType.ANALYER_OUTPUT,
+                    vscode.Uri.file(anapath)
+                );
+            }
+        }
+    }
+
+    private runDumpbinExports(vsDevCmd: string, dll: string): Promise<string[]> {
+        const cp = require('child_process');
+        const dllArg = this.formatCmdArg(dll);
+        const command = `call "${vsDevCmd}" -arch=x64 -host_arch=x64 >nul && dumpbin /exports ${dllArg}`;
+
+        return new Promise(resolve => {
+            cp.exec(command, { shell: 'cmd.exe', maxBuffer: 40 * 1024 * 1024 }, (err: any, stdout: string) => {
+                if (err) {
+                    resolve([]);
+                    return;
+                }
+                resolve(this.parseDumpbinExports(stdout || ''));
+            });
+        });
+    }
+
+    private parseDumpbinExports(stdout: string): string[] {
+        const lines = stdout.split(/\r?\n/);
+        const names: string[] = [];
+        let inExports = false;
+
+        for (const raw of lines) {
+            const line = raw.replace(/\s+$/g, '');
+            if (!line.length) {
+                if (inExports && names.length > 0) {
+                    break;
+                }
+                continue;
+            }
+            if (!inExports) {
+                if (/^\s+ordinal\b/i.test(line) && /\bname\b/i.test(line)) {
+                    inExports = true;
+                }
+                continue;
+            }
+            // Entry format: "       1    0 00071FA0 u_UCharDirection_swap_78 [(forwarded to ...)]"
+            // C++ mangled names can start with '?' (MSVC), so accept any non-whitespace token
+            // after the ordinal/hint/RVA columns.
+            const m = line.match(/^\s*\d+\s+[0-9A-Fa-f]+\s+[0-9A-Fa-f]+\s+(\S+)/);
+            if (m) {
+                names.push(m[1]);
+            } else {
+                break;
+            }
+        }
+        return names;
+    }
+
+    private runLibFromDef(vsDevCmd: string, defFile: string, outLib: string, machine: string): Promise<boolean> {
+        const cp = require('child_process');
+        const args = [`/def:${defFile}`, `/machine:${machine}`, `/out:${outLib}`]
+            .map(a => this.formatCmdArg(a))
+            .join(' ');
+        const command = `call "${vsDevCmd}" -arch=x64 -host_arch=x64 >nul && lib ${args}`;
+
+        return new Promise(resolve => {
+            cp.exec(command, { shell: 'cmd.exe', maxBuffer: 40 * 1024 * 1024 }, (err: any) => {
+                resolve(!err && fs.existsSync(outLib));
+            });
+        });
     }
 
     private findVsDevCmdScript(): string | undefined {

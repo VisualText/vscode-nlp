@@ -10,6 +10,7 @@ let nlpStatusBarRun: vscode.StatusBarItem;
 let nlpStatusBarText: vscode.StatusBarItem;
 let nlpStatusBarDev: vscode.StatusBarItem;
 let nlpStatusBarFired: vscode.StatusBarItem;
+let nlpStatusBarRunMode: vscode.StatusBarItem;
 let nlpStatusBarEngineVersion: vscode.StatusBarItem;
 let nlpStatusBarVisualTextVersion: vscode.StatusBarItem;
 let nlpStatusBarFilesVersion: vscode.StatusBarItem;
@@ -17,6 +18,7 @@ let nlpStatusBarAnalyzersVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV, SILENT }
 export enum FiredMode { BUILT, FIRED }
+export enum RunMode { INTERPRETED, COMPILED, COMPILED_KB }
 
 export let nlpStatusBar: NLPStatusBar;
 export class NLPStatusBar {
@@ -25,11 +27,13 @@ export class NLPStatusBar {
     logFile = new TreeFile();
     devMode: DevMode;
     firedMode: FiredMode;
-    
+    runMode: RunMode;
+
     private constructor(ctx: vscode.ExtensionContext) {
         this._ctx = ctx;
         this.devMode = DevMode.DEV;
         this.firedMode = FiredMode.FIRED;
+        this.runMode = this.readRunModeConfig();
 
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
         nlpStatusBarRun.text = `$(run)`;
@@ -51,6 +55,11 @@ export class NLPStatusBar {
         nlpStatusBarFired.tooltip = 'Fired settings';
         nlpStatusBarFired.command = 'status.chooseFired';
         nlpStatusBarFired.show();
+
+        nlpStatusBarRunMode = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 16);
+        nlpStatusBarRunMode.tooltip = 'Toggle interpreted vs compiled analyzer run';
+        nlpStatusBarRunMode.command = 'status.toggleRunMode';
+        nlpStatusBarRunMode.show();
 
         nlpStatusBarEngineVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
         nlpStatusBarEngineVersion.tooltip = 'NLP Engine Version';
@@ -77,6 +86,7 @@ export class NLPStatusBar {
         vscode.commands.registerCommand('status.update', () => this.update());
         vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
         vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
+        vscode.commands.registerCommand('status.toggleRunMode', () => this.toggleRunMode());
         vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings());
         vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
         vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
@@ -223,6 +233,114 @@ export class NLPStatusBar {
         }
     }
 
+    public getRunMode(): RunMode {
+        return this.runMode;
+    }
+
+    setRunMode(mode: RunMode) {
+        this.runMode = mode;
+        this.writeRunModeConfig(mode);
+        this.updateRunModeState();
+    }
+
+    toggleRunMode() {
+        const next = this.nextRunMode(this.runMode);
+        if ((next === RunMode.COMPILED || next === RunMode.COMPILED_KB) && !this.hasCompiledLib(next)) {
+            const name = this.currentAnalyzerName() || 'this analyzer';
+            const compileCmd = next === RunMode.COMPILED_KB ? 'kbView.compileKB' : 'analyzerView.compileAnalyzer';
+            const compileLabel = next === RunMode.COMPILED_KB ? 'Compile KB' : 'Compile Analyzer and KB';
+            const modeLabel = next === RunMode.COMPILED_KB ? 'Compiled KB' : 'Compiled';
+            vscode.window
+                .showWarningMessage(
+                    `${name} hasn't been compiled yet. Compile it before switching to ${modeLabel} run mode.`,
+                    compileLabel
+                )
+                .then(choice => {
+                    if (choice === compileLabel) {
+                        vscode.commands.executeCommand(compileCmd);
+                    }
+                });
+            return;
+        }
+        this.setRunMode(next);
+    }
+
+    private nextRunMode(mode: RunMode): RunMode {
+        switch (mode) {
+            case RunMode.INTERPRETED: return RunMode.COMPILED;
+            case RunMode.COMPILED:    return RunMode.COMPILED_KB;
+            default:                  return RunMode.INTERPRETED;
+        }
+    }
+
+    private currentAnalyzerName(): string | undefined {
+        const ana = visualText.getCurrentAnalyzer();
+        if (!ana || !ana.fsPath.length) return undefined;
+        return path.basename(ana.fsPath.replace(/[\\/]+$/, ''));
+    }
+
+    private compiledLibPath(mode: RunMode = RunMode.COMPILED): string | undefined {
+        const ana = visualText.getCurrentAnalyzer();
+        if (!ana || !ana.fsPath.length) return undefined;
+        const ext = os.platform() === 'win32' ? '.dll' : os.platform() === 'darwin' ? '.dylib' : '.so';
+        if (mode === RunMode.COMPILED_KB) {
+            return path.join(ana.fsPath, 'kb' + ext);
+        }
+        const name = this.currentAnalyzerName();
+        if (!name) return undefined;
+        return path.join(ana.fsPath, name + ext);
+    }
+
+    public hasCompiledLib(mode: RunMode = RunMode.COMPILED): boolean {
+        const p = this.compiledLibPath(mode);
+        return !!p && fs.existsSync(p);
+    }
+
+    updateRunModeState() {
+        if (this.runMode === RunMode.COMPILED) {
+            nlpStatusBarRunMode.text = '$(symbol-method) Run: Compiled';
+        } else if (this.runMode === RunMode.COMPILED_KB) {
+            nlpStatusBarRunMode.text = '$(symbol-namespace) Run: Compiled KB';
+        } else {
+            nlpStatusBarRunMode.text = '$(symbol-keyword) Run: Interpreted';
+        }
+    }
+
+    private readRunModeConfig(): RunMode {
+        try {
+            const folder = visualText.getWorkspaceFolder();
+            const config = folder.fsPath.length
+                ? vscode.workspace.getConfiguration('analyzer', folder)
+                : vscode.workspace.getConfiguration('analyzer');
+            const value = config.get<string>('runMode');
+            if (value === 'compiled') return RunMode.COMPILED;
+            if (value === 'compiled-kb') return RunMode.COMPILED_KB;
+            return RunMode.INTERPRETED;
+        } catch {
+            return RunMode.INTERPRETED;
+        }
+    }
+
+    private writeRunModeConfig(mode: RunMode) {
+        try {
+            const folder = visualText.getWorkspaceFolder();
+            const value = mode === RunMode.COMPILED ? 'compiled'
+                        : mode === RunMode.COMPILED_KB ? 'compiled-kb'
+                        : 'interpreted';
+            if (folder.fsPath.length) {
+                vscode.workspace
+                    .getConfiguration('analyzer', folder)
+                    .update('runMode', value, vscode.ConfigurationTarget.WorkspaceFolder);
+            } else {
+                vscode.workspace
+                    .getConfiguration('analyzer')
+                    .update('runMode', value, vscode.ConfigurationTarget.Global);
+            }
+        } catch {
+            // ignore persistence failures; state still lives in memory
+        }
+    }
+
     update() {
         if (visualText.analyzer.hasText()) {
             const filepath = visualText.analyzer.getTextPath().fsPath;
@@ -232,7 +350,9 @@ export class NLPStatusBar {
 
             this.updateDevState();
             this.updateFiredState();
+            this.updateRunModeState();
             nlpStatusBarDev.show();
+            nlpStatusBarRunMode.show();
         }
         this.updateEngineVersion('');
         this.updateVisualTextVersion('');

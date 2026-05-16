@@ -18,6 +18,8 @@ This provides two major advantages:
 - Faster execution.
 - Protection of native NLP++ source code when delivering analyzers to customers who do not have access to NLP++ source.
 
+Version 3.1 adds a **KB-only** compile path and a matching **Compiled KB** run mode so the knowledge base can be compiled and shipped on its own while the analyzer continues to run interpreted.
+
 ## Version 2 milestone
 
 On December 29, 2022, Version 2 introduced the ability to build and use the analyzer view together with the updated NLP-ENGINE.
@@ -82,7 +84,7 @@ The NLP-ENGINE now comes with the NLP++ Language extension but is available sepa
 
 ### Compile Asset Requirements
 
-To enable `-COMPILE` analyzer and KB builds from the VSCode extension, the `VisualText/nlp-engine` latest release must include this additional asset:
+To enable `-COMPILE` analyzer builds and `-COMPILEKB` KB-only builds from the VSCode extension, the `VisualText/nlp-engine` latest release must include this additional asset:
 
 - `nlpengine-compile-libs.zip`
 
@@ -136,6 +138,9 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 ## Release Notes
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
+
+### 3.1.0
+Renamed the existing analyzer compile command to "Compile Analyzer and KB to C++ Library". "Compile KB to C++ Library" now invokes `nlp.exe -COMPILEKB` and emits `kb.dll`. Added a "Compiled KB" run mode that runs the analyzer interpreted against the compiled KB library. The run-mode status bar now cycles Interpreted -> Compiled -> Compiled KB.
 
 ### 3.0.0
 Added support for compiling analyzers and the knowledge base (KB). Benefits include faster execution and protection of native NLP++ source code when analyzers are distributed to customers without access to the NLP++ source.

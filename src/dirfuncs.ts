@@ -247,11 +247,11 @@ export namespace dirfuncs {
         if (!fs.existsSync(dirPath) || dirPath.length <= 2)
             return false;
         try {
-            deleteSync(dirPath);
+            deleteSync(dirPath, { force: true });
             return true;
         } catch (err: any) {
             vscode.window.showInformationMessage('Error deleting folder ' + dirPath + ': ' + err.message);
-        } 
+        }
         return false;
     }
     
@@ -274,12 +274,12 @@ export namespace dirfuncs {
         if (!fs.existsSync(dirPath) || dirPath.length <= 2)
             return false;
         try {
-            deleteSync(dirPath);
+            deleteSync(dirPath, { force: true });
             fs.mkdirSync(dirPath);
             return true;
         } catch (err: any) {
             vscode.window.showInformationMessage('Error emptying folder ' + dirPath + ': ' + err.message);
-        } 
+        }
         return false;
     }
 

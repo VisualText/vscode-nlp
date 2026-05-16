@@ -1055,6 +1055,9 @@ export class VisualText {
 
         if (this.latestExtIndex >= 0) {
             this.extensionItems[this.latestExtIndex].latest = true;
+            if (!this.version.length) {
+                this.version = latestVersion;
+            }
         }
     }
 
