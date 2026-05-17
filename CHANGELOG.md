@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.0
+Added the ability to compile only the knowledge base (KB) and to run an interpreted analyzer against the compiled KB.
+
+- Renamed the existing analyzer compile command to **"Compile Analyzer and KB to C++ Library"** to reflect that it produces both.
+- **"Compile KB to C++ Library"** now invokes `nlp.exe -COMPILEKB` and produces `kb.dll` (`kb.so` / `kb.dylib` on Linux/macOS) in the analyzer directory.
+- The run-mode status bar now cycles through three modes: Interpreted -> Compiled -> Compiled KB. In Compiled KB mode the analyzer is run interpreted while the compiled KB library is loaded.
+
 ### 3.0.0
 Added support for compiling analyzers and the knowledge base (KB).
 Benefits: faster execution and protection of native NLP++ source code when analyzers are distributed to customers without access to the NLP++ source.

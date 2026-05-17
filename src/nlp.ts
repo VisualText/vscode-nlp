@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { dirfuncs } from './dirfuncs';
 import { TextFile, nlpFileType } from './textFile';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 import { SequenceFile } from './sequence';
 import { sequenceView } from './sequenceView';
-import { nlpStatusBar, DevMode } from './status';
+import { nlpStatusBar, DevMode, RunMode } from './status';
 import { outputView, outputFileType } from './outputView';
 
 export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
@@ -98,7 +99,23 @@ export class NLPFile extends TextFile {
 
 			const mode = nlpStatusBar.getDevMode();
 			const devFlagStr = mode == DevMode.DEV ? '-DEV' : mode == DevMode.SILENT ? '-SILENT' : '';
-			const args: string[] = ['-ANA', '"' + anapath + '"', '-WORK', '"' + engineDir + '"', '"' + filestr + '"', devFlagStr];
+
+			const runMode = nlpStatusBar.getRunMode();
+			const usingCompiled = runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_KB;
+			if (usingCompiled) {
+				const staged = visualText.nlp.stageCompiledAnalyzer(anapath, engineDir, filepath, runMode);
+				if (!staged) {
+					visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.FAILED);
+					vscode.commands.executeCommand('logView.refreshAll');
+					return;
+				}
+			}
+
+			const args: string[] = ['-ANA', '"' + anapath + '"', '-WORK', '"' + engineDir + '"'];
+			if (usingCompiled) {
+				args.push('-COMPILED');
+			}
+			args.push('"' + filestr + '"', devFlagStr);
 
 			visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.ANALYZING);
 
@@ -151,6 +168,59 @@ export class NLPFile extends TextFile {
 
 	public stopAll() {
 		visualText.nlp.stopAllFlag = true;
+	}
+
+	public stageCompiledAnalyzer(anapath: string, engineDir: string, filepath: vscode.Uri, runMode: RunMode = RunMode.COMPILED): boolean {
+		const analyzerName = path.basename(anapath.replace(/[\\/]+$/, ''));
+		const platform = os.platform();
+		const ext = platform === 'win32' ? '.dll' : platform === 'darwin' ? '.dylib' : '.so';
+		const libBaseName = runMode === RunMode.COMPILED_KB ? 'kb' : analyzerName;
+		const compiledLibName = `${libBaseName}${ext}`;
+		const compiledLib = path.join(anapath, compiledLibName);
+
+		if (!fs.existsSync(compiledLib)) {
+			logView.addMessage(`Compiled library not found: ${compiledLib}`, logLineType.ANALYER_OUTPUT, filepath);
+			const isKbOnly = runMode === RunMode.COMPILED_KB;
+			const primaryAction = isKbOnly ? 'Compile KB' : 'Compile Analyzer and KB';
+			const secondaryAction = isKbOnly ? 'Compile Analyzer and KB' : 'Compile KB';
+			vscode.window.showErrorMessage(
+				`Compiled library not found: ${compiledLibName}. Compile the analyzer (or KB) first, or switch the run mode back to Interpreted.`,
+				primaryAction,
+				secondaryAction
+			).then(choice => {
+				if (choice === 'Compile Analyzer and KB') {
+					vscode.commands.executeCommand('analyzerView.compileAnalyzer');
+				} else if (choice === 'Compile KB') {
+					vscode.commands.executeCommand('kbView.compileKB');
+				}
+			});
+			return false;
+		}
+
+		if (platform !== 'win32') {
+			logView.addMessage(`Compiled run requested but engine -COMPILED only loads a runtime DLL on Windows. Skipping DLL stage.`, logLineType.ANALYER_OUTPUT, filepath);
+			return true;
+		}
+
+		try {
+			// The engine's load_compiled() reads the runtime DLL from <analyzerDir>/bin/run.dll
+			// (or runu.dll); the "appdir" it uses there is the analyzer directory, not -WORK.
+			const binDir = path.join(anapath, 'bin');
+			if (!fs.existsSync(binDir)) {
+				fs.mkdirSync(binDir, { recursive: true });
+			}
+			// nlp.exe build flavor decides whether it loads run.dll or runu.dll; stage both
+			// so the engine finds whichever it expects.
+			fs.copyFileSync(compiledLib, path.join(binDir, 'run.dll'));
+			fs.copyFileSync(compiledLib, path.join(binDir, 'runu.dll'));
+			logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\run.dll (and runu.dll)`, logLineType.ANALYER_OUTPUT, filepath);
+			return true;
+		} catch (err: any) {
+			const detail = err && err.message ? err.message : String(err);
+			logView.addMessage(`Failed to stage compiled analyzer DLL: ${detail}`, logLineType.ANALYER_OUTPUT, filepath);
+			vscode.window.showErrorMessage(`Failed to stage compiled analyzer DLL: ${detail}`);
+			return false;
+		}
 	}
 
 	public setAnalyzerStatus(uri: vscode.Uri, status: analyzerStatus) {

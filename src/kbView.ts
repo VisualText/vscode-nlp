@@ -241,7 +241,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
 		vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
 		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
-		vscode.commands.registerCommand('kbView.compileKB', () => this.compileKB());
+		vscode.commands.registerCommand('kbView.compileKB', (item?: any) => this.compileKB(item));
 	}
 
 	static attach(ctx: vscode.ExtensionContext) {
@@ -543,14 +543,18 @@ export class KBView {
 		}
 	}
 
-	async compileKB() {
-		if (!visualText.analyzer.isLoaded()) {
+	async compileKB(item?: { uri?: vscode.Uri }) {
+		let analyzerDir: vscode.Uri;
+		if (item && item.uri) {
+			analyzerDir = dirfuncs.isDir(item.uri.fsPath) ? item.uri : vscode.Uri.file(path.dirname(item.uri.fsPath));
+		} else if (visualText.analyzer.isLoaded()) {
+			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		} else {
 			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
 			return;
 		}
-		const analyzerDir = visualText.analyzer.getAnalyzerDirectory();
 		const compile = NLPCompile.attach();
-		await compile.compileKB(analyzerDir);
+		await compile.compileKBOnly(analyzerDir);
 	}
 
 	private openKBFile(kbItem: KBItem): void {
