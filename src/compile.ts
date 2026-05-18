@@ -139,8 +139,9 @@ export class NLPCompile {
             progress.report({ increment: 20, message: 'Compiling C++ library...' });
 
             // 3. Compile generated C++ using CMake and NLP-engine static libraries.
-            const libBaseName = target === compileTarget.KB_ONLY ? 'kb' : path.basename(anapath);
-            const success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName);
+            const kbOnly = target === compileTarget.KB_ONLY;
+            const libBaseName = kbOnly ? 'kb' : path.basename(anapath);
+            const success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName, kbOnly);
 
             if (success) {
                 const libName = this.sharedLibraryName(libBaseName);
@@ -461,11 +462,12 @@ export class NLPCompile {
     // Step 3: Compile C++ into a shared library with CMake
     // ---------------------------------------------------------------------------
 
-    private async compileCppWithCMake(anapath: string, support: EngineCompileSupport, libBaseName?: string): Promise<boolean> {
-        const cppFiles = this.findGeneratedCppFiles(anapath);
+    private async compileCppWithCMake(anapath: string, support: EngineCompileSupport, libBaseName?: string, kbOnly: boolean = false): Promise<boolean> {
+        const cppFiles = this.findGeneratedCppFiles(anapath, kbOnly);
 
         if (cppFiles.length === 0) {
-            vscode.window.showErrorMessage(`No generated C++ source files found under ${anapath}.`);
+            const where = kbOnly ? `${anapath}\\kb` : anapath;
+            vscode.window.showErrorMessage(`No generated C++ source files found under ${where}.`);
             return false;
         }
 
@@ -500,7 +502,7 @@ export class NLPCompile {
             '#include "my_tchar.h"\n';
         fs.writeFileSync(stdAfxStub, stdAfxContent, { encoding: 'utf8' });
 
-        const cmakeContent = this.generateCompileCMakeLists(anapath, analyzerName, support, sourceDir);
+        const cmakeContent = this.generateCompileCMakeLists(anapath, analyzerName, support, sourceDir, kbOnly);
         fs.writeFileSync(cmakeFile, cmakeContent, { encoding: 'utf8' });
 
         const outputChannel = vscode.window.createOutputChannel('NLP++ Compile');
@@ -541,7 +543,7 @@ export class NLPCompile {
         return true;
     }
 
-    private generateCompileCMakeLists(anapath: string, analyzerName: string, support: EngineCompileSupport, stubDir: string): string {
+    private generateCompileCMakeLists(anapath: string, analyzerName: string, support: EngineCompileSupport, stubDir: string, kbOnly: boolean = false): string {
         const toCMakePath = (filePath: string) => filePath.replace(/\\/g, '/');
         const stubDirCMake = toCMakePath(stubDir);
         const includeLines = support.includeDirs
@@ -551,6 +553,13 @@ export class NLPCompile {
             .map(file => `    "${toCMakePath(file)}"`)
             .join('\n');
         const analyzerPath = toCMakePath(anapath);
+        // KB-only builds must not glob run/*.cpp: those files (e.g. run/analyzer.cpp) include
+        // optional user-extension headers like ..\user\user.h that may not exist, and call into
+        // Arun overloads that produce ambiguity errors. Restrict to kb/*.cpp for KB-only.
+        const sourceGlob = kbOnly
+            ? `"${analyzerPath}/kb/*.cpp"`
+            : `"${analyzerPath}/run/*.cpp" "${analyzerPath}/kb/*.cpp"`;
+        const sourceErrorScope = kbOnly ? 'kb/' : 'run/ or kb/';
 
         return `cmake_minimum_required(VERSION 3.16)
 project(nlp_generated_library LANGUAGES CXX)
@@ -570,9 +579,9 @@ foreach(OUTPUTCONFIG \${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_\${OUTPUTCONFIG_UPPER} "${analyzerPath}")
 endforeach()
 
-file(GLOB GENERATED_CPP "${analyzerPath}/run/*.cpp" "${analyzerPath}/kb/*.cpp")
+file(GLOB GENERATED_CPP ${sourceGlob})
 if(NOT GENERATED_CPP)
-    message(FATAL_ERROR "No generated C++ sources found in run/ or kb/.")
+    message(FATAL_ERROR "No generated C++ sources found in ${sourceErrorScope}.")
 endif()
 
 add_library(nlp_generated SHARED \${GENERATED_CPP})
@@ -692,8 +701,8 @@ endif()
         }
     }
 
-    private findGeneratedCppFiles(anapath: string): string[] {
-        const candidateDirs = ['run', 'kb'];
+    private findGeneratedCppFiles(anapath: string, kbOnly: boolean = false): string[] {
+        const candidateDirs = kbOnly ? ['kb'] : ['run', 'kb'];
         const cppFiles: string[] = [];
 
         for (const dirName of candidateDirs) {

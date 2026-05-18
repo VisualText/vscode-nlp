@@ -8,6 +8,7 @@ import { dirfuncs, getFileTypes } from './dirfuncs';
 import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
+import * as os from 'os';
 import { anaSubDir } from './analyzer';
 import { NLPCompile } from './compile';
 
@@ -44,7 +45,11 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 		if (treeItem.label != this.EMPTY_TEXT) {
 			const name = path.basename(kbItem.uri.fsPath);
-			treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
+			const isCompiledLib = name.endsWith('.dll') || name.endsWith('.so') || name.endsWith('.dylib');
+
+			if (!isCompiledLib) {
+				treeItem.command = { command: 'kbView.openFile', title: "Open File", arguments: [kbItem], };
+			}
 			treeItem.contextValue = 'kb';
 
 			const icon = visualText.fileIconFromExt(kbItem.uri.fsPath);
@@ -52,6 +57,18 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 			treeItem.iconPath = {
 				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', icon)),
 				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', icon))
+			}
+
+			if (isCompiledLib) {
+				// Compiled artifact: show its actual path + mtime, since it lives outside kb/user/.
+				// Treat as read-only: skip the toggle/mod/old context overrides used for KB sources.
+				treeItem.contextValue = 'compiledLib';
+				try {
+					const stat = fs.statSync(kbItem.uri.fsPath);
+					treeItem.description = stat.mtime.toLocaleString();
+				} catch { /* file may have just been deleted; tolerate */ }
+				treeItem.tooltip = kbItem.uri.fsPath;
+				return treeItem;
 			}
 
 			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
@@ -83,6 +100,24 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 					files.push({ uri: entry.uri, type: entry.type });
 					if (entry.uri.fsPath.endsWith('.nlm'))
 						visualText.modFiles.push(entry.uri);
+				}
+			}
+		}
+
+		// At the KB root, surface compiled artifacts from the analyzer root so they show up
+		// alongside the KB sources for visual reference. The DLL lives outside kb/user/ and
+		// is produced by Compile KB / Compile Analyzer and KB.
+		if (visualText.analyzer.isLoaded() && dir.fsPath === visualText.analyzer.getKBDirectory().fsPath) {
+			const anaRoot = visualText.analyzer.getAnalyzerDirectory().fsPath;
+			const libExt = os.platform() === 'win32' ? '.dll' : os.platform() === 'darwin' ? '.dylib' : '.so';
+			const analyzerName = path.basename(anaRoot.replace(/[\\/]+$/, ''));
+			const compiledLibs = [
+				path.join(anaRoot, 'kb' + libExt),
+				path.join(anaRoot, analyzerName + libExt)
+			];
+			for (const libPath of compiledLibs) {
+				if (fs.existsSync(libPath)) {
+					files.push({ uri: vscode.Uri.file(libPath), type: vscode.FileType.File });
 				}
 			}
 		}

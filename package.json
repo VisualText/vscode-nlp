@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ language extension with compiled analyzer and compiled KB support for faster execution and protection of native NLP++ source code when distributing analyzers.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.1.0",
+    "version": "3.1.4",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -2359,7 +2359,7 @@
                 },
                 {
                     "command": "kbView.rename",
-                    "when": "view == kbView && viewItem != 'empty'",
+                    "when": "view == kbView && viewItem != 'empty' && viewItem != 'compiledLib'",
                     "group": "navigation"
                 },
                 {
@@ -2404,7 +2404,7 @@
                 },
                 {
                     "command": "kbView.copyToAnalyzer",
-                    "when": "view == kbView && viewItem != 'empty'",
+                    "when": "view == kbView && viewItem != 'empty' && viewItem != 'compiledLib'",
                     "group": "inline@0"
                 },
                 {
@@ -2419,7 +2419,7 @@
                 },
                 {
                     "command": "kbView.rename",
-                    "when": "view == kbView && viewItem != 'empty'",
+                    "when": "view == kbView && viewItem != 'empty' && viewItem != 'compiledLib'",
                     "group": "inline@3"
                 },
                 {

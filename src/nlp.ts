@@ -112,7 +112,10 @@ export class NLPFile extends TextFile {
 			}
 
 			const args: string[] = ['-ANA', '"' + anapath + '"', '-WORK', '"' + engineDir + '"'];
-			if (usingCompiled) {
+			// -COMPILED loads bin/run.dll as the analyzer body. COMPILED_KB keeps the analyzer
+			// interpreted; consh independently auto-loads bin/kb.dll when present (nlp_engine.cpp
+			// line 248 hardcodes the compiled-KB attempt with interpreted fallback).
+			if (runMode === RunMode.COMPILED) {
 				args.push('-COMPILED');
 			}
 			args.push('"' + filestr + '"', devFlagStr);
@@ -203,17 +206,32 @@ export class NLPFile extends TextFile {
 		}
 
 		try {
-			// The engine's load_compiled() reads the runtime DLL from <analyzerDir>/bin/run.dll
-			// (or runu.dll); the "appdir" it uses there is the analyzer directory, not -WORK.
+			// The engine reads compiled artifacts from <analyzerDir>/bin/:
+			//   - load_compiled() (lite/nlp.cpp:1238) loads bin/run.dll as the analyzer body
+			//     when -COMPILED is passed.
+			//   - consh (cs/libconsh/cg.cpp:181) loads bin/kb.dll as the compiled KB whenever
+			//     it exists (auto-detected, regardless of -COMPILED).
+			// In both cases "appdir" is the analyzer directory, not -WORK.
 			const binDir = path.join(anapath, 'bin');
 			if (!fs.existsSync(binDir)) {
 				fs.mkdirSync(binDir, { recursive: true });
 			}
-			// nlp.exe build flavor decides whether it loads run.dll or runu.dll; stage both
-			// so the engine finds whichever it expects.
-			fs.copyFileSync(compiledLib, path.join(binDir, 'run.dll'));
-			fs.copyFileSync(compiledLib, path.join(binDir, 'runu.dll'));
-			logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\run.dll (and runu.dll)`, logLineType.ANALYER_OUTPUT, filepath);
+			// nlp.exe build flavor decides whether it loads the ANSI or unicode name;
+			// stage both so the engine finds whichever it expects.
+			if (runMode === RunMode.COMPILED_KB) {
+				fs.copyFileSync(compiledLib, path.join(binDir, 'kb.dll'));
+				fs.copyFileSync(compiledLib, path.join(binDir, 'kbu.dll'));
+				logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\kb.dll (and kbu.dll)`, logLineType.ANALYER_OUTPUT, filepath);
+			} else {
+				fs.copyFileSync(compiledLib, path.join(binDir, 'run.dll'));
+				fs.copyFileSync(compiledLib, path.join(binDir, 'runu.dll'));
+				// The full-analyzer compile globs run/*.cpp AND kb/*.cpp into one library, so
+				// the same DLL exports both run_analyzer and kb_setup. Stage it as bin/kb.dll
+				// too so consh's compiled-KB load succeeds instead of falling back to interpreted.
+				fs.copyFileSync(compiledLib, path.join(binDir, 'kb.dll'));
+				fs.copyFileSync(compiledLib, path.join(binDir, 'kbu.dll'));
+				logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\run.dll, runu.dll, kb.dll, kbu.dll`, logLineType.ANALYER_OUTPUT, filepath);
+			}
 			return true;
 		} catch (err: any) {
 			const detail = err && err.message ? err.message : String(err);
