@@ -1431,6 +1431,8 @@ export class VisualText {
             icon = 'test.svg';
         } else if (filename.endsWith('.py')) {
             icon = 'python.svg';
+        } else if (filename.endsWith('.dll') || filename.endsWith('.so') || filename.endsWith('.dylib')) {
+            icon = 'library.svg';
         } else {
             icon = 'file.svg';
         }

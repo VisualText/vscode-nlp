@@ -244,7 +244,10 @@ export class NLPStatusBar {
     }
 
     toggleRunMode() {
-        const next = this.nextRunMode(this.runMode);
+        let next = this.nextRunMode(this.runMode);
+        if (next === RunMode.COMPILED && !this.hasCompiledLib(RunMode.COMPILED) && this.hasCompiledLib(RunMode.COMPILED_KB)) {
+            next = RunMode.COMPILED_KB;
+        }
         if ((next === RunMode.COMPILED || next === RunMode.COMPILED_KB) && !this.hasCompiledLib(next)) {
             const name = this.currentAnalyzerName() || 'this analyzer';
             const compileCmd = next === RunMode.COMPILED_KB ? 'kbView.compileKB' : 'analyzerView.compileAnalyzer';
