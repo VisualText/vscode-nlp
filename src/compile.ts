@@ -283,11 +283,14 @@ export class NLPCompile {
         }
 
         const requiredLibs = ['prim', 'kbm', 'consh', 'words', 'lite'];
-        // ICU import libs are optional: the engine release ships ICU as DLLs next to nlp.exe
-        // (icuuc78.dll, icudt78.dll). The link step only needs the matching .lib files if the
-        // engine static libs actually reference ICU symbols. If they don't, the link succeeds
-        // without them; if they do, the linker surfaces a clear unresolved-symbols error.
-        const optionalLibs = os.platform() === 'win32' ? ['icuuc78', 'icudt78'] : [];
+        // ICU import libs are optional: the engine release ships ICU as DLLs next to nlp.exe.
+        // lite.lib references icuin78 (Collator::createInstance) via find_str_nocase, so
+        // icuin78.dll is required for analyzer-DLL linking; the other two are needed for ICU
+        // common+data symbols. If a DLL is absent, ensureIcuImportLibs skips it and the linker
+        // surfaces a clear unresolved-symbols error for whichever symbol is actually needed.
+        const optionalLibs = os.platform() === 'win32'
+            ? ['icuuc78', 'icudt78', 'icuin78']
+            : [];
         const requiredHeaders = [
             'prim/libprim.h',
             'prim/prim.h',
@@ -480,6 +483,16 @@ export class NLPCompile {
 
         fs.mkdirSync(sourceDir, { recursive: true });
 
+        // Wipe any stale CMakeCache.txt so the next configure re-detects the toolchain.
+        // Without this, switching MSVC versions (e.g. VS 2022 Preview → VS 18) is ignored:
+        // CMake keeps the originally-cached compiler path and the link uses the old MSVC's libs.
+        const cmakeCacheFile = path.join(buildDir, 'CMakeCache.txt');
+        if (fs.existsSync(cmakeCacheFile)) {
+            try {
+                fs.rmSync(buildDir, { recursive: true, force: true });
+            } catch { /* tolerate */ }
+        }
+
         const stdAfxStub = path.join(sourceDir, 'StdAfx.h');
         const stdAfxContent =
             '// Auto-generated stub. Engine-generated .cpp files include "StdAfx.h" by convention.\n' +
@@ -509,7 +522,15 @@ export class NLPCompile {
         outputChannel.show(true);
         outputChannel.appendLine('Configuring CMake build for analyzer/KB library...');
 
-        const configureResult = await this.execCommand('cmake', ['-S', sourceDir, '-B', buildDir], anapath);
+        // On Windows, run CMake configure+build inside the VsDevCmd environment so it picks
+        // up the same MSVC toolchain that built the engine libs we're linking against. Without
+        // this, CMake auto-detects whichever Visual Studio it finds first (often an older one
+        // missing recent stdlib intrinsics like __std_find_last_of_trivial_pos_1).
+        const winVsDevCmd = os.platform() === 'win32' ? this.findVsDevCmdScript() : undefined;
+        const configureArgs = ['-S', sourceDir, '-B', buildDir];
+        const configureResult = winVsDevCmd
+            ? await this.execCmakeWithVsDevCmd(winVsDevCmd, configureArgs, anapath)
+            : await this.execCommand('cmake', configureArgs, anapath);
         this.appendCommandOutput(outputChannel, 'cmake configure', configureResult);
         if (!configureResult.ok) {
             logView.addMessage('CMake configure failed.', logLineType.ANALYER_OUTPUT, vscode.Uri.file(anapath));
@@ -522,7 +543,9 @@ export class NLPCompile {
             buildArgs.push('--config', 'Release');
         }
 
-        const buildResult = await this.execCommand('cmake', buildArgs, anapath);
+        const buildResult = winVsDevCmd
+            ? await this.execCmakeWithVsDevCmd(winVsDevCmd, buildArgs, anapath)
+            : await this.execCommand('cmake', buildArgs, anapath);
         this.appendCommandOutput(outputChannel, 'cmake build', buildResult);
 
         if (!buildResult.ok && !fs.existsSync(outputLib)) {
@@ -735,7 +758,10 @@ endif()
     }
 
     private async ensureIcuImportLibs(engineRoot: string, anapath: string): Promise<void> {
-        const targets = ['icuuc78', 'icudt78'];
+        // Generate import libs for every ICU DLL the engine bundle ships. A missing DLL is
+        // skipped here (logged) and surfaces as a link-time unresolved-symbol error only if
+        // the engine static libs actually reference it.
+        const targets = ['icuuc78', 'icudt78', 'icuin78'];
         const libDir = path.join(engineRoot, 'lib');
         if (!fs.existsSync(libDir)) {
             try { fs.mkdirSync(libDir, { recursive: true }); } catch { return; }
@@ -865,6 +891,23 @@ endif()
         return names;
     }
 
+    private execCmakeWithVsDevCmd(vsDevCmd: string, args: string[], cwd: string): Promise<CommandResult> {
+        const cp = require('child_process');
+        const formatted = args.map(a => this.formatCmdArg(a)).join(' ');
+        const command = `call "${vsDevCmd}" -arch=x64 -host_arch=x64 >nul && cmake ${formatted}`;
+        return new Promise(resolve => {
+            cp.exec(command, { cwd: cwd, shell: 'cmd.exe', maxBuffer: 40 * 1024 * 1024 }, (err: any, stdout: string, stderr: string) => {
+                const out = stdout ? stdout.toString() : '';
+                const errOut = stderr ? stderr.toString() : '';
+                if (err) {
+                    resolve({ ok: false, stdout: out, stderr: errOut, errorMessage: err.message });
+                } else {
+                    resolve({ ok: true, stdout: out, stderr: errOut });
+                }
+            });
+        });
+    }
+
     private runLibFromDef(vsDevCmd: string, defFile: string, outLib: string, machine: string): Promise<boolean> {
         const cp = require('child_process');
         const args = [`/def:${defFile}`, `/machine:${machine}`, `/out:${outLib}`]
@@ -890,7 +933,12 @@ endif()
 
         try {
             if (fs.existsSync(vswhere)) {
-                const installPath = cp.execFileSync(vswhere, ['-latest', '-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-property', 'installationPath'], {
+                // -prerelease so vswhere also considers Insiders/next-major VS (e.g. VS 18)
+                // alongside stable releases. -latest then picks the highest installationVersion
+                // among all candidates, which is what we want since the engine libs are built
+                // with the newest MSVC on GitHub Actions and reference recent stdlib intrinsics
+                // (e.g. __std_find_last_of_trivial_pos_1, added in MSVC 14.42+).
+                const installPath = cp.execFileSync(vswhere, ['-latest', '-prerelease', '-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-property', 'installationPath'], {
                     encoding: 'utf8'
                 }).trim();
 
@@ -906,7 +954,10 @@ endif()
         }
 
         const editions = ['BuildTools', 'Community', 'Professional', 'Enterprise'];
-        const versions = ['2022', '2019', '18', '17', '16'];
+        // VS 18 (current insiders/next major) first — its MSVC matches the symbols the engine
+        // libs reference (e.g. __std_find_last_of_trivial_pos_1 was added in MSVC 14.42+).
+        // Falling back to 2022 still works for engines built with that toolset.
+        const versions = ['18', '2022', '2019', '17', '16'];
         const baseRoots = [
             path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Microsoft Visual Studio'),
             path.join(programFilesX86, 'Microsoft Visual Studio')
