@@ -16,7 +16,7 @@ import { TextFile } from './textFile';
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
 export enum upType { UNKNOWN, VERSION, DOWNLOAD, DELETE, UNZIP }
-export enum upComp { UNKNOWN, ICU1, ICU2, NLP_EXE, ENGINE_FILES, ENGINE_COMPILE_FILES, ANALYZER_FILES, VT_FILES }
+export enum upComp { UNKNOWN, ICU1, ICU2, ICU3, NLP_EXE, ENGINE_FILES, ENGINE_COMPILE_FILES, ANALYZER_FILES, VT_FILES }
 export enum upPush { FRONT, BACK }
 
 export interface updateOp {
@@ -60,7 +60,7 @@ export class VisualText {
     public opsQueue: updateOp[] = new Array();
     public statusStrs = ['UNKNOWN', 'START', 'RUNNING', 'CANCEL', 'FAILED', 'DONE'];
     public opStrs = ['UNKNOWN', 'CHECK_EXISTS', 'VERSION', 'DOWNLOAD', 'UNZIP', 'DELETE', 'FAILED', 'DONE'];
-    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'NLP_EXE', 'ENGINE_FILES', 'ENGINE_COMPILE_FILES', 'ANALYZER_FILES', 'VT_FILES'];
+    public compStrs = ['UNKNOWN', 'ICU1', 'ICU2', 'ICU3', 'NLP_EXE', 'ENGINE_FILES', 'ENGINE_COMPILE_FILES', 'ANALYZER_FILES', 'VT_FILES'];
 
     public readonly LOG_SUFFIX = '_log';
     public readonly TEST_SUFFIX = '_test';
@@ -68,6 +68,8 @@ export class VisualText {
     public readonly NLP_EXE = 'nlp.exe';
     public readonly ICU1_WIN = 'icudt78.dll';
     public readonly ICU2_WIN = 'icuuc78.dll';
+    // icuin78 hosts ICU's i18n APIs (Collator, etc.) that lite.lib's find_str_nocase references.
+    public readonly ICU3_WIN = 'icuin78.dll';
     public readonly NLPENGINE_FILES_ASSET = 'nlpengine.zip';
     public readonly NLPENGINE_COMPILE_FILES_ASSET = 'nlpengine-compile-libs.zip';
     public readonly NLPENGINE_REPO = 'nlp-engine';
@@ -312,6 +314,7 @@ export class VisualText {
         if (visualText.platform == 'win32') {
             visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.ICU1);
             visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.ICU2);
+            visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.ICU3);
         }
         visualText.addUpdateOperation(op, upPush.BACK, upType.DOWNLOAD, upStat.START, upOp.CHECK_EXISTS, upComp.NLP_EXE);
         visualText.addUpdateOperation(op, upPush.BACK, upType.UNZIP, upStat.START, upOp.CHECK_EXISTS, upComp.ENGINE_FILES);
@@ -322,6 +325,7 @@ export class VisualText {
         if (visualText.platform == 'win32') {
             visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ICU1);
             visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ICU2);
+            visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ICU3);
         }
         visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.NLP_EXE);
         visualText.addUpdateOperation(op, push, upType.DELETE, upStat.START, upOp.DELETE, upComp.ENGINE_FILES);
@@ -341,6 +345,7 @@ export class VisualText {
         visualText.addUpdateOperation(op, push, upType.UNZIP, upStat.START, upOp.DOWNLOAD, upComp.ENGINE_FILES);
         visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.NLP_EXE);
         if (visualText.platform == 'win32') {
+            visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.ICU3);
             visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.ICU2);
             visualText.addUpdateOperation(op, push, upType.DOWNLOAD, upStat.START, upOp.DOWNLOAD, upComp.ICU1);
         }
@@ -360,6 +365,7 @@ export class VisualText {
         switch (component) {
             case upComp.ICU1:
             case upComp.ICU2:
+            case upComp.ICU3:
                 visualText.libFilenames(op);
                 break;
             case upComp.NLP_EXE:
@@ -415,12 +421,12 @@ export class VisualText {
     libFilenames(op: updateOp) {
         let libRelease = '';
         let lib = '';
-        const icu1 = op.component == upComp.ICU1 ? 1 : 0;
-        switch (visualText.platform) {
-            case 'win32':
-                libRelease = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
-                lib = icu1 ? visualText.ICU1_WIN : visualText.ICU2_WIN;
-                break;
+        if (visualText.platform === 'win32') {
+            switch (op.component) {
+                case upComp.ICU1: libRelease = lib = visualText.ICU1_WIN; break;
+                case upComp.ICU2: libRelease = lib = visualText.ICU2_WIN; break;
+                case upComp.ICU3: libRelease = lib = visualText.ICU3_WIN; break;
+            }
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         const engDir = visualText.engineDirectory().fsPath;
