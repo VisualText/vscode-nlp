@@ -2,7 +2,7 @@
     "N": {
         "prefix": ["N(\"$text\",1)"],
         "body": [
-            "N(\"$$text\",${1:1})"
+            "N(\"\\$text\",${1:1})"
         ],
         "description": "Node variable with $text value."
     },
@@ -773,7 +773,7 @@
     "attrtype": {
         "prefix": ["attrtype"],
         "body": [
-            "attrtype(${1:concept},${1:attr})"
+            "attrtype(${1:concept},${2:attr})"
         ],
         "description": "Fetch attribute's type where 0=str, 1=num, 2=concept, 3=float"
     },

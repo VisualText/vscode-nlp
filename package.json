@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++ language extension with compiled analyzer and compiled KB support for faster execution and protection of native NLP++ source code when distributing analyzers.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.1.6",
+    "version": "3.1.7",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
