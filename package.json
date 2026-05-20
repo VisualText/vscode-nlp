@@ -1,9 +1,9 @@
 {
     "name": "nlp",
     "displayName": "NLP",
-    "description": "NLP++ language extension with compiled analyzer and compiled KB support for faster execution and protection of native NLP++ source code when distributing analyzers.",
+    "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.1.8",
+    "version": "3.1.9",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
