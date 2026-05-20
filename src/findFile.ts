@@ -107,7 +107,8 @@ export class FindFile {
 					if (bracketsFlag)
 						text = line.replace(searchTerm,` <<${searchTerm}>> `);
 					const label = `${filename} [${num} ${pos}] ${line}`;
-					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: text});
+					const newText = `${path.basename(uri.fsPath)} ${text}`;
+					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: newText});
 				}
 				num++;
 			}

@@ -595,8 +595,9 @@ export class SequenceFile extends TextFile {
 					infolder = false;
 				}
 			}
-			if (!infolder && pass.typeStr == 'nlp' && pass.uri && pass.uri.fsPath.length > 4)
+			if (!infolder && (pass.typeStr == 'nlp' || pass.typeStr == 'rec') && pass.uri && pass.uri.fsPath.length > 4) {
 				files.push(pass.uri);
+			}
 		}
 		return files;
 	}
