@@ -139,7 +139,7 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
-### 3.1.0
+### 3.1.10
 Renamed the existing analyzer compile command to "Compile Analyzer and KB to C++ Library". "Compile KB to C++ Library" now invokes `nlp.exe -COMPILEKB` and emits `kb.dll`. Added a "Compiled KB" run mode that runs the analyzer interpreted against the compiled KB library. The run-mode status bar now cycles Interpreted -> Compiled -> Compiled KB.
 
 ### 3.0.0
