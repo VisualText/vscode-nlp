@@ -138,7 +138,11 @@ export class Analyzer {
             return false;
         } else {
             const items: vscode.QuickPickItem[] = [];
-            let fromDir = path.join(visualText.getVisualTextDirectory("analyzers"));
+
+            let fromDir = path.join(visualText.getVisualTextDirectory("analyzer-templates"));
+            if (!dirfuncs.isDir(fromDir)) {
+                fromDir = path.join(visualText.getVisualTextDirectory("analyzers"));
+            }
             if (dirfuncs.isDir(fromDir)) {
                 const files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
                 const dirMap: { [key: string]: string } = {};

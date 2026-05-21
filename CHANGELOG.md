@@ -3,7 +3,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 3.1.0
+### 3.1.10
 Added the ability to compile only the knowledge base (KB) and to run an interpreted analyzer against the compiled KB.
 
 - Renamed the existing analyzer compile command to **"Compile Analyzer and KB to C++ Library"** to reflect that it produces both.
