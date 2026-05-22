@@ -411,11 +411,26 @@ export class VisualText {
                 exe = 'nlpm.exe';
                 break;
             default:
-                exe = 'nlpl.exe';
+                exe = visualText.linuxZipName();
+                op.type = upType.UNZIP;
         }
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + exe;
         const engDir = visualText.engineDirectory().fsPath;
         op.local = path.join(engDir, visualText.NLP_EXE);
+    }
+
+    linuxZipName(): string {
+        try {
+            const osRelease = fs.readFileSync('/etc/os-release', 'utf8');
+            const versionMatch = osRelease.match(/^VERSION_ID="?([^"\n]+)"?/m);
+            if (versionMatch) {
+                const v = versionMatch[1];
+                if (v === '20.04') return 'ubuntu-20.04.zip';
+                if (v === '22.04') return 'ubuntu-22.04.zip';
+            }
+        } catch (e) {
+        }
+        return 'ubuntu-latest.zip';
     }
 
     libFilenames(op: updateOp) {
@@ -774,7 +789,9 @@ export class VisualText {
 
         (async () => {
             const dir = path.dirname(op.local);
-            const filename = path.basename(op.local);
+            const filename = (op.component === upComp.NLP_EXE && op.type === upType.UNZIP)
+                ? path.basename(op.remote)
+                : path.basename(op.local);
             const url = op.remote;
 
             const downloader = new Downloader({
@@ -805,14 +822,37 @@ export class VisualText {
 
     unzip(op: updateOp) {
         (async () => {
-            const toPath = op.local;
             const vtFileDir = path.dirname(op.local);
+            const isLinuxExeZip = op.component === upComp.NLP_EXE && op.type === upType.UNZIP;
+            const toPath = isLinuxExeZip
+                ? path.join(vtFileDir, path.basename(op.remote))
+                : op.local;
 
             const extract = require('extract-zip')
             try {
                 this.debugMessage('Unzipping: ' + toPath, logLineType.UPDATER);
                 await extract(toPath, { dir: vtFileDir });
                 this.debugMessage('UNZIPPED: ' + toPath, logLineType.UPDATER);
+
+                if (isLinuxExeZip) {
+                    const subfolder = path.join(vtFileDir, path.basename(toPath, '.zip'));
+                    if (fs.existsSync(subfolder)) {
+                        for (const f of fs.readdirSync(subfolder)) {
+                            const src = path.join(subfolder, f);
+                            const dst = f === 'nlpl.exe'
+                                ? path.join(vtFileDir, visualText.NLP_EXE)
+                                : path.join(vtFileDir, f);
+                            if (fs.existsSync(dst)) {
+                                const stat = fs.statSync(dst);
+                                if (stat.isDirectory()) dirfuncs.delDir(dst);
+                                else fs.unlinkSync(dst);
+                            }
+                            fs.renameSync(src, dst);
+                        }
+                        dirfuncs.delDir(subfolder);
+                    }
+                }
+
                 op.status = upStat.DONE;
                 dirfuncs.delFile(toPath);
             }
