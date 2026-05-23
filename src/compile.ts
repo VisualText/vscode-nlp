@@ -121,27 +121,34 @@ export class NLPCompile {
                 );
             }
 
-            progress.report({ increment: 30, message: 'Checking CMake and NLP-engine compile libraries...' });
-
-            // On Windows, the engine release ships ICU as DLLs only. Generate matching .lib
-            // import libraries from those DLLs (using dumpbin + lib) so the link step can
-            // resolve icu_78::* references from prim.lib.
-            if (os.platform() === 'win32') {
-                await this.ensureIcuImportLibs(engineDir, anapath);
-            }
-
-            const compileSupport = await this.resolveCompileSupport(anapath);
-            if (!compileSupport) {
-                vscode.commands.executeCommand('logView.refreshAll');
-                return;
-            }
-
-            progress.report({ increment: 20, message: 'Compiling C++ library...' });
-
-            // 3. Compile generated C++ using CMake and NLP-engine static libraries.
             const kbOnly = target === compileTarget.KB_ONLY;
             const libBaseName = kbOnly ? 'kb' : path.basename(anapath);
-            const success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName, kbOnly);
+
+            const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'local').toLowerCase();
+            let success = false;
+
+            if (compileMode === 'cloud') {
+                progress.report({ increment: 30, message: 'Submitting to compile service...' });
+                success = await this.compileCppOnCloud(anapath, libBaseName, kbOnly, progress);
+            } else {
+                progress.report({ increment: 30, message: 'Checking CMake and NLP-engine compile libraries...' });
+
+                // On Windows, the engine release ships ICU as DLLs only. Generate matching .lib
+                // import libraries from those DLLs (using dumpbin + lib) so the link step can
+                // resolve icu_78::* references from prim.lib.
+                if (os.platform() === 'win32') {
+                    await this.ensureIcuImportLibs(engineDir, anapath);
+                }
+
+                const compileSupport = await this.resolveCompileSupport(anapath);
+                if (!compileSupport) {
+                    vscode.commands.executeCommand('logView.refreshAll');
+                    return;
+                }
+
+                progress.report({ increment: 20, message: 'Compiling C++ library...' });
+                success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName, kbOnly);
+            }
 
             if (success) {
                 const libName = this.sharedLibraryName(libBaseName);
@@ -990,5 +997,239 @@ endif()
         } else {
             return analyzerName + '.so';
         }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Cloud compile (compile.mode === 'cloud')
+    // ---------------------------------------------------------------------------
+
+    private async compileCppOnCloud(
+        anapath: string,
+        analyzerName: string,
+        kbOnly: boolean,
+        progress: vscode.Progress<{ message?: string; increment?: number }>
+    ): Promise<boolean> {
+        const config = vscode.workspace.getConfiguration('compile');
+        const dispatcherUrl = (config.get<string>('dispatcherUrl') || '').replace(/\/$/, '');
+        if (!dispatcherUrl) {
+            vscode.window.showErrorMessage(
+                'compile.dispatcherUrl is not set. Configure the compile service URL or switch compile.mode to "local".'
+            );
+            return false;
+        }
+
+        const engineVersion = visualText.exeEngineVersion || visualText.repoEngineVersion;
+        if (!engineVersion) {
+            vscode.window.showErrorMessage(
+                'Unable to determine engine version. Run the updater to refresh nlp.exe before using cloud compile.'
+            );
+            return false;
+        }
+
+        const platformKey = this.cloudPlatformKey();
+        if (!platformKey) {
+            vscode.window.showErrorMessage(`Cloud compile not supported on platform: ${os.platform()}/${process.arch}.`);
+            return false;
+        }
+
+        const logUri = vscode.Uri.file(anapath);
+        const stageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nlp-cloud-compile-'));
+
+        try {
+            // 1. Stage payload: run/, kb/, StdAfx.h (mirrors what emit-cmake.sh expects).
+            this.stageCloudPayload(anapath, stageDir, kbOnly);
+
+            // 2. Pack and hash.
+            progress.report({ message: 'Packaging sources...' });
+            const tarPath = path.join(stageDir, '_payload.tar.gz');
+            await this.tarGzDirectory(stageDir, tarPath);
+            const sourcesHash = await this.sha256File(tarPath);
+
+            const manifest = {
+                schemaVersion: 1,
+                engineVersion,
+                platform: platformKey,
+                analyzerName,
+                kbOnly,
+                sourcesHash: `sha256:${sourcesHash}`,
+                extensionVersion: visualText.version,
+            };
+
+            // 3. POST /build.
+            progress.report({ message: 'Uploading to compile service...' });
+            const form = new FormData();
+            form.append('manifest', JSON.stringify(manifest));
+            const tarBytes = fs.readFileSync(tarPath);
+            form.append('payload', new Blob([tarBytes], { type: 'application/gzip' }), 'payload.tar.gz');
+
+            const buildRes = await fetch(`${dispatcherUrl}/build`, { method: 'POST', body: form });
+            if (!buildRes.ok) {
+                const body = await buildRes.text();
+                vscode.window.showErrorMessage(`Compile service rejected request: ${buildRes.status} ${body}`);
+                return false;
+            }
+            const submitted = await buildRes.json() as {
+                jobId: string;
+                cached?: boolean;
+                artifactUrl?: string;
+            };
+
+            // 4. Cache hit short-circuits the poll.
+            let artifactUrl = submitted.artifactUrl;
+            if (!submitted.cached) {
+                progress.report({ message: `Building on ${platformKey}...` });
+                const polled = await this.pollCloudJob(dispatcherUrl, submitted.jobId, anapath);
+                if (polled.status !== 'done' || !polled.artifactUrl) {
+                    return false;
+                }
+                artifactUrl = polled.artifactUrl;
+            }
+
+            // 5. Download artifact next to the analyzer.
+            progress.report({ message: 'Downloading library...' });
+            const libName = this.sharedLibraryName(analyzerName);
+            const dest = path.join(anapath, libName);
+            await this.downloadToFile(artifactUrl!, dest);
+            logView.addMessage(`Cloud compile output: ${dest}`, logLineType.ANALYER_OUTPUT, logUri);
+            return true;
+
+        } catch (err: any) {
+            logView.addMessage(`Cloud compile failed: ${err?.message ?? err}`, logLineType.ANALYER_OUTPUT, logUri);
+            vscode.window.showErrorMessage(`Cloud compile failed: ${err?.message ?? err}`);
+            return false;
+        } finally {
+            try { fs.rmSync(stageDir, { recursive: true, force: true }); } catch { /* tolerate */ }
+        }
+    }
+
+    private cloudPlatformKey(): string | undefined {
+        switch (os.platform()) {
+            case 'win32':  return 'windows';
+            case 'darwin': return process.arch === 'arm64' ? 'macos-arm64' : 'macos-x86_64';
+            case 'linux':  return this.linuxCloudPlatformKey();
+            default:       return undefined;
+        }
+    }
+
+    private linuxCloudPlatformKey(): string {
+        try {
+            const osRelease = fs.readFileSync('/etc/os-release', 'utf8');
+            const m = osRelease.match(/^VERSION_ID="?([^"\n]+)"?/m);
+            if (m) {
+                if (m[1] === '20.04') return 'linux-20.04';
+                if (m[1] === '22.04') return 'linux-22.04';
+            }
+        } catch { /* fall through */ }
+        return 'linux-latest';
+    }
+
+    private stageCloudPayload(anapath: string, stageDir: string, kbOnly: boolean): void {
+        const dirs = kbOnly ? ['kb'] : ['run', 'kb'];
+        for (const d of dirs) {
+            const src = path.join(anapath, d);
+            if (!fs.existsSync(src)) continue;
+            const dst = path.join(stageDir, d);
+            fs.mkdirSync(dst, { recursive: true });
+            for (const f of fs.readdirSync(src)) {
+                // The engine's -COMPILE emits both .cpp and .h files in run/ and kb/.
+                // The .cpp files include the .h files (analyzer.h, passN.h, etc.) so
+                // both must be shipped to the runner.
+                const lower = f.toLowerCase();
+                if (!lower.endsWith('.cpp') && !lower.endsWith('.h')) continue;
+                fs.copyFileSync(path.join(src, f), path.join(dst, f));
+            }
+        }
+        // Same StdAfx.h stub the local compileCppWithCMake writes.
+        fs.writeFileSync(
+            path.join(stageDir, 'StdAfx.h'),
+            '#pragma once\n' +
+            '#ifdef _WIN32\n' +
+            '#ifndef WIN32_LEAN_AND_MEAN\n#define WIN32_LEAN_AND_MEAN\n#endif\n' +
+            '#ifndef NOMINMAX\n#define NOMINMAX\n#endif\n' +
+            '#include <windows.h>\n#include <tchar.h>\n#endif\n' +
+            '#include "my_tchar.h"\n',
+            { encoding: 'utf8' }
+        );
+    }
+
+    private tarGzDirectory(srcDir: string, outPath: string): Promise<void> {
+        const cp = require('child_process');
+        return new Promise((resolve, reject) => {
+            // System tar is bundled on Windows 10+, macOS, and Linux.
+            const child = cp.spawn('tar', ['-czf', outPath, '-C', srcDir, '.'], { stdio: 'inherit' });
+            child.on('error', reject);
+            child.on('exit', (code: number) => code === 0 ? resolve() : reject(new Error(`tar exited ${code}`)));
+        });
+    }
+
+    private sha256File(filePath: string): Promise<string> {
+        const crypto = require('crypto');
+        return new Promise((resolve, reject) => {
+            const h = crypto.createHash('sha256');
+            const stream = fs.createReadStream(filePath);
+            stream.on('data', (chunk: string | Buffer) => h.update(chunk));
+            stream.on('end', () => resolve(h.digest('hex')));
+            stream.on('error', reject);
+        });
+    }
+
+    private async pollCloudJob(
+        dispatcherUrl: string,
+        jobId: string,
+        anapath: string
+    ): Promise<{ status: string; artifactUrl?: string }> {
+        const logUri = vscode.Uri.file(anapath);
+        const deadline = Date.now() + 10 * 60 * 1000;   // 10 min ceiling
+        let delay = 2000;
+        while (Date.now() < deadline) {
+            await new Promise(r => setTimeout(r, delay));
+            delay = Math.min(delay + 1000, 8000);
+
+            const res = await fetch(`${dispatcherUrl}/jobs/${encodeURIComponent(jobId)}`);
+            if (!res.ok) continue;
+            const job = await res.json() as {
+                status: string;
+                artifactUrl?: string;
+                buildLogUrl?: string;
+                errors?: Array<{
+                    file: string; line: number; column?: number;
+                    severity: string; message: string;
+                    nlpSourceFile?: string; nlpSourceLine?: number;
+                }>;
+            };
+            if (job.status === 'done' || job.status === 'failed') {
+                if (job.status === 'failed') {
+                    if (job.errors?.length) {
+                        for (const e of job.errors) {
+                            const where = e.nlpSourceFile
+                                ? `${e.nlpSourceFile}:${e.nlpSourceLine}`
+                                : `${e.file}:${e.line}${e.column ? ':' + e.column : ''}`;
+                            logView.addMessage(`${e.severity} ${where}: ${e.message}`, logLineType.ANALYER_OUTPUT, logUri);
+                        }
+                    }
+                    if (job.buildLogUrl) {
+                        logView.addMessage(`Build log: ${job.buildLogUrl}`, logLineType.ANALYER_OUTPUT, logUri);
+                    }
+                    vscode.window.showErrorMessage(
+                        job.errors?.length
+                            ? `Cloud compile failed with ${job.errors.length} error(s). See output.`
+                            : 'Cloud compile failed. See output for build log link.'
+                    );
+                }
+                return job;
+            }
+        }
+        vscode.window.showErrorMessage('Cloud compile timed out.');
+        return { status: 'timeout' };
+    }
+
+    private async downloadToFile(url: string, dest: string): Promise<void> {
+        const res = await fetch(url);
+        if (!res.ok || !res.body) {
+            throw new Error(`download ${url} -> ${res.status}`);
+        }
+        const buf = Buffer.from(await res.arrayBuffer());
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        fs.writeFileSync(dest, buf);
     }
 }
