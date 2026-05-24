@@ -1101,12 +1101,27 @@ endif()
             // 4. Cache hit short-circuits the poll.
             let artifactUrl = submitted.artifactUrl;
             if (!submitted.cached) {
-                progress.report({ message: `Building on ${platformKey}...` });
-                const polled = await this.pollCloudJob(dispatcherUrl, submitted.jobId, anapath);
-                if (polled.status !== 'done' || !polled.artifactUrl) {
-                    return false;
+                // Live elapsed-time tick on the status-bar progress message so
+                // the user can see the wait progressing rather than guessing
+                // whether the extension is hung. Refreshed every second.
+                const baseMsg = `Building on ${platformKey}...`;
+                const tickStart = Date.now();
+                progress.report({ message: baseMsg });
+                const tick = setInterval(() => {
+                    const sec = Math.floor((Date.now() - tickStart) / 1000);
+                    const m = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    progress.report({ message: `${baseMsg} ${m}:${s.toString().padStart(2, '0')}` });
+                }, 1000);
+                try {
+                    const polled = await this.pollCloudJob(dispatcherUrl, submitted.jobId, anapath);
+                    if (polled.status !== 'done' || !polled.artifactUrl) {
+                        return false;
+                    }
+                    artifactUrl = polled.artifactUrl;
+                } finally {
+                    clearInterval(tick);
                 }
-                artifactUrl = polled.artifactUrl;
             }
 
             // 5. Download artifact next to the analyzer.
