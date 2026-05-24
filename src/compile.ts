@@ -84,7 +84,11 @@ export class NLPCompile {
         }
 
         vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
+            // Status-bar progress instead of a sticky bottom-right popup —
+            // the cloud-compile path can wait several minutes for a GHA
+            // runner to dequeue, and a long-lived popup is intrusive.
+            // The completion notification below still appears as a popup.
+            location: vscode.ProgressLocation.Window,
             title: `Compile ${targetLabel}`,
             cancellable: false
         }, async (progress) => {
@@ -152,10 +156,30 @@ export class NLPCompile {
 
             if (success) {
                 const libName = this.sharedLibraryName(libBaseName);
+                const libPath = path.join(analyzerDir.fsPath, libName);
                 logView.addMessage(`Compile ${targetLabel} succeeded: ${libName}`, logLineType.ANALYER_OUTPUT, analyzerDir);
-                vscode.window.showInformationMessage(`Compile ${targetLabel} succeeded: ${libName}`);
+                // Action-button notification stays visible until dismissed (a
+                // plain showInformationMessage auto-fades after a few seconds,
+                // easy to miss after a long cloud-compile wait).
+                vscode.window.showInformationMessage(
+                    `Compile ${targetLabel} succeeded: ${libName}`,
+                    'Reveal in Explorer'
+                ).then(choice => {
+                    if (choice === 'Reveal in Explorer') {
+                        vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(libPath));
+                    }
+                });
             } else {
                 logView.addMessage(`Compile ${targetLabel} failed. Check the output for details.`, logLineType.ANALYER_OUTPUT, analyzerDir);
+                // Same persistence rationale as the success notification.
+                vscode.window.showErrorMessage(
+                    `Compile ${targetLabel} failed. See the NLP output panel for details.`,
+                    'Open Output'
+                ).then(choice => {
+                    if (choice === 'Open Output') {
+                        vscode.commands.executeCommand('logView.focus');
+                    }
+                });
             }
 
             vscode.commands.executeCommand('logView.refreshAll');
@@ -1179,7 +1203,11 @@ endif()
         anapath: string
     ): Promise<{ status: string; artifactUrl?: string }> {
         const logUri = vscode.Uri.file(anapath);
-        const deadline = Date.now() + 10 * 60 * 1000;   // 10 min ceiling
+        // 30 min ceiling. GHA's free-tier Windows runner pool can spend
+        // 5-10+ min in the queue before a runner picks up, plus actual build
+        // time. 10 min was too tight; 30 min covers worst observed cases
+        // while still bounding the wait to something the user would notice.
+        const deadline = Date.now() + 30 * 60 * 1000;
         let delay = 2000;
         while (Date.now() < deadline) {
             await new Promise(r => setTimeout(r, delay));
