@@ -177,6 +177,11 @@ export class NLPCompile {
                     'Open Output'
                 ).then(choice => {
                     if (choice === 'Open Output') {
+                        // logView lives inside the `vtOutput` panel container
+                        // (see package.json viewsContainers). Just calling
+                        // `logView.focus` on a hidden container is a no-op,
+                        // so reveal the container first.
+                        vscode.commands.executeCommand('workbench.view.extension.vtOutput');
                         vscode.commands.executeCommand('logView.focus');
                     }
                 });
