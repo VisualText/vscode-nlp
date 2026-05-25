@@ -1018,17 +1018,36 @@ endif()
             return false;
         }
 
-        const engineVersion = visualText.exeEngineVersion || visualText.repoEngineVersion;
-        if (!engineVersion) {
+        const rawEngineVersion = (visualText.exeEngineVersion || visualText.repoEngineVersion || '').trim();
+        if (!rawEngineVersion) {
             vscode.window.showErrorMessage(
                 'Unable to determine engine version. Run the updater to refresh nlp.exe before using cloud compile.'
             );
             return false;
         }
+        // nlp.exe --version prints "3.1.14"; GH release tags are "v3.1.14".
+        // Normalize so the runner workflow can `gh release download` reliably.
+        const engineVersion = rawEngineVersion.startsWith('v') ? rawEngineVersion : `v${rawEngineVersion}`;
 
         const platformKey = this.cloudPlatformKey();
         if (!platformKey) {
             vscode.window.showErrorMessage(`Cloud compile not supported on platform: ${os.platform()}/${process.arch}.`);
+            return false;
+        }
+
+        // Verify the engine release the user is running actually exists on GitHub.
+        // The runner workflow fetches `nlpengine-compile-libs-<platform>.zip` from
+        // this release tag — if the user's nlp.exe is from a tag that isn't
+        // published (e.g., a local dev build, or a tag deleted from the repo),
+        // generated .cpp will fail to link against whatever the runner pulls.
+        progress.report({ message: `Verifying engine release ${engineVersion}...` });
+        const releaseExists = await this.verifyEngineReleaseExists(engineVersion);
+        if (!releaseExists) {
+            vscode.window.showErrorMessage(
+                `Engine release ${engineVersion} not found on GitHub (VisualText/nlp-engine). ` +
+                `The cloud compile service can only build against published engine releases. ` +
+                `Update your installed nlp.exe to a published release, or switch compile.mode to "local".`
+            );
             return false;
         }
 
@@ -1100,6 +1119,17 @@ endif()
         } finally {
             try { fs.rmSync(stageDir, { recursive: true, force: true }); } catch { /* tolerate */ }
         }
+    }
+
+    private async verifyEngineReleaseExists(releaseTag: string): Promise<boolean> {
+        // Returns true if the GH release for releaseTag exists, false on 404.
+        // Network or non-404 errors propagate up so the outer try/catch in
+        // compileCppOnCloud surfaces them as "Cloud compile failed: ...".
+        const url = `https://api.github.com/repos/VisualText/nlp-engine/releases/tags/${encodeURIComponent(releaseTag)}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if (res.status === 404) return false;
+        if (!res.ok) throw new Error(`GitHub release lookup returned ${res.status}`);
+        return true;
     }
 
     private cloudPlatformKey(): string | undefined {
