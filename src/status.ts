@@ -244,27 +244,42 @@ export class NLPStatusBar {
     }
 
     toggleRunMode() {
+        // Cycle to the next mode, skipping any compiled mode whose lib
+        // doesn't exist. INTERPRETED is always available so the loop always
+        // lands somewhere within 3 attempts.
+        // Previously, hitting an unavailable compiled mode showed a warning
+        // and returned without advancing — leaving the toggle stuck (e.g.
+        // on COMPILED with no kb.dll, advancing to COMPILED_KB was blocked
+        // and the toggle wouldn't cycle back to INTERPRETED).
         let next = this.nextRunMode(this.runMode);
-        if (next === RunMode.COMPILED && !this.hasCompiledLib(RunMode.COMPILED) && this.hasCompiledLib(RunMode.COMPILED_KB)) {
-            next = RunMode.COMPILED_KB;
+        for (let attempts = 0; attempts < 3; attempts++) {
+            if (next === RunMode.INTERPRETED) break;
+            if (this.hasCompiledLib(next)) break;
+            next = this.nextRunMode(next);
         }
-        if ((next === RunMode.COMPILED || next === RunMode.COMPILED_KB) && !this.hasCompiledLib(next)) {
+
+        // If we cycled all the way back to INTERPRETED while already on
+        // INTERPRETED, no compiled mode is available — the user clicked
+        // toggle expecting a compiled mode but nothing's built. Pop a
+        // one-shot prompt offering to compile.
+        if (next === RunMode.INTERPRETED && this.runMode === RunMode.INTERPRETED) {
             const name = this.currentAnalyzerName() || 'this analyzer';
-            const compileCmd = next === RunMode.COMPILED_KB ? 'kbView.compileKB' : 'analyzerView.compileAnalyzer';
-            const compileLabel = next === RunMode.COMPILED_KB ? 'Compile KB' : 'Compile Analyzer and KB';
-            const modeLabel = next === RunMode.COMPILED_KB ? 'Compiled KB' : 'Compiled';
             vscode.window
                 .showWarningMessage(
-                    `${name} hasn't been compiled yet. Compile it before switching to ${modeLabel} run mode.`,
-                    compileLabel
+                    `${name} has nothing compiled yet. Compile it to switch to a compiled run mode.`,
+                    'Compile Analyzer and KB',
+                    'Compile KB'
                 )
                 .then(choice => {
-                    if (choice === compileLabel) {
-                        vscode.commands.executeCommand(compileCmd);
+                    if (choice === 'Compile Analyzer and KB') {
+                        vscode.commands.executeCommand('analyzerView.compileAnalyzer');
+                    } else if (choice === 'Compile KB') {
+                        vscode.commands.executeCommand('kbView.compileKB');
                     }
                 });
             return;
         }
+
         this.setRunMode(next);
     }
 

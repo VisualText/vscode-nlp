@@ -3,10 +3,10 @@ src/**
 tsconfig.json
 webpack.config.js
 
-# Build artifacts we don't need  
+# Build artifacts we don't need
 *.vsix
-.vscode/launch.json
-.vscode/tasks.json
+.vscode/**
+.claude/**
 
 # Node modules - bundled by webpack
 node_modules/**
@@ -15,6 +15,7 @@ node_modules/**
 .git*
 .eslintrc.json
 npm-debug.log*
+*.log
 .nyc_output
 coverage
 
