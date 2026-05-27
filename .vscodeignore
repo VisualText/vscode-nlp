@@ -6,6 +6,8 @@ webpack.config.js
 # Build artifacts we don't need
 *.vsix
 .vscode/**
+# ...but ship the colorization template: colorizeAnalyzer() copies it into each workspace's .vscode/settings.json
+!.vscode/settings.json
 .claude/**
 
 # Node modules - bundled by webpack
