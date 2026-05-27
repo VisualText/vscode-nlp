@@ -244,43 +244,26 @@ export class NLPStatusBar {
     }
 
     toggleRunMode() {
-        // Cycle to the next mode, skipping any compiled mode whose lib
-        // doesn't exist. INTERPRETED is always available so the loop always
-        // lands somewhere within 3 attempts.
-        // Previously, hitting an unavailable compiled mode showed a warning
-        // and returned without advancing — leaving the toggle stuck (e.g.
-        // on COMPILED with no kb.dll, advancing to COMPILED_KB was blocked
-        // and the toggle wouldn't cycle back to INTERPRETED).
-        let next = this.nextRunMode(this.runMode);
-        for (let attempts = 0; attempts < 3; attempts++) {
-            if (next === RunMode.INTERPRETED) break;
-            if (this.hasCompiledLib(next)) break;
-            next = this.nextRunMode(next);
-        }
-
-        // If we cycled all the way back to INTERPRETED while already on
-        // INTERPRETED, no compiled mode is available — the user clicked
-        // toggle expecting a compiled mode but nothing's built. Pop a
-        // one-shot prompt offering to compile.
-        if (next === RunMode.INTERPRETED && this.runMode === RunMode.INTERPRETED) {
-            const name = this.currentAnalyzerName() || 'this analyzer';
-            vscode.window
-                .showWarningMessage(
-                    `${name} has nothing compiled yet. Compile it to switch to a compiled run mode.`,
-                    'Compile Analyzer and KB',
-                    'Compile KB'
-                )
-                .then(choice => {
-                    if (choice === 'Compile Analyzer and KB') {
-                        vscode.commands.executeCommand('analyzerView.compileAnalyzer');
-                    } else if (choice === 'Compile KB') {
-                        vscode.commands.executeCommand('kbView.compileKB');
-                    }
-                });
-            return;
-        }
-
-        this.setRunMode(next);
+        // Cycle freely through all three modes: INTERPRETED -> COMPILED ->
+        // COMPILED_KB -> INTERPRETED. The toggle deliberately does NOT gate
+        // on whether a compiled lib exists.
+        //
+        // It used to skip compiled modes whose lib it couldn't find via
+        // getCurrentAnalyzer()/<name>.dll. But "the current analyzer" is
+        // resolved three different ways across the codebase
+        // (visualText.currentAnalyzer here, analyzer.getAnalyzerDirectory()
+        // in the compile path, and the input-file-derived path in the run
+        // path). When those drift — e.g. multiple installed copies of the
+        // same analyzer — the toggle would report "nothing compiled yet"
+        // even though the .dll was sitting right where compile/run expect
+        // it, making Run: Compiled KB unreachable.
+        //
+        // The authoritative guard is stageCompiledAnalyzer() in nlp.ts,
+        // which checks for the lib at RUN time using the reliable
+        // input-file-derived analyzer path and prompts to compile if it's
+        // missing. So the toggle just advances; running in a mode with no
+        // lib yet surfaces an actionable message at the right moment.
+        this.setRunMode(this.nextRunMode(this.runMode));
     }
 
     private nextRunMode(mode: RunMode): RunMode {
