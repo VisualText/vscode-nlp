@@ -1372,7 +1372,10 @@ export class VisualText {
             let add = false;
             const toDir = vscode.workspace.workspaceFolders[0].uri;
             const toFile = path.join(toDir.fsPath, '.vscode', 'settings.json');
-            const fromDir = visualText.extensionDirectory();
+            // Read the colorization template from the running extension (source tree in
+            // debug, installed .vsix dir in production) rather than the manually-built
+            // installed path, which only holds the downloaded nlp-engine assets.
+            const fromDir = this._ctx.extensionUri;
             const fromFile = path.join(fromDir.fsPath, '.vscode', 'settings.json');
             if (fs.existsSync(toFile)) {
                 if (this.jsonState.jsonParse(toDir, 'settings')) {
