@@ -200,17 +200,12 @@ export class NLPFile extends TextFile {
 			return false;
 		}
 
-		if (platform !== 'win32') {
-			logView.addMessage(`Compiled run requested but engine -COMPILED only loads a runtime DLL on Windows. Skipping DLL stage.`, logLineType.ANALYER_OUTPUT, filepath);
-			return true;
-		}
-
 		try {
 			// The engine reads compiled artifacts from <analyzerDir>/bin/:
-			//   - load_compiled() (lite/nlp.cpp:1238) loads bin/run.dll as the analyzer body
-			//     when -COMPILED is passed.
-			//   - consh (cs/libconsh/cg.cpp:181) loads bin/kb.dll as the compiled KB whenever
-			//     it exists (auto-detected, regardless of -COMPILED).
+			//   - load_compiled() (lite/nlp.cpp:1238) loads bin/run.<ext> as the analyzer
+			//     body when -COMPILED is passed. <ext> is dll on Windows, so on Linux/macOS.
+			//   - consh (cs/libconsh/cg.cpp:168) loads bin/kb.<ext> as the compiled KB
+			//     whenever it exists (auto-detected, regardless of -COMPILED).
 			// In both cases "appdir" is the analyzer directory, not -WORK.
 			const binDir = path.join(anapath, 'bin');
 			if (!fs.existsSync(binDir)) {
@@ -219,24 +214,25 @@ export class NLPFile extends TextFile {
 			// nlp.exe build flavor decides whether it loads the ANSI or unicode name;
 			// stage both so the engine finds whichever it expects.
 			if (runMode === RunMode.COMPILED_KB) {
-				fs.copyFileSync(compiledLib, path.join(binDir, 'kb.dll'));
-				fs.copyFileSync(compiledLib, path.join(binDir, 'kbu.dll'));
-				logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\kb.dll (and kbu.dll)`, logLineType.ANALYER_OUTPUT, filepath);
+				fs.copyFileSync(compiledLib, path.join(binDir, `kb${ext}`));
+				fs.copyFileSync(compiledLib, path.join(binDir, `kbu${ext}`));
+				logView.addMessage(`Staged ${compiledLibName} as ${path.join(binDir, `kb${ext}`)} (and kbu${ext})`, logLineType.ANALYER_OUTPUT, filepath);
 			} else {
-				fs.copyFileSync(compiledLib, path.join(binDir, 'run.dll'));
-				fs.copyFileSync(compiledLib, path.join(binDir, 'runu.dll'));
+				fs.copyFileSync(compiledLib, path.join(binDir, `run${ext}`));
+				fs.copyFileSync(compiledLib, path.join(binDir, `runu${ext}`));
 				// The full-analyzer compile globs run/*.cpp AND kb/*.cpp into one library, so
-				// the same DLL exports both run_analyzer and kb_setup. Stage it as bin/kb.dll
-				// too so consh's compiled-KB load succeeds instead of falling back to interpreted.
-				fs.copyFileSync(compiledLib, path.join(binDir, 'kb.dll'));
-				fs.copyFileSync(compiledLib, path.join(binDir, 'kbu.dll'));
-				logView.addMessage(`Staged ${compiledLibName} as ${binDir}\\run.dll, runu.dll, kb.dll, kbu.dll`, logLineType.ANALYER_OUTPUT, filepath);
+				// the same library exports both run_analyzer and kb_setup. Stage it as
+				// bin/kb<ext> too so consh's compiled-KB load succeeds instead of falling
+				// back to interpreted.
+				fs.copyFileSync(compiledLib, path.join(binDir, `kb${ext}`));
+				fs.copyFileSync(compiledLib, path.join(binDir, `kbu${ext}`));
+				logView.addMessage(`Staged ${compiledLibName} as ${path.join(binDir, `run${ext}`)}, runu${ext}, kb${ext}, kbu${ext}`, logLineType.ANALYER_OUTPUT, filepath);
 			}
 			return true;
 		} catch (err: any) {
 			const detail = err && err.message ? err.message : String(err);
-			logView.addMessage(`Failed to stage compiled analyzer DLL: ${detail}`, logLineType.ANALYER_OUTPUT, filepath);
-			vscode.window.showErrorMessage(`Failed to stage compiled analyzer DLL: ${detail}`);
+			logView.addMessage(`Failed to stage compiled analyzer library: ${detail}`, logLineType.ANALYER_OUTPUT, filepath);
+			vscode.window.showErrorMessage(`Failed to stage compiled analyzer library: ${detail}`);
 			return false;
 		}
 	}
