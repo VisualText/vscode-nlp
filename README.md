@@ -18,7 +18,7 @@ This provides two major advantages:
 - Faster execution.
 - Protection of native NLP++ source code when delivering analyzers to customers who do not have access to NLP++ source.
 
-Version 3.1 adds a **KB-only** compile path and a matching **Compiled KB** run mode so the knowledge base can be compiled and shipped on its own while the analyzer continues to run interpreted.
+Version 3.1 adds a **KB-only** compile path and a matching **Compiled KB** run mode so the knowledge base can be compiled and shipped on its own. With engine 3.1.44+ (shipped in extension 3.1.21), **Compiled** mode now runs the full analyzer body from native shared libraries on Linux and macOS too — previously this was Windows-only with rules staying interpreted on the other platforms.
 
 ## Version 2 milestone
 
@@ -82,26 +82,23 @@ In order to use the VSCode NLP++ Language Extension, the NLP-ENGINE which is in 
 
 The NLP-ENGINE now comes with the NLP++ Language extension but is available separately from the [VisualText github repository](https://github.com/VisualText/nlp-engine). The engine can run as a stand alone executable outside of the language extension.
 
-### Compile Asset Requirements
+### Compile build modes
 
-To enable `-COMPILE` analyzer builds and `-COMPILEKB` KB-only builds from the VSCode extension, the `VisualText/nlp-engine` latest release must include this additional asset:
+The extension supports two ways to turn a `-COMPILE`d analyzer into the shared libraries that `-COMPILED` mode loads (`bin/run.<ext>` + `bin/kb.<ext>`):
 
-- `nlpengine-compile-libs.zip`
+- **`compile.mode = "local"`** (default): the extension drives CMake locally against the engine's compile-libs. Requires a working C++ toolchain on the user's machine (Visual Studio Build Tools on Windows, build-essential on Linux, Xcode CLI on macOS) plus CMake ≥ 3.16.
+- **`compile.mode = "cloud"`**: the extension tarballs the generated C++ and uploads it to the [nlp-compile-service](https://github.com/VisualText/nlp-compile-service) Cloudflare Worker. The worker routes the build to a GitHub Actions runner (Linux / Windows / macOS as appropriate), and the extension downloads the resulting library and stages it into `<analyzer>/bin/`. No local C++ toolchain needed; requires `compile.dispatcherUrl` to be set.
 
-The archive should extract under the extension's `nlp-engine` folder and include:
+### Compile Asset Requirements (local mode only)
+
+For `compile.mode = "local"`, the `VisualText/nlp-engine` latest release must include the additional asset `nlpengine-compile-libs.zip`. It extracts under the extension's `nlp-engine` folder and includes:
 
 - `include/` (engine headers)
-- `lib/` (compiled engine libraries for the target platform)
+- `lib/` (engine static libraries: `prim`, `kbm`, `consh`, `words`, `lite`, plus ICU)
 
-Expected library set in `lib/`:
+The updater in `vscode-nlp` checks for and downloads this asset on startup so the local compile path is ready out of the box.
 
-- `prim`
-- `kbm`
-- `consh`
-- `words`
-- `lite`
-
-The updater in `vscode-nlp` now checks for and downloads this asset so the compile commands can build generated analyzer/KB C++ with CMake.
+Cloud mode doesn't need any of this — the compile-libs live on the runner side.
 
 ### Types of Analyzers Commonly Written Using NLP++
 
@@ -139,8 +136,14 @@ Click [here](https://github.com/VisualText/vscode-nlp/issues) for known issues.
 
 For the complete list of changes and release notes, click [here](https://marketplace.visualstudio.com/items/dehilster.nlp/changelog).
 
+### 3.1.21
+Bumps the bundled engine to v3.1.44 (and updates the auto-updater to follow). The new engine enables compiled-RUN dispatch on Linux and macOS — `compile.mode = "compiled"` now runs the full analyzer body from `bin/run.<ext>` on every platform, not just Windows. Companion to the VSCODE-NLP-572 staging fix in 3.1.20.
+
+### 3.1.20
+Linux and macOS: the extension's "Compile Analyzer and KB to C++ Library" command now stages the cloud-built `.so` / `.dylib` into `<analyzer>/bin/run.<ext>` + `bin/kb.<ext>` so the engine's `-COMPILED` load path actually finds it. Previously the staging step was Windows-only with a stale "engine -COMPILED only loads a runtime DLL on Windows" comment that was no longer true.
+
 ### 3.1.10
-Renamed the existing analyzer compile command to "Compile Analyzer and KB to C++ Library". "Compile KB to C++ Library" now invokes `nlp.exe -COMPILEKB` and emits `kb.dll`. Added a "Compiled KB" run mode that runs the analyzer interpreted against the compiled KB library. The run-mode status bar now cycles Interpreted -> Compiled -> Compiled KB.
+Renamed the existing analyzer compile command to "Compile Analyzer and KB to C++ Library". "Compile KB to C++ Library" now invokes `nlp.exe -COMPILEKB` and emits `kb.dll`. Added a "Compiled KB" run mode that runs the analyzer interpreted against the compiled KB library. The run-mode status bar now cycles Interpreted -> Compiled -> Compiled KB. (Engine 3.1.44+ extends Compiled to also run the analyzer body natively on Linux/macOS — see 3.1.21 notes.)
 
 ### 3.0.0
 Added support for compiling analyzers and the knowledge base (KB). Benefits include faster execution and protection of native NLP++ source code when analyzers are distributed to customers without access to the NLP++ source.
