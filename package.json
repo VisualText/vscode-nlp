@@ -534,20 +534,26 @@
             {
                 "command": "helpView.windowCHMHelp",
                 "category": "NLP",
-                "title": "Open Full Windows Help",
-                "description": "Open Browser function help"
+                "title": "Open Legacy Windows Help",
+                "description": "Open the legacy Windows CHM help file"
             },
             {
-                "command": "helpView.openBrowserFunctionHelp",
+                "command": "helpView.openHelpIndex",
                 "category": "NLP",
-                "title": "Open Browser Function Help",
-                "description": "Open browser function help"
+                "title": "Open Help Index",
+                "description": "Open the markdown help index"
             },
             {
-                "command": "helpView.openBrowserVariableHelp",
+                "command": "helpView.openFunctionHelp",
                 "category": "NLP",
-                "title": "Open Browser Variable Help",
-                "description": "Open browser variable help"
+                "title": "Open Functions Help",
+                "description": "Open the markdown functions help"
+            },
+            {
+                "command": "helpView.openVariableHelp",
+                "category": "NLP",
+                "title": "Open Variables Help",
+                "description": "Open the markdown variables help"
             },
             {
                 "command": "nlp.selectSequence",
@@ -560,12 +566,6 @@
                 "category": "NLP",
                 "title": "Lookup Word",
                 "description": "Lookup a term in the help"
-            },
-            {
-                "command": "helpView.lookupBrowser",
-                "category": "NLP",
-                "title": "Lookup Word in Browser",
-                "description": "Lookup a term in the help in Browser"
             },
             {
                 "command": "textView.copyToAnalyzer",
@@ -1880,11 +1880,6 @@
                     "group": "anlp"
                 },
                 {
-                    "when": "isWindows && resourceExtname == .nlp",
-                    "command": "helpView.windowCHMHelp",
-                    "group": "help"
-                },
-                {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "sequenceView.finalTree",
                     "group": "bnlp"
@@ -1901,23 +1896,28 @@
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.openBrowserFunctionHelp",
-                    "group": "help"
-                },
-                {
-                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.openBrowserVariableHelp",
-                    "group": "help"
-                },
-                {
-                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
                     "command": "helpView.lookup",
-                    "group": "help"
+                    "group": "help@1"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
-                    "command": "helpView.lookupBrowser",
-                    "group": "help"
+                    "command": "helpView.openHelpIndex",
+                    "group": "help@2"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.openFunctionHelp",
+                    "group": "help@3"
+                },
+                {
+                    "when": "resourceExtname == .pat || resourceExtname == .nlp",
+                    "command": "helpView.openVariableHelp",
+                    "group": "help@4"
+                },
+                {
+                    "when": "isWindows && resourceExtname == .nlp",
+                    "command": "helpView.windowCHMHelp",
+                    "group": "help@5"
                 },
                 {
                     "when": "resourceExtname == .pat || resourceExtname == .nlp",
