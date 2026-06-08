@@ -14,10 +14,10 @@ export class HelpView {
 
     constructor(private context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource));
-        vscode.commands.registerCommand('helpView.lookupBrowser', (resource) => this.lookupBrowser(resource));
         vscode.commands.registerCommand('helpView.windowCHMHelp', (resource) => this.windowCHMHelp(resource));
-        vscode.commands.registerCommand('helpView.openBrowserFunctionHelp', this.openBrowserFunctionHelp);
-        vscode.commands.registerCommand('helpView.openBrowserVariableHelp', this.openBrowserVariableHelp);
+        vscode.commands.registerCommand('helpView.openHelpIndex', () => this.openHelpIndex());
+        vscode.commands.registerCommand('helpView.openFunctionHelp', () => this.openFunctionHelp());
+        vscode.commands.registerCommand('helpView.openVariableHelp', () => this.openVariableHelp());
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -28,24 +28,6 @@ export class HelpView {
             helpView = new HelpView(ctx);
         }
         return helpView;
-    }
-
-    lookupBrowser(resource: vscode.Uri) {
-        let editor = vscode.window.activeTextEditor;
-        if (editor) {
-            let cursorPosition = editor.selection.start;
-            let wordRange = editor.document.getWordRangeAtPosition(cursorPosition);
-            if (wordRange) {
-                const text = this.getTerm(editor, wordRange);
-                var helpPath = visualText.getVisualTextDirectory('Help');
-                helpPath = path.join(helpPath, 'helps', text + '.htm');
-                if (!fs.existsSync(helpPath)) {
-                    vscode.window.showErrorMessage(`File does not exist: ${helpPath}`);
-                    return;
-                }
-                vscode.env.openExternal(vscode.Uri.file(helpPath));
-            }
-        }
     }
 
     lookup(resource: vscode.Uri) {
@@ -107,16 +89,24 @@ export class HelpView {
         }
     }
 
-    openBrowserFunctionHelp() {
-        var helpPath = visualText.getVisualTextDirectory('Help');
-        helpPath = path.join(helpPath, 'helps', 'NLP_PP_Stuff', 'Functions' + '.htm');
-        vscode.env.openExternal(vscode.Uri.file(helpPath));
-
+    openHelpIndex() {
+        this.displayMarkdownHelp('index');
     }
 
-    openBrowserVariableHelp() {
-        var helpPath = visualText.getVisualTextDirectory('Help');
-        helpPath = path.join(helpPath, 'helps', 'NLP_PP_Stuff', 'Variable_types' + '.htm');
-        vscode.env.openExternal(vscode.Uri.file(helpPath));
+    openFunctionHelp() {
+        this.displayMarkdownHelp(path.join('NLP_PP_Stuff', 'Functions'));
+    }
+
+    openVariableHelp() {
+        this.displayMarkdownHelp(path.join('NLP_PP_Stuff', 'About_NLP++_Variables'));
+    }
+
+    displayMarkdownHelp(relativeName: string) {
+        const mdFile = path.join(visualText.getVisualTextDirectory('Help'), 'markdown', relativeName + '.md');
+        if (fs.existsSync(mdFile)) {
+            vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(mdFile));
+        } else {
+            vscode.window.showErrorMessage(`Help file does not exist: ${mdFile}`);
+        }
     }
 }
