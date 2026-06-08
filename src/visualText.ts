@@ -1434,9 +1434,10 @@ export class VisualText {
     }
 
     displayHelpFile(title: string, filename: string) {
-        const pathFile = path.join(visualText.getVisualTextDirectory("Help"), "helps", filename);
-        const mdFile = pathFile + ".md";
-        const htmlFile = pathFile + ".htm";
+        const helpDir = visualText.getVisualTextDirectory("Help");
+        const baseName = path.parse(filename).name;
+        const mdFile = path.join(helpDir, "markdown", baseName + ".md");
+        const htmlFile = path.join(helpDir, "helps", baseName + ".html");
         if (fs.existsSync(mdFile)) {
             vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(mdFile));
         }
