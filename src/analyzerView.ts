@@ -216,6 +216,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.video', () => this.video());
 		vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
 		vscode.commands.registerCommand('analyzerView.compileAnalyzer', resource => this.compileAnalyzer(resource));
+		vscode.commands.registerCommand('analyzerView.compileAnalyzerOnly', resource => this.compileAnalyzerOnly(resource));
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -769,6 +770,20 @@ export class AnalyzerView {
 		}
 		const compile = NLPCompile.attach();
 		await compile.compileAnalyzer(analyzerDir);
+	}
+
+	async compileAnalyzerOnly(analyzerItem: AnalyzerItem) {
+		let analyzerDir: vscode.Uri;
+		if (analyzerItem && analyzerItem.uri) {
+			analyzerDir = dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+		} else if (visualText.analyzer.isLoaded()) {
+			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		} else {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		const compile = NLPCompile.attach();
+		await compile.compileAnalyzerOnly(analyzerDir);
 	}
 
 	public deleteAllAnalyzerLogs() {

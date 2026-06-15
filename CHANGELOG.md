@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.25
+Added **"Compile Analyzer Only to C++ Library"**, which invokes `nlp.exe -COMPILEANA` (requires NLP-engine 3.6.0+).
+
+- Regenerates only the analyzer C++ (`run/`) and rebuilds the analyzer library, reusing the already-generated KB C++ (`kb/`) — a fast recompile when only NLP++ rules changed, skipping KB regeneration.
+- Available from the Analyzers view title menu and an analyzer's context menu, alongside "Compile Analyzer and KB" and "Compile KB".
+- Warns if no KB C++ exists yet (run "Compile Analyzer and KB" or "Compile KB" once first).
+
 ### 3.1.10
 Added the ability to compile only the knowledge base (KB) and to run an interpreted analyzer against the compiled KB.
 
