@@ -5,7 +5,7 @@ import * as os from 'os';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 
-export enum compileTarget { ANALYZER, KB_ONLY }
+export enum compileTarget { ANALYZER, KB_ONLY, ANALYZER_ONLY }
 
 interface NlpCompileResult {
     ok: boolean;
@@ -53,13 +53,26 @@ export class NLPCompile {
         await this.runCompile(analyzerDir, compileTarget.KB_ONLY);
     }
 
+    // Analyzer-only: regenerate the analyzer C++ (run/) via -COMPILEANA without
+    // regenerating the KB, then rebuild the analyzer library reusing the
+    // already-generated kb/*.cpp. Fast recompile when only NLP++ rules changed.
+    async compileAnalyzerOnly(analyzerDir: vscode.Uri): Promise<void> {
+        await this.runCompile(analyzerDir, compileTarget.ANALYZER_ONLY);
+    }
+
     // ---------------------------------------------------------------------------
     // Core compile flow
     // ---------------------------------------------------------------------------
 
     private async runCompile(analyzerDir: vscode.Uri, target: compileTarget): Promise<void> {
-        const targetLabel = target === compileTarget.KB_ONLY ? 'KB' : 'Analyzer and KB';
-        const compileFlag = target === compileTarget.KB_ONLY ? '-COMPILEKB' : '-COMPILE';
+        const targetLabel =
+            target === compileTarget.KB_ONLY ? 'KB' :
+            target === compileTarget.ANALYZER_ONLY ? 'Analyzer' :
+            'Analyzer and KB';
+        const compileFlag =
+            target === compileTarget.KB_ONLY ? '-COMPILEKB' :
+            target === compileTarget.ANALYZER_ONLY ? '-COMPILEANA' :
+            '-COMPILE';
 
         // 1. Check NLP engine executable
         const exe = visualText.exePath().fsPath;
@@ -77,6 +90,20 @@ export class NLPCompile {
             if (kbSources.length === 0) {
                 const analyzerName = path.basename(analyzerDir.fsPath.replace(/[\\/]+$/, ''));
                 const message = `No .kbb or .dict files found under ${analyzerName}/kb/user. Add KB sources before compiling the KB.`;
+                logView.addMessage(message, logLineType.ANALYER_OUTPUT, analyzerDir);
+                vscode.window.showWarningMessage(message);
+                return;
+            }
+        }
+
+        // Analyzer-only compile regenerates run/ C++ but NOT the KB. The analyzer
+        // library still links kb/*.cpp, so those must already exist from a prior
+        // "Compile Analyzer and KB" / "Compile KB".
+        if (target === compileTarget.ANALYZER_ONLY) {
+            const kbCpp = this.findGeneratedCppFiles(analyzerDir.fsPath, true); // kb only
+            if (kbCpp.length === 0) {
+                const analyzerName = path.basename(analyzerDir.fsPath.replace(/[\\/]+$/, ''));
+                const message = `No generated KB C++ found under ${analyzerName}/kb/. Run "Compile Analyzer and KB" (or "Compile KB") once before "Compile Analyzer Only".`;
                 logView.addMessage(message, logLineType.ANALYER_OUTPUT, analyzerDir);
                 vscode.window.showWarningMessage(message);
                 return;
