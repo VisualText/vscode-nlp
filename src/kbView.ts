@@ -106,16 +106,20 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 		// At the KB root, surface compiled artifacts from the analyzer root so they show up
 		// alongside the KB sources for visual reference. The DLL lives outside kb/user/ and
-		// is produced by Compile KB / Compile Analyzer and KB.
+		// is produced by Compile KB (kb), Compile Analyzer Only (analyzer), or
+		// Compile Analyzer and KB (<analyzerName>).
 		if (visualText.analyzer.isLoaded() && dir.fsPath === visualText.analyzer.getKBDirectory().fsPath) {
 			const anaRoot = visualText.analyzer.getAnalyzerDirectory().fsPath;
 			const libExt = os.platform() === 'win32' ? '.dll' : os.platform() === 'darwin' ? '.dylib' : '.so';
 			const analyzerName = path.basename(anaRoot.replace(/[\\/]+$/, ''));
 			const compiledLibs = [
 				path.join(anaRoot, 'kb' + libExt),
+				path.join(anaRoot, 'analyzer' + libExt),
 				path.join(anaRoot, analyzerName + libExt)
 			];
-			for (const libPath of compiledLibs) {
+			// Dedupe in case the analyzer is itself named "analyzer", which would
+			// make the analyzer-only and full-compile paths identical.
+			for (const libPath of [...new Set(compiledLibs)]) {
 				if (fs.existsSync(libPath)) {
 					files.push({ uri: vscode.Uri.file(libPath), type: vscode.FileType.File });
 				}

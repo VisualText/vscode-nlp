@@ -18,7 +18,7 @@ let nlpStatusBarAnalyzersVersion: vscode.StatusBarItem;
 
 export enum DevMode { NORMAL, DEV, SILENT }
 export enum FiredMode { BUILT, FIRED }
-export enum RunMode { INTERPRETED, COMPILED, COMPILED_KB }
+export enum RunMode { INTERPRETED, COMPILED, COMPILED_KB, COMPILED_ANALYZER }
 
 export let nlpStatusBar: NLPStatusBar;
 export class NLPStatusBar {
@@ -244,9 +244,9 @@ export class NLPStatusBar {
     }
 
     toggleRunMode() {
-        // Cycle freely through all three modes: INTERPRETED -> COMPILED ->
-        // COMPILED_KB -> INTERPRETED. The toggle deliberately does NOT gate
-        // on whether a compiled lib exists.
+        // Cycle freely through all four modes: INTERPRETED -> COMPILED_KB ->
+        // COMPILED_ANALYZER -> COMPILED -> INTERPRETED. The toggle deliberately
+        // does NOT gate on whether a compiled lib exists.
         //
         // It used to skip compiled modes whose lib it couldn't find via
         // getCurrentAnalyzer()/<name>.dll. But "the current analyzer" is
@@ -268,9 +268,10 @@ export class NLPStatusBar {
 
     private nextRunMode(mode: RunMode): RunMode {
         switch (mode) {
-            case RunMode.INTERPRETED: return RunMode.COMPILED;
-            case RunMode.COMPILED:    return RunMode.COMPILED_KB;
-            default:                  return RunMode.INTERPRETED;
+            case RunMode.INTERPRETED:       return RunMode.COMPILED_KB;
+            case RunMode.COMPILED_KB:       return RunMode.COMPILED_ANALYZER;
+            case RunMode.COMPILED_ANALYZER: return RunMode.COMPILED;
+            default:                        return RunMode.INTERPRETED;
         }
     }
 
@@ -287,6 +288,9 @@ export class NLPStatusBar {
         if (mode === RunMode.COMPILED_KB) {
             return path.join(ana.fsPath, 'kb' + ext);
         }
+        if (mode === RunMode.COMPILED_ANALYZER) {
+            return path.join(ana.fsPath, 'analyzer' + ext);
+        }
         const name = this.currentAnalyzerName();
         if (!name) return undefined;
         return path.join(ana.fsPath, name + ext);
@@ -300,6 +304,8 @@ export class NLPStatusBar {
     updateRunModeState() {
         if (this.runMode === RunMode.COMPILED) {
             nlpStatusBarRunMode.text = '$(symbol-method) Run: Compiled';
+        } else if (this.runMode === RunMode.COMPILED_ANALYZER) {
+            nlpStatusBarRunMode.text = '$(symbol-class) Run: Compiled Analyzer';
         } else if (this.runMode === RunMode.COMPILED_KB) {
             nlpStatusBarRunMode.text = '$(symbol-namespace) Run: Compiled KB';
         } else {
@@ -315,6 +321,7 @@ export class NLPStatusBar {
                 : vscode.workspace.getConfiguration('analyzer');
             const value = config.get<string>('runMode');
             if (value === 'compiled') return RunMode.COMPILED;
+            if (value === 'compiled-analyzer') return RunMode.COMPILED_ANALYZER;
             if (value === 'compiled-kb') return RunMode.COMPILED_KB;
             return RunMode.INTERPRETED;
         } catch {
@@ -326,6 +333,7 @@ export class NLPStatusBar {
         try {
             const folder = visualText.getWorkspaceFolder();
             const value = mode === RunMode.COMPILED ? 'compiled'
+                        : mode === RunMode.COMPILED_ANALYZER ? 'compiled-analyzer'
                         : mode === RunMode.COMPILED_KB ? 'compiled-kb'
                         : 'interpreted';
             if (folder.fsPath.length) {

@@ -101,7 +101,7 @@ export class NLPFile extends TextFile {
 			const devFlagStr = mode == DevMode.DEV ? '-DEV' : mode == DevMode.SILENT ? '-SILENT' : '';
 
 			const runMode = nlpStatusBar.getRunMode();
-			const usingCompiled = runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_KB;
+			const usingCompiled = runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_KB || runMode === RunMode.COMPILED_ANALYZER;
 			if (usingCompiled) {
 				const staged = visualText.nlp.stageCompiledAnalyzer(anapath, engineDir, filepath, runMode);
 				if (!staged) {
@@ -112,10 +112,11 @@ export class NLPFile extends TextFile {
 			}
 
 			const args: string[] = ['-ANA', '"' + anapath + '"', '-WORK', '"' + engineDir + '"'];
-			// -COMPILED loads bin/run.dll as the analyzer body. COMPILED_KB keeps the analyzer
-			// interpreted; consh independently auto-loads bin/kb.dll when present (nlp_engine.cpp
-			// line 248 hardcodes the compiled-KB attempt with interpreted fallback).
-			if (runMode === RunMode.COMPILED) {
+			// -COMPILED loads bin/run.dll as the analyzer body, so it is passed for both
+			// COMPILED (analyzer + KB) and COMPILED_ANALYZER (analyzer only). COMPILED_KB keeps
+			// the analyzer interpreted; consh independently auto-loads bin/kb.dll when present
+			// (nlp_engine.cpp line 248 hardcodes the compiled-KB attempt with interpreted fallback).
+			if (runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_ANALYZER) {
 				args.push('-COMPILED');
 			}
 			args.push('"' + filestr + '"', devFlagStr);
@@ -177,22 +178,31 @@ export class NLPFile extends TextFile {
 		const analyzerName = path.basename(anapath.replace(/[\\/]+$/, ''));
 		const platform = os.platform();
 		const ext = platform === 'win32' ? '.dll' : platform === 'darwin' ? '.dylib' : '.so';
-		const libBaseName = runMode === RunMode.COMPILED_KB ? 'kb' : analyzerName;
+		// Library naming mirrors the compile targets in compile.ts:
+		//   COMPILED_KB       -> kb.<ext>
+		//   COMPILED_ANALYZER -> analyzer.<ext>
+		//   COMPILED          -> <analyzerName>.<ext>
+		const libBaseName =
+			runMode === RunMode.COMPILED_KB ? 'kb' :
+			runMode === RunMode.COMPILED_ANALYZER ? 'analyzer' :
+			analyzerName;
 		const compiledLibName = `${libBaseName}${ext}`;
 		const compiledLib = path.join(anapath, compiledLibName);
 
 		if (!fs.existsSync(compiledLib)) {
 			logView.addMessage(`Compiled library not found: ${compiledLib}`, logLineType.ANALYER_OUTPUT, filepath);
-			const isKbOnly = runMode === RunMode.COMPILED_KB;
-			const primaryAction = isKbOnly ? 'Compile KB' : 'Compile Analyzer and KB';
-			const secondaryAction = isKbOnly ? 'Compile Analyzer and KB' : 'Compile KB';
+			const primaryAction =
+				runMode === RunMode.COMPILED_KB ? 'Compile KB' :
+				runMode === RunMode.COMPILED_ANALYZER ? 'Compile Analyzer Only' :
+				'Compile Analyzer and KB';
 			vscode.window.showErrorMessage(
-				`Compiled library not found: ${compiledLibName}. Compile the analyzer (or KB) first, or switch the run mode back to Interpreted.`,
-				primaryAction,
-				secondaryAction
+				`Compiled library not found: ${compiledLibName}. ${primaryAction} first, or switch the run mode back to Interpreted.`,
+				primaryAction
 			).then(choice => {
 				if (choice === 'Compile Analyzer and KB') {
 					vscode.commands.executeCommand('analyzerView.compileAnalyzer');
+				} else if (choice === 'Compile Analyzer Only') {
+					vscode.commands.executeCommand('analyzerView.compileAnalyzerOnly');
 				} else if (choice === 'Compile KB') {
 					vscode.commands.executeCommand('kbView.compileKB');
 				}
@@ -214,10 +224,23 @@ export class NLPFile extends TextFile {
 			// nlp.exe build flavor decides whether it loads the ANSI or unicode name;
 			// stage both so the engine finds whichever it expects.
 			if (runMode === RunMode.COMPILED_KB) {
+				// KB compiled, analyzer interpreted.
 				fs.copyFileSync(compiledLib, path.join(binDir, `kb${ext}`));
 				fs.copyFileSync(compiledLib, path.join(binDir, `kbu${ext}`));
 				logView.addMessage(`Staged ${compiledLibName} as ${path.join(binDir, `kb${ext}`)} (and kbu${ext})`, logLineType.ANALYER_OUTPUT, filepath);
+			} else if (runMode === RunMode.COMPILED_ANALYZER) {
+				// Analyzer compiled, KB interpreted. Stage only the analyzer body and remove
+				// any stale bin/kb<ext> left by a prior COMPILED run so consh auto-detection
+				// falls back to interpreting the KB instead of loading a stale compiled one.
+				fs.copyFileSync(compiledLib, path.join(binDir, `run${ext}`));
+				fs.copyFileSync(compiledLib, path.join(binDir, `runu${ext}`));
+				for (const stale of [`kb${ext}`, `kbu${ext}`]) {
+					const stalePath = path.join(binDir, stale);
+					if (fs.existsSync(stalePath)) fs.unlinkSync(stalePath);
+				}
+				logView.addMessage(`Staged ${compiledLibName} as ${path.join(binDir, `run${ext}`)} (and runu${ext}); KB interpreted`, logLineType.ANALYER_OUTPUT, filepath);
 			} else {
+				// Analyzer + KB compiled together.
 				fs.copyFileSync(compiledLib, path.join(binDir, `run${ext}`));
 				fs.copyFileSync(compiledLib, path.join(binDir, `runu${ext}`));
 				// The full-analyzer compile globs run/*.cpp AND kb/*.cpp into one library, so
