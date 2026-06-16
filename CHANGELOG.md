@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.26
+Gave the analyzer-only compile its own library name and a matching run mode.
+
+- "Compile Analyzer Only" now produces `analyzer.dll` (`analyzer.so` / `analyzer.dylib`) instead of `<analyzerName>.dll`; the analyzer-named library is reserved for "Compile Analyzer and KB", which compiles both together.
+- The run-mode status bar now cycles through four modes: Interpreted -> Compiled KB -> Compiled Analyzer -> Compiled. In Compiled Analyzer mode the analyzer is run from `analyzer.dll` while the KB stays interpreted.
+- The KB view now also surfaces `analyzer.dll` alongside `kb.dll` and the analyzer-named library.
+
 ### 3.1.25
 Added **"Compile Analyzer Only to C++ Library"**, which invokes `nlp.exe -COMPILEANA` (requires NLP-engine 3.6.0+).
 

@@ -153,7 +153,14 @@ export class NLPCompile {
             }
 
             const kbOnly = target === compileTarget.KB_ONLY;
-            const libBaseName = kbOnly ? 'kb' : path.basename(anapath);
+            // Library naming mirrors the run modes in status.ts:
+            //   KB_ONLY       -> kb.<ext>              (KB compiled, analyzer interpreted)
+            //   ANALYZER_ONLY -> analyzer.<ext>        (analyzer compiled, KB interpreted)
+            //   ANALYZER      -> <analyzerName>.<ext>  (analyzer + KB compiled together)
+            const libBaseName =
+                target === compileTarget.KB_ONLY ? 'kb' :
+                target === compileTarget.ANALYZER_ONLY ? 'analyzer' :
+                path.basename(anapath);
 
             const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'local').toLowerCase();
             let success = false;
