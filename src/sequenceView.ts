@@ -145,6 +145,24 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						collapsibleState: collapse, active: passItem.active
 					});
 
+			} else if (passItem.isPython()) {
+				conVal = conVal + 'pythonfile';
+				label = passItem.name;
+				if (debugConVal) label = row.toString() + ' ' + conVal;
+				tooltip = passItem.uri.fsPath;
+				if (passItem.fileExists())
+					seqItems.push({
+						uri: passItem.uri, label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal,
+						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, library: passItem.library, row: row,
+						collapsibleState: collapse, active: passItem.active
+					});
+				else
+					seqItems.push({
+						uri: passItem.uri, label: label, name: passItem.name, tooltip: 'MISSING', contextValue: 'missing', inFolder: passItem.inFolder,
+						type: 'missing', passNum: passItem.passNum, library: passItem.library, row: row,
+						collapsibleState: collapse, active: passItem.active
+					});
+
 			} else {
 				tooltip = passItem.uri.fsPath;
 				if (passItem.tokenizer) {
@@ -194,6 +212,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		} else if (seqItem.type.localeCompare('folder') == 0) {
 			icon = seqItem.active ? 'folder.svg' : 'folder-inactive.svg';
 			collapse = vscode.TreeItemCollapsibleState.Collapsed;
+
+		} else if (seqItem.type.localeCompare('python') == 0 || seqItem.type.localeCompare('pythonpre') == 0 || seqItem.type.localeCompare('pypre') == 0) {
+			icon = 'python.svg';
 
 		} else if (seqItem.type.localeCompare('nlp')) {
 			icon = 'seq-circle.svg';
@@ -420,6 +441,27 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	insertPython(seqItem: SequenceItem): void {
+		if (visualText.hasWorkspaceFolder()) {
+			const seqFile = visualText.analyzer.seqFile;
+			const flavors = [
+				{ label: 'python', description: 'normal pass - runs at this position (after tokenization)' },
+				{ label: 'pythonpre', description: 'pre-tokenization - runs before the tokenizer (raw text)' }
+			];
+			vscode.window.showQuickPick(flavors, { title: 'Insert Python Pass', placeHolder: 'Choose python pass type' }).then(choice => {
+				if (choice) {
+					const pre = choice.label === 'pythonpre';
+					vscode.window.showInputBox({ title: 'Insert Python Pass', value: 'pyfiller', prompt: 'Enter python pass name' }).then(newname => {
+						if (newname) {
+							seqFile.insertNewPythonPass(seqItem, newname, pre);
+							vscode.commands.executeCommand('sequenceView.refreshAll');
+						}
+					});
+				}
+			});
+		}
+	}
+
 	renameTopComment(passFile: vscode.Uri) {
 		const textFile = new TextFile();
 		textFile.setFile(passFile);
@@ -599,6 +641,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertNew', (seqItem) => treeDataProvider.insertRules(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertCode', (seqItem) => treeDataProvider.insertCode(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertPython', (seqItem) => treeDataProvider.insertPython(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryTreeFuncs', (seqItem) => treeDataProvider.libraryTreeFuncs(seqItem));
