@@ -444,19 +444,13 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 	insertPython(seqItem: SequenceItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			const seqFile = visualText.analyzer.seqFile;
-			const flavors = [
-				{ label: 'python', description: 'normal pass - runs at this position (after tokenization)' },
-				{ label: 'pythonpre', description: 'pre-tokenization - runs before the tokenizer (raw text)' }
-			];
-			vscode.window.showQuickPick(flavors, { title: 'Insert Python Pass', placeHolder: 'Choose python pass type' }).then(choice => {
-				if (choice) {
-					const pre = choice.label === 'pythonpre';
-					vscode.window.showInputBox({ title: 'Insert Python Pass', value: 'pyfiller', prompt: 'Enter python pass name' }).then(newname => {
-						if (newname) {
-							seqFile.insertNewPythonPass(seqItem, newname, pre);
-							vscode.commands.executeCommand('sequenceView.refreshAll');
-						}
-					});
+			// A single python pass type. It runs wherever it is placed in the
+			// sequence — move it above the tokenizer to run on raw text, or leave
+			// it below to run post-tokenization. (The old "pythonpre" flavor is gone.)
+			vscode.window.showInputBox({ title: 'Insert Python Pass', value: 'pyfiller', prompt: 'Enter python pass name' }).then(newname => {
+				if (newname) {
+					seqFile.insertNewPythonPass(seqItem, newname);
+					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
 		}

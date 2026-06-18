@@ -3,6 +3,16 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.28
+Simplified the Python pass type into a single, position-aware pass.
+
+- Removed the separate `pythonpre` flavor. There is now one **Python** pass that runs wherever it sits in the sequence: place it before the tokenizer to run on raw text, or after the tokenizer to run post-tokenization. It is the only pass type allowed before tokenization.
+- "Insert > Python" now just prompts for a name (no pre/post choice). The generated `.py` stub documents the positional pre/post behavior the engine passes as its phase argument.
+- Existing `pythonpre` passes are still recognized when read, so older analyzers keep working.
+
+### 3.1.27
+Added support for the native **Python pass** type in the analyzer sequence: a Python icon in the sequence tree, an "Insert > Python" command that creates a `.py` stub in `spec/`, and `.py` pass handling in the sequence model.
+
 ### 3.1.26
 Gave the analyzer-only compile its own library name and a matching run mode.
 
