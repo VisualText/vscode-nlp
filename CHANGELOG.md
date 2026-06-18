@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.29
+Fixed two issues with python passes placed before the tokenizer.
+
+- A python pass now always shows the Python icon. `getPassFiles` was overwriting every pass's uri with `<name>.nlp`, so a python pass pointed at a non-existent `.nlp`, read as "missing", and fell back to the default dot icon. Python passes now keep their `.py` uri.
+- Clicking a python pass inserted before the tokenizer now opens its `.py` file. The sequence view treated "pass 1" as the tokenizer (opening the sequence file / tree / rule matches); a python pass at pass 1 is now excluded from that special-casing.
+
 ### 3.1.28
 Simplified the Python pass type into a single, position-aware pass.
 
