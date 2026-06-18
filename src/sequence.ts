@@ -405,24 +405,28 @@ export class SequenceFile extends TextFile {
 		}
 	}
 			
-	insertNewPythonPass(seqItem: SequenceItem, newPass: string, pre: boolean) {
+	insertNewPythonPass(seqItem: SequenceItem, newPass: string, before: boolean = false) {
 		if (this.passItems.length && newPass.length) {
 			const foundItem = this.findPass(seqItem.type,seqItem.name);
-			const passItem = this.createPythonPassItem(newPass,pre);
+			const passItem = this.createPythonPassItem(newPass);
 			if (foundItem)
-				this.passItems.splice(foundItem.row+1,0,passItem);
+				// before: splice at the target's row (above it) so a python pass can
+				// be placed before the tokenizer; otherwise insert after it.
+				this.passItems.splice(before ? foundItem.row : foundItem.row+1,0,passItem);
 			else
 				this.passItems.push(passItem);
 			this.saveFile();
 		}
 	}
 
-	createPythonPassItem(newPass: string, pre: boolean): PassItem {
+	createPythonPassItem(newPass: string): PassItem {
 		const newfile = this.createNewPythonFile(newPass);
 		const passItem = new PassItem();
 		passItem.uri = vscode.Uri.file(newfile);
 		passItem.name = newPass;
-		passItem.typeStr = pre ? 'pythonpre' : 'python';
+		// A single python pass type that runs wherever it sits in the sequence.
+		// Placed before the tokenizer it runs on raw text; after it, post-tokenization.
+		passItem.typeStr = 'python';
 		passItem.comment = '# python pass';
 		passItem.text = this.passString(passItem);
 		passItem.empty = false;
@@ -439,8 +443,9 @@ export class SequenceFile extends TextFile {
 	newPythonContent(filename: string): string {
 		let py = '# NLP++ python pass: ' + filename + '\n';
 		py = py.concat('# Invoked as:  python "<appdir>/spec/',filename,'.py" "<appdir>" "<inputfile>" <pre|post>\n');
-		py = py.concat('#   pre  = pythonpre pass (runs before tokenization)\n');
-		py = py.concat('#   post = python pass (runs at its position, after tokenization)\n');
+		py = py.concat('#   The pass runs wherever it sits in the sequence. The engine passes\n');
+		py = py.concat('#   "pre" when it is placed before the tokenizer (raw text), or\n');
+		py = py.concat('#   "post" when it is placed after the tokenizer.\n');
 		py = py.concat('import sys, io, os\n\n');
 		py = py.concat('appdir    = sys.argv[1] if len(sys.argv) > 1 else "."\n');
 		py = py.concat('inputfile = sys.argv[2] if len(sys.argv) > 2 else ""\n');
