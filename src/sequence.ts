@@ -44,6 +44,11 @@ export class PassItem {
 	public isRuleFile(): boolean {
 		return this.typeStr.localeCompare('nlp') == 0 || this.typeStr.localeCompare('rec') == 0;
 	}
+
+	public isPython(): boolean {
+		const t = this.typeStr.toLowerCase();
+		return t == 'python' || t == 'pythonpre' || t == 'pypre';
+	}
 	
 	public isFolder(): boolean {
 		return this.typeStr.localeCompare('folder') == 0;
@@ -214,7 +219,10 @@ export class SequenceFile extends TextFile {
 				if (passItem.typeStr.localeCompare('nlp') == 0 || passItem.typeStr.localeCompare('rec') == 0) {
 					passItem.uri = this.passItemUri(passItem);
 				}
-				passItem.comment = this.tokenStr(tokens,2);				
+				if (passItem.isPython()) {
+					passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,passItem.name + '.py'));
+				}
+				passItem.comment = this.tokenStr(tokens,2);
 			}
 			passItem.empty = false;
 		}
@@ -397,6 +405,50 @@ export class SequenceFile extends TextFile {
 		}
 	}
 			
+	insertNewPythonPass(seqItem: SequenceItem, newPass: string, pre: boolean) {
+		if (this.passItems.length && newPass.length) {
+			const foundItem = this.findPass(seqItem.type,seqItem.name);
+			const passItem = this.createPythonPassItem(newPass,pre);
+			if (foundItem)
+				this.passItems.splice(foundItem.row+1,0,passItem);
+			else
+				this.passItems.push(passItem);
+			this.saveFile();
+		}
+	}
+
+	createPythonPassItem(newPass: string, pre: boolean): PassItem {
+		const newfile = this.createNewPythonFile(newPass);
+		const passItem = new PassItem();
+		passItem.uri = vscode.Uri.file(newfile);
+		passItem.name = newPass;
+		passItem.typeStr = pre ? 'pythonpre' : 'python';
+		passItem.comment = '# python pass';
+		passItem.text = this.passString(passItem);
+		passItem.empty = false;
+		return passItem;
+	}
+
+	createNewPythonFile(filename: string): string {
+		const newfilepath = path.join(visualText.analyzer.getSpecDirectory().fsPath,filename.concat('.py'));
+		if (!fs.existsSync(newfilepath))
+			fs.writeFileSync(newfilepath,this.newPythonContent(filename),{flag:'w+'});
+		return newfilepath;
+	}
+
+	newPythonContent(filename: string): string {
+		let py = '# NLP++ python pass: ' + filename + '\n';
+		py = py.concat('# Invoked as:  python "<appdir>/spec/',filename,'.py" "<appdir>" "<inputfile>" <pre|post>\n');
+		py = py.concat('#   pre  = pythonpre pass (runs before tokenization)\n');
+		py = py.concat('#   post = python pass (runs at its position, after tokenization)\n');
+		py = py.concat('import sys, io, os\n\n');
+		py = py.concat('appdir    = sys.argv[1] if len(sys.argv) > 1 else "."\n');
+		py = py.concat('inputfile = sys.argv[2] if len(sys.argv) > 2 else ""\n');
+		py = py.concat('phase     = sys.argv[3] if len(sys.argv) > 3 else "post"\n\n');
+		py = py.concat('# TODO: your pass logic here\n');
+		return py;
+	}
+
 	insertNewFolderPass(row: number, folderName: string, type: string): number {
 		const passItem = this.getPassByRow(row);
 		if (folderName.length) {
