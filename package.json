@@ -1048,6 +1048,14 @@
                 }
             },
             {
+                "command": "sequenceView.insertPythonBeforeTokenize",
+                "title": "Insert Python Pass Before Tokenizer",
+                "icon": {
+                    "light": "resources/light/python.svg",
+                    "dark": "resources/dark/python.svg"
+                }
+            },
+            {
                 "command": "sequenceView.insert",
                 "title": "Insert Existing Pass(es)",
                 "icon": {
@@ -2561,6 +2569,11 @@
                     "command": "sequenceView.openKB",
                     "when": "view == sequenceView && viewItem =~ /.*hasLog.*/",
                     "group": "display"
+                },
+                {
+                    "command": "sequenceView.insertPythonBeforeTokenize",
+                    "when": "view == sequenceView && viewItem =~ /.*tokenize.*/",
+                    "group": "tokenize@0"
                 },
                 {
                     "command": "sequenceView.tokenize",

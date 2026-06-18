@@ -405,12 +405,14 @@ export class SequenceFile extends TextFile {
 		}
 	}
 			
-	insertNewPythonPass(seqItem: SequenceItem, newPass: string) {
+	insertNewPythonPass(seqItem: SequenceItem, newPass: string, before: boolean = false) {
 		if (this.passItems.length && newPass.length) {
 			const foundItem = this.findPass(seqItem.type,seqItem.name);
 			const passItem = this.createPythonPassItem(newPass);
 			if (foundItem)
-				this.passItems.splice(foundItem.row+1,0,passItem);
+				// before: splice at the target's row (above it) so a python pass can
+				// be placed before the tokenizer; otherwise insert after it.
+				this.passItems.splice(before ? foundItem.row : foundItem.row+1,0,passItem);
 			else
 				this.passItems.push(passItem);
 			this.saveFile();

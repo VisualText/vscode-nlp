@@ -8,6 +8,7 @@ Simplified the Python pass type into a single, position-aware pass.
 
 - Removed the separate `pythonpre` flavor. There is now one **Python** pass that runs wherever it sits in the sequence: place it before the tokenizer to run on raw text, or after the tokenizer to run post-tokenization. It is the only pass type allowed before tokenization.
 - "Insert > Python" now just prompts for a name (no pre/post choice). The generated `.py` stub documents the positional pre/post behavior the engine passes as its phase argument.
+- The tokenizer's right-click menu gains **"Insert Python Pass Before Tokenizer"**, so a python pass can be placed ahead of the tokenizer (previously the menu only inserted after the selected pass).
 - Existing `pythonpre` passes are still recognized when read, so older analyzers keep working.
 
 ### 3.1.27

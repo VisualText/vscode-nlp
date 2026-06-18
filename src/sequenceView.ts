@@ -441,15 +441,18 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
-	insertPython(seqItem: SequenceItem): void {
+	insertPython(seqItem: SequenceItem, before: boolean = false): void {
 		if (visualText.hasWorkspaceFolder()) {
 			const seqFile = visualText.analyzer.seqFile;
 			// A single python pass type. It runs wherever it is placed in the
-			// sequence — move it above the tokenizer to run on raw text, or leave
-			// it below to run post-tokenization. (The old "pythonpre" flavor is gone.)
-			vscode.window.showInputBox({ title: 'Insert Python Pass', value: 'pyfiller', prompt: 'Enter python pass name' }).then(newname => {
+			// sequence — before the tokenizer to run on raw text, or after it to
+			// run post-tokenization. (The old "pythonpre" flavor is gone.) The
+			// tokenizer context menu uses before=true so a python pass can be
+			// inserted ahead of the tokenizer (the only pass allowed there).
+			const title = before ? 'Insert Python Pass Before Tokenizer' : 'Insert Python Pass';
+			vscode.window.showInputBox({ title: title, value: 'pyfiller', prompt: 'Enter python pass name' }).then(newname => {
 				if (newname) {
-					seqFile.insertNewPythonPass(seqItem, newname);
+					seqFile.insertNewPythonPass(seqItem, newname, before);
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 				}
 			});
@@ -636,6 +639,7 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertCode', (seqItem) => treeDataProvider.insertCode(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertPython', (seqItem) => treeDataProvider.insertPython(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertPythonBeforeTokenize', (seqItem) => treeDataProvider.insertPython(seqItem, true));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryTreeFuncs', (seqItem) => treeDataProvider.libraryTreeFuncs(seqItem));
