@@ -1116,10 +1116,18 @@ export class SequenceView {
 		return true;
 	}
 
+	// A python pass can now sit at pass 1 (before the tokenizer), so "pass 1"
+	// no longer implies "the tokenizer". The passNum == 1 shortcuts below
+	// (open the sequence file / tree / rule matches) are tokenizer behaviour and
+	// must skip python passes, which open their own .py file like any other pass.
+	private isPythonItem(seqItem: SequenceItem): boolean {
+		return seqItem.type == 'python' || seqItem.type == 'pythonpre' || seqItem.type == 'pypre';
+	}
+
 	private openPass(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem) && seqItem.type.localeCompare('folder') && seqItem.type.localeCompare('stub')) {
 			// Mostly for debugging purposes
-			if (seqItem.passNum == 1)
+			if (seqItem.passNum == 1 && !this.isPythonItem(seqItem))
 				seqItem.uri = visualText.analyzer.seqFile.getSequenceFile();
 			this.textFile.setFile(seqItem.uri);
 			if (seqItem.passNum != 1 && !this.textFile.isFileType(nlpFileType.NLP)) {
@@ -1134,7 +1142,7 @@ export class SequenceView {
 
 	private openTree(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
-			if (seqItem.passNum == 1) {
+			if (seqItem.passNum == 1 && !this.isPythonItem(seqItem)) {
 				this.openTreeFile(seqItem.passNum);
 			} else {
 				this.textFile.setFileType(seqItem.uri.fsPath);
@@ -1178,7 +1186,7 @@ export class SequenceView {
 
 	private displayMatchedRules(seqItem: SequenceItem): void {
 		if (this.notMissing(seqItem)) {
-			if (seqItem.passNum == 1) {
+			if (seqItem.passNum == 1 && !this.isPythonItem(seqItem)) {
 				this.openRuleMatchFile(seqItem.passNum);
 			} else {
 				this.textFile.setFile(seqItem.uri);

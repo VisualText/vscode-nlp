@@ -146,7 +146,10 @@ export class SequenceFile extends TextFile {
 
 			if (passItem.text.length) {
 				passItem.row = row++;
-				passItem.uri = vscode.Uri.file(path.join(specDir,passItem.name + '.nlp'));
+				// Keep the .py uri that setPass() assigned to python passes;
+				// only rule passes resolve to a .nlp file here.
+				if (!passItem.isPython())
+					passItem.uri = vscode.Uri.file(path.join(specDir,passItem.name + '.nlp'));
 				passItem.library = vscode.Uri.file(this.getLibraryFile(passItem.uri.fsPath));
 				this.passItems.push(passItem);
 			}
