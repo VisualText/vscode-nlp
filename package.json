@@ -1720,6 +1720,16 @@
                 }
             },
             {
+                "command": "analyzerView.runRegressionTest",
+                "title": "Run Regression Test (All Files)",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "analyzerView.blessRegression",
+                "title": "Bless Regression Goldens (All Files)",
+                "icon": "$(save-all)"
+            },
+            {
                 "command": "kbView.compileKB",
                 "title": "Compile KB to C++ Library",
                 "icon": {
@@ -2249,6 +2259,11 @@
                     "command": "analyzerView.video",
                     "when": "view == analyzerView",
                     "group": "navigation@5"
+                },
+                {
+                    "command": "analyzerView.runRegressionTest",
+                    "when": "view == analyzerView",
+                    "group": "navigation@6"
                 },
                 {
                     "command": "analyzerView.copyPath",
@@ -3079,6 +3094,16 @@
                     "command": "analyzerView.compileAnalyzerOnly",
                     "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "compile"
+                },
+                {
+                    "command": "analyzerView.runRegressionTest",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "regress"
+                },
+                {
+                    "command": "analyzerView.blessRegression",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "regress"
                 },
                 {
                     "command": "kbView.compileKB",
