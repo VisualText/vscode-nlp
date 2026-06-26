@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { textView, TextItem } from './textView';
@@ -217,6 +218,8 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
 		vscode.commands.registerCommand('analyzerView.compileAnalyzer', resource => this.compileAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.compileAnalyzerOnly', resource => this.compileAnalyzerOnly(resource));
+		vscode.commands.registerCommand('analyzerView.runRegressionTest', resource => this.runRegressionTest(resource));
+		vscode.commands.registerCommand('analyzerView.blessRegression', resource => this.blessRegression(resource));
 
 		visualText.colorizeAnalyzer();
 		this.folderUri = undefined;
@@ -784,6 +787,53 @@ export class AnalyzerView {
 		}
 		const compile = NLPCompile.attach();
 		await compile.compileAnalyzerOnly(analyzerDir);
+	}
+
+	// Run the cross-platform golden-file regression tester (nlp_regress.py, shipped
+	// in visualText/python) over every file in the analyzer's input/ directory.
+	// The semantic JSON compare is stable across cosmetic engine drift, unlike the
+	// per-file line-by-line "Run Regression Test" on text/output files.
+	private runRegress(analyzerItem: AnalyzerItem, command: 'test' | 'bless') {
+		let analyzerDir: vscode.Uri;
+		if (analyzerItem && analyzerItem.uri) {
+			analyzerDir = dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+		} else if (visualText.analyzer.isLoaded()) {
+			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		} else {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		const script = path.join(visualText.getVisualTextDirectory('python'), 'nlp_regress.py');
+		if (!fs.existsSync(script)) {
+			vscode.window.showErrorMessage('Regression script not found: ' + script);
+			return;
+		}
+		const engineDir = visualText.engineDirectory().fsPath;
+		const py = os.platform() === 'win32' ? 'python' : 'python3';
+		const cmd = `${py} "${script}" ${command} "${analyzerDir.fsPath}" --cli --engine "${engineDir}"`;
+
+		const termName = 'NLP++ Regression';
+		let term = vscode.window.terminals.find(t => t.name === termName);
+		if (!term) {
+			term = vscode.window.createTerminal(termName);
+		}
+		term.show(true);
+		term.sendText(cmd);
+	}
+
+	runRegressionTest(analyzerItem: AnalyzerItem) {
+		this.runRegress(analyzerItem, 'test');
+	}
+
+	blessRegression(analyzerItem: AnalyzerItem) {
+		vscode.window.showWarningMessage(
+			'Bless will OVERWRITE the regression goldens (test/expected/) with the analyzer\'s CURRENT output. Only do this after confirming the current output is correct. Continue?',
+			{ modal: true }, 'Bless'
+		).then(choice => {
+			if (choice === 'Bless') {
+				this.runRegress(analyzerItem, 'bless');
+			}
+		});
 	}
 
 	public deleteAllAnalyzerLogs() {
