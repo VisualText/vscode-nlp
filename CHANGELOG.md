@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.1.30
+Added a whole-analyzer regression tester to the Analyzers panel.
+
+- New **"Run Regression Test (All Files)"** toolbar button (and analyzer right-click item) runs `nlp_regress.py` over every file in the analyzer's `input/` directory in an "NLP++ Regression" terminal, showing live PASS/FAIL output. It compares the structured extraction semantically (id-stripped, order-insensitive), so it is stable across cosmetic engine drift while still catching real extraction changes.
+- New **"Bless Regression Goldens (All Files)"** command (re)captures the goldens, with modal confirmation before overwriting.
+- Complements the existing per-file, line-by-line "Run Regression Test".
+
 ### 3.1.29
 Fixed two issues with python passes placed before the tokenizer.
 
