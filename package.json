@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.1.30",
+    "version": "3.2.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -51,6 +51,11 @@
                     "id": "kbView",
                     "name": "KB",
                     "icon": "resources/dark/kb.svg"
+                },
+                {
+                    "id": "helpView",
+                    "name": "Help",
+                    "icon": "resources/dark/document.svg"
                 }
             ],
             "vtOutput": [
@@ -554,6 +559,25 @@
                 "category": "NLP",
                 "title": "Open Variables Help",
                 "description": "Open the markdown variables help"
+            },
+            {
+                "command": "helpView.openHome",
+                "category": "NLP",
+                "title": "NLP++ Help",
+                "description": "Open the NLP++ help home page",
+                "icon": "$(book)"
+            },
+            {
+                "command": "helpView.refreshHelp",
+                "category": "NLP",
+                "title": "Refresh Help",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "helpView.createClaudePrompt",
+                "category": "NLP",
+                "title": "Create Claude Prompt to Build an Analyzer",
+                "icon": "$(comment-discussion)"
             },
             {
                 "command": "nlp.selectSequence",
@@ -1730,6 +1754,16 @@
                 "icon": "$(save-all)"
             },
             {
+                "command": "textView.runRegressionItem",
+                "title": "Run Regression Test",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "textView.blessRegressionItem",
+                "title": "Bless Regression Goldens",
+                "icon": "$(save-all)"
+            },
+            {
                 "command": "kbView.compileKB",
                 "title": "Compile KB to C++ Library",
                 "icon": {
@@ -2071,6 +2105,26 @@
                     "group": "navigation@4"
                 },
                 {
+                    "command": "helpView.openHome",
+                    "when": "view == textView",
+                    "group": "navigation@9"
+                },
+                {
+                    "command": "helpView.openHome",
+                    "when": "view == sequenceView",
+                    "group": "navigation@9"
+                },
+                {
+                    "command": "helpView.openHome",
+                    "when": "view == kbView",
+                    "group": "navigation@9"
+                },
+                {
+                    "command": "helpView.refreshHelp",
+                    "when": "view == helpView",
+                    "group": "navigation@1"
+                },
+                {
                     "command": "textView.fastLoad",
                     "when": "view == textView && !textView.fastload",
                     "group": "secondary@0"
@@ -2264,6 +2318,11 @@
                     "command": "analyzerView.runRegressionTest",
                     "when": "view == analyzerView",
                     "group": "navigation@6"
+                },
+                {
+                    "command": "helpView.createClaudePrompt",
+                    "when": "view == analyzerView",
+                    "group": "navigation@7"
                 },
                 {
                     "command": "analyzerView.copyPath",
@@ -3016,6 +3075,21 @@
                     "group": "inline@01"
                 },
                 {
+                    "command": "textView.runRegressionItem",
+                    "when": "view == textView && viewItem =~ /file|dir/",
+                    "group": "inline@05"
+                },
+                {
+                    "command": "textView.runRegressionItem",
+                    "when": "view == textView && viewItem =~ /file|dir/",
+                    "group": "regress@00"
+                },
+                {
+                    "command": "textView.blessRegressionItem",
+                    "when": "view == textView && viewItem =~ /file|dir/",
+                    "group": "regress@01"
+                },
+                {
                     "command": "textView.analyze",
                     "when": "view == textView && viewItem =~ /.*file.*/",
                     "group": "inline@02"
@@ -3029,16 +3103,6 @@
                     "command": "textView.copyToAnalyzer",
                     "when": "view == textView",
                     "group": "inline@04"
-                },
-                {
-                    "command": "textView.newDir",
-                    "when": "view == textView && viewItem =~ /.*dir.*/",
-                    "group": "inline@05"
-                },
-                {
-                    "command": "textView.newText",
-                    "when": "view == textView && viewItem =~ /.*dir.*/",
-                    "group": "inline@06"
                 },
                 {
                     "command": "textView.deleteDir",
@@ -3132,6 +3196,12 @@
                     "scope": "application",
                     "default": false,
                     "description": "Load textview fast. Attributes for text files are lost such as has logs, etc."
+                },
+                "analyzer.regressionTerminal": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": false,
+                    "description": "Run regression tests by shelling out to nlp_regress.py in a terminal instead of the built-in runner (which streams results into the NLP++ log view)."
                 },
                 "user.name": {
                     "type": "string",

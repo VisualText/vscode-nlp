@@ -50,6 +50,12 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 		}
 		return [];
 	}
+
+	// Required for TreeView.reveal() (used to auto-scroll to the newest line).
+	// The log is a flat list, so every item is a root node with no parent.
+	public getParent(element: LogItem): LogItem | undefined {
+		return undefined;
+	}
 }
 
 export let logView: LogView;
@@ -65,7 +71,7 @@ export class LogView {
 	constructor(context: vscode.ExtensionContext) {
 		const logViewProvider = new OutputTreeDataProvider();
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
-		vscode.commands.registerCommand('logView.refreshAll', () => logViewProvider.refresh());
+		vscode.commands.registerCommand('logView.refreshAll', () => { logViewProvider.refresh(); this.revealLast(); });
 		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
 		vscode.commands.registerCommand('logView.addMessage', (message, type, uri) => this.addMessage(message, type, uri));
 		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
@@ -92,6 +98,19 @@ export class LogView {
 			logView = new LogView(ctx);
 		}
 		return logView;
+	}
+
+	// Auto-scroll the log view to the most recent line. reveal() relies on the
+	// provider's getParent(); the log is flat so this just scrolls to the tail.
+	// select/focus false = scroll only, don't steal selection or keyboard focus.
+	private revealLast() {
+		if (!this.logView || this.logs.length === 0) return;
+		const last = this.logs[this.logs.length - 1];
+		try {
+			this.logView.reveal(last, { select: false, focus: false });
+		} catch {
+			// view not visible / not ready yet — nothing to scroll
+		}
 	}
 
 	enginePath() {

@@ -10,6 +10,7 @@ import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 import { anaSubDir } from './analyzer';
 import { NLPCompile } from './compile';
+import { regressionRunner } from './regression';
 
 export enum analyzerItemType { ANALYZER, FOLDER, NLP, SEQUENCE, ECL, MANIFEST, FILE, README }
 
@@ -799,6 +800,22 @@ export class AnalyzerView {
 			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
 			return;
 		}
+		// Default to the native (TypeScript) runner: results stream into the NLP++
+		// log view and there is no python dependency. Set
+		// "analyzer.regressionTerminal": true to fall back to shelling out to
+		// nlp_regress.py in a terminal (useful for A/B-ing the two).
+		const useTerminal = vscode.workspace.getConfiguration('analyzer').get<boolean>('regressionTerminal', false);
+		if (useTerminal) {
+			this.runRegressTerminal(analyzerDir, command);
+			return;
+		}
+		if (command === 'bless')
+			regressionRunner.bless(analyzerDir);
+		else
+			regressionRunner.test(analyzerDir);
+	}
+
+	private runRegressTerminal(analyzerDir: vscode.Uri, command: 'test' | 'bless') {
 		const script = path.join(visualText.getVisualTextDirectory('python'), 'nlp_regress.py');
 		if (!fs.existsSync(script)) {
 			vscode.window.showErrorMessage('Regression script not found: ' + script);
@@ -829,7 +846,7 @@ export class AnalyzerView {
 		}
 		// Only warn about overwriting when goldens already exist. On the first
 		// bless there is nothing to overwrite, so just create them.
-		if (!this.hasBlessedGoldens(analyzerDir)) {
+		if (!regressionRunner.goldensExist(analyzerDir)) {
 			this.runRegress(analyzerItem, 'bless');
 			return;
 		}
@@ -853,24 +870,6 @@ export class AnalyzerView {
 			return visualText.analyzer.getAnalyzerDirectory();
 		}
 		return undefined;
-	}
-
-	// True if any golden (.json under test/expected/) has been blessed already.
-	private hasBlessedGoldens(analyzerDir: vscode.Uri): boolean {
-		const expectedDir = path.join(analyzerDir.fsPath, 'test', 'expected');
-		if (!fs.existsSync(expectedDir)) return false;
-		const hasJson = (dir: string): boolean => {
-			for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-				const full = path.join(dir, entry.name);
-				if (entry.isDirectory()) {
-					if (hasJson(full)) return true;
-				} else if (entry.name.endsWith('.json')) {
-					return true;
-				}
-			}
-			return false;
-		};
-		return hasJson(expectedDir);
 	}
 
 	public deleteAllAnalyzerLogs() {
