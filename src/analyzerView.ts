@@ -794,12 +794,8 @@ export class AnalyzerView {
 	// The semantic JSON compare is stable across cosmetic engine drift, unlike the
 	// per-file line-by-line "Run Regression Test" on text/output files.
 	private runRegress(analyzerItem: AnalyzerItem, command: 'test' | 'bless') {
-		let analyzerDir: vscode.Uri;
-		if (analyzerItem && analyzerItem.uri) {
-			analyzerDir = dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
-		} else if (visualText.analyzer.isLoaded()) {
-			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
-		} else {
+		const analyzerDir = this.resolveRegressAnalyzerDir(analyzerItem);
+		if (!analyzerDir) {
 			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
 			return;
 		}
@@ -826,14 +822,55 @@ export class AnalyzerView {
 	}
 
 	blessRegression(analyzerItem: AnalyzerItem) {
+		const analyzerDir = this.resolveRegressAnalyzerDir(analyzerItem);
+		if (!analyzerDir) {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		// Only warn about overwriting when goldens already exist. On the first
+		// bless there is nothing to overwrite, so just create them.
+		if (!this.hasBlessedGoldens(analyzerDir)) {
+			this.runRegress(analyzerItem, 'bless');
+			return;
+		}
 		vscode.window.showWarningMessage(
-			'Bless will OVERWRITE the regression goldens (test/expected/) with the analyzer\'s CURRENT output. Only do this after confirming the current output is correct. Continue?',
+			'Bless will OVERWRITE the existing regression goldens (test/expected/) with the analyzer\'s CURRENT output. Only do this after confirming the current output is correct. Continue?',
 			{ modal: true }, 'Bless'
 		).then(choice => {
 			if (choice === 'Bless') {
 				this.runRegress(analyzerItem, 'bless');
 			}
 		});
+	}
+
+	// Resolve the analyzer directory for a regression command: the clicked tree
+	// item, else the loaded analyzer, else undefined.
+	private resolveRegressAnalyzerDir(analyzerItem: AnalyzerItem): vscode.Uri | undefined {
+		if (analyzerItem && analyzerItem.uri) {
+			return dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+		}
+		if (visualText.analyzer.isLoaded()) {
+			return visualText.analyzer.getAnalyzerDirectory();
+		}
+		return undefined;
+	}
+
+	// True if any golden (.json under test/expected/) has been blessed already.
+	private hasBlessedGoldens(analyzerDir: vscode.Uri): boolean {
+		const expectedDir = path.join(analyzerDir.fsPath, 'test', 'expected');
+		if (!fs.existsSync(expectedDir)) return false;
+		const hasJson = (dir: string): boolean => {
+			for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+				const full = path.join(dir, entry.name);
+				if (entry.isDirectory()) {
+					if (hasJson(full)) return true;
+				} else if (entry.name.endsWith('.json')) {
+					return true;
+				}
+			}
+			return false;
+		};
+		return hasJson(expectedDir);
 	}
 
 	public deleteAllAnalyzerLogs() {
