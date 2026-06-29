@@ -8,7 +8,7 @@ Help announcements and polish.
 
 - **Announcements**: version-independent broadcast pages (`Help/markdown/vscode/announcements/<id>.md`) that show once per user on the next relogin, even without an extension update. New **Announcements** node in the Help view and a **Show Latest Announcement** (📣) button.
 - The **NLP++ Textbook** is now featured on the Help home page and listed in the Help view.
-- **Create Claude Prompt** moved below Quick Start and renamed.
+- **LLM Prompts**: a new Help-view node lists reusable prompt files (`Help/markdown/vscode/prompts/<name>.md`) whose `{{...}}` placeholders are filled with this machine's engine/analyzer/library paths and opened in a new editor. Authorable in the VisualText files. **Create Claude Prompt** now opens the first prompt.
 
 ### 3.2.0
 Added an in-extension Help system and a built-in regression-test runner.

@@ -12,10 +12,12 @@ export interface HelpItem {
     icon: string;
     isVersionRoot?: boolean;
     isAnnounceRoot?: boolean;
+    isPromptRoot?: boolean;
     collapsible?: boolean;
     expanded?: boolean;
     children?: HelpItem[];
-    cmd?: string;   // run this command instead of opening a markdown page
+    cmd?: string;        // run this command instead of opening a markdown page
+    promptFile?: string; // an LLM-prompt file under prompts/ to fill + open
 }
 
 export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
@@ -29,10 +31,12 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
             : vscode.TreeItemCollapsibleState.None;
         const ti = new vscode.TreeItem(item.label, collapse);
         ti.iconPath = new vscode.ThemeIcon(item.icon);
-        // Items can run a command (e.g. Create Claude Prompt); leaf pages open
-        // their markdown; parent nodes just expand.
+        // Items can run a command, open an LLM prompt, or open a markdown page;
+        // parent nodes just expand.
         if (item.cmd) {
             ti.command = { command: item.cmd, title: item.label };
+        } else if (item.promptFile) {
+            ti.command = { command: 'helpView.openPrompt', title: item.label, arguments: [item] };
         } else if (!item.collapsible && !item.isVersionRoot && item.page) {
             ti.command = { command: 'helpView.openVscodeHelp', title: 'Open Help', arguments: [item] };
         }
@@ -45,7 +49,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
                 { label: 'Home', page: 'vscode/home', icon: 'home' },
                 { label: 'NLP++ Textbook', page: 'NLP++_Textbook', icon: 'book' },
                 { label: 'Quick Start', page: 'vscode/quickstart', icon: 'rocket' },
-                { label: 'Create Claude Prompt', page: '', icon: 'comment-discussion', cmd: 'helpView.createClaudePrompt' },
+                { label: 'LLM Prompts', page: '', icon: 'comment-discussion', isPromptRoot: true, collapsible: true },
                 { label: 'Regression Testing', page: 'vscode/testing', icon: 'beaker' },
                 { label: 'Compiling Analyzers', page: 'vscode/compiling', icon: 'gear' },
                 { label: 'Lazy Loading', page: 'vscode/lazyload', icon: 'symbol-array' },
@@ -76,6 +80,10 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
             return helpView.listAnnouncements().map(a => (
                 { label: a, page: 'vscode/announcements/' + a, icon: 'megaphone' } as HelpItem));
         }
+        if (item.isPromptRoot) {
+            return helpView.listPrompts().map(p => (
+                { label: p.title, page: '', icon: 'sparkle', promptFile: p.file } as HelpItem));
+        }
         if (item.children) {
             return item.children;
         }
@@ -102,6 +110,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.openVscodeHelp', (item) => this.openVscodeHelp(item));
         vscode.commands.registerCommand('helpView.refreshHelp', () => this.helpTreeProvider.refresh());
         vscode.commands.registerCommand('helpView.createClaudePrompt', () => this.createClaudePrompt());
+        vscode.commands.registerCommand('helpView.openPrompt', (item) => this.openPrompt(item));
         vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
         this.exists = false;
         this.ctx = context;
@@ -206,33 +215,91 @@ export class HelpView {
             this.displayMarkdownHelp(item.page);
     }
 
-    // Build a ready-to-paste prompt for Claude that points it at this machine's
-    // engine, example/template analyzers, and library files, then open it in a
-    // new editor. Paths are machine-specific, which is why this is generated.
-    async createClaudePrompt() {
+    // ----- LLM prompt library -------------------------------------------------
+
+    private promptsDir(): string {
+        return path.join(visualText.getVisualTextDirectory('Help'), 'markdown', 'vscode', 'prompts');
+    }
+
+    // Machine-specific values substituted into {{...}} placeholders in prompt files.
+    private promptVariables(): { [name: string]: string } {
         const engineDir = visualText.engineDirectory().fsPath;
         const exeName = os.platform() === 'win32' ? 'nlp.exe' : 'nlp';
-        const exe = path.join(engineDir, exeName);
-        const analyzersDir = visualText.getVisualTextDirectory('analyzers');
-        const templatesDir = visualText.getVisualTextDirectory('analyzer-templates');
-        const vtDir = visualText.getVisualTextDirectory();
-        const languagesDir = visualText.getVisualTextDirectory('languages');
-        const miscDir = visualText.getVisualTextDirectory('misc');
+        const cur = visualText.getCurrentAnalyzer();
+        return {
+            engineExe: path.join(engineDir, exeName),
+            engineDir: engineDir,
+            visualTextDir: visualText.getVisualTextDirectory(),
+            analyzersDir: visualText.getVisualTextDirectory('analyzers'),
+            templatesDir: visualText.getVisualTextDirectory('analyzer-templates'),
+            languagesDir: visualText.getVisualTextDirectory('languages'),
+            miscDir: visualText.getVisualTextDirectory('misc'),
+            currentAnalyzer: (cur && cur.fsPath && cur.fsPath.length > 1) ? cur.fsPath : '(no analyzer loaded)',
+        };
+    }
 
+    private fillPromptVariables(text: string): string {
+        const vars = this.promptVariables();
+        return text.replace(/\{\{(\w+)\}\}/g, (m, name) => (vars[name] !== undefined ? vars[name] : m));
+    }
+
+    // Prompt files: prompts/<file>.md whose FIRST line is the title (shown in the
+    // Help tree) and the rest is the prompt body. Returns them sorted by file name.
+    listPrompts(): { file: string; title: string }[] {
+        const dir = this.promptsDir();
+        if (!fs.existsSync(dir)) return [];
+        return fs.readdirSync(dir)
+            .filter(f => f.toLowerCase().endsWith('.md'))
+            .sort()
+            .map(f => {
+                const first = (fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/)[0] || '').replace(/^#+\s*/, '').trim();
+                return { file: f, title: first || f.replace(/\.md$/i, '') };
+            });
+    }
+
+    // Read a prompt file, drop its title line, fill ${...} variables, and open the
+    // result in a new editor ready to paste into an LLM.
+    async openPromptByFile(file: string) {
+        const full = path.join(this.promptsDir(), file);
+        if (!fs.existsSync(full)) {
+            vscode.window.showErrorMessage(`Prompt file not found: ${full}`);
+            return;
+        }
+        const raw = fs.readFileSync(full, 'utf8');
+        const nl = raw.indexOf('\n');
+        const body = nl >= 0 ? raw.slice(nl + 1) : '';
+        const content = this.fillPromptVariables(body).replace(/^\s+/, '');
+        const doc = await vscode.workspace.openTextDocument({ content, language: 'markdown' });
+        await vscode.window.showTextDocument(doc);
+    }
+
+    openPrompt(item: HelpItem) {
+        if (item && item.promptFile)
+            this.openPromptByFile(item.promptFile);
+    }
+
+    // The toolbar button / quickstart link: open the first prompt in the library,
+    // or fall back to a built-in one if the prompt content isn't installed.
+    async createClaudePrompt() {
+        const list = this.listPrompts();
+        if (list.length) {
+            await this.openPromptByFile(list[0].file);
+            return;
+        }
+        const v = this.promptVariables();
         const prompt =
 `I want you to help me write a prototype NLP++ analyzer. NLP++ is a rule-based programming language for natural language processing, run by the NLP engine. Everything you need is already installed on this machine at the paths below:
 
-- NLP engine executable (run analyzers with this): ${exe}
-- Example analyzers (study these for patterns, the pass sequence, and how rules and the knowledge base work together): ${analyzersDir}
-- Analyzer templates (good starting points for a new analyzer): ${templatesDir}
-- VisualText support files: ${vtDir}
-    - Library functions and language dictionaries / knowledge bases: ${languagesDir}
-    - Misc library functions: ${miscDir}
+- NLP engine executable (run analyzers with this): ${v.engineExe}
+- Example analyzers (study these for patterns and the pass sequence): ${v.analyzersDir}
+- Analyzer templates (good starting points for a new analyzer): ${v.templatesDir}
+- VisualText support files: ${v.visualTextDir}
+    - Library functions and language dictionaries / knowledge bases: ${v.languagesDir}
+    - Misc library functions: ${v.miscDir}
 
 An NLP++ analyzer is a folder containing: spec/ (the .nlp passes plus analyzer.seq, the ordered pass sequence), input/ (text files to analyze), and kb/ (the knowledge base). Before writing anything, read several of the example and template analyzers above to learn the analyzer.seq format, the pass structure, and the library functions and KB conventions available in the languages and misc directories. Run an analyzer by invoking the engine executable above on an input file.
 
 Create a folder of text files from the internet that (FILL IN YOUR DESCRIPTION) and create an analyzer that does (FILL IN YOUR DESCRIPTION OF THE ANALYZER).`;
-
         const doc = await vscode.workspace.openTextDocument({ content: prompt, language: 'markdown' });
         await vscode.window.showTextDocument(doc);
     }
