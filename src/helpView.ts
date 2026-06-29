@@ -11,6 +11,7 @@ export interface HelpItem {
     page: string;
     icon: string;
     isVersionRoot?: boolean;
+    isAnnounceRoot?: boolean;
     collapsible?: boolean;
     expanded?: boolean;
     children?: HelpItem[];
@@ -41,9 +42,10 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
     getChildren(item?: HelpItem): HelpItem[] {
         if (!item) {
             return [
-                { label: 'Create Claude Prompt to Build an Analyzer', page: '', icon: 'comment-discussion', cmd: 'helpView.createClaudePrompt' },
                 { label: 'Home', page: 'vscode/home', icon: 'home' },
+                { label: 'NLP++ Textbook', page: 'NLP++_Textbook', icon: 'book' },
                 { label: 'Quick Start', page: 'vscode/quickstart', icon: 'rocket' },
+                { label: 'Create Claude Prompt', page: '', icon: 'comment-discussion', cmd: 'helpView.createClaudePrompt' },
                 { label: 'Regression Testing', page: 'vscode/testing', icon: 'beaker' },
                 { label: 'Compiling Analyzers', page: 'vscode/compiling', icon: 'gear' },
                 { label: 'Lazy Loading', page: 'vscode/lazyload', icon: 'symbol-array' },
@@ -62,12 +64,17 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
                         { label: 'Special Functions', page: 'Table_of_Special_Functions', icon: 'symbol-misc' },
                     ],
                 },
+                { label: 'Announcements', page: '', icon: 'megaphone', isAnnounceRoot: true, collapsible: true, expanded: true },
                 { label: 'Version Notes', page: '', icon: 'history', isVersionRoot: true, collapsible: true, expanded: true },
             ];
         }
         if (item.isVersionRoot) {
             return helpView.listVersionNotes().map(v => (
                 { label: v, page: 'vscode/versions/' + v, icon: 'tag' } as HelpItem));
+        }
+        if (item.isAnnounceRoot) {
+            return helpView.listAnnouncements().map(a => (
+                { label: a, page: 'vscode/announcements/' + a, icon: 'megaphone' } as HelpItem));
         }
         if (item.children) {
             return item.children;
@@ -95,6 +102,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.openVscodeHelp', (item) => this.openVscodeHelp(item));
         vscode.commands.registerCommand('helpView.refreshHelp', () => this.helpTreeProvider.refresh());
         vscode.commands.registerCommand('helpView.createClaudePrompt', () => this.createClaudePrompt());
+        vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -244,6 +252,18 @@ Create a folder of text files from the internet that (FILL IN YOUR DESCRIPTION) 
             .sort((a, b) => this.compareVersions(b, a));
     }
 
+    // Announcement files live at Help/markdown/vscode/announcements/<id>.md and
+    // are keyed by id (not version) — name them so they sort newest-first (e.g.
+    // a date prefix like 2026-06-29-...). Returns the ids present, newest first.
+    listAnnouncements(): string[] {
+        const dir = path.join(visualText.getVisualTextDirectory('Help'), 'markdown', 'vscode', 'announcements');
+        if (!fs.existsSync(dir)) return [];
+        return fs.readdirSync(dir)
+            .filter(f => f.toLowerCase().endsWith('.md'))
+            .map(f => f.replace(/\.md$/i, ''))
+            .sort((a, b) => b.localeCompare(a));
+    }
+
     // Numeric dotted-version compare: returns >0 if a>b, <0 if a<b, 0 if equal.
     compareVersions(a: string, b: string): number {
         const pa = a.split('.').map(n => parseInt(n, 10) || 0);
@@ -261,35 +281,78 @@ Create a folder of text files from the internet that (FILL IN YOUR DESCRIPTION) 
         return (typeof v === 'string' && v.length) ? v : (visualText.version || '');
     }
 
-    // Called once on activation. On a first install, opens the help home. On an
-    // upgrade, opens the newest version note the user hasn't seen yet (a note
-    // exists only for releases the developers marked significant). Never blocks
-    // activation and never nags about a version already seen.
-    checkVersionNotes() {
+    // Called once on activation. Shows, at most, one popup: a version note (on
+    // first install / upgrade) takes priority; otherwise an unseen announcement.
+    // Guarded so help never blocks activation.
+    showStartupHelp() {
         try {
-            const key = 'nlp.helpLastSeenVersion';
-            const current = this.extensionVersion();
-            const lastSeen = this.ctx.globalState.get<string>(key);
-
-            if (!lastSeen) {
-                // First install — show the hub once the help content is present.
-                if (this.helpExists('vscode/home')) {
-                    this.openHome();
-                    this.ctx.globalState.update(key, current);
-                }
-                return;
-            }
-
-            if (current && this.compareVersions(current, lastSeen) > 0) {
-                const next = this.listVersionNotes().find(v =>
-                    this.compareVersions(v, lastSeen) > 0 &&
-                    this.compareVersions(v, current) <= 0);
-                if (next)
-                    this.displayMarkdownHelp('vscode/versions/' + next);
-                this.ctx.globalState.update(key, current);
-            }
+            if (!this.checkVersionNotes())
+                this.checkAnnouncements();
         } catch {
             // Help should never break activation.
         }
+    }
+
+    // On a first install, opens the help home. On an upgrade, opens the newest
+    // version note the user hasn't seen yet (a note exists only for releases the
+    // developers marked significant). Returns true if it opened something.
+    checkVersionNotes(): boolean {
+        const key = 'nlp.helpLastSeenVersion';
+        const current = this.extensionVersion();
+        const lastSeen = this.ctx.globalState.get<string>(key);
+
+        if (!lastSeen) {
+            // First install — show the hub once the help content is present.
+            if (this.helpExists('vscode/home')) {
+                this.openHome();
+                this.ctx.globalState.update(key, current);
+                return true;
+            }
+            return false;
+        }
+
+        if (current && this.compareVersions(current, lastSeen) > 0) {
+            const next = this.listVersionNotes().find(v =>
+                this.compareVersions(v, lastSeen) > 0 &&
+                this.compareVersions(v, current) <= 0);
+            this.ctx.globalState.update(key, current);
+            if (next) {
+                this.displayMarkdownHelp('vscode/versions/' + next);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Force-show the newest announcement, ignoring the seen-state. Lets a dev
+    // preview an announcement (and a user re-open the latest) on demand, instead
+    // of relying on the once-per-id startup popup.
+    showLatestAnnouncement() {
+        const list = this.listAnnouncements();
+        if (list.length === 0) {
+            vscode.window.showInformationMessage('No announcements found.');
+            return;
+        }
+        this.displayMarkdownHelp('vscode/announcements/' + list[0]);
+    }
+
+    // Announcements are broadcast independently of the extension version: drop a
+    // new file under announcements/ (e.g. via a VisualText files content update)
+    // and it shows once, on the next relogin. Seen ids are tracked in globalState.
+    // Shows the newest unseen announcement and marks all present ones seen (so an
+    // old backlog never pops). Returns true if it opened something.
+    checkAnnouncements(): boolean {
+        const key = 'nlp.helpSeenAnnouncements';
+        const present = this.listAnnouncements();          // newest first
+        if (present.length === 0) return false;
+        const seen = this.ctx.globalState.get<string[]>(key) ?? [];
+        const unseen = present.find(a => !seen.includes(a));
+        // Mark every current announcement seen, whether or not we show it.
+        this.ctx.globalState.update(key, present);
+        if (unseen) {
+            this.displayMarkdownHelp('vscode/announcements/' + unseen);
+            return true;
+        }
+        return false;
     }
 }

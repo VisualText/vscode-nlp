@@ -576,8 +576,14 @@
             {
                 "command": "helpView.createClaudePrompt",
                 "category": "NLP",
-                "title": "Create Claude Prompt to Build an Analyzer",
+                "title": "Create Claude Prompt",
                 "icon": "$(comment-discussion)"
+            },
+            {
+                "command": "helpView.showLatestAnnouncement",
+                "category": "NLP",
+                "title": "Show Latest Announcement",
+                "icon": "$(megaphone)"
             },
             {
                 "command": "nlp.selectSequence",
@@ -2118,6 +2124,11 @@
                     "command": "helpView.openHome",
                     "when": "view == kbView",
                     "group": "navigation@9"
+                },
+                {
+                    "command": "helpView.showLatestAnnouncement",
+                    "when": "view == helpView",
+                    "group": "navigation@0"
                 },
                 {
                     "command": "helpView.refreshHelp",

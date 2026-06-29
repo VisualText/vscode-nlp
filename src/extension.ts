@@ -25,8 +25,9 @@ export function activate(ctx: vscode.ExtensionContext): void {
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
 
-    // First-run welcome / new-version notes (guarded; never blocks activation).
-    help.checkVersionNotes();
+    // First-run welcome / new-version notes / announcements (guarded; never
+    // blocks activation). Shows at most one popup, version notes taking priority.
+    help.showStartupHelp();
 
     vscode.commands.executeCommand('setContext', 'textView.fastload', visualText.getTextFastLoad());
       
