@@ -3,8 +3,8 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-### 3.2.1
-Help announcements and polish.
+### 3.2.2
+Help announcements, an LLM prompt library, and polish.
 
 - **Announcements**: version-independent broadcast pages (`Help/markdown/vscode/announcements/<id>.md`) that show once per user on the next relogin, even without an extension update. New **Announcements** node in the Help view and a **Show Latest Announcement** (📣) button.
 - The **NLP++ Textbook** is now featured on the Help home page and listed in the Help view.
