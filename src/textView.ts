@@ -8,6 +8,7 @@ import { dirfuncs } from './dirfuncs';
 import { nlpStatusBar, DevMode, FiredMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import { anaSubDir } from './analyzer';
+import { regressionRunner } from './regression';
 import * as fs from 'fs';
 import moment from 'moment';
 import 'moment-duration-format'
@@ -301,6 +302,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.analyzerCurrent', () => this.analyzerCurrent());
 		vscode.commands.registerCommand('textView.analyze', (textItem) => this.analyze(textItem));
 		vscode.commands.registerCommand('textView.analyzeDir', (textItem) => this.analyzeDir(textItem));
+		vscode.commands.registerCommand('textView.runRegressionItem', (textItem) => this.runRegressionItem(textItem));
+		vscode.commands.registerCommand('textView.blessRegressionItem', (textItem) => this.blessRegressionItem(textItem));
 		vscode.commands.registerCommand('textView.openText', () => this.openText());
 		vscode.commands.registerCommand('textView.search', () => this.search());
 		vscode.commands.registerCommand('textView.fastLoad', () => this.fastLoad(true));
@@ -665,6 +668,44 @@ export class TextView {
 				this.deleteFileLogDir(textItem.uri.fsPath);
 			}
 		}
+	}
+
+	// Run the golden-file regression tester scoped to the clicked line — a single
+	// input file, or every file under a folder in the analyzer's input/ tree.
+	public runRegressionItem(textItem: TextItem): void {
+		const analyzerDir = this.regressionAnalyzerDir(textItem);
+		if (analyzerDir)
+			regressionRunner.test(analyzerDir, textItem.uri);
+	}
+
+	public blessRegressionItem(textItem: TextItem): void {
+		const analyzerDir = this.regressionAnalyzerDir(textItem);
+		if (!analyzerDir) return;
+		// Warn only when goldens already exist for this file/folder.
+		if (!regressionRunner.goldensExist(analyzerDir, textItem.uri)) {
+			regressionRunner.bless(analyzerDir, textItem.uri);
+			return;
+		}
+		const itemName = path.basename(textItem.uri.fsPath);
+		vscode.window.showWarningMessage(
+			`Bless will OVERWRITE the existing regression goldens for '${itemName}' with the analyzer's CURRENT output. Continue?`,
+			{ modal: true }, 'Bless'
+		).then(choice => {
+			if (choice === 'Bless')
+				regressionRunner.bless(analyzerDir, textItem.uri);
+		});
+	}
+
+	private regressionAnalyzerDir(textItem: TextItem): vscode.Uri | undefined {
+		if (!textItem || !textItem.uri || !fs.existsSync(textItem.uri.fsPath)) {
+			vscode.window.showWarningMessage('Select an input file or folder to run a regression test.');
+			return undefined;
+		}
+		if (!visualText.analyzer.isLoaded()) {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return undefined;
+		}
+		return visualText.analyzer.getAnalyzerDirectory();
 	}
 
 	public deleteFileLogs(textItem: TextItem): void {

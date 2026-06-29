@@ -21,9 +21,12 @@ export function activate(ctx: vscode.ExtensionContext): void {
     SequenceView.attach(ctx);
     KBView.attach(ctx);
     FindView.attach(ctx);
-    HelpView.attach(ctx);
+    const help = HelpView.attach(ctx);
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
+
+    // First-run welcome / new-version notes (guarded; never blocks activation).
+    help.checkVersionNotes();
 
     vscode.commands.executeCommand('setContext', 'textView.fastload', visualText.getTextFastLoad());
       

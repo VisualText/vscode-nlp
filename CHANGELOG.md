@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.0
+Added an in-extension Help system and a built-in regression-test runner.
+
+- **Help view** in the NLP++ sidebar plus a 📖 book button on the view toolbars, opening markdown help pages (Quick Start, Compiling, Regression Testing, Lazy Loading) and an **NLP++** reference node (functions, variables, etc.). Help content lives in the VisualText files under `Help/markdown/vscode/`.
+- **Version notes**: on first install the Help home opens; on upgrade the newest unseen `versions/<ver>.md` opens automatically (tracked in globalState).
+- **Create Claude Prompt to Build an Analyzer** (Help view + Analyzers toolbar): opens a new editor with a generated prompt containing this machine's engine, example/template analyzer, and library paths.
+- **Built-in regression runner**: "Run Regression Test" / "Bless Regression Goldens" now run natively and stream `PASS`/`FAIL`/`MISSING` into the **Logging** view (no terminal, no Python dependency). Set `analyzer.regressionTerminal` to use the old `nlp_regress.py` terminal path. A 🧪 test icon and right-click items on each Text-view file/folder scope a run to that item.
+- The Logging view now **auto-scrolls** to the newest line, and a regression run **clears the log** before starting.
+
 ### 3.1.30
 Added a whole-analyzer regression tester to the Analyzers panel.
 
