@@ -3,6 +3,9 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.3
+Toolbar cleanup: moved the **Video** and **Create Claude Prompt** actions (Analyzers view) and **Video** (Output view) from the title bar into the `...` overflow. The Run Regression Test button stays on the Analyzers toolbar.
+
 ### 3.2.2
 Help announcements, an LLM prompt library, and polish.
 
