@@ -2228,7 +2228,7 @@
                 {
                     "command": "outputView.video",
                     "when": "view == outputView",
-                    "group": "navigation@6"
+                    "group": "secondary@6"
                 },
                 {
                     "command": "logView.stopUpdater",
@@ -2323,7 +2323,7 @@
                 {
                     "command": "analyzerView.video",
                     "when": "view == analyzerView",
-                    "group": "navigation@5"
+                    "group": "secondary@5"
                 },
                 {
                     "command": "analyzerView.runRegressionTest",
@@ -2333,7 +2333,7 @@
                 {
                     "command": "helpView.createClaudePrompt",
                     "when": "view == analyzerView",
-                    "group": "navigation@7"
+                    "group": "secondary@6"
                 },
                 {
                     "command": "analyzerView.copyPath",
