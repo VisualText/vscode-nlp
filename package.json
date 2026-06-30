@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.2.2",
+    "version": "3.2.3",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
