@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.4
+Analyze logging and run-mode improvements.
+
+- The Logging view now shows the **total analyze time** — "Done analyzing … (2.34 sec)".
+- The log **no longer clears when an analysis completes**, so the "Analyzing…" line, the engine output, and the timing all stay visible. A directory analyze now shows every file's result instead of only the last.
+- The status-bar run-mode toggle now cycles **Interpreted → Compiled → Compiled KB → Compiled Analyzer**.
+
 ### 3.2.3
 Toolbar cleanup: moved the **Video** and **Create Claude Prompt** actions (Analyzers view) and **Video** (Output view) from the title bar into the `...` overflow. The Run Regression Test button stays on the Analyzers toolbar.
 

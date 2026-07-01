@@ -244,8 +244,8 @@ export class NLPStatusBar {
     }
 
     toggleRunMode() {
-        // Cycle freely through all four modes: INTERPRETED -> COMPILED_KB ->
-        // COMPILED_ANALYZER -> COMPILED -> INTERPRETED. The toggle deliberately
+        // Cycle freely through all four modes: INTERPRETED -> COMPILED ->
+        // COMPILED_KB -> COMPILED_ANALYZER -> INTERPRETED. The toggle deliberately
         // does NOT gate on whether a compiled lib exists.
         //
         // It used to skip compiled modes whose lib it couldn't find via
@@ -268,9 +268,9 @@ export class NLPStatusBar {
 
     private nextRunMode(mode: RunMode): RunMode {
         switch (mode) {
-            case RunMode.INTERPRETED:       return RunMode.COMPILED_KB;
+            case RunMode.INTERPRETED:       return RunMode.COMPILED;
+            case RunMode.COMPILED:          return RunMode.COMPILED_KB;
             case RunMode.COMPILED_KB:       return RunMode.COMPILED_ANALYZER;
-            case RunMode.COMPILED_ANALYZER: return RunMode.COMPILED;
             default:                        return RunMode.INTERPRETED;
         }
     }
