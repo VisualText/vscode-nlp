@@ -90,6 +90,7 @@ export class NLPFile extends TextFile {
 
 			const filename = path.basename(filepath.fsPath);
 			const typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
+			const analyzeStart = Date.now();
 			logView.addMessage('Analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
 			outputView.setType(outputFileType.ALL);
@@ -146,15 +147,16 @@ export class NLPFile extends TextFile {
 						if (syntaxError)
 							logView.loadMakeAna();
 						else if (!logView.makeAna())
-							logView.loadAnalyzerOuts();
+							logView.loadAnalyzerOuts(false);
 
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
 					} else {
-						logView.loadAnalyzerOuts();
+						logView.loadAnalyzerOuts(false);
 						const typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
-						logView.addMessage('Done analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						const secs = ((Date.now() - analyzeStart) / 1000).toFixed(2);
+						logView.addMessage('Done analyzing ' + typeStr + ': ' + filename + '  (' + secs + ' sec)', logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
 						visualText.analyzer.saveCurrentFile(filepath);
 						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');

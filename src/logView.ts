@@ -147,8 +147,9 @@ export class LogView {
 		visualText.displayHelpFile('Updater Help', 'UPDATERHELP.html');
 	}
 
-	public loadAnalyzerOuts() {
-		this.clearLogs();
+	public loadAnalyzerOuts(clear: boolean = true) {
+		if (clear)
+			this.clearLogs();
 		const outputDir = path.join(visualText.getCurrentAnalyzer().fsPath, "output");
 		const outFile = vscode.Uri.file(path.join(outputDir, 'stdout.log'));
 		const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
