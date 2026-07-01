@@ -18,6 +18,7 @@ export interface HelpItem {
     children?: HelpItem[];
     cmd?: string;        // run this command instead of opening a markdown page
     promptFile?: string; // an LLM-prompt file under prompts/ to fill + open
+    tooltip?: string;    // hover text (markdown) — e.g. an LLM prompt's description
 }
 
 export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
@@ -31,6 +32,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
             : vscode.TreeItemCollapsibleState.None;
         const ti = new vscode.TreeItem(item.label, collapse);
         ti.iconPath = new vscode.ThemeIcon(item.icon);
+        if (item.tooltip) ti.tooltip = new vscode.MarkdownString(item.tooltip);
         // Items can run a command, open an LLM prompt, or open a markdown page;
         // parent nodes just expand.
         if (item.cmd) {
@@ -82,7 +84,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
         }
         if (item.isPromptRoot) {
             return helpView.listPrompts().map(p => (
-                { label: p.title, page: '', icon: 'sparkle', promptFile: p.file } as HelpItem));
+                { label: p.title, page: '', icon: 'sparkle', promptFile: p.file, tooltip: p.description || p.title } as HelpItem));
         }
         if (item.children) {
             return item.children;
@@ -244,16 +246,19 @@ export class HelpView {
     }
 
     // Prompt files: prompts/<file>.md whose FIRST line is the title (shown in the
-    // Help tree) and the rest is the prompt body. Returns them sorted by file name.
-    listPrompts(): { file: string; title: string }[] {
+    // Help tree). An optional `<!-- desc: ... -->` marker gives the hover tooltip.
+    // The rest is the prompt body. Returns them sorted by file name.
+    listPrompts(): { file: string; title: string; description?: string }[] {
         const dir = this.promptsDir();
         if (!fs.existsSync(dir)) return [];
         return fs.readdirSync(dir)
             .filter(f => f.toLowerCase().endsWith('.md'))
             .sort()
             .map(f => {
-                const first = (fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/)[0] || '').replace(/^#+\s*/, '').trim();
-                return { file: f, title: first || f.replace(/\.md$/i, '') };
+                const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+                const first = (raw.split(/\r?\n/)[0] || '').replace(/^#+\s*/, '').trim();
+                const m = raw.match(/<!--\s*desc:\s*([\s\S]*?)-->/i);
+                return { file: f, title: first || f.replace(/\.md$/i, ''), description: m ? m[1].trim() : undefined };
             });
     }
 
@@ -267,7 +272,8 @@ export class HelpView {
         }
         const raw = fs.readFileSync(full, 'utf8');
         const nl = raw.indexOf('\n');
-        const body = nl >= 0 ? raw.slice(nl + 1) : '';
+        let body = nl >= 0 ? raw.slice(nl + 1) : '';
+        body = body.replace(/<!--\s*desc:[\s\S]*?-->\s*/i, ''); // drop the tooltip marker
         const content = this.fillPromptVariables(body).replace(/^\s+/, '');
         const doc = await vscode.workspace.openTextDocument({ content, language: 'markdown' });
         await vscode.window.showTextDocument(doc);

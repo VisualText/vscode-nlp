@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.5
+LLM Prompts help tree: hover descriptions.
+
+- Prompt entries in the **LLM Prompts** help tree now show a longer **hover tooltip** describing what each prompt does, read from an optional `<!-- desc: ... -->` line in the prompt file.
+- The description marker is stripped when a prompt is opened, so it never appears in the text you paste into the LLM.
+
 ### 3.2.4
 Analyze logging and run-mode improvements.
 
