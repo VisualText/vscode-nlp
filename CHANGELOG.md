@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.9
+LLM Prompts open in a rendered preview.
+
+- Clicking a prompt under **LLM Prompts** in the Help tree now opens a **rendered markdown preview** (with `{{variables}}` filled in), consistent with the other help items, instead of the raw markdown editor.
+- The raw copy-paste path is unchanged: the **Create Claude Prompt** toolbar button still opens the editable prompt text ready to paste into an LLM.
+
 ### 3.2.8
 Knowledge Base template default + analyzer load timing.
 
