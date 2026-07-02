@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.8
+Knowledge Base template default + analyzer load timing.
+
+- The **New Analyzer** template picker now floats the **Knowledge Base** template to the **top of the list**, shows it **pre-checked**, and labels it **(Recommended)** — so it is the default choice.
+- The analyze timing summary now reports **analyzer load time** — `Loaded analyzer:` (interpreted) or `Loaded compiled analyzer:` (compiled) — from the new engine output. This surfaces what was previously the largest unaccounted chunk of the total (building/loading the analyzer), and the breakdown still sums exactly to the total.
+
 ### 3.2.6
 Analyze log: clean timing summary with its own log file.
 

@@ -165,24 +165,31 @@ export class NLPFile extends TextFile {
 						const procRaw = procWall / 1000;                      // whole nlp.exe process
 						const postRaw = totalRaw - setupRaw - procRaw;        // parsing, writes, view refreshes
 						// Engine's own sub-timings (measured inside nlp.exe, nested in procRaw).
+						// The engine reports: KB load, analyzer load (compiled or interpreted),
+						// and the analyze loop itself.
 						const kbMatch = engineOut.match(/Loaded knowledge base:\s*([0-9.]+)/);
+						const anaMatch = engineOut.match(/Loaded (compiled analyzer|analyzer):\s*([0-9.]+)/);
 						const execMatch = engineOut.match(/Exec analyzer time\s*=\s*([0-9.]+)/);
 						const kbSec = kbMatch ? parseFloat(kbMatch[1]) : 0;
+						const anaSec = anaMatch ? parseFloat(anaMatch[2]) : 0;
 						const execSec = execMatch ? parseFloat(execMatch[1]) : 0;
 						const rTotal = round2(totalRaw);
 						const rSetup = round2(setupRaw);
 						const rKb = round2(kbSec);
+						const rAna = round2(anaSec);
 						const rExec = round2(execSec);
 						const rPost = round2(postRaw);
-						// Everything left in the process that isn't KB load or the analyze loop:
-						// process startup, grammar/sequence/DLL loading, shutdown. Also absorbs rounding.
-						const rEngine = round2(rTotal - rSetup - rKb - rExec - rPost);
+						// Process startup/shutdown left over after KB load, analyzer load, and the
+						// analyze loop. Also absorbs rounding so the column sums to the total.
+						const rEngine = round2(rTotal - rSetup - rKb - rAna - rExec - rPost);
 						const secs = rTotal.toFixed(2);
 						const summary: string[] = ['Analyzing ' + typeStr + ': ' + filename];
 						summary.push('Setup (extension): ' + rSetup.toFixed(2) + ' sec');
-						summary.push('Engine startup + load: ' + rEngine.toFixed(2) + ' sec');
+						summary.push('Engine startup: ' + rEngine.toFixed(2) + ' sec');
 						if (kbMatch)
 							summary.push('Loaded knowledge base: ' + rKb.toFixed(2) + ' sec');
+						if (anaMatch)
+							summary.push('Loaded ' + anaMatch[1] + ': ' + rAna.toFixed(2) + ' sec');
 						if (execMatch)
 							summary.push('Exec analyzer time: ' + rExec.toFixed(2) + ' sec');
 						summary.push('Post-processing (extension): ' + rPost.toFixed(2) + ' sec');

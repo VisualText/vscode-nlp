@@ -152,7 +152,15 @@ export class Analyzer {
                         const readme = path.join(file.fsPath, "README.MD");
                         let descr: string, tit: string;
                         ({ title: tit, description: descr } = this.readDescription(readme));
-                        items.push({ label: tit, description: descr });
+                        const item: vscode.QuickPickItem = { label: tit, description: descr };
+                        if (basename === "Knowledge Base") {
+                            // Default choice: pre-check the Knowledge Base template and float it to the top.
+                            item.picked = true;
+                            item.description = descr && descr.length ? "(Recommended) " + descr : "(Recommended)";
+                            items.unshift(item);
+                        } else {
+                            items.push(item);
+                        }
                         dirMap[tit] = basename;
                     }
                 }
