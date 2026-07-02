@@ -281,7 +281,26 @@ export class HelpView {
 
     openPrompt(item: HelpItem) {
         if (item && item.promptFile)
-            this.openPromptByFile(item.promptFile);
+            this.previewPromptByFile(item.promptFile);
+    }
+
+    // Render a prompt as a markdown preview (consistent with the other help
+    // items). Variables are filled and the tooltip marker dropped; the title
+    // line is kept so it renders as a heading. The processed text is written to
+    // a temp file because markdown.showPreview needs a file URI.
+    async previewPromptByFile(file: string) {
+        const full = path.join(this.promptsDir(), file);
+        if (!fs.existsSync(full)) {
+            vscode.window.showErrorMessage(`Prompt file not found: ${full}`);
+            return;
+        }
+        const raw = fs.readFileSync(full, 'utf8').replace(/<!--\s*desc:[\s\S]*?-->\s*/i, '');
+        const content = this.fillPromptVariables(raw).replace(/^\s+/, '');
+        const tmpDir = path.join(os.tmpdir(), 'visualtext-prompts');
+        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+        const tmpFile = path.join(tmpDir, file);
+        fs.writeFileSync(tmpFile, content, 'utf8');
+        vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(tmpFile));
     }
 
     // The toolbar button / quickstart link: open the first prompt in the library,
