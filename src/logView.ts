@@ -86,6 +86,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
 		vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug());
 		vscode.commands.registerCommand('logView.analyzerOuts', () => this.loadAnalyzerOuts());
+		vscode.commands.registerCommand('logView.analyzeSummary', () => this.loadAnalyzeSummary());
 		vscode.commands.registerCommand('logView.enginePath', () => this.enginePath());
 
 		this.exists = false;
@@ -154,9 +155,14 @@ export class LogView {
 		const outFile = vscode.Uri.file(path.join(outputDir, 'stdout.log'));
 		const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
 		this.addMessage('STD OUT FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
-		this.addLogFile(outFile, logLineType.ANALYER_OUTPUT, '   ');
+		this.addLogFile(outFile, logLineType.ANALYER_OUTPUT, '   ', false, !clear);
 		this.addMessage('ERROR FILE: ' + errFile.fsPath, logLineType.ANALYER_OUTPUT, errFile);
-		this.addLogFile(errFile, logLineType.ANALYER_OUTPUT, '   ');
+		this.addLogFile(errFile, logLineType.ANALYER_OUTPUT, '   ', false, !clear);
+	}
+
+	public loadAnalyzeSummary() {
+		this.clearLogs();
+		this.addLogFile(visualText.analyzer.getOutputDirectory('analyze.log'), logLineType.LOGFILE, '', false, true);
 	}
 
 	private loadTimingLog() {
@@ -170,17 +176,18 @@ export class LogView {
 		this.addLogFile(visualText.analyzer.treeFile('cgerr'), logLineType.LOGFILE);
 	}
 
-	public makeAna(): boolean {
-		this.clearLogs();
+	public makeAna(clear: boolean = true): boolean {
+		if (clear)
+			this.clearLogs();
 		let errFlag = false
 		if (logView.syntaxErrorsLog('cgerr'))
-			errFlag = logView.addLogFile(visualText.analyzer.treeFile('cgerr'), logLineType.LOGFILE, '', true);
-		return errFlag || this.loadMakeAna();
+			errFlag = logView.addLogFile(visualText.analyzer.treeFile('cgerr'), logLineType.LOGFILE, '', true, !clear);
+		return errFlag || this.loadMakeAna(clear);
 	}
 
-	public loadMakeAna(): boolean {
+	public loadMakeAna(clear: boolean = true): boolean {
 		const errorLog = visualText.analyzer.getOutputDirectory('err.log');
-		const errFlag = this.addLogFile(errorLog, logLineType.LOGFILE);
+		const errFlag = this.addLogFile(errorLog, logLineType.LOGFILE, '', false, !clear);
 		const makeFlag = this.addLogFile(visualText.analyzer.treeFile('make_ana'), logLineType.LOGFILE, '', true, true);
 		return errFlag || makeFlag;
 	}

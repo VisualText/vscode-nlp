@@ -663,8 +663,18 @@ export class VisualText {
                             if (visualText.versionCompare(repoVersion, exeVersion) > 0) {
                                 newer = true;
                             }
-                        } else {
+                        } else if (!fs.existsSync(op.local)) {
+                            // No engine installed yet -> download it. (A present
+                            // exe is handled by the branches above/below.)
                             newer = true;
+                        } else {
+                            // Exe is present but its version couldn't be read (or
+                            // the repo version is unknown). Do NOT assume "newer":
+                            // that re-downloaded the engine on every startup when
+                            // `nlp.exe --version` returned empty (e.g. a transient
+                            // spawn/ICU hiccup), producing an endless update loop.
+                            if (visualText.debug)
+                                visualText.debugMessage('Skipping engine update: version undetermined (exe=[' + exeVersion + '] repo=[' + repoVersion + '])', logLineType.UPDATER);
                         }
                         op.status = upStat.DONE;
                     }
@@ -1047,25 +1057,38 @@ export class VisualText {
         dirfuncs.changeMod(op.local, 755);
         visualText.exeEngineVersion = '';
         const cp = require('child_process');
-        return new Promise((resolve, reject) => {
-            const child = cp.spawn(op.local, ['--version']);
-            const stdOut = "";
-            const stdErr = "";
-            child.stdout.on("data", (data) => {
-                const versionStr = data.toString();
-                if (debug) visualText.debugMessage('version str: ' + versionStr, logLineType.UPDATER);
-                const tokens = versionStr.split('\r\n');
-                if (tokens.length) {
-                    if (tokens.length == 1)
-                        visualText.exeEngineVersion = versionStr;
-                    else
-                        visualText.exeEngineVersion = tokens[tokens.length - 2];
-                    if (debug) visualText.debugMessage('version found: ' + visualText.exeEngineVersion, logLineType.UPDATER);
-                }
+        return new Promise((resolve) => {
+            let stdout = '';
+            let settled = false;
+            // Resolve exactly once, from the FULL accumulated output. Resolving on
+            // the first stdout chunk (or never, on spawn failure) is what left
+            // exeEngineVersion empty and drove the perpetual re-download loop.
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                // `nlp.exe --version` prints just the version; take the last
+                // non-empty line and strip CR/LF/whitespace either way.
+                const lines = stdout.split(/\r?\n/).map(s => s.trim()).filter(s => s.length);
+                visualText.exeEngineVersion = lines.length ? lines[lines.length - 1] : '';
+                if (debug) visualText.debugMessage('version found: [' + visualText.exeEngineVersion + ']', logLineType.UPDATER);
                 resolve(visualText.exeEngineVersion);
+            };
+            let child;
+            try {
+                child = cp.spawn(op.local, ['--version']);
+            } catch (err) {
+                visualText.debugMessage('fetchExeVersion spawn threw: ' + err, logLineType.UPDATER);
+                finish();
+                return;
+            }
+            child.stdout.on('data', (data) => { stdout += data.toString(); });
+            // --version exits non-zero by design, so key off 'close', not the exit
+            // code. 'error' fires if the exe can't be spawned at all.
+            child.on('close', () => finish());
+            child.on('error', (err) => {
+                visualText.debugMessage('fetchExeVersion spawn error: ' + err, logLineType.UPDATER);
+                finish();
             });
-        }).catch(err => {
-            visualText.debugMessage(err, logLineType.UPDATER);
         });
     }
 

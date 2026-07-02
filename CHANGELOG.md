@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.6
+Analyze log: clean timing summary with its own log file.
+
+- The Logging view now shows a **concise, fully-additive timing breakdown** for each analyze — Setup, Engine startup + load, Loaded knowledge base, Exec analyzer time, Post-processing — and the segments **sum exactly to the total** shown on the "Done analyzing …" line.
+- The verbose `stdout`/`stderr` dump (command args, paths, `-DEV` output) no longer floods the log on every run. It is still available on demand from the **Display Analyzer Output Files** toolbar button (log icon).
+- The summary is written to its own **`analyze.log`** file and can be reloaded any time with the new **Display Analyze Summary** toolbar button (document icon).
+- The log now **clears at the start** of each analyze, so every run shows a fresh, self-contained summary (and never clears mid-run).
+
 ### 3.2.5
 LLM Prompts help tree: hover descriptions.
 

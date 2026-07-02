@@ -91,6 +91,7 @@ export class NLPFile extends TextFile {
 			const filename = path.basename(filepath.fsPath);
 			const typeStr = dirfuncs.isDir(filepath.fsPath) ? 'directory' : 'file';
 			const analyzeStart = Date.now();
+			logView.clearLogs();
 			logView.addMessage('Analyzing ' + typeStr + ': ' + filename, logLineType.ANALYER_OUTPUT, filepath);
 			vscode.commands.executeCommand('logView.refreshAll');
 			outputView.setType(outputFileType.ALL);
@@ -128,7 +129,9 @@ export class NLPFile extends TextFile {
 
 			return new Promise(resolve => {
 				nlpStatusBar.analyzerButton(false);
+				const execStart = Date.now();
 				visualText.processID = cp.execFile(exe, args, (err, stdout, stderr) => {
+					const procWall = Date.now() - execStart;
 					const outputDir = path.join(visualText.getCurrentAnalyzer().fsPath, "output");
 					const outFile = vscode.Uri.file(path.join(outputDir, 'stdout.log'));
 					const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
@@ -145,24 +148,57 @@ export class NLPFile extends TextFile {
 						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						if (syntaxError)
-							logView.loadMakeAna();
-						else if (!logView.makeAna())
+							logView.loadMakeAna(false);
+						else if (!logView.makeAna(false))
 							logView.loadAnalyzerOuts(false);
 
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
 					} else {
-						logView.loadAnalyzerOuts(false);
-						const typeStr = dirfuncs.isDir(filestr) ? 'directory' : 'file';
-						const secs = ((Date.now() - analyzeStart) / 1000).toFixed(2);
-						logView.addMessage('Done analyzing ' + typeStr + ': ' + filename + '  (' + secs + ' sec)', logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						const engineOut = (stdout || '') + '\n' + (stderr || '');
+						// Flat, additive timing breakdown. Every segment is disjoint, so the
+						// segments sum exactly to the total wall-clock time.
+						const round2 = (n: number) => Math.round(n * 100) / 100;
+						const totalRaw = (Date.now() - analyzeStart) / 1000;
+						const setupRaw = (execStart - analyzeStart) / 1000;   // saveAll, empty dirs, staging DLLs
+						const procRaw = procWall / 1000;                      // whole nlp.exe process
+						const postRaw = totalRaw - setupRaw - procRaw;        // parsing, writes, view refreshes
+						// Engine's own sub-timings (measured inside nlp.exe, nested in procRaw).
+						const kbMatch = engineOut.match(/Loaded knowledge base:\s*([0-9.]+)/);
+						const execMatch = engineOut.match(/Exec analyzer time\s*=\s*([0-9.]+)/);
+						const kbSec = kbMatch ? parseFloat(kbMatch[1]) : 0;
+						const execSec = execMatch ? parseFloat(execMatch[1]) : 0;
+						const rTotal = round2(totalRaw);
+						const rSetup = round2(setupRaw);
+						const rKb = round2(kbSec);
+						const rExec = round2(execSec);
+						const rPost = round2(postRaw);
+						// Everything left in the process that isn't KB load or the analyze loop:
+						// process startup, grammar/sequence/DLL loading, shutdown. Also absorbs rounding.
+						const rEngine = round2(rTotal - rSetup - rKb - rExec - rPost);
+						const secs = rTotal.toFixed(2);
+						const summary: string[] = ['Analyzing ' + typeStr + ': ' + filename];
+						summary.push('Setup (extension): ' + rSetup.toFixed(2) + ' sec');
+						summary.push('Engine startup + load: ' + rEngine.toFixed(2) + ' sec');
+						if (kbMatch)
+							summary.push('Loaded knowledge base: ' + rKb.toFixed(2) + ' sec');
+						if (execMatch)
+							summary.push('Exec analyzer time: ' + rExec.toFixed(2) + ' sec');
+						summary.push('Post-processing (extension): ' + rPost.toFixed(2) + ' sec');
+						summary.push('Done analyzing ' + typeStr + ': ' + filename + '  (' + secs + ' sec)');
+						// Persist the concise timing summary to its own log file (retrievable via the toolbar).
+						dirfuncs.writeFile(visualText.analyzer.getOutputDirectory('analyze.log').fsPath, summary.join('\n') + '\n');
+						// The "Analyzing" line is already live in the log; show the rest.
+						for (const line of summary.slice(1))
+							logView.addMessage(line, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
 						visualText.analyzer.saveCurrentFile(filepath);
 						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('sequenceView.refreshAll');
 						vscode.commands.executeCommand('analyzerView.refreshAll');
 						vscode.commands.executeCommand('kbView.refreshAll');
+						vscode.commands.executeCommand('logView.refreshAll');
 						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.DONE);
 						nlpStatusBar.resetAnalyzerButton();
 						resolve('Processed');
