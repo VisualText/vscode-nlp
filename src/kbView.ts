@@ -80,6 +80,10 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				treeItem.contextValue = treeItem.contextValue + 'nomo';
 			else
 				treeItem.contextValue = treeItem.contextValue + 'mod';
+
+			// Files ending in "full.dict" / "full.kbb" get a byte-sort menu item.
+			if (/full\.(dict|kbb)$/.test(name))
+				treeItem.contextValue = treeItem.contextValue + 'bytesort';
 		} else {
 			treeItem.contextValue = 'empty';
 		}
@@ -269,6 +273,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
 		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
 		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
+		vscode.commands.registerCommand('kbView.byteSort', (KBItem) => this.byteSort(KBItem));
 		vscode.commands.registerCommand('kbView.explore', () => this.explore());
 		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
 		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
@@ -339,6 +344,83 @@ export class KBView {
 	video() {
 		const url = 'http://vscodekbviewer.visualtext.org';
 		vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+	}
+
+	// Re-order a "*full.dict" / "*full.kbb" file in UTF-8 byte order (= Unicode
+	// code-point order), which the engine's lazy dictionary load requires.
+	// Preserves CRLF/LF, the header comment, and any inline provenance comment
+	// (it stays attached to the entry it precedes).
+	byteSort(kbItem: KBItem): void {
+		if (!kbItem || !kbItem.uri) return;
+		const fsPath = kbItem.uri.fsPath;
+		const name = path.basename(fsPath);
+		if (!/full\.(dict|kbb)$/.test(name)) {
+			vscode.window.showWarningMessage(`Byte-sort only applies to *full.dict / *full.kbb files (not ${name}).`);
+			return;
+		}
+		try {
+			const original = fs.readFileSync(fsPath, 'utf8');
+			const eol = original.includes('\r\n') ? '\r\n' : '\n';
+			const lines = original.split(/\r?\n/).filter(l => l.length > 0);
+			const cmp = (a: string, b: string) => Buffer.from(a, 'utf8').compare(Buffer.from(b, 'utf8'));
+			let out: string[];
+			let count: number;
+
+			if (name.endsWith('.dict')) {
+				// "word pos=X" lines; keep the leading # header, and keep any inline
+				// provenance comment attached to the entry it precedes.
+				const header: string[] = [];
+				const entries: { key: string, block: string[] }[] = [];
+				let started = false;
+				let pending: string[] = [];
+				for (const line of lines) {
+					if (line.startsWith('#')) {
+						if (started) pending.push(line); else header.push(line);
+						continue;
+					}
+					started = true;
+					entries.push({ key: line.split(' ', 1)[0], block: pending.concat([line]) });
+					pending = [];
+				}
+				entries.sort((a, b) => cmp(a.key, b.key));   // stable: same word stays grouped
+				out = header.slice();
+				for (const e of entries) out.push(...e.block);
+				count = entries.length;
+			} else {
+				// .kbb: header + "dictionary" + blocks ("  word:" then "    mNN:")
+				const header: string[] = [];
+				const blocks: { key: string, block: string[] }[] = [];
+				let cur: { key: string, block: string[] } | null = null;
+				let seenDict = false;
+				let pending: string[] = [];
+				for (const line of lines) {
+					const s = line.trim();
+					if (s === 'dictionary') { seenDict = true; continue; }
+					if (line.startsWith('#')) {
+						if (seenDict) pending.push(line); else header.push(line);
+						continue;
+					}
+					if (/^ {2}\S.*:$/.test(line) && !line.startsWith('    ')) {
+						cur = { key: s.slice(0, -1), block: pending.concat([line]) };
+						blocks.push(cur);
+						pending = [];
+					} else if (cur) {
+						cur.block.push(line);
+					}
+				}
+				blocks.sort((a, b) => cmp(a.key, b.key));
+				out = header.slice();
+				out.push('dictionary');
+				for (const b of blocks) out.push(...b.block);
+				count = blocks.length;
+			}
+
+			fs.writeFileSync(fsPath, out.join(eol) + eol);
+			vscode.window.showInformationMessage(`Byte-sorted ${name} (${count} entries, UTF-8 order).`);
+			vscode.commands.executeCommand('kbView.refreshAll');
+		} catch (err: any) {
+			vscode.window.showErrorMessage(`Byte-sort failed for ${name}: ${err.message ?? err}`);
+		}
 	}
 
 	cleanFiles() {
