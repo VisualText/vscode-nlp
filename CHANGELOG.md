@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.10
+Lazy-loaded dictionary shown in the analyzer summary.
+
+- When the engine lazy-loads a dictionary (`.dict`/`.kbb`), the analyzer timing summary now lists a **Lazy-loaded dictionary** line under **Loaded knowledge base**, reporting the on-demand read time.
+- It appears only when lazy loading is active, and is shown as an indented sub-line (a breakdown of the KB-load segment) so the top-level timings still sum to the total.
+
 ### 3.2.9
 LLM Prompts open in a rendered preview.
 
