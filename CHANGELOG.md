@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.12
+Analyzer summary: report lazy-loaded KB and dictionary separately.
+
+- The lazy-load breakdown under **Loaded knowledge base** now shows **Lazy-loaded KB** (`.kbb`) and **Lazy-loaded dictionary** (`.dict`) as two distinct lines, each with its own on-demand read time, instead of a single combined "Lazy-loaded dictionary" line.
+- Each sub-line appears only when that file type was actually lazy-loaded, and both stay indented as a breakdown of the KB-load segment (top-level timings still sum to the total).
+
 ### 3.2.11
 NLP++ snippets: 91 new function snippets generated from the help documentation.
 

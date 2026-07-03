@@ -170,13 +170,15 @@ export class NLPFile extends TextFile {
 						const kbMatch = engineOut.match(/Loaded knowledge base:\s*([0-9.]+)/);
 						const anaMatch = engineOut.match(/Loaded (compiled analyzer|analyzer):\s*([0-9.]+)/);
 						const execMatch = engineOut.match(/Exec analyzer time\s*=\s*([0-9.]+)/);
-						// Lazy dictionary loading: when active the engine reads the .dict/.kbb
-						// on demand and reports per-file read times. These are a breakdown of
-						// the KB-load segment (not an additional segment), so we show them as
-						// an indented sub-line rather than adding them to the additive sum.
-						const lazyLoaded = engineOut.includes('Lazy-loading words from');
-						const lazyReads = [...engineOut.matchAll(/READ (?:kbb|dict) files time\s*=\s*([0-9.]+)/g)];
-						const lazySec = lazyReads.reduce((s, m) => s + parseFloat(m[1]), 0);
+						// Lazy loading: when active the engine reads the *full.kbb / *full.dict
+						// on demand and reports a per-type read time. These are a breakdown of
+						// the KB-load segment (not additional segments), so they are shown as
+						// indented sub-lines. The KB (.kbb) and the dictionary (.dict) are
+						// reported separately.
+						const lazyKbb = /Lazy-loading words from [^\r\n]*\.kbb/i.test(engineOut);
+						const lazyDict = /Lazy-loading words from [^\r\n]*\.dict/i.test(engineOut);
+						const kbbReadMatch = engineOut.match(/READ kbb files time\s*=\s*([0-9.]+)/);
+						const dictReadMatch = engineOut.match(/READ dict files time\s*=\s*([0-9.]+)/);
 						const kbSec = kbMatch ? parseFloat(kbMatch[1]) : 0;
 						const anaSec = anaMatch ? parseFloat(anaMatch[2]) : 0;
 						const execSec = execMatch ? parseFloat(execMatch[1]) : 0;
@@ -185,7 +187,6 @@ export class NLPFile extends TextFile {
 						const rKb = round2(kbSec);
 						const rAna = round2(anaSec);
 						const rExec = round2(execSec);
-						const rLazy = round2(lazySec);
 						const rPost = round2(postRaw);
 						// Process startup/shutdown left over after KB load, analyzer load, and the
 						// analyze loop. Also absorbs rounding so the column sums to the total.
@@ -196,8 +197,10 @@ export class NLPFile extends TextFile {
 						summary.push('Engine startup: ' + rEngine.toFixed(2) + ' sec');
 						if (kbMatch) {
 							summary.push('Loaded knowledge base: ' + rKb.toFixed(2) + ' sec');
-							if (lazyLoaded)
-								summary.push('  Lazy-loaded dictionary: ' + rLazy.toFixed(2) + ' sec');
+							if (lazyKbb && kbbReadMatch)
+								summary.push('  Lazy-loaded KB: ' + round2(parseFloat(kbbReadMatch[1])).toFixed(2) + ' sec');
+							if (lazyDict && dictReadMatch)
+								summary.push('  Lazy-loaded dictionary: ' + round2(parseFloat(dictReadMatch[1])).toFixed(2) + ' sec');
 						}
 						if (anaMatch)
 							summary.push('Loaded ' + anaMatch[1] + ': ' + rAna.toFixed(2) + ' sec');
