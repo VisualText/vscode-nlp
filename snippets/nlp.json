@@ -1486,5 +1486,642 @@
             "single();"
         ],
         "description": "Post match area"
+    },
+    "abs": {
+        "prefix": ["abs"],
+        "body": [
+            "abs(${1:numInt})"
+        ],
+        "description": "Compute the absolute value of an integer."
+    },
+    "dballocstmt": {
+        "prefix": ["dballocstmt"],
+        "body": [
+            "dballocstmt()"
+        ],
+        "description": "Allocate statement handle for the currently open database."
+    },
+    "dbbindcol": {
+        "prefix": ["dbbindcol"],
+        "body": [
+            "dbbindcol(${1:column_num},${2:type_str},${3:size_num},${4:&var},${5:&flag_var})"
+        ],
+        "description": "Bind a database table's column to an NLP++ variable."
+    },
+    "dbclose": {
+        "prefix": ["dbclose"],
+        "body": [
+            "dbclose()"
+        ],
+        "description": "Close the currently open database."
+    },
+    "dbexec": {
+        "prefix": ["dbexec"],
+        "body": [
+            "dbexec(${1:command_str})"
+        ],
+        "description": "Execute a statement on the currently open database."
+    },
+    "dbexecstmt": {
+        "prefix": ["dbexecstmt"],
+        "body": [
+            "dbexecstmt(${1:command_str})"
+        ],
+        "description": "Execute a statement with the currently open statement handle."
+    },
+    "dbfetch": {
+        "prefix": ["dbfetch"],
+        "body": [
+            "dbfetch()"
+        ],
+        "description": "Fetch a row from the current database result."
+    },
+    "dbfreestmt": {
+        "prefix": ["dbfreestmt"],
+        "body": [
+            "dbfreestmt()"
+        ],
+        "description": "Free the statement handle for the currently open database."
+    },
+    "dbopen": {
+        "prefix": ["dbopen"],
+        "body": [
+            "dbopen(${1:db_str},${2:user_str},${3:password_str})"
+        ],
+        "description": "Open a database."
+    },
+    "DICTphraselookup": {
+        "prefix": ["DICTphraselookup"],
+        "body": [
+            "DICTphraselookup(${1:fromNode},${2:keyStr},${3:matchStr},${4:listStr},${5:skipPunctInt})"
+        ],
+        "description": "Look up a phrase in the Knowledge Base dictionary by walking the parse tree from a starting node alongside a phrase hierarchy stored in the KB. Parse tree nodes that match the phrase hierarchy are annotated with match information."
+    },
+    "excise": {
+        "prefix": ["excise"],
+        "body": [
+            "excise(${1:ruleEltNumber1},${2:ruleEltNumber2})"
+        ],
+        "description": "Excise the nodes matching the range of elements from ruleEltNumber1 to ruleEltNumber2 from the parse tree."
+    },
+    "factorial": {
+        "prefix": ["factorial"],
+        "body": [
+            "factorial(${1:numInt})"
+        ],
+        "description": "Compute the factorial of a non-negative integer."
+    },
+    "fileout": {
+        "prefix": ["fileout"],
+        "body": [
+            "fileout(${1:fileName})"
+        ],
+        "description": "Open fileName for appending. FileName becomes a variable useable in print actions with a file argument, e.g. prlit()."
+    },
+    "fprintgvar": {
+        "prefix": ["fprintgvar"],
+        "body": [
+            "fprintgvar(${1:fileName},${2:var})"
+        ],
+        "description": "OBSOLETE. To fileName, print the value of the global variable var."
+    },
+    "fprintnvar": {
+        "prefix": ["fprintnvar"],
+        "body": [
+            "fprintnvar(${1:fileName},${2:var},${3:ord})"
+        ],
+        "description": "OBSOLETE. To fileName, print the value of the variable var in the ordth element's node."
+    },
+    "fprintvar": {
+        "prefix": ["fprintvar"],
+        "body": [
+            "fprintvar(${1:fileName},${2:varName})"
+        ],
+        "description": "Print the values of the global variable varName to fileName."
+    },
+    "fprintxvar": {
+        "prefix": ["fprintxvar"],
+        "body": [
+            "fprintxvar(${1:fileNname},${2:var},${3:ord})"
+        ],
+        "description": "OBSOLETE. To fileName, print the value of the variable var in the ordth context node."
+    },
+    "gdump": {
+        "prefix": ["gdump"],
+        "body": [
+            "gdump(${1:fileName})"
+        ],
+        "description": "Dump all the global variables and their values to fileName."
+    },
+    "ginc": {
+        "prefix": ["ginc"],
+        "body": [
+            "ginc(${1:var})"
+        ],
+        "description": "Increment the value of the global variable var. If the variable has no numeric value, it is set so that incrementing yields 1."
+    },
+    "gtolower": {
+        "prefix": ["gtolower"],
+        "body": [
+            "gtolower(${1:varname})"
+        ],
+        "description": "Convert the strings in multi-string valued global variable to lower case."
+    },
+    "guniq": {
+        "prefix": ["guniq"],
+        "body": [
+            "guniq(${1:varname})"
+        ],
+        "description": "Remove redundancies in a sorted, multi-string valued global variable."
+    },
+    "inc": {
+        "prefix": ["inc"],
+        "body": [
+            "inc(${1:var})"
+        ],
+        "description": "Increment the value of the global variable var. If the variable has no numeric value, it is set so that incrementing yields 1."
+    },
+    "listadd": {
+        "prefix": ["listadd"],
+        "body": [
+            "listadd(${1:olist},${2:oitem[},${3:keep]})"
+        ],
+        "description": "Add a new node to a list node's children. If the item occurs after the list (olist < oitem), it is added as the last child. If the item occurs before the list, it is added as the first child. The optional keep arg can be \"true\" or \"false\". If \"true\", it keeps the nodes between the list and the item as children of list. If \"false\", it excises all the intervening nodes."
+    },
+    "loaddict": {
+        "prefix": ["loaddict"],
+        "body": [
+            "loaddict(${1:file_str})"
+        ],
+        "description": "Load a single dictionary file (.dict) from the analyzer's kb/user directory into the conceptual grammar (the KB currently in memory)."
+    },
+    "loadkbb": {
+        "prefix": ["loadkbb"],
+        "body": [
+            "loadkbb(${1:file_str})"
+        ],
+        "description": "Load a single knowledge base binary file (.kbb) from the analyzer's kb/user directory into the conceptual grammar (the KB currently in memory)."
+    },
+    "logten": {
+        "prefix": ["logten"],
+        "body": [
+            "logten(${1:numFlt})"
+        ],
+        "description": "Compute base 10 logarithm of given number."
+    },
+    "lookup": {
+        "prefix": ["lookup"],
+        "body": [
+            "lookup(${1:var},${2:fileName},${3:flag})"
+        ],
+        "description": "Look up the values of named global variable var in the file named fileName and modify the named flag flag."
+    },
+    "merge": {
+        "prefix": ["merge"],
+        "body": [
+            "merge()"
+        ],
+        "description": "Perform a single tier reduction that dissolves each top level node in the matched phrase."
+    },
+    "merger": {
+        "prefix": ["merger"],
+        "body": [
+            "merger(${1:number1},${2:number2})"
+        ],
+        "description": "Perform a single tier reduction that dissolves each top level node in the matched range."
+    },
+    "mod": {
+        "prefix": ["mod"],
+        "body": [
+            "mod(${1:numInt1},${2:numInt2})"
+        ],
+        "description": "Compute the modulus (remainder) of dividing one integer by another."
+    },
+    "ndump": {
+        "prefix": ["ndump"],
+        "body": [
+            "ndump(${1:fileName},${2:ord})"
+        ],
+        "description": "Dump all the variables in the ordth phrase element's node and their values to fileName."
+    },
+    "ninc": {
+        "prefix": ["ninc"],
+        "body": [
+            "ninc(${1:num},${2:var})"
+        ],
+        "description": "Increment the variable var stored on the node matching the numth rule element. If the variable has no numeric value, it is set so that incrementing yields 1."
+    },
+    "noop": {
+        "prefix": ["noop"],
+        "body": [
+            "noop()"
+        ],
+        "description": "Perform no POST Action. This is a convenience to disable the default single() reduce action."
+    },
+    "or": {
+        "prefix": ["or"],
+        "body": [
+            "or(${1:number1},${2:number1})"
+        ],
+        "description": "Check action that succeeds if any of the rule elements from number1 to number2 has matched an actual node. Meaningful only if this is a range of optional rule elements."
+    },
+    "pnmove": {
+        "prefix": ["pnmove"],
+        "body": [
+            "pnmove(${1:node},${2:tonode},${3:before_after_n})"
+        ],
+        "description": "Programmatically move a node in the parse tree.."
+    },
+    "pnpush": {
+        "prefix": ["pnpush"],
+        "body": [
+            "pnpush(${1:pnode},${2:name_str})"
+        ],
+        "description": "Group a single parse tree node under a new nonliteral parent node."
+    },
+    "pnpushval": {
+        "prefix": ["pnpushval"],
+        "body": [
+            "pnpushval(${1:pnode},${2:var_str},${3:val})"
+        ],
+        "description": "Push a value onto the front of pnode's variable."
+    },
+    "pnremoveval": {
+        "prefix": ["pnremoveval"],
+        "body": [
+            "pnremoveval(${1:pnode},${2:var_str})"
+        ],
+        "description": "Remove a variable from a parse tree node."
+    },
+    "pnrpushval": {
+        "prefix": ["pnrpushval"],
+        "body": [
+            "pnrpushval(${1:pnode},${2:var_str},${3:val})"
+        ],
+        "description": "Push a value onto the end of pnode's variable."
+    },
+    "pnsetfired": {
+        "prefix": ["pnsetfired"],
+        "body": [
+            "pnsetfired(${1:pnode},${2:num})"
+        ],
+        "description": "Set the fired flag of a parse tree node."
+    },
+    "pnvartype": {
+        "prefix": ["pnvartype"],
+        "body": [
+            "pnvartype(${1:pnode},${2:var_str})"
+        ],
+        "description": "Fetch the data type of a parse tree node's variable value."
+    },
+    "pranchor": {
+        "prefix": ["pranchor"],
+        "body": [
+            "pranchor(${1:fileName},${2:number1},${3:number2})"
+        ],
+        "description": "OBSOLETE. Print a web URL to fileName. Treat the range (number1, number2) as a URL."
+    },
+    "prchild": {
+        "prefix": ["prchild"],
+        "body": [
+            "prchild(${1:fileName},${2:number},${3:name})"
+        ],
+        "description": "OBSOLETE. Look for name immediately under the node matching rule element number. Print its text to fileName, if found."
+    },
+    "print": {
+        "prefix": ["print"],
+        "body": [
+            "print(${1:string})"
+        ],
+        "description": "OBSOLETE. Print the literal string to standard output."
+    },
+    "printr": {
+        "prefix": ["printr"],
+        "body": [
+            "printr(${1:number1},${2:number2})"
+        ],
+        "description": "OBSOLETE. Print the text for the rule element range from number1 to number2 to standard output."
+    },
+    "printvar": {
+        "prefix": ["printvar"],
+        "body": [
+            "printvar(${1:varName})"
+        ],
+        "description": "Print the values of the global variable varName to standard output."
+    },
+    "prlit": {
+        "prefix": ["prlit"],
+        "body": [
+            "prlit(${1:fileName},${2:string})"
+        ],
+        "description": "OBSOLETE. Print the literal string string to fileName."
+    },
+    "prrange": {
+        "prefix": ["prrange"],
+        "body": [
+            "prrange(${1:fileName},${2:number1},${3:number2})"
+        ],
+        "description": "Print the text under a range of rule elements number1 to number2 to fileName."
+    },
+    "prtree": {
+        "prefix": ["prtree"],
+        "body": [
+            "prtree(${1:fileName},${2:number},${3:name})"
+        ],
+        "description": "Look for name anywhere under the node matching rule element number. Print its text to fileName, if found."
+    },
+    "prxtree": {
+        "prefix": ["prxtree"],
+        "body": [
+            "prxtree(${1:fileName},${2:prestr},${3:ord},${4:name},${5:poststr})"
+        ],
+        "description": "OBSOLETE. To fileName, print the first node called name found in the ordth element's tree, preceded by prestr and followed by poststr. If named node is not found, nothing is printed out."
+    },
+    "push": {
+        "prefix": ["push"],
+        "body": [
+            "push(${1:var})"
+        ],
+        "description": "Push a value to the front of a variable's value(s)."
+    },
+    "randomint": {
+        "prefix": ["randomint"],
+        "body": [
+            "randomint(${1:numInt1},${2:numInt2})"
+        ],
+        "description": "Generate a random integer between two given integers, inclusive."
+    },
+    "resolveurl": {
+        "prefix": ["resolveurl"],
+        "body": [
+            "resolveurl(${1:baseurl_str},${2:embeddedurl_str})"
+        ],
+        "description": "Convert a relative URL to an absolute URL."
+    },
+    "sdump": {
+        "prefix": ["sdump"],
+        "body": [
+            "sdump(${1:fileName})"
+        ],
+        "description": "Dump all the variables in the suggested node and their values to fileName."
+    },
+    "setbase": {
+        "prefix": ["setbase"],
+        "body": [
+            "setbase(${1:num},${2:bool_str})"
+        ],
+        "description": "Set the BASE attribute of the numth node to \"true\" or \"false\"."
+    },
+    "setlookahead": {
+        "prefix": ["setlookahead"],
+        "body": [
+            "setlookahead(${1:ord_num})"
+        ],
+        "description": "Dynamically set the next node that the rule matcher will look at, after the current rule match is done."
+    },
+    "setunsealed": {
+        "prefix": ["setunsealed"],
+        "body": [
+            "setunsealed(${1:num},${2:bool_str})"
+        ],
+        "description": "Set the UNSEALED attribute of the numth node to \"true\" or \"false\"."
+    },
+    "single": {
+        "prefix": ["single"],
+        "body": [
+            "single()"
+        ],
+        "description": "Perform the DEFAULT single tier reduction. This reduces the entire set of nodes that matched a rule phrase."
+    },
+    "singler": {
+        "prefix": ["singler"],
+        "body": [
+            "singler(${1:number1},${2:number2})"
+        ],
+        "description": "Perform a single tier reduction of a range of rule elements. eg. If finding a period to be end-of-sentence in context, we only want to reduce the period to end-of-sentence, not the whole context."
+    },
+    "singlex": {
+        "prefix": ["singlex"],
+        "body": [
+            "singlex(${1:number1},${2:number2})"
+        ],
+        "description": "Perform a single tier reduction of a range of rule elements. All nodes NOT in the range are EXCISED."
+    },
+    "singlezap": {
+        "prefix": ["singlezap"],
+        "body": [
+            "singlezap()"
+        ],
+        "description": "Perform a single tier reduction. Excise all the nodes in the matched phrase."
+    },
+    "sortvals": {
+        "prefix": ["sortvals"],
+        "body": [
+            "sortvals(${1:varname})"
+        ],
+        "description": "Sort the strings in multi-string-valued global variable varname."
+    },
+    "splice": {
+        "prefix": ["splice"],
+        "body": [
+            "splice(${1:number1},${2:number2})"
+        ],
+        "description": "Dissolve the top level nodes of given range."
+    },
+    "sqlstr": {
+        "prefix": ["sqlstr"],
+        "body": [
+            "sqlstr(${1:string})"
+        ],
+        "description": "Convert string to SQL format."
+    },
+    "startout": {
+        "prefix": ["startout"],
+        "body": [
+            "startout()"
+        ],
+        "description": "Divert standard output to the main output file, set by the caller of the analyzer."
+    },
+    "stopout": {
+        "prefix": ["stopout"],
+        "body": [
+            "stopout()"
+        ],
+        "description": "Stop diverting standard output to the main output file. Subsequent file-less output is to standard output."
+    },
+    "strhaspunct": {
+        "prefix": ["strhaspunct"],
+        "body": [
+            "strhaspunct(${1:string})"
+        ],
+        "description": "Check if a string contains a punctuation character."
+    },
+    "striscaps": {
+        "prefix": ["striscaps"],
+        "body": [
+            "striscaps(${1:string1})"
+        ],
+        "description": "Check if the entire string is uppercase."
+    },
+    "urlbase": {
+        "prefix": ["urlbase"],
+        "body": [
+            "urlbase(${1:urlStr})"
+        ],
+        "description": "Extract a normalized directory path from a URL."
+    },
+    "urltofile": {
+        "prefix": ["urltofile"],
+        "body": [
+            "urltofile(${1:urlStr},${2:fileStr})"
+        ],
+        "description": "Fetch a page from the web using the given URL and writing to the given file name."
+    },
+    "varstrs": {
+        "prefix": ["varstrs"],
+        "body": [
+            "varstrs(${1:varname})"
+        ],
+        "description": "Create an empty multi-string-valued global variable with name varname."
+    },
+    "xaddlen": {
+        "prefix": ["xaddlen"],
+        "body": [
+            "xaddlen(${1:var},${2:num})"
+        ],
+        "description": "Add the text length of the node(s) matching the numth rule element to the variable var stored on the context (dominant) node."
+    },
+    "xaddnvar": {
+        "prefix": ["xaddnvar"],
+        "body": [
+            "xaddnvar(${1:num},${2:nvar},${3:xvar})"
+        ],
+        "description": "Add the value of the node variable nvar (taken from the node matching the numth rule element) to the variable xvar stored on the context (dominant) node."
+    },
+    "xdump": {
+        "prefix": ["xdump"],
+        "body": [
+            "xdump(${1:fileName},${2:ord})"
+        ],
+        "description": "Dump all the variables in the ordth context node and their values to fileName."
+    },
+    "xinc": {
+        "prefix": ["xinc"],
+        "body": [
+            "xinc(${1:var})"
+        ],
+        "description": "Increment the variable var stored on the context (dominant) node. If the variable has no numeric value, it is set so that incrementing yields 1."
+    },
+    "xrename": {
+        "prefix": ["xrename"],
+        "body": [
+            "xrename(${1:name [},${2:num]})"
+        ],
+        "description": "Rename the numth context node to name. If num is absent or 0, rename last context node."
+    },
+    "cap": {
+        "prefix": ["cap"],
+        "body": [
+            "<${1:from},${2:to}>cap();"
+        ],
+        "description": "Pre action that succeeds if leaf token has capitalized first letter."
+    },
+    "length": {
+        "prefix": ["length"],
+        "body": [
+            "<${1:from},${2:to}>length(${3:lengthNumber});"
+        ],
+        "description": "Pre action that succeeds if leaf token has length exactly equal to lengthNumber."
+    },
+    "lengthr": {
+        "prefix": ["lengthr"],
+        "body": [
+            "<${1:from},${2:to}>lengthr(${3:lengthNumber1},${4:lengthNumber2});"
+        ],
+        "description": "Pre action that succeeds if leaf token length is in the range of lengths (lengthNumber1,lengthNumber2), inclusive."
+    },
+    "lowercase": {
+        "prefix": ["lowercase"],
+        "body": [
+            "<${1:from},${2:to}>lowercase();"
+        ],
+        "description": "Pre action that succeeds if leaf token is all lowercase."
+    },
+    "numrange": {
+        "prefix": ["numrange"],
+        "body": [
+            "<${1:from},${2:to}>numrange(${3:number1},${4:number2});"
+        ],
+        "description": "Pre action that succeeds if leaf token is numeric in the given range."
+    },
+    "regexp": {
+        "prefix": ["regexp"],
+        "body": [
+            "<${1:from},${2:to}>regexp(${3:patternStr});"
+        ],
+        "description": "Match text to a regular expression pattern."
+    },
+    "regexpi": {
+        "prefix": ["regexpi"],
+        "body": [
+            "<${1:from},${2:to}>regexpi(${3:patternStr});"
+        ],
+        "description": "Match text to a regular expression pattern (case insensitive)."
+    },
+    "unknown": {
+        "prefix": ["unknown"],
+        "body": [
+            "<${1:from},${2:to}>unknown();"
+        ],
+        "description": "Pre action that succeeds if leaf token is an unknown word."
+    },
+    "uppercase": {
+        "prefix": ["uppercase"],
+        "body": [
+            "<${1:from},${2:to}>uppercase();"
+        ],
+        "description": "Pre action that succeeds if leaf token is all uppercase."
+    },
+    "var": {
+        "prefix": ["var"],
+        "body": [
+            "<${1:from},${2:to}>var(${3:varName});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName with non-zero value."
+    },
+    "vareq": {
+        "prefix": ["vareq"],
+        "body": [
+            "<${1:from},${2:to}>vareq(${3:varName},${4:numOrString});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName whose value equals the string or number in the second argument."
+    },
+    "vargt": {
+        "prefix": ["vargt"],
+        "body": [
+            "<${1:from},${2:to}>vargt(${3:varName},${4:num});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName whose numeric value is greater than the number in the second argument."
+    },
+    "varlt": {
+        "prefix": ["varlt"],
+        "body": [
+            "<${1:from},${2:to}>varlt(${3:varName},${4:num});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName whose numeric value is less than the number in the second argument."
+    },
+    "varne": {
+        "prefix": ["varne"],
+        "body": [
+            "<${1:from},${2:to}>varne(${3:varName},${4:numOrString});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName whose value doe not equal the string or number in the second argument."
+    },
+    "varz": {
+        "prefix": ["varz"],
+        "body": [
+            "<${1:from},${2:to}>varz(${3:varName});"
+        ],
+        "description": "Feature-based matching. Match if the given nodes have a variable called varName with zero value."
     }
 }
