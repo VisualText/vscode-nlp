@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.11
+NLP++ snippets: 91 new function snippets generated from the help documentation.
+
+- Added snippets for documented builtins that previously had none — including `loaddict`/`loadkbb`, math functions (`abs`, `mod`, `logten`, `factorial`, `randomint`), database functions (`dbopen`, `dbexec`, `dbfetch`, …), print/dump functions (`print`, `prtree`, `fprintvar`, `gdump`, …), parse-node functions (`pnpush`, `pnmove`, `pnpushval`, …), and URL/string helpers (`resolveurl`, `urlbase`, `strhaspunct`, `striscaps`, …).
+- Added the rule-action reductions (`uppercase`, `lowercase`, `cap`, `length`, `regexp`, `var`, `vareq`, …) in the `<from,to>` element-range form.
+- Each snippet's placeholders come from the documented syntax and its description from the help page's Purpose.
+
 ### 3.2.10
 Lazy-loaded dictionary shown in the analyzer summary.
 
