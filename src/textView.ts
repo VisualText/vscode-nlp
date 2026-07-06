@@ -134,10 +134,15 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			}
 		}
 
-		let hasAllLogs = false;
-		if (!visualText.getTextFastLoad())
-			hasAllLogs = dirfuncs.hasLogDirs(dir, true);
-		vscode.commands.executeCommand('setContext', 'text.hasLogs', false);
+		// #349: enable the "clear all logs" title button when the analyzer has any
+		// log directories. Only set the context for the root input dir so expanding a
+		// logless subfolder doesn't hide the button. (Was hardcoded to false.)
+		if (dir.fsPath == visualText.analyzer.getInputDirectory().fsPath) {
+			let hasAllLogs = false;
+			if (!visualText.getTextFastLoad())
+				hasAllLogs = dirfuncs.hasLogDirs(dir, true);
+			vscode.commands.executeCommand('setContext', 'text.hasLogs', hasAllLogs);
+		}
 
 		if (visualText.getTextFastLoad()) {
 			const endTime = moment();
