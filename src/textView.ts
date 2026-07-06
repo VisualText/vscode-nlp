@@ -290,7 +290,7 @@ export class TextView {
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
-		this.textView = vscode.window.createTreeView('textView', { treeDataProvider });
+		this.textView = vscode.window.createTreeView('textView', { treeDataProvider, showCollapseAll: true });
 		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.importFiles', (textItem) => treeDataProvider.importFiles(textItem));
 		vscode.commands.registerCommand('textView.existingFolder', (textItem) => treeDataProvider.existingFolder(textItem));
@@ -511,7 +511,14 @@ export class TextView {
 			} else {
 				const sizeStr = this.humanFileSize(stats.size, true, 1);
 				const base = path.basename(textItem.uri.fsPath);
-				vscode.window.showInformationMessage(base + ": " + sizeStr);
+				let counts = '';
+				try {
+					const content = fs.readFileSync(textItem.uri.fsPath, 'utf8');
+					const lines = content.length ? content.split(/\r\n|\r|\n/).length : 0;
+					const words = (content.match(/\S+/g) || []).length;
+					counts = " (" + lines + " lines, " + words + " words)";
+				} catch { /* size-only if the file can't be read as text */ }
+				vscode.window.showInformationMessage(base + ": " + sizeStr + counts);
 			}
 		});
 	}
@@ -645,13 +652,15 @@ export class TextView {
 	private deleteFile(textItem: TextItem): void {
 		if (visualText.hasWorkspaceFolder()) {
 			const items: vscode.QuickPickItem[] = [];
+			const isDir = dirfuncs.isDir(textItem.uri.fsPath);
+			const kind = isDir ? 'directory' : 'file';
 			let deleteDescr = '';
 			const filename = path.basename(textItem.uri.fsPath);
-			deleteDescr = deleteDescr.concat('Delete \'', filename, '\'?');
+			deleteDescr = deleteDescr.concat('Delete ', kind, ' \'', filename, '\'?');
 			items.push({ label: 'Yes', description: deleteDescr });
 			items.push({ label: 'No', description: 'Do not delete ' + filename });
 
-			vscode.window.showQuickPick(items, { title: 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
+			vscode.window.showQuickPick(items, { title: isDir ? 'Delete Directory' : 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
 				visualText.fileOps.addFileOperation(textItem.uri, textItem.uri, [fileOpRefresh.TEXT], fileOperation.DELETE);

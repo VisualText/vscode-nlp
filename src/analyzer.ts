@@ -149,7 +149,7 @@ export class Analyzer {
                 for (const file of files) {
                     const basename = path.basename(file.fsPath);
                     if (dirfuncs.isDir(file.fsPath)) {
-                        const readme = path.join(file.fsPath, "README.MD");
+                        const readme = path.join(file.fsPath, "README.md");
                         let descr: string, tit: string;
                         ({ title: tit, description: descr } = this.readDescription(readme));
                         const item: vscode.QuickPickItem = { label: tit, description: descr };
@@ -308,6 +308,10 @@ export class Analyzer {
         vscode.commands.executeCommand("analyzerView.updateTitle", analyzerDir);
         if (this.currentTextFile.fsPath.length > 2)
             vscode.commands.executeCommand("textView.updateTitle", vscode.Uri.file(this.currentTextFile.fsPath));
+        else
+            // Reset the Text view title when the new analyzer has no current text file,
+            // otherwise it keeps showing the previous analyzer's file (#976).
+            vscode.commands.executeCommand("textView.updateTitle", vscode.Uri.file(''));
     }
 
     checkHierFile() {

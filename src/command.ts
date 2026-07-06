@@ -68,12 +68,18 @@ export class NLPCommands {
                 textFile.rollupLines(selFlag);
                 textFile.linesToText(editor, selFlag);
 
-                const firstLine = editor.document.lineAt(0);
-                const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-                const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
-                editor.edit(function (editBuilder) {
-                    editBuilder.replace(textRange, textFile.getText());
-                });
+                // For a selection, linesToText already inserted the sorted lines via a
+                // snippet. Replacing the whole document here would overwrite that with the
+                // original (unsorted) text, so only do the whole-document replace when
+                // sorting the entire file (#791).
+                if (!selFlag) {
+                    const firstLine = editor.document.lineAt(0);
+                    const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+                    const textRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+                    editor.edit(function (editBuilder) {
+                        editBuilder.replace(textRange, textFile.getText());
+                    });
+                }
             }
         }
     }
