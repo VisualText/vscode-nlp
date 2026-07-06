@@ -363,8 +363,14 @@ export class SequenceFile extends TextFile {
 				for (const pass of passes) {
 					const passPath = path.join(specDir,path.basename(pass.fsPath));
 					if (copy) {
-						fs.copyFileSync(pass.fsPath,passPath);								
-					}		
+						fs.copyFileSync(pass.fsPath,passPath);
+					}
+					// If a pass with this name is already in the sequence, the copy above
+					// overwrote its file in place -- keep its existing position/attributes
+					// instead of adding a second entry with the same name (#807).
+					if (this.findPassByFilename(path.basename(pass.fsPath))) {
+						continue;
+					}
 					pi = this.createPassItemFromFile(passPath);
 					row++;
 					this.passItems.splice(row,0,pi);

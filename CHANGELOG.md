@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.14
+More issue-tracker bug fixes.
+
+- **#898** "Create Mod file when none" now awaits creation before appending, so the mod file is created and selected before the append (previously a race left it not working).
+- **#746** Renaming a text file now opens the renamed file **beside** the current editor.
+- **#807** Inserting an existing pass whose name is already in the sequence no longer adds a duplicate entry — the file is overwritten in place, keeping the existing pass position.
+
 ### 3.2.13
 Issue-tracker bug fixes.
 

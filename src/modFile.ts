@@ -39,13 +39,13 @@ export class ModFile extends TextFile {
 			items.push({label: 'Create', description: 'Create a new mod file'});
 			items.push({label: 'Abort', description: 'Abort this attempt' });
 
-			await vscode.window.showQuickPick(items, {title: 'Mod File', canPickMany: false, placeHolder: 'Choose create or abort'}).then(selection => {
+			await vscode.window.showQuickPick(items, {title: 'Mod File', canPickMany: false, placeHolder: 'Choose create or abort'}).then(async selection => {
 				if (typeof selection === undefined || !selection || selection.label == 'Abort')
                     retVal = false;
-                else {
-                    visualText.analyzer.modCreate(visualText.analyzer.getKBDirectory());
-                    retVal = true;                    
-                }
+                else
+                    // Await creation so the mod file exists and is selected before addFile
+                    // appends to it (#898). retVal follows whether a file was actually created.
+                    retVal = await visualText.analyzer.modCreate(visualText.analyzer.getKBDirectory());
 			});
         } else {
             const items: vscode.QuickPickItem[] = visualText.modFileList();
