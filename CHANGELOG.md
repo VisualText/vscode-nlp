@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.16
+Fix Text view "clear all logs" button never showing.
+
+- **#349** The **clear-all-logs** button in the Text view title bar now appears when the analyzer has log directories. The `text.hasLogs` context that gates it was hardcoded to `false`, so the button (and its command) were never shown even though they existed.
+
 ### 3.2.15
 Fix VisualText files update leaving residual files.
 
