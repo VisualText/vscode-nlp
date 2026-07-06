@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { VisualText } from './visualText';
 import { AnalyzerView } from './analyzerView';
 import { NLPCommands } from "./command";
@@ -30,7 +31,31 @@ export function activate(ctx: vscode.ExtensionContext): void {
     help.showStartupHelp();
 
     vscode.commands.executeCommand('setContext', 'textView.fastload', visualText.getTextFastLoad());
-      
+
+    // #849: stamp the "# MODIFIED:" header line with the current date/time when an
+    // NLP++ pass file is saved. onWillSaveTextDocument + waitUntil applies the edit
+    // atomically with the save, so there is no re-save loop and no on-disk conflict.
+    // Only files that already carry the header line (created from the pass template)
+    // are touched.
+    ctx.subscriptions.push(vscode.workspace.onWillSaveTextDocument(e => {
+        const ext = path.extname(e.document.fileName).toLowerCase();
+        if (ext !== '.nlp' && ext !== '.rec' && ext !== '.pat')
+            return;
+        const now = new Date();
+        const stamp = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate() +
+            ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+        const newLine = '# MODIFIED: ' + stamp;
+        const max = Math.min(e.document.lineCount, 15);
+        for (let i = 0; i < max; i++) {
+            const line = e.document.lineAt(i);
+            if (/^#\s*MODIFIED:/i.test(line.text)) {
+                if (line.text.trimEnd() !== newLine)
+                    e.waitUntil(Promise.resolve([vscode.TextEdit.replace(line.range, newLine)]));
+                return;
+            }
+        }
+    }));
+
     if (visualText.getAutoUpdate())
         visualText.startUpdater();
     else

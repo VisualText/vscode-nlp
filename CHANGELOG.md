@@ -4,9 +4,10 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ### 3.2.16
-Fix Text view "clear all logs" button never showing.
+Text view clear-all-logs button + modified date on save.
 
 - **#349** The **clear-all-logs** button in the Text view title bar now appears when the analyzer has log directories. The `text.hasLogs` context that gates it was hardcoded to `false`, so the button (and its command) were never shown even though they existed.
+- **#849** Saving an NLP++ pass file (`.nlp`/`.rec`/`.pat`) now stamps its `# MODIFIED:` header line with the current date and time. Only files that already carry the header (created from the pass template) are touched, and the update is applied atomically with the save (no re-save loop).
 
 ### 3.2.15
 Fix VisualText files update leaving residual files.
