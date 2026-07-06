@@ -247,7 +247,8 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 						newname = newname + path.extname(textItem.uri.fsPath);
 					const newfile = vscode.Uri.file(path.join(path.dirname(textItem.uri.fsPath), newname));
 					dirfuncs.rename(original.fsPath, newfile.fsPath);
-					vscode.window.showTextDocument(newfile);
+					// Open the renamed file beside the current editor (#746).
+					vscode.window.showTextDocument(newfile, { viewColumn: vscode.ViewColumn.Beside });
 
 					const logFolderOrig = vscode.Uri.file(path.join(original.fsPath + visualText.LOG_SUFFIX));
 					if (dirfuncs.isDir(logFolderOrig.fsPath)) {

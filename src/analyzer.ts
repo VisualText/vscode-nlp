@@ -65,22 +65,24 @@ export class Analyzer {
         }
     }
 
-    async modCreate(uri: vscode.Uri) {
+    async modCreate(uri: vscode.Uri): Promise<boolean> {
+        let created = false;
         await vscode.window.showInputBox({ value: "filename", prompt: "Enter mod file name" }).then(newname => {
             if (newname) {
                 const filepath = path.join(uri.fsPath, newname + ".nlm");
                 if (fs.existsSync(filepath)) {
                     vscode.window.showWarningMessage("Mod file: " + filepath + " already exists");
-                    return false;
+                    return;
                 }
                 const modUri = vscode.Uri.file(filepath);
                 visualText.modFiles.push(modUri);
                 dirfuncs.writeFile(filepath, "# Description goes here");
                 visualText.setModFile(modUri);
                 vscode.commands.executeCommand("kbView.refreshAll");
-                return true;
+                created = true;
             }
         });
+        return created;
     }
 
     hasText(): boolean {
