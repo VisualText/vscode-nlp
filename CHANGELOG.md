@@ -3,6 +3,18 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.13
+Issue-tracker bug fixes.
+
+- **#915** Analyzer template descriptions now show on Linux — the template picker read `README.MD` (uppercase), which failed on case-sensitive filesystems; it now reads `README.md`.
+- **#976** The Text view title now resets to `TEXT` when the newly selected analyzer has no current text file, instead of keeping the previous analyzer's filename.
+- **#867** Renaming a pass by only changing letter case is now allowed (the case-insensitive "already exists" check no longer blocks a case-only rename).
+- **#786** Commenting code no longer collapses `\\` to `\` (backslashes are escaped before the snippet insert).
+- **#791** "Sort / unique lines" now works on a selection instead of being overwritten by a whole-document replace.
+- **#741** Deleting a directory in the Text view now says "directory" (title and prompt) instead of "file".
+- **#559** File properties now include line and word counts alongside the file size.
+- **#497** The Text view gains a **Collapse All** title-bar button.
+
 ### 3.2.12
 Analyzer summary: report lazy-loaded KB and dictionary separately.
 

@@ -557,7 +557,9 @@ export class NLPFile extends TextFile {
 					const posEnd = new vscode.Position(end.line, lastLineLength + 1);
 					const range = new vscode.Range(posStart, posEnd);
 
-					newLineStr = newLineStr.replace(/\$/g, '\\$');
+					// Escape backslashes before dollars so snippet parsing does not collapse
+					// "\\" to "\" (#786).
+					newLineStr = newLineStr.replace(/\\/g, '\\\\').replace(/\$/g, '\\$');
 					const snippet = new vscode.SnippetString(newLineStr);
 					editor.insertSnippet(snippet, range);
 				}
