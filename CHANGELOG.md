@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.15
+Fix VisualText files update leaving residual files.
+
+- **#800** Updating the VisualText files now removes the whole `visualText` directory before re-downloading, so stale/residual files no longer survive an update. The previous per-folder delete built a doubled `visualText/visualText/…` path that matched nothing and deleted nothing.
+
 ### 3.2.14
 More issue-tracker bug fixes.
 
