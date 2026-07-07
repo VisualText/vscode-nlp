@@ -86,6 +86,11 @@ export class FindFile {
 		this.textFile.setFile(uri);
 		const filename = path.basename(uri.fsPath);
 		const escapedLower = escaped.toLowerCase();
+		// #787: when the file is an analyzer pass, prefix its results with the pass
+		// number so find results read in analyzer-sequence (pass) order and the
+		// multi-pass progression is visible. Computed once per file.
+		const passNum = visualText.analyzer.seqFile.findPassByFilename(filename);
+		const passTag = passNum > 0 ? `${passNum}  ` : '';
 
 		if (this.textFile.getText().toLowerCase().search(escapedLower) >= 0) {
 			let num = 0;
@@ -106,8 +111,8 @@ export class FindFile {
 					let text = line;
 					if (bracketsFlag)
 						text = line.replace(searchTerm,` <<${searchTerm}>> `);
-					const label = `${filename} [${num} ${pos}] ${line}`;
-					const newText = `${path.basename(uri.fsPath)} ${text}`;
+					const label = `${passTag}${filename} [${num} ${pos}] ${line}`;
+					const newText = `${passTag}${path.basename(uri.fsPath)} ${text}`;
 					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: newText});
 				}
 				num++;
