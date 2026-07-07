@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.17
+Find Results: show pass numbers.
+
+- **#787** (partial) Find results in analyzer pass files are now prefixed with the **analyzer-sequence pass number**, so results read in pass order and the multi-pass progression is visible. Non-pass files (function libraries, input text) are unaffected.
+
 ### 3.2.16
 Text view clear-all-logs button + modified date on save.
 
