@@ -296,7 +296,7 @@ export class TextView {
 
 	constructor(context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
-		this.textView = vscode.window.createTreeView('textView', { treeDataProvider, showCollapseAll: true });
+		this.textView = vscode.window.createTreeView('textView', { treeDataProvider, showCollapseAll: true, canSelectMany: true });
 		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('textView.importFiles', (textItem) => treeDataProvider.importFiles(textItem));
 		vscode.commands.registerCommand('textView.existingFolder', (textItem) => treeDataProvider.existingFolder(textItem));
@@ -318,8 +318,8 @@ export class TextView {
 		vscode.commands.registerCommand('textView.newText', (textItem) => this.newText(textItem, false));
 		vscode.commands.registerCommand('textView.newDirTop', (textItem) => this.newDir(textItem, true));
 		vscode.commands.registerCommand('textView.newDir', (textItem) => this.newDir(textItem, false));
-		vscode.commands.registerCommand('textView.deleteFile', (textItem) => this.deleteFile(textItem));
-		vscode.commands.registerCommand('textView.deleteDir', (textItem) => this.deleteFile(textItem));
+		vscode.commands.registerCommand('textView.deleteFile', (textItem, allItems) => this.deleteFile(textItem, allItems));
+		vscode.commands.registerCommand('textView.deleteDir', (textItem, allItems) => this.deleteFile(textItem, allItems));
 		vscode.commands.registerCommand('textView.deleteFileLogs', (textItem) => this.deleteFileLogs(textItem));
 		vscode.commands.registerCommand('textView.deleteAnalyzerLogs', () => this.deleteAnalyzerLogs());
 		vscode.commands.registerCommand('textView.splitDir', (textItem) => this.splitDir(textItem));
@@ -655,21 +655,36 @@ export class TextView {
 		}
 	}
 
-	private deleteFile(textItem: TextItem): void {
+	private deleteFile(textItem: TextItem, allItems?: TextItem[]): void {
 		if (visualText.hasWorkspaceFolder()) {
-			const items: vscode.QuickPickItem[] = [];
-			const isDir = dirfuncs.isDir(textItem.uri.fsPath);
-			const kind = isDir ? 'directory' : 'file';
-			let deleteDescr = '';
-			const filename = path.basename(textItem.uri.fsPath);
-			deleteDescr = deleteDescr.concat('Delete ', kind, ' \'', filename, '\'?');
-			items.push({ label: 'Yes', description: deleteDescr });
-			items.push({ label: 'No', description: 'Do not delete ' + filename });
+			// Multi-select: when several tree items are selected, VSCode passes the
+			// whole selection as the second argument; delete them all (#755).
+			let targets = (allItems && allItems.length) ? allItems : (textItem ? [textItem] : []);
+			if (textItem && !targets.some(t => t.uri.fsPath == textItem.uri.fsPath))
+				targets = [textItem, ...targets];
+			if (targets.length == 0)
+				return;
 
-			vscode.window.showQuickPick(items, { title: isDir ? 'Delete Directory' : 'Delete File', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
+			const items: vscode.QuickPickItem[] = [];
+			let title: string;
+			if (targets.length > 1) {
+				title = 'Delete Items';
+				items.push({ label: 'Yes', description: 'Delete ' + targets.length + ' selected items?' });
+				items.push({ label: 'No', description: 'Do not delete the selected items' });
+			} else {
+				const isDir = dirfuncs.isDir(targets[0].uri.fsPath);
+				const kind = isDir ? 'directory' : 'file';
+				const filename = path.basename(targets[0].uri.fsPath);
+				title = isDir ? 'Delete Directory' : 'Delete File';
+				items.push({ label: 'Yes', description: 'Delete ' + kind + ' \'' + filename + '\'?' });
+				items.push({ label: 'No', description: 'Do not delete ' + filename });
+			}
+
+			vscode.window.showQuickPick(items, { title: title, canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
 				if (!selection || selection.label == 'No')
 					return;
-				visualText.fileOps.addFileOperation(textItem.uri, textItem.uri, [fileOpRefresh.TEXT], fileOperation.DELETE);
+				for (const target of targets)
+					visualText.fileOps.addFileOperation(target.uri, target.uri, [fileOpRefresh.TEXT], fileOperation.DELETE);
 				visualText.fileOps.startFileOps();
 			});
 		}
