@@ -86,11 +86,19 @@ export class FindFile {
 		this.textFile.setFile(uri);
 		const filename = path.basename(uri.fsPath);
 		const escapedLower = escaped.toLowerCase();
-		// #787: when the file is an analyzer pass, prefix its results with the pass
-		// number so find results read in analyzer-sequence (pass) order and the
-		// multi-pass progression is visible. Computed once per file.
-		const passNum = visualText.analyzer.seqFile.findPassByFilename(filename);
-		const passTag = passNum > 0 ? `${passNum}  ` : '';
+		// #787: prefix results with the analyzer-sequence pass info so they read in
+		// pass order and show the multi-pass progression. The tag is "<mark><passNum>  "
+		// where <mark> is "I " for an inactive (disabled) pass, or "O " for an orphan
+		// pass file (a .nlp/.rec/.pat in spec/ not referenced by the sequence). Non-pass
+		// files (function libraries, input text) get no tag. Computed once per file.
+		const seqFile = visualText.analyzer.seqFile;
+		const passName = path.parse(filename).name;
+		const passItem = seqFile.getPasses().find(p => p.passNum > 0 && p.name == passName);
+		let passTag = '';
+		if (passItem)
+			passTag = (passItem.active ? '' : 'I ') + `${passItem.passNum}  `;
+		else if (path.dirname(uri.fsPath) == seqFile.getSpecDirectory().fsPath && /\.(nlp|rec|pat)$/i.test(filename))
+			passTag = 'O  ';
 
 		if (this.textFile.getText().toLowerCase().search(escapedLower) >= 0) {
 			let num = 0;

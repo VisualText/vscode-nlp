@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.18
+Find Results: mark inactive and orphan passes.
+
+- **#787** (partial) Find results now mark **inactive** passes with `I` and **orphan** pass files (a `.nlp`/`.rec`/`.pat` in `spec/` not referenced by the analyzer sequence) with `O`, alongside the pass number added in 3.2.17. Remaining #787 items (rule number, tab-aware char offset, the full `X PASS RULE ELT | LINE,CHAR` format) are still open.
+
 ### 3.2.17
 Find Results: show pass numbers.
 
