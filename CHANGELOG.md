@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.20
+Help view: Helpful Links.
+
+- A new **Helpful Links** node in the Help view lists external resources (tutorial videos, articles, and the VisualText / NLP++ sites) and opens each in the browser.
+- The list is read from an **editable file** shipped in the VisualText files — `Help/markdown/vscode/helpful-links.txt` (one link per line: `Title | https://url | Description`), so links can be added or changed without an extension update.
+
 ### 3.2.19
 Text view: delete multiple files/folders at once.
 
