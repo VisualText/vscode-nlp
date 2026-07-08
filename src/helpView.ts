@@ -13,11 +13,13 @@ export interface HelpItem {
     isVersionRoot?: boolean;
     isAnnounceRoot?: boolean;
     isPromptRoot?: boolean;
+    isLinksRoot?: boolean;
     collapsible?: boolean;
     expanded?: boolean;
     children?: HelpItem[];
     cmd?: string;        // run this command instead of opening a markdown page
     promptFile?: string; // an LLM-prompt file under prompts/ to fill + open
+    url?: string;        // an external URL to open in the browser (Helpful Links)
     tooltip?: string;    // hover text (markdown) — e.g. an LLM prompt's description
 }
 
@@ -39,6 +41,8 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
             ti.command = { command: item.cmd, title: item.label };
         } else if (item.promptFile) {
             ti.command = { command: 'helpView.openPrompt', title: item.label, arguments: [item] };
+        } else if (item.url) {
+            ti.command = { command: 'helpView.openLink', title: item.label, arguments: [item] };
         } else if (!item.collapsible && !item.isVersionRoot && item.page) {
             ti.command = { command: 'helpView.openVscodeHelp', title: 'Open Help', arguments: [item] };
         }
@@ -70,6 +74,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
                         { label: 'Special Functions', page: 'Table_of_Special_Functions', icon: 'symbol-misc' },
                     ],
                 },
+                { label: 'Helpful Links', page: '', icon: 'link', isLinksRoot: true, collapsible: true },
                 { label: 'Announcements', page: '', icon: 'megaphone', isAnnounceRoot: true, collapsible: true, expanded: true },
                 { label: 'Version Notes', page: '', icon: 'history', isVersionRoot: true, collapsible: true, expanded: true },
             ];
@@ -85,6 +90,10 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
         if (item.isPromptRoot) {
             return helpView.listPrompts().map(p => (
                 { label: p.title, page: '', icon: 'sparkle', promptFile: p.file, tooltip: p.description || p.title } as HelpItem));
+        }
+        if (item.isLinksRoot) {
+            return helpView.listLinks().map(l => (
+                { label: l.title, page: '', icon: 'link-external', url: l.url, tooltip: l.description || l.url } as HelpItem));
         }
         if (item.children) {
             return item.children;
@@ -113,6 +122,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.refreshHelp', () => this.helpTreeProvider.refresh());
         vscode.commands.registerCommand('helpView.createClaudePrompt', () => this.createClaudePrompt());
         vscode.commands.registerCommand('helpView.openPrompt', (item) => this.openPrompt(item));
+        vscode.commands.registerCommand('helpView.openLink', (item) => this.openLink(item));
         vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
         this.exists = false;
         this.ctx = context;
@@ -215,6 +225,35 @@ export class HelpView {
     openVscodeHelp(item: HelpItem) {
         if (item && item.page)
             this.displayMarkdownHelp(item.page);
+    }
+
+    // ----- Helpful Links ------------------------------------------------------
+
+    // Editable links file: Help/markdown/vscode/helpful-links.txt, one link per line
+    // as "Title | https://url | Description". Blank lines and lines starting with #
+    // are ignored. Authorable in the VisualText files (visualtext-files repo), so the
+    // list can change without an extension update.
+    private linksFile(): string {
+        return path.join(visualText.getVisualTextDirectory('Help'), 'markdown', 'vscode', 'helpful-links.txt');
+    }
+
+    listLinks(): { title: string; url: string; description?: string }[] {
+        const file = this.linksFile();
+        if (!fs.existsSync(file)) return [];
+        const links: { title: string; url: string; description?: string }[] = [];
+        for (const raw of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+            const line = raw.trim();
+            if (!line || line.startsWith('#')) continue;
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 2 && parts[1])
+                links.push({ title: parts[0] || parts[1], url: parts[1], description: parts[2] || undefined });
+        }
+        return links;
+    }
+
+    openLink(item: HelpItem) {
+        if (item && item.url)
+            vscode.env.openExternal(vscode.Uri.parse(item.url));
     }
 
     // ----- LLM prompt library -------------------------------------------------
