@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.19
+Text view: delete multiple files/folders at once.
+
+- **#755** The Text view now supports **multi-select**: select several files/folders (Ctrl/Shift-click) and delete them in one action. The single-item delete (with its file/directory wording) is unchanged; multi-select shows a "Delete N selected items?" confirmation.
+
 ### 3.2.18
 Find Results: mark inactive and orphan passes.
 
