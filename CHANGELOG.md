@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.22
+Insert Python Library Pass.
+
+- **#882** New **Insert Python Library Pass** on the sequence view: pick a script from the shared `visualText/python/` library (shown with its `# DESC:` descriptor) and it's copied into the analyzer's `spec/` and added to the sequence as a python pass — including a "before the tokenizer" variant on the tokenizer menu. The generic **Insert Python Pass** (blank stub) is unchanged.
+- Ships with a **`json2kbb.py`** library script that converts a JSON input file to a KBB in `kb/user/` (the inverse of `KBFuncs.nlp`'s `JsonKB`), so an analyzer can build a KBB from JSON before processing. (Requires the companion VisualText-files release for the script + descriptors.)
+
 ### 3.2.21
 Issue fixes: spaces in paths, missing sequence file, dict-error line, find options.
 
