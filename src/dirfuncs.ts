@@ -139,6 +139,7 @@ export namespace dirfuncs {
 
     export function getDirectoryTypes(folder: vscode.Uri): {uri: vscode.Uri, type: vscode.FileType}[] {
         const dirsAndTypes = Array();
+        if (!fs.existsSync(folder.fsPath)) return dirsAndTypes;   // missing dir (e.g. spec/ gone) -> empty, no throw (#770)
         const filenames = fs.readdirSync(folder.fsPath);
         for (const filename of filenames) {
             if (!filename.startsWith('.')) {
@@ -171,6 +172,7 @@ export namespace dirfuncs {
 
     export function getFiles(folder: vscode.Uri, filter: string[]=[], getType: getFileTypes=getFileTypes.FILES, recurse: boolean=false): vscode.Uri[] {
         const fileUris: vscode.Uri[] = new Array();
+        if (!fs.existsSync(folder.fsPath)) return fileUris;   // missing dir (e.g. spec/ gone) -> empty, no throw (#770)
         const filenames = fs.readdirSync(folder.fsPath);
         for (const filename of filenames) {
             if (!filename.startsWith('.')) {

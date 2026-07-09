@@ -124,6 +124,12 @@ export class SequenceFile extends TextFile {
 			this.setSpecDir(specDir);
 
 		const anaFile = path.join(specDir,visualText.ANALYZER_SEQUENCE_FILE);
+		// Surface a missing sequence file instead of rendering a silent empty tree (#770).
+		if (!fs.existsSync(anaFile)) {
+			this.passItems = [];
+			vscode.window.showWarningMessage('Analyzer sequence file missing: ' + anaFile);
+			return;
+		}
 		super.setFile(vscode.Uri.file(anaFile),true);
 		let passNum = 1;
 		this.passItems = [];

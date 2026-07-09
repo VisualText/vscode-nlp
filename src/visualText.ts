@@ -1444,7 +1444,8 @@ export class VisualText {
             platformCmd = 'open';
         }
         if (platformCmd != '') {
-            const cmd = platformCmd + ' ' + dir;
+            // Quote the path so folders/files with spaces open correctly (#123).
+            const cmd = platformCmd + ' "' + dir + '"';
             const cp = require('child_process');
             cp.exec(cmd, (err, stdout, stderr) => {
                 console.log('stdout: ' + stdout);
