@@ -85,7 +85,13 @@ export class FindFile {
 			return;
 		this.textFile.setFile(uri);
 		const filename = path.basename(uri.fsPath);
-		const escapedLower = escaped.toLowerCase();
+		// #157: optional case-sensitive / whole-word matching (settings; default off, so
+		// the behaviour is unchanged -- case-insensitive substring).
+		const findConfig = vscode.workspace.getConfiguration('nlp');
+		const caseSensitive = findConfig.get<boolean>('findCaseSensitive', false);
+		const wholeWord = findConfig.get<boolean>('findWholeWord', false);
+		const rx = new RegExp(wholeWord ? '\\b' + escaped + '\\b' : escaped, caseSensitive ? '' : 'i');
+		const termLen = searchTerm.length;
 		// #787: prefix results with the analyzer-sequence pass info so they read in
 		// pass order and show the multi-pass progression. The tag is "<mark><passNum>  "
 		// where <mark> is "I " for an inactive (disabled) pass, or "O " for an orphan
@@ -100,25 +106,24 @@ export class FindFile {
 		else if (path.dirname(uri.fsPath) == seqFile.getSpecDirectory().fsPath && /\.(nlp|rec|pat)$/i.test(filename))
 			passTag = 'O  ';
 
-		if (this.textFile.getText().toLowerCase().search(escapedLower) >= 0) {
+		if (this.textFile.getText().search(rx) >= 0) {
 			let num = 0;
 			for (let line of this.textFile.getLines()) {
-				const lineLower = line.toLowerCase();
-				const pos = lineLower.search(escapedLower);
+				const pos = line.search(rx);
 				if (pos >= 0) {
-					if (line.length + escapedLower.length > context) {
+					if (line.length + termLen > context) {
 						const half = context / 2;
 						if (line.length - pos < half) {
 							line = line.substring(line.length-context-1,context);
 						} else if (pos > half) {
-							line = line.substring(pos-half,context+escapedLower.length);								
+							line = line.substring(pos-half,context+termLen);
 						} else {
 							line = line.substring(0,context);
 						}
 					}
 					let text = line;
 					if (bracketsFlag)
-						text = line.replace(searchTerm,` <<${searchTerm}>> `);
+						text = line.replace(rx, m => ` <<${m}>> `);
 					const label = `${passTag}${filename} [${num} ${pos}] ${line}`;
 					const newText = `${passTag}${path.basename(uri.fsPath)} ${text}`;
 					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: newText});

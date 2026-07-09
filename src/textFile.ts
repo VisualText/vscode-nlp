@@ -84,7 +84,8 @@ export class TextFile {
 
     runPythonCode(editor: vscode.TextEditor, pythonScriptPath: string) {
         const inputFilePath = editor.document.uri.fsPath;
-        const command = `python ${pythonScriptPath} ${inputFilePath}`;
+        // Quote the paths so a script or input file with spaces runs correctly (#123).
+        const command = `python "${pythonScriptPath}" "${inputFilePath}"`;
 
         // Execute the command
         exec(command, (error, stdout, stderr) => {

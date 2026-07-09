@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.21
+Issue fixes: spaces in paths, missing sequence file, dict-error line, find options.
+
+- **#123** File/folder names with **spaces** now work — the Explore command and the Python-pass runner quote their paths instead of passing them unquoted to the shell.
+- **#770** A missing `spec/` directory or `analyzer.seq` no longer throws/blanks the views — `dirfuncs` guards against reading a non-existent directory, and a clear "Analyzer sequence file missing" warning is shown.
+- **#878** Double-clicking a **dictionary error** in the log now jumps to the correct line — a `.dict` error reports the dict line number as its first token, which was being ignored.
+- **#157** Find now supports **case-sensitive** and **whole-word** matching via the `nlp.findCaseSensitive` and `nlp.findWholeWord` settings (both off by default, so the default behavior is unchanged).
+- **#974** **Duplicate Line** (Ctrl+Shift+D) no longer collapses `\\` to `\` — the duplicated line is inserted as literal text so backslashes are preserved.
+
 ### 3.2.20
 Help view: Helpful Links.
 

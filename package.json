@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.2.20",
+    "version": "3.2.21",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -3239,6 +3239,18 @@
                     "scope": "resource",
                     "default": false,
                     "description": "Run regression tests by shelling out to nlp_regress.py in a terminal instead of the built-in runner (which streams results into the NLP++ log view)."
+                },
+                "nlp.findCaseSensitive": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": false,
+                    "description": "Find: match case (case-sensitive search). Off by default."
+                },
+                "nlp.findWholeWord": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": false,
+                    "description": "Find: match whole word only. Off by default."
                 },
                 "user.name": {
                     "type": "string",

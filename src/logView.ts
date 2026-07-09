@@ -277,6 +277,9 @@ export class LogView {
 					const filename = tokens[tokens.length - 2];
 					const filePath = path.join(visualText.analyzer.getKBDirectory().fsPath, filename);
 					uri = vscode.Uri.file(filePath);
+					// A .dict error line is "<dictLine> <col> [msg - file.dict]" -- the FIRST
+					// number is the line in the dict file, so double-click lands there (#878).
+					lineNum = passNum;
 					type = logLineType.SYNTAX_ERROR;
 					icon = this.typeIcon(logLineType.SYNTAX_ERROR);
 				}
