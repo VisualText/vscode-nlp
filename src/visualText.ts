@@ -555,17 +555,13 @@ export class VisualText {
                             visualText.debugMessage('Deleting: ' + op.local, logLineType.UPDATER);
                             fs.unlinkSync(op.local);
                         }
-                        if (op.component == upComp.VT_FILES) {
-                            // #800: clear the entire visualText directory before re-downloading
-                            // so no stale/residual files survive. The generic per-folder delete
-                            // below built a doubled "visualText/visualText/..." path that never
-                            // existed, so it deleted nothing and left residual files behind.
-                            const vtDir = path.dirname(op.local);
-                            if (fs.existsSync(vtDir)) {
-                                visualText.debugMessage('Deleting VisualText dir: ' + vtDir, logLineType.UPDATER);
-                                dirfuncs.delDir(vtDir);
-                            }
-                        } else if (op.folders.length) {
+                        // NOTE: do NOT delete the whole visualText directory here. That
+                        // (#800) left the directory empty if the subsequent download/unzip
+                        // stalled, and the missing files re-triggered the updater, so the
+                        // unzip got stuck in a loop. The unzip overwrites files in place, so
+                        // a fresh download simply refreshes them. (Residual files from an
+                        // older release are tolerated; clearing them safely is future work.)
+                        if (op.folders.length) {
                             for (const folder of op.folders) {
                                 const f = path.join(path.dirname(op.local), folder);
                                 if (fs.existsSync(f)) {
