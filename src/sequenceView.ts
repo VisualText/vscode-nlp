@@ -459,6 +459,60 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
+	// Insert a python pass from the shared library (visualText/python/*.py). The
+	// chosen script is copied into the analyzer's spec/ and added to the sequence
+	// as a python pass. The generic "Insert Python Pass" (blank stub) still exists.
+	insertPythonLibrary(seqItem: SequenceItem, before: boolean = false): void {
+		if (!visualText.hasWorkspaceFolder())
+			return;
+		const pyDir = visualText.getVisualTextDirectory('python');
+		if (!dirfuncs.isDir(pyDir)) {
+			vscode.window.showWarningMessage('No python library folder found: ' + pyDir);
+			return;
+		}
+		const scripts = this.listLibraryPython(pyDir);
+		if (!scripts.length) {
+			vscode.window.showWarningMessage('No python scripts found in ' + pyDir);
+			return;
+		}
+		const items: vscode.QuickPickItem[] = scripts.map(s => ({ label: s.name, description: s.desc }));
+		const title = before ? 'Insert Python Library Pass Before Tokenizer' : 'Insert Python Library Pass';
+		vscode.window.showQuickPick(items, { title: title, placeHolder: 'Choose a python script to insert as a pass' }).then(sel => {
+			if (!sel)
+				return;
+			const src = path.join(pyDir, sel.label + '.py');
+			const dest = path.join(visualText.analyzer.getSpecDirectory().fsPath, sel.label + '.py');
+			try {
+				fs.copyFileSync(src, dest);
+			} catch (err: any) {
+				vscode.window.showErrorMessage('Could not copy python script: ' + err.message);
+				return;
+			}
+			// The library file now lives in spec/; insertNewPythonPass reuses it
+			// (createNewPythonFile only writes a stub when the file is absent).
+			visualText.analyzer.seqFile.insertNewPythonPass(seqItem, sel.label, before);
+			vscode.commands.executeCommand('sequenceView.refreshAll');
+		});
+	}
+
+	// List the python library scripts with their "# DESC:" descriptor line
+	// (scanned near the top of each file) for the picker.
+	listLibraryPython(dir: string): { name: string, desc: string }[] {
+		const result: { name: string, desc: string }[] = [];
+		for (const f of fs.readdirSync(dir)) {
+			if (!f.toLowerCase().endsWith('.py'))
+				continue;
+			const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+			let desc = '';
+			for (const line of raw.split(/\r?\n/).slice(0, 15)) {
+				const m = line.match(/^#\s*DESC:\s*(.*)$/i);
+				if (m) { desc = m[1].trim(); break; }
+			}
+			result.push({ name: path.parse(f).name, desc: desc });
+		}
+		return result.sort((a, b) => a.name.localeCompare(b.name));
+	}
+
 	renameTopComment(passFile: vscode.Uri) {
 		const textFile = new TextFile();
 		textFile.setFile(passFile);
@@ -640,6 +694,8 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.insertDecl', (seqItem) => treeDataProvider.insertDecl(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertPython', (seqItem) => treeDataProvider.insertPython(seqItem));
 		vscode.commands.registerCommand('sequenceView.insertPythonBeforeTokenize', (seqItem) => treeDataProvider.insertPython(seqItem, true));
+		vscode.commands.registerCommand('sequenceView.insertPythonLibrary', (seqItem) => treeDataProvider.insertPythonLibrary(seqItem));
+		vscode.commands.registerCommand('sequenceView.insertPythonLibraryBeforeTokenize', (seqItem) => treeDataProvider.insertPythonLibrary(seqItem, true));
 		vscode.commands.registerCommand('sequenceView.insertLibrary', (seqItem) => treeDataProvider.insertLibraryPass(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryKBFuncs', (seqItem) => treeDataProvider.libraryKBFuncs(seqItem));
 		vscode.commands.registerCommand('sequenceView.libraryTreeFuncs', (seqItem) => treeDataProvider.libraryTreeFuncs(seqItem));
