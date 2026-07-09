@@ -591,8 +591,9 @@ export class NLPFile extends TextFile {
 			let line = lines[position.line];
 			const posEnd = new vscode.Position(position.line + 1, 0);
 			const rang = new vscode.Selection(posEnd, posEnd);
-			line = line.replace(/\$/g, '\\$');
-			const snippet = new vscode.SnippetString(line);
+			// appendText escapes snippet metacharacters (\, $, }) so a literal "\\" is
+			// preserved instead of collapsing to "\" (#974).
+			const snippet = new vscode.SnippetString().appendText(line);
 			editor.insertSnippet(snippet, rang);
 			editor.selection = rang;
 		}
