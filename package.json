@@ -2459,13 +2459,13 @@
                 {
                     "command": "sequenceView.insertPython",
                     "group": "edit@4"
-                },
-                {
-                    "command": "sequenceView.insertPythonLibrary",
-                    "group": "edit@5"
                 }
             ],
             "librarypass": [
+                {
+                    "command": "sequenceView.insertPythonLibrary",
+                    "group": "edit@0"
+                },
                 {
                     "command": "sequenceView.libraryKBFuncs",
                     "group": "edit@1"
