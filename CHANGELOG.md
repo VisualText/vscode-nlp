@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.29
+Stop the updater from re-downloading the VisualText files every cycle.
+
+- The VT files existence check still looked for a `visualText/analyzers` folder, but that folder was **renamed to `analyzer-templates`** in the visualtext files. The stale name was never found, so the updater treated the VisualText files as permanently missing and re-downloaded/re-unzipped them on every update check. The check now looks for `analyzer-templates`.
+
 ### 3.2.28
 Fix the unzip hang on large engine libraries (the real root cause).
 
