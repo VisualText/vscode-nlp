@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.2.32",
+    "version": "3.3.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -3257,6 +3257,48 @@
             "type": "object",
             "title": "NLP",
             "properties": {
+                "nlp.format.enable": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": true,
+                    "description": "Enable the NLP++ document formatter (Format Document / format on save for .nlp and .pat files)."
+                },
+                "nlp.format.indentStyle": {
+                    "type": "string",
+                    "enum": [
+                        "tabs",
+                        "spaces",
+                        "editor"
+                    ],
+                    "enumDescriptions": [
+                        "Indent with tabs (the NLP++ default; keeps the ### (N) rule-comment alignment consistent).",
+                        "Indent with spaces (uses nlp.format.tabSize per level).",
+                        "Follow the editor's current tab/space setting for the file."
+                    ],
+                    "scope": "resource",
+                    "default": "tabs",
+                    "description": "Indentation unit the formatter emits."
+                },
+                "nlp.format.tabSize": {
+                    "type": "number",
+                    "scope": "resource",
+                    "default": 4,
+                    "description": "Spaces per indent level when nlp.format.indentStyle is \"spaces\"."
+                },
+                "nlp.format.braceStyle": {
+                    "type": "string",
+                    "enum": [
+                        "allman",
+                        "keep"
+                    ],
+                    "enumDescriptions": [
+                        "Put an opening brace { on its own line (Allman).",
+                        "Leave braces where the author put them; only fix indentation."
+                    ],
+                    "scope": "resource",
+                    "default": "allman",
+                    "description": "Brace placement the formatter enforces in @DECL/@CODE/@POST code regions."
+                },
                 "update.auto": {
                     "type": "boolean",
                     "scope": "application",
@@ -3362,6 +3404,7 @@
         "lint:fix": "eslint src/**/*.ts --fix",
         "pretest": "npm run compile && npm run lint",
         "test": "node ./dist/test/runTest.js",
+        "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "vsce-package": "npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
