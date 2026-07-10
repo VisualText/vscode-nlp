@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.32
+Fix rule reformatting leaving a doubled node number in the comment.
+
+- Reformatting a comment where a node number was glued to the annotation — e.g. `_word ### (2) (2)moose and stuff` (or `### (2)moose and stuff`) — now strips the whole leading run of `(N)` (spaced or glued to the following word) and produces `### (2) moose and stuff`, instead of keeping the extra number. A parenthesized number in the *middle* of an annotation (e.g. `### see rule (3) here`) is still preserved. ([#1077](https://github.com/VisualText/vscode-nlp/issues/1077))
+
 ### 3.2.31
 Fix rule reformatting of numbered comments that carry annotations.
 

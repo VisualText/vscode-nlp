@@ -852,11 +852,12 @@ export class NLPFile extends TextFile {
 	constructLine(rules, words: string[], type: reformatType) {
 		// Pull the user's annotation out of the trailing comment (the tokens
 		// after the first '#'-prefixed token), dropping the auto-generated node
-		// number '(N)' whether it was written right after '###'
-		// (e.g. "### (2) beginning of year") or at the end (e.g. "### note (2)").
-		// Previously only a trailing '(N)' was stripped, so a leading one stayed
-		// in the comment and a second number got appended on reformat. (#1065)
-		const isNodeNum = (w: string) => /^\(\d+\)$/.test(w);
+		// number. The reformatter emits it number-first ("### (N) note"), so we
+		// strip a leading run of "(N)" -- whether spaced OR glued to the next
+		// word, e.g. "(2) (2)moose and stuff" -> "moose and stuff" -- plus a
+		// single trailing "(N)" left over from the old number-last style. A "(N)"
+		// in the middle of the annotation is the user's text and is kept.
+		// (#1065, #1077)
 		let commentStart = words.length;   // index of the '#'-token, or words.length if none
 		for (let i = words.length - 1; i >= 0; i--) {
 			if (words[i].startsWith('#')) {
@@ -866,12 +867,10 @@ export class NLPFile extends TextFile {
 		}
 		let userComment = '';
 		if (commentStart < words.length) {
-			const commentWords = words.slice(commentStart + 1);
-			if (commentWords.length && isNodeNum(commentWords[0]))
-				commentWords.shift();
-			else if (commentWords.length && isNodeNum(commentWords[commentWords.length - 1]))
-				commentWords.pop();
-			userComment = commentWords.join(' ');
+			userComment = words.slice(commentStart + 1).join(' ')
+				.replace(/^(?:\(\d+\)\s*)+/, '')
+				.replace(/\s*\(\d+\)\s*$/, '')
+				.trim();
 		}
 		let word = '';  // Declare word here
 
