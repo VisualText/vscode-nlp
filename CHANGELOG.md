@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.27
+Make the updater self-healing and fix the Stop button.
+
+- **Stop now actually stops.** Pressing Stop while an unzip/download was running left the op marked `RUNNING`, which kept the updater loop alive forever — so the stop icon never went away. Stop now abandons in-flight ops (they can't be truly cancelled, but the timer, queue, and `updating.running` state reset immediately).
+- **Partial installs self-heal.** The existence check treated any folder that merely *exists* as complete, so an empty `include`/`lib`/`visualText` folder left by an interrupted download was declared "done" — leaving missing files that never got re-fetched. It now treats an **empty folder as missing** and re-downloads.
+- **Hung unzip no longer wedges the updater.** A 120s watchdog on extraction turns a hang into a normal failure, so the queue completes and the next run retries instead of sitting at `RUNNING` indefinitely.
+
 ### 3.2.26
 Fix the updater getting stuck while unzipping `visualtext.zip`.
 
