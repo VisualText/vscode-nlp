@@ -842,6 +842,24 @@ export class VisualText {
         })();
     }
 
+    // Move a single extracted entry into its final location, replacing any
+    // existing file/dir. src and dst live on the same volume (the temp dir is a
+    // child of the engine dir), so renameSync is atomic and fast; the cpSync
+    // fallback only covers a transient Windows lock on the destination.
+    private moveIntoPlace(src: string, dst: string) {
+        if (fs.existsSync(dst)) {
+            if (fs.statSync(dst).isDirectory()) dirfuncs.delDir(dst);
+            else fs.unlinkSync(dst);
+        }
+        try {
+            fs.renameSync(src, dst);
+        } catch (e) {
+            fs.cpSync(src, dst, { recursive: true });
+            if (fs.statSync(src).isDirectory()) dirfuncs.delDir(src);
+            else fs.unlinkSync(src);
+        }
+    }
+
     unzip(op: updateOp) {
         (async () => {
             const vtFileDir = path.dirname(op.local);
@@ -850,36 +868,43 @@ export class VisualText {
                 ? path.join(vtFileDir, path.basename(op.remote))
                 : op.local;
 
+            // Extract into a temp sibling dir first, then move each top-level
+            // entry into place only after the FULL extraction succeeds. An
+            // interrupted or partial unzip therefore never lands in the engine
+            // dir, so it can't masquerade as a complete install and re-trigger
+            // the download->unzip retry loop that left the updater stuck. The
+            // source zip is only deleted after everything is moved into place,
+            // so a re-run always re-extracts cleanly from scratch. (See #1070.)
+            const tmpDir = path.join(vtFileDir, '.vt-unzip-tmp');
             const extract = require('extract-zip')
             try {
-                this.debugMessage('Unzipping: ' + toPath, logLineType.UPDATER);
-                await extract(toPath, { dir: vtFileDir });
+                if (fs.existsSync(tmpDir)) dirfuncs.delDir(tmpDir);
+                fs.mkdirSync(tmpDir, { recursive: true });
+
+                this.debugMessage('Unzipping (this can take ~15s): ' + toPath, logLineType.UPDATER);
+                await extract(toPath, { dir: tmpDir });
                 this.debugMessage('UNZIPPED: ' + toPath, logLineType.UPDATER);
 
+                // exe zips wrap their payload in a single subfolder; flatten it.
+                let srcRoot = tmpDir;
                 if (isLinuxExeZip) {
-                    const subfolder = path.join(vtFileDir, path.basename(toPath, '.zip'));
-                    if (fs.existsSync(subfolder)) {
-                        for (const f of fs.readdirSync(subfolder)) {
-                            const src = path.join(subfolder, f);
-                            const dst = f === 'nlpl.exe'
-                                ? path.join(vtFileDir, visualText.NLP_EXE)
-                                : path.join(vtFileDir, f);
-                            if (fs.existsSync(dst)) {
-                                const stat = fs.statSync(dst);
-                                if (stat.isDirectory()) dirfuncs.delDir(dst);
-                                else fs.unlinkSync(dst);
-                            }
-                            fs.renameSync(src, dst);
-                        }
-                        dirfuncs.delDir(subfolder);
-                    }
+                    const subfolder = path.join(tmpDir, path.basename(toPath, '.zip'));
+                    if (fs.existsSync(subfolder)) srcRoot = subfolder;
+                }
+                for (const f of fs.readdirSync(srcRoot)) {
+                    const dst = (isLinuxExeZip && f === 'nlpl.exe')
+                        ? path.join(vtFileDir, visualText.NLP_EXE)
+                        : path.join(vtFileDir, f);
+                    visualText.moveIntoPlace(path.join(srcRoot, f), dst);
                 }
 
+                dirfuncs.delDir(tmpDir);
                 op.status = upStat.DONE;
                 dirfuncs.delFile(toPath);
             }
             catch (err) {
                 this.debugMessage('Could not unzip file: ' + toPath + '\n' + err, logLineType.UPDATER);
+                if (fs.existsSync(tmpDir)) dirfuncs.delDir(tmpDir);
                 op.status = upStat.FAILED;
             }
         })();
