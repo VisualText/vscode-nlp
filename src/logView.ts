@@ -85,6 +85,7 @@ export class LogView {
 		vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp());
 		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
 		vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug());
+		vscode.commands.registerCommand('logView.toggleAutoUpdate', () => this.toggleAutoUpdate());
 		vscode.commands.registerCommand('logView.analyzerOuts', () => this.loadAnalyzerOuts());
 		vscode.commands.registerCommand('logView.analyzeSummary', () => this.loadAnalyzeSummary());
 		vscode.commands.registerCommand('logView.enginePath', () => this.enginePath());
@@ -129,6 +130,22 @@ export class LogView {
 				return;
 			}
 			visualText.debug = selection.label === arfirm ? true : false;
+		});
+	}
+
+	toggleAutoUpdate() {
+		const items: vscode.QuickPickItem[] = [];
+		const on = 'Turn ON auto update';
+		const current = visualText.getAutoUpdate() ? ' (currently ON)' : ' (currently OFF)';
+		items.push({ label: on, description: 'automatically update the engine and VisualText files on load/reload' });
+		items.push({ label: 'Turn OFF auto update', description: 'do not auto update on load/reload' });
+		vscode.window.showQuickPick(items, { title: 'Auto Update' + current, canPickMany: false, placeHolder: 'Choose ON or Off' }).then(selection => {
+			if (!selection) {
+				return;
+			}
+			const enable = selection.label === on;
+			visualText.setAutoUpdate(enable);
+			vscode.window.showInformationMessage('Auto update is now ' + (enable ? 'ON' : 'OFF'));
 		});
 	}
 
