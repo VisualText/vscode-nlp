@@ -7,6 +7,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 Fix rule reformatting of numbered comments that carry annotations.
 
 - Reformatting a rule whose element comments include an annotation after the node number — e.g. `_amount ### (2) beginning of year` — no longer keeps the old number in the comment and append a second one (`### (2) beginning of year (2)`). The reformatter now recognizes the auto-generated `(N)` whether it was written just after `###` (number-first) or at the end (number-last), strips it, and re-emits the comment as `### (N) annotation`, preserving the user's text. A parenthesized number in the *middle* of an annotation (e.g. `### see rule (3) for details`) is left untouched. ([#1065](https://github.com/VisualText/vscode-nlp/issues/1065))
+- **Sequence view menu**: **Insert Python Library Pass Before Tokenizer** moved up to just after the **Library Pass** submenu (it previously sat down in the tokenize group). It still appears only when right-clicking a tokenizer pass.
 
 ### 3.2.30
 Sequence view menu tweak.
