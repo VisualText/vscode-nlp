@@ -378,7 +378,10 @@ export class VisualText {
                 visualText.zipFiles(op, visualText.NLPENGINE_REPO, '', visualText.NLPENGINE_COMPILE_FILES_ASSET, ['include', 'lib']);
                 break;
             case upComp.VT_FILES:
-                visualText.zipFiles(op, visualText.VISUALTEXT_FILES_REPO, 'visualText', visualText.VISUALTEXT_FILES_ASSET, [visualText.ANALYZER_SEQUENCE_FOLDER, 'Help', 'analyzers']);
+                // 'analyzer-templates' replaced the old 'analyzers' folder in the
+                // visualtext.zip; checking the stale name made VT_FILES look
+                // permanently missing, so the updater re-downloaded it every cycle.
+                visualText.zipFiles(op, visualText.VISUALTEXT_FILES_REPO, 'visualText', visualText.VISUALTEXT_FILES_ASSET, [visualText.ANALYZER_SEQUENCE_FOLDER, 'Help', 'analyzer-templates']);
                 break;
             case upComp.ANALYZER_FILES:
                 visualText.zipFiles(op, visualText.ANALYZERS_REPO, 'analyzers', visualText.ANALYZERS_ASSET, ['']);
