@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.26
+Fix the updater getting stuck while unzipping `visualtext.zip`.
+
+- The unzip now extracts into a temporary sibling directory and only moves each top-level entry into the engine directory **after the full extraction succeeds**. Previously the extraction wrote directly into the engine dir, so an interrupted unzip (e.g. a window reload mid-extraction) left a **partial tree** that looked like a complete install. The leftover `.zip` then made the updater skip the download and jump straight back to the unzip, which was interrupted again — an endless "stuck on unzipping" loop. The source `.zip` is now deleted only after everything is moved into place, so any re-run re-extracts cleanly from scratch.
+- **KB view**: `.json` files placed in `kb/user` now appear in the tree (with the JSON icon), so JSON data fed to an analyzer for the `json2kbb` pass is visible alongside the `.kbb` files it generates.
+
 ### 3.2.25
 Menu tweaks, JSON icon, and orphan-python fix.
 

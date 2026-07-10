@@ -96,7 +96,9 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 		const entries = dirfuncs.getDirectoryTypes(dir);
 		visualText.mod.clear();
 		visualText.modFiles = [];
-		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.test', '.txt'];
+		// .json is listed so JSON sources placed in kb/user (converted to .kbb by the
+		// json2kbb python pass) are visible alongside the KB files they generate.
+		const order = ['.dict', '.dictt', '.kbb', '.kbbb', '.nlm', '.json', '.test', '.txt'];
 
 		for (const ext of order) {
 			for (const entry of entries) {
