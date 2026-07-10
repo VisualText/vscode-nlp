@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.25
+Menu tweaks, JSON icon, and orphan-python fix.
+
+- **Toggle Auto Update** added to the Logging view's `⋯` menu (next to Toggle Update Trace), so auto-update can be turned on/off without editing settings.
+- **KB view**: "Explore KB Folder" added to the title `⋯` menu, and the help **Video** moved from the title bar into the `⋯` menu.
+- **Output view**: "Explore Folder" added to the title `⋯` menu.
+- **JSON files** now show a `{ }` JSON icon in the tree.
+- **Orphan passes**: clicking the orphan button now shows **python (`.py`) passes** too (previously only `.nlp`/`.pat`), and the orphan check no longer misclassifies them. The same fix applies to Delete Orphans.
+
 ### 3.2.24
 Fix update loop with multiple extension versions installed.
 

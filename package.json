@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.2.24",
+    "version": "3.2.25",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -1674,6 +1674,14 @@
                 }
             },
             {
+                "command": "logView.toggleAutoUpdate",
+                "title": "Toggle Auto Update",
+                "icon": {
+                    "light": "resources/light/update.svg",
+                    "dark": "resources/dark/update.svg"
+                }
+            },
+            {
                 "command": "logView.checkUpdates",
                 "title": "Check for updates",
                 "icon": {
@@ -2098,9 +2106,14 @@
                     "group": "navigation@4"
                 },
                 {
+                    "command": "kbView.explore",
+                    "when": "view == kbView",
+                    "group": "second@0"
+                },
+                {
                     "command": "kbView.video",
                     "when": "view == kbView",
-                    "group": "navigation@6"
+                    "group": "second@2"
                 },
                 {
                     "command": "kbView.langLibs",
@@ -2258,6 +2271,11 @@
                     "group": "navigation@5"
                 },
                 {
+                    "command": "outputView.explore",
+                    "when": "view == outputView",
+                    "group": "secondary@5"
+                },
+                {
                     "command": "outputView.video",
                     "when": "view == outputView",
                     "group": "secondary@6"
@@ -2304,6 +2322,11 @@
                 },
                 {
                     "command": "logView.updateDebug",
+                    "when": "view == logView",
+                    "group": "third"
+                },
+                {
+                    "command": "logView.toggleAutoUpdate",
                     "when": "view == logView",
                     "group": "third"
                 },

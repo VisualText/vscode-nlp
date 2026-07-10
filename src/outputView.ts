@@ -207,10 +207,9 @@ export class OutputView {
 	deleteOrphans(): void {
 		if (visualText.hasWorkspaceFolder()) {
 			const files: vscode.Uri[] = [];
-			const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp']);
+			const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp', '.py']);
 			for (const nlpFile of nlpFiles) {
-				if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.nlp')) == true &&
-					visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.pat')) == true) {
+				if (visualText.analyzer.seqFile.isOrphan(path.parse(nlpFile.fsPath).name) == true) {
 					files.push(nlpFile);
 				}
 			}
@@ -301,10 +300,11 @@ export class OutputView {
 				this.outputFiles = this.outputFiles.concat(kbFiles);
 			}
 			else if (this.type == outputFileType.NLP) {
-				const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp']);
+				// Include python passes (.py) alongside .nlp/.pat, and test orphan status
+				// by the extension-stripped pass name so .py files are classified correctly.
+				const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp', '.py']);
 				for (const nlpFile of nlpFiles) {
-					if (visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.nlp')) == true &&
-						visualText.analyzer.seqFile.isOrphan(path.basename(nlpFile.fsPath, '.pat')) == true) {
+					if (visualText.analyzer.seqFile.isOrphan(path.parse(nlpFile.fsPath).name) == true) {
 						this.outputFiles.push(nlpFile);
 					}
 				}
