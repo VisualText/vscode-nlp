@@ -12,6 +12,7 @@ import { HelpView } from './helpView';
 import { LogView } from './logView';
 import { NLPStatusBar } from './status';
 import { visualText } from './visualText';
+import { registerFormatter } from './format/formatProvider';
 
 export function activate(ctx: vscode.ExtensionContext): void {
     TextView.attach(ctx);
@@ -25,6 +26,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     const help = HelpView.attach(ctx);
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
+    registerFormatter(ctx);
 
     // First-run welcome / new-version notes / announcements (guarded; never
     // blocks activation). Shows at most one popup, version notes taking priority.

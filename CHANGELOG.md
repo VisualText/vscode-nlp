@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.3.0
+Add a full document formatter for NLP++ (`.nlp`/`.pat`) files.
+
+- **Format Document** (Shift+Alt+F / format on save) and **Format Selection** (Ctrl+K Ctrl+F) now work on NLP++ pass files. The formatter is region-aware: it reflows `@RULES`/`@MULTI` rule blocks (one element per line with an aligned, auto-numbered `### (N)` comment column) and re-indents `@DECL`/`@CODE`/`@PRE`/`@POST`/`@CHECK` code with tabs and Allman braces. Preamble/header regions pass through untouched.
+- **Rigorous and safe.** The engine is built on a lossless tokenizer, so strings and comments can never be corrupted. Every region is emitted only if formatting it is a fixpoint *and* leaves the rule's semantic "spine" (its elements and attributes) unchanged — so a reformat can never alter what a rule matches. Verified idempotent and lossless across a corpus of 11,000+ real `.nlp` files.
+- **Fixes a latent bug** shared with the existing "Reformat Rule" command: the reformatter was silently dropping an attribute bracket on the suggested/rewrite node (`_ENDRULE [base] <-` became `_ENDRULE <-`, affecting 10,000+ rules in the wild). The full node is now preserved.
+- Configurable via `nlp.format.*` settings: `enable`, `indentStyle` (tabs/spaces/editor), `tabSize`, and `braceStyle` (allman/keep).
+
 ### 3.2.32
 Fix rule reformatting leaving a doubled node number in the comment.
 

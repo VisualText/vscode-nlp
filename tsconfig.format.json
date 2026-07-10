@@ -1,0 +1,20 @@
+// Standalone build for the pure-TS formatter engine + corpus harness.
+// Emits to out-format/ (gitignored, not shipped) so it never touches the
+// webpacked dist/ bundle. Run via: npm run test:format
+{
+	"compilerOptions": {
+		"rootDir": "src/format",
+		"outDir": "out-format",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"sourceMap": false
+	},
+	"include": ["src/format/**/*.ts"],
+	"exclude": ["src/format/formatProvider.ts"]
+}
