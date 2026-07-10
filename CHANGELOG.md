@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.28
+Fix the unzip hang on large engine libraries (the real root cause).
+
+- The updater now extracts zips with the **OS-native extractor** (`bsdtar`, shipped on Windows 10 1803+/11 and macOS) instead of the `extract-zip` library, which was observed to **hang** on large entries — specifically `nlpengine-compile-libs.zip`, whose `words.lib` is 38 MB (the whole zip expands to ~60 MB). Native `tar` extracts that same zip in a fraction of a second; `extract-zip` timed out at 120 s. `extract-zip` remains a fallback where a zip-capable `tar` isn't present (e.g. GNU tar on Linux). This is what was actually causing the recurring "stuck on unzipping" hangs; 3.2.26/3.2.27 kept the partial state from wedging the updater, and this removes the hang itself.
+
 ### 3.2.27
 Make the updater self-healing and fix the Stop button.
 

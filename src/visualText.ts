@@ -881,6 +881,33 @@ export class VisualText {
         }
     }
 
+    // Extract a zip into destDir. Prefers the OS-native extractor (bsdtar,
+    // shipped on Windows 10+/1803 and macOS), which handles large entries
+    // reliably and fast -- extract-zip has been observed to HANG on big native
+    // static libs (e.g. a 38 MB words.lib in nlpengine-compile-libs.zip), while
+    // tar extracts the same 60 MB zip in a fraction of a second. Falls back to
+    // extract-zip where a zip-capable tar isn't available (e.g. GNU tar on
+    // Linux). (See #1073.)
+    private extractArchive(zipPath: string, destDir: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const useTar = os.platform() === 'win32' || os.platform() === 'darwin';
+            const tryExtractZip = (why?: string) => {
+                if (why) this.debugMessage('Native unzip unavailable (' + why + '), using extract-zip', logLineType.UPDATER);
+                const extract = require('extract-zip');
+                extract(zipPath, { dir: destDir }).then(() => resolve()).catch(reject);
+            };
+            if (!useTar) { tryExtractZip(); return; }
+            const { execFile } = require('child_process');
+            const tarExe = os.platform() === 'win32'
+                ? path.join(process.env.WINDIR || 'C:\\Windows', 'System32', 'tar.exe')
+                : 'tar';
+            execFile(tarExe, ['-xf', zipPath, '-C', destDir], { windowsHide: true }, (err: any) => {
+                if (err) tryExtractZip(err.message || String(err));
+                else resolve();
+            });
+        });
+    }
+
     unzip(op: updateOp) {
         (async () => {
             const vtFileDir = path.dirname(op.local);
@@ -897,20 +924,21 @@ export class VisualText {
             // source zip is only deleted after everything is moved into place,
             // so a re-run always re-extracts cleanly from scratch. (See #1070.)
             const tmpDir = path.join(vtFileDir, '.vt-unzip-tmp');
-            const extract = require('extract-zip')
             try {
                 if (fs.existsSync(tmpDir)) dirfuncs.delDir(tmpDir);
                 fs.mkdirSync(tmpDir, { recursive: true });
 
-                this.debugMessage('Unzipping (this can take ~15s): ' + toPath, logLineType.UPDATER);
-                // Watchdog: if extract-zip never resolves (a hang seen on some
-                // machines), time out so the op FAILS instead of sitting at
-                // RUNNING forever and wedging the whole updater. FAILED is
-                // terminal, so the queue completes and the next run retries.
+                this.debugMessage('Unzipping: ' + toPath, logLineType.UPDATER);
+                // Watchdog: if extraction never resolves (a hang seen with
+                // extract-zip on large entries), time out so the op FAILS instead
+                // of sitting at RUNNING forever and wedging the whole updater.
+                // FAILED is terminal, so the queue completes and the next run
+                // retries. (The native tar path normally finishes in well under a
+                // second, so this only bites a genuine hang.)
                 const UNZIP_TIMEOUT_MS = 120000;
                 await Promise.race([
-                    extract(toPath, { dir: tmpDir }),
-                    new Promise((_resolve, reject) =>
+                    this.extractArchive(toPath, tmpDir),
+                    new Promise<void>((_resolve, reject) =>
                         setTimeout(() => reject(new Error('unzip timed out after '
                             + (UNZIP_TIMEOUT_MS / 1000) + 's')), UNZIP_TIMEOUT_MS))
                 ]);
