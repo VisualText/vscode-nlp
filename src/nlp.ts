@@ -797,24 +797,16 @@ export class NLPFile extends TextFile {
 		if (words.length)
 			this.constructLine(rules, words, type);
 
-		// Find longest line
+		// Find longest line (to align the '### (N)' comment column)
 		let maxLine = 0;
-		let maxComment = 0;
 		for (const rule of rules) {
-			let total = rule.rule.length;
-			if (total > maxLine)
-				maxLine = total;
-			total = rule.comment.length;
-			if (total > maxComment)
-				maxComment = total;
+			if (rule.rule.length > maxLine)
+				maxLine = rule.rule.length;
 		}
-		if (maxComment)
-			maxComment += 1;  // For space after user comment
 
 		// Construct reformated string
 		const tabsize = 4;
 		const tabsMax = Math.floor(maxLine / tabsize);
-		const tabsCommentMax = Math.floor(maxComment / tabsize);
 		let nodeNumber = 1;
 		let ruleLine = '';
 		let hasAtAt = false;
@@ -826,12 +818,14 @@ export class NLPFile extends TextFile {
 				ruleLine = rule.suggested + ' <-';
 			} else {
 				const tabstr = this.tabString(rule.rule.length, tabsize, tabsMax);
-				const tabCommentStr = this.tabString(rule.comment.length, tabsize, tabsCommentMax);
-				const commentStr = rule.comment.length ? rule.comment + ' \t' : tabsCommentMax > 0 ? tabCommentStr : '';
 				if (type == reformatType.ONELINE)
 					ruleLine = rule.rule;
 				else
-					ruleLine = '\t' + rule.rule + tabstr + '### ' + commentStr + '(' + nodeNumber.toString() + ')';
+					// Number first ("### (N) annotation") to match the auto-number
+					// style used elsewhere (tree/sequence) and keep any user
+					// annotation after the node number. (#1065)
+					ruleLine = '\t' + rule.rule + tabstr + '### (' + nodeNumber.toString() + ')'
+						+ (rule.comment.length ? ' ' + rule.comment : '');
 				nodeNumber++;
 			}
 			rulelinesFinal.push(ruleLine);
@@ -856,34 +850,30 @@ export class NLPFile extends TextFile {
 	}
 
 	constructLine(rules, words: string[], type: reformatType) {
-		// Check for user  or auto-generated comment
-		const lastOne = words[words.length - 1];
-		const second = lastOne.substring(1, lastOne.length - 1);
-		const parsed = parseInt(second);
-		const isNumeric = isNaN(parsed) ? false : true;
-		const lastIsNodeNumber = lastOne.startsWith('(') && lastOne.endsWith(')') && isNumeric ? true : false;
-		let commentStart = 0;
-		let userComment = '';
-		let found = false;
-		commentStart = words.length - 1;
-		for (const word of words.reverse()) {
-			if (word.startsWith('#')) {
-				found = true;
+		// Pull the user's annotation out of the trailing comment (the tokens
+		// after the first '#'-prefixed token), dropping the auto-generated node
+		// number '(N)' whether it was written right after '###'
+		// (e.g. "### (2) beginning of year") or at the end (e.g. "### note (2)").
+		// Previously only a trailing '(N)' was stripped, so a leading one stayed
+		// in the comment and a second number got appended on reformat. (#1065)
+		const isNodeNum = (w: string) => /^\(\d+\)$/.test(w);
+		let commentStart = words.length;   // index of the '#'-token, or words.length if none
+		for (let i = words.length - 1; i >= 0; i--) {
+			if (words[i].startsWith('#')) {
+				commentStart = i;
 				break;
 			}
-			commentStart--;
 		}
-		words.reverse();
+		let userComment = '';
+		if (commentStart < words.length) {
+			const commentWords = words.slice(commentStart + 1);
+			if (commentWords.length && isNodeNum(commentWords[0]))
+				commentWords.shift();
+			else if (commentWords.length && isNodeNum(commentWords[commentWords.length - 1]))
+				commentWords.pop();
+			userComment = commentWords.join(' ');
+		}
 		let word = '';  // Declare word here
-		if (found) {
-			const end = lastIsNodeNumber ? words.length - 1 : words.length;
-			for (let i = commentStart + 1; i < end; i++) {
-				word = words[i];
-				if (userComment.length)
-					userComment += ' ';
-				userComment += word;
-			}
-		}
 
 		// Construct Line
 		if (!words.length)
