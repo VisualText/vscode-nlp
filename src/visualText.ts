@@ -467,10 +467,14 @@ export class VisualText {
 
         for (const o of visualText.opsQueue) {
             if (visualText.stopAll) {
-                if (o.status == upStat.RUNNING)
-                    allDone = false;
-                else
-                    o.status = upStat.DONE;
+                // Abandon every op, including a RUNNING one. The download/unzip
+                // async is fire-and-forget and can't be truly cancelled, but the
+                // updater state -- the timer, the queue, and the "updating.running"
+                // context that shows the stop icon -- MUST reset so Stop actually
+                // stops. (Previously a RUNNING op kept allDone false forever, so
+                // the stop icon never went away.) A late-completing async just sets
+                // status on an op no longer in the queue, which is harmless.
+                o.status = upStat.CANCEL;
             }
             else {
                 if (o.status == upStat.UNKNOWN || o.status == upStat.START || o.status == upStat.RUNNING) {
@@ -519,7 +523,11 @@ export class VisualText {
                             let missingOne = false;
                             for (const folder of op.folders) {
                                 const f = path.join(endDir, folder);
-                                if (!fs.existsSync(f)) {
+                                // An empty folder means a prior download/unzip was
+                                // interrupted; treat it as missing so the updater
+                                // re-fetches instead of declaring an incomplete
+                                // install complete (which left "missing files").
+                                if (!visualText.pathPopulated(f)) {
                                     missingOne = true;
                                     break;
                                 }
@@ -842,6 +850,19 @@ export class VisualText {
         })();
     }
 
+    // A path counts as "populated" only if it exists AND has content: a
+    // non-empty directory, or a non-empty file. An empty dir left by an
+    // interrupted download/unzip is treated as absent so the updater re-fetches.
+    private pathPopulated(p: string): boolean {
+        try {
+            if (!fs.existsSync(p)) return false;
+            const st = fs.statSync(p);
+            return st.isDirectory() ? fs.readdirSync(p).length > 0 : st.size > 0;
+        } catch {
+            return false;
+        }
+    }
+
     // Move a single extracted entry into its final location, replacing any
     // existing file/dir. src and dst live on the same volume (the temp dir is a
     // child of the engine dir), so renameSync is atomic and fast; the cpSync
@@ -882,7 +903,17 @@ export class VisualText {
                 fs.mkdirSync(tmpDir, { recursive: true });
 
                 this.debugMessage('Unzipping (this can take ~15s): ' + toPath, logLineType.UPDATER);
-                await extract(toPath, { dir: tmpDir });
+                // Watchdog: if extract-zip never resolves (a hang seen on some
+                // machines), time out so the op FAILS instead of sitting at
+                // RUNNING forever and wedging the whole updater. FAILED is
+                // terminal, so the queue completes and the next run retries.
+                const UNZIP_TIMEOUT_MS = 120000;
+                await Promise.race([
+                    extract(toPath, { dir: tmpDir }),
+                    new Promise((_resolve, reject) =>
+                        setTimeout(() => reject(new Error('unzip timed out after '
+                            + (UNZIP_TIMEOUT_MS / 1000) + 's')), UNZIP_TIMEOUT_MS))
+                ]);
                 this.debugMessage('UNZIPPED: ' + toPath, logLineType.UPDATER);
 
                 // exe zips wrap their payload in a single subfolder; flatten it.
