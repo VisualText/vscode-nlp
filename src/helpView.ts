@@ -271,7 +271,7 @@ export class HelpView {
             engineExe: path.join(engineDir, exeName),
             engineDir: engineDir,
             visualTextDir: visualText.getVisualTextDirectory(),
-            analyzersDir: visualText.getVisualTextDirectory('analyzers'),
+            analyzersDir: visualText.getBlockAnalyzersPath().fsPath,
             templatesDir: visualText.getVisualTextDirectory('analyzer-templates'),
             languagesDir: visualText.getVisualTextDirectory('languages'),
             miscDir: visualText.getVisualTextDirectory('misc'),
