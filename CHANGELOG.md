@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.2.24
+Fix update loop with multiple extension versions installed.
+
+- The updater's existence check now uses the same engine directory the download/unzip target (`engineDirectory()`). Previously it used `getExtensionPath()`, which could resolve to a **different installed version**, so with several `dehilster.nlp-*` versions present the check looked in one directory while the download populated another — the update never registered as complete and the unzip looped. (Related: #481.)
+
 ### 3.2.23
 Fix VisualText files update getting stuck.
 

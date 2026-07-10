@@ -508,7 +508,13 @@ export class VisualText {
             case upStat.START:
                 switch (op.operation) {
                     case upOp.CHECK_EXISTS:
-                        const endDir = path.join(visualText.getExtensionPath().fsPath, visualText.NLPENGINE_REPO);
+                        // Use the SAME engine directory the download/unzip target
+                        // (engineDirectory(), based on this.version). getExtensionPath()
+                        // can resolve to a different installed version, so with multiple
+                        // versions installed the check looked in one dir while the download
+                        // populated another -- the update never registered as done and the
+                        // unzip looped. (See #481.)
+                        const endDir = visualText.engineDirectory().fsPath;
                         if (op.folders.length && endDir) {
                             let missingOne = false;
                             for (const folder of op.folders) {
