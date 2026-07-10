@@ -318,9 +318,12 @@ export class Analyzer {
         const hierPath = path.join(kbPath.fsPath, "hier.kb");
         if (fs.existsSync(hierPath)) {
             const currHierText = new TextFile(hierPath);
-            visualText.getExtensionDirs();
-            const extPath = visualText.getExtensionPath();
-            const extHierPath = path.join(extPath.fsPath, "nlp-engine", "visualtext", "analyzers", "basic", "kb", "user", "hier.kb");
+            // The 'basic' analyzer was replaced by the 'Bare Minimum' template
+            // (which carries the same baseline hier.kb shared by most templates)
+            // under analyzer-templates. Resolve via the installed engine dir
+            // rather than getExtensionPath(), which can point at a different
+            // installed version when several are present.
+            const extHierPath = path.join(visualText.getVisualTextDirectory("analyzer-templates"), "Bare Minimum", "kb", "user", "hier.kb");
             if (fs.existsSync(extHierPath)) {
                 const basicHierText = new TextFile(extHierPath);
                 if (basicHierText.getText() != currHierText.getText()) {
