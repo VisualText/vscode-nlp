@@ -1126,14 +1126,6 @@
                 }
             },
             {
-                "command": "sequenceView.insertAnalyzerBlock",
-                "title": "Insert Analyzer Block(s)",
-                "icon": {
-                    "light": "resources/light/file-code.svg",
-                    "dark": "resources/dark/file-code.svg"
-                }
-            },
-            {
                 "command": "sequenceView.deleteFolder",
                 "title": "Delete Folder",
                 "icon": {
@@ -2658,11 +2650,6 @@
                     "command": "sequenceView.insertOrphan",
                     "when": "view == sequenceView",
                     "group": "atop@4"
-                },
-                {
-                    "command": "sequenceView.insertAnalyzerBlock",
-                    "when": "view == sequenceView && viewItem =~ /.*outside.*/",
-                    "group": "atop@5"
                 },
                 {
                     "command": "sequenceView.newFolder",

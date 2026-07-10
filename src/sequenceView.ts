@@ -723,7 +723,6 @@ export class SequenceView {
 		vscode.commands.registerCommand('sequenceView.toggleActive', (seqItem) => this.toggleActive(seqItem));
 		vscode.commands.registerCommand('sequenceView.modAdd', () => this.modAdd());
 		vscode.commands.registerCommand('sequenceView.video', () => this.video());
-		vscode.commands.registerCommand('sequenceView.insertAnalyzerBlock', (seqItem) => this.insertAnalyzerBlocks(seqItem));
 		vscode.commands.registerCommand('sequenceView.compareSisters', (seqItem) => this.compareSisters(seqItem));
 		vscode.commands.registerCommand('sequenceView.copyContext', (seqItem) => this.copyContext(seqItem));
 		vscode.commands.registerCommand('sequenceView.compareLibrary', (seqItem) => this.compareLibrary(seqItem));
@@ -800,43 +799,6 @@ export class SequenceView {
 					vscode.commands.executeCommand('sequenceView.refreshAll');
 					return true;
 				});
-			}
-		}
-	}
-
-	insertAnalyzerBlocks(seqItem: SequenceItem): void {
-		if (visualText.getWorkspaceFolder()) {
-			const items: vscode.QuickPickItem[] = [];
-			const fromDir = path.join(visualText.getVisualTextDirectory('analyzers'));
-			if (dirfuncs.isDir(fromDir)) {
-				const files = dirfuncs.getDirectories(vscode.Uri.file(fromDir));
-				for (const file of files) {
-					if (dirfuncs.isDir(file.fsPath)) {
-						const readme = path.join(file.fsPath, "README.MD");
-						let descr: string, tit: string;
-						({ title: tit, description: descr } = visualText.analyzer.readDescription(readme));
-						items.push({ label: tit, description: descr });
-					}
-				}
-				vscode.window.showQuickPick(items, { title: 'Insert Analyzer', canPickMany: true, placeHolder: 'Choose analyzer blocks to insert' }).then(selections => {
-					if (!selections)
-						return false;
-					let row = seqItem.row;
-					if (seqItem.type.localeCompare('folder') == 0)
-						row = visualText.analyzer.seqFile.getLastItemInFolder(row).row;
-					const toDir = visualText.analyzer.getAnalyzerDirectory().fsPath;
-					visualText.fileOps.addFileOperation(vscode.Uri.file(fromDir), vscode.Uri.file(toDir), [fileOpRefresh.ANALYZER], fileOperation.ANASEL, row.toString());
-					for (const selection of selections) {
-						if (selection.description)
-							this.insertAnalyzerBlock(fromDir, toDir, selection.label);
-					}
-					visualText.fileOps.startFileOps();
-					vscode.commands.executeCommand('sequenceView.refreshAll');
-					return true;
-				});
-
-			} else {
-				vscode.window.showWarningMessage('No analyzers found in ' + fromDir);
 			}
 		}
 	}
