@@ -2637,19 +2637,24 @@
                     "group": "atop@1"
                 },
                 {
-                    "command": "sequenceView.insert",
-                    "when": "view == sequenceView",
+                    "command": "sequenceView.insertPythonLibraryBeforeTokenize",
+                    "when": "view == sequenceView && viewItem =~ /.*tokenize.*/",
                     "group": "atop@2"
                 },
                 {
-                    "command": "sequenceView.insertSister",
+                    "command": "sequenceView.insert",
                     "when": "view == sequenceView",
                     "group": "atop@3"
                 },
                 {
-                    "command": "sequenceView.insertOrphan",
+                    "command": "sequenceView.insertSister",
                     "when": "view == sequenceView",
                     "group": "atop@4"
+                },
+                {
+                    "command": "sequenceView.insertOrphan",
+                    "when": "view == sequenceView",
+                    "group": "atop@5"
                 },
                 {
                     "command": "sequenceView.newFolder",
@@ -2715,11 +2720,6 @@
                     "command": "sequenceView.insertPythonBeforeTokenize",
                     "when": "view == sequenceView && viewItem =~ /.*tokenize.*/",
                     "group": "tokenize@0"
-                },
-                {
-                    "command": "sequenceView.insertPythonLibraryBeforeTokenize",
-                    "when": "view == sequenceView && viewItem =~ /.*tokenize.*/",
-                    "group": "tokenize@1"
                 },
                 {
                     "command": "sequenceView.tokenize",
