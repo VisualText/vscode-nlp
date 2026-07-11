@@ -1,0 +1,9 @@
+name = "nlp-telemetry"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Fill database_id in after running:  wrangler d1 create nlp-telemetry
+[[d1_databases]]
+binding = "DB"
+database_name = "nlp-telemetry"
+database_id = "18a15af7-27c3-44b6-941e-b914fc60e1be"

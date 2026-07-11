@@ -12,6 +12,7 @@ import { nlpStatusBar, DevMode, RunMode } from './status';
 import { outputView, outputFileType } from './outputView';
 import { ReformatType as reformatType } from './format/types';
 import { formatRuleText } from './format/rulesRegion';
+import * as telemetry from './telemetry/telemetry';
 
 export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
 export enum analyzerStatus { UNKNOWN, ANALYZING, DONE, FAILED }
@@ -106,6 +107,8 @@ export class NLPFile extends TextFile {
 
 			const runMode = nlpStatusBar.getRunMode();
 			const usingCompiled = runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_KB || runMode === RunMode.COMPILED_ANALYZER;
+			// Anonymous: which run mode was used. No file names, paths, or content.
+			telemetry.sendEvent('analyzer.run', { mode: usingCompiled ? 'compiled' : 'interpreted' });
 			if (usingCompiled) {
 				const staged = visualText.nlp.stageCompiledAnalyzer(anapath, engineDir, filepath, runMode);
 				if (!staged) {

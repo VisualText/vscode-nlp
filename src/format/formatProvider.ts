@@ -5,6 +5,7 @@
 import * as vscode from "vscode";
 import { formatDocument, formatRegionsInRange } from "./formatter";
 import { FormatOptions } from "./types";
+import * as telemetry from "../telemetry/telemetry";
 
 // Resolve FormatOptions from the nlp.format.* settings, falling back to the
 // editor's own indentation for the "editor" indent style.
@@ -42,7 +43,20 @@ function fullDocumentEdit(
 	if (!cfg.get<boolean>("enable", true)) return [];
 
 	const original = document.getText();
-	const formatted = formatDocument(original, resolveOptions(document, fmt));
+	let formatted: string;
+	try {
+		formatted = formatDocument(original, resolveOptions(document, fmt));
+	} catch (err) {
+		// The formatter is designed never to throw; if it somehow does, don't
+		// corrupt the buffer -- report a scrubbed error and make no edit.
+		telemetry.sendError("format.error", "document", { bytes: original.length });
+		return [];
+	}
+	// Anonymous: byte count and a changed/unchanged flag only -- no content.
+	telemetry.sendEvent("format.document", undefined, {
+		bytes: original.length,
+		changed: formatted === original ? 0 : 1,
+	});
 	if (formatted === original) return [];
 
 	const fullRange = new vscode.Range(
@@ -66,7 +80,18 @@ function rangeEdits(
 	const src = document.getText();
 	const start = document.offsetAt(range.start);
 	const end = document.offsetAt(range.end);
-	return formatRegionsInRange(src, start, end, resolveOptions(document, fmt)).map((e) =>
+	let regionEdits;
+	try {
+		regionEdits = formatRegionsInRange(src, start, end, resolveOptions(document, fmt));
+	} catch (err) {
+		telemetry.sendError("format.error", "selection", { bytes: end - start });
+		return [];
+	}
+	telemetry.sendEvent("format.selection", undefined, {
+		bytes: end - start,
+		edits: regionEdits.length,
+	});
+	return regionEdits.map((e) =>
 		vscode.TextEdit.replace(
 			new vscode.Range(document.positionAt(e.start), document.positionAt(e.end)),
 			e.newText,

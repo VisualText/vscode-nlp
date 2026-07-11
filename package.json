@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -3257,6 +3257,12 @@
             "type": "object",
             "title": "NLP",
             "properties": {
+                "nlp.telemetry.enable": {
+                    "type": "boolean",
+                    "scope": "application",
+                    "default": true,
+                    "markdownDescription": "Send anonymous usage counts (feature usage, run mode, errors) to help improve the extension. Never includes file contents, analyzer/KB source, file names, or paths. This is layered on top of VS Code's global `#telemetry.telemetryLevel#` setting — if that is off, nothing is sent regardless of this setting."
+                },
                 "nlp.format.enable": {
                     "type": "boolean",
                     "scope": "resource",
