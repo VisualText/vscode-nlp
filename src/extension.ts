@@ -13,6 +13,7 @@ import { LogView } from './logView';
 import { NLPStatusBar } from './status';
 import { visualText } from './visualText';
 import { registerFormatter } from './format/formatProvider';
+import * as telemetry from './telemetry/telemetry';
 
 export function activate(ctx: vscode.ExtensionContext): void {
     TextView.attach(ctx);
@@ -27,6 +28,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
     registerFormatter(ctx);
+    telemetry.activate(ctx); // no-op unless a connection string is configured
 
     // First-run welcome / new-version notes / announcements (guarded; never
     // blocks activation). Shows at most one popup, version notes taking priority.

@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.0
+Add anonymous, opt-out usage telemetry.
+
+- The extension can now send **anonymous usage data** — counts and metadata only (which features are used, analyzer run mode, extension/VS Code version, platform, and handled errors) — to help prioritize work and catch problems in the field. It **never** sends file contents, analyzer/KB/dictionary source, file names, paths, or any text being analyzed. The only identifier is VS Code's already-anonymized `machineId`.
+- Fully opt-out and respected on two independent switches: VS Code's global `telemetry.telemetryLevel` and the new **`nlp.telemetry.enable`** setting. If either is off, nothing is sent. See the Telemetry section of the README.
+
 ### 3.3.0
 Add a full document formatter for NLP++ (`.nlp`/`.pat`) files.
 

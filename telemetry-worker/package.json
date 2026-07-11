@@ -1,0 +1,13 @@
+{
+	"name": "nlp-telemetry-worker",
+	"private": true,
+	"description": "Cloudflare Worker that records anonymous NLP++ extension usage into D1",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"tail": "wrangler tail"
+	},
+	"devDependencies": {
+		"wrangler": "^3.80.0"
+	}
+}

@@ -3,6 +3,12 @@ src/**
 tsconfig.json
 webpack.config.js
 
+# Standalone Cloudflare telemetry worker (deployed separately, never shipped)
+telemetry-worker/**
+
+# Formatter test-harness build output (npm run test:format) - never shipped
+out-format/**
+
 # Build artifacts we don't need
 *.vsix
 .vscode/**

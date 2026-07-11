@@ -220,6 +220,15 @@ Added fast load option for the TextView for large number of files
 ### 2.24.6
 Can now display fired rules from dictionaries.
 
+# Telemetry
+
+This extension can send **anonymous usage data** to help prioritize features and catch errors in the field. It records only counts and metadata — for example, that a document was formatted, which analyzer run mode was used, or that a handled error occurred. It **never** sends file contents, analyzer/KB/dictionary source, file names, paths, or any text being analyzed.
+
+Telemetry respects two independent opt-outs, and sends nothing if either is off:
+
+- VS Code's global `telemetry.telemetryLevel` setting (`off` disables all extension telemetry), and
+- the extension's own `nlp.telemetry.enable` setting.
+
 # Development
 
 ## VSCode Language Extension
