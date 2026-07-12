@@ -180,8 +180,14 @@ export class NLPFile extends TextFile {
 						// the KB-load segment (not additional segments), so they are shown as
 						// indented sub-lines. The KB (.kbb) and the dictionary (.dict) are
 						// reported separately.
-						const lazyKbb = /Lazy-loading words from [^\r\n]*\.kbb/i.test(engineOut);
-						const lazyDict = /Lazy-loading words from [^\r\n]*\.dict/i.test(engineOut);
+						// One "Lazy-loading words from <path>" line per file the engine loaded
+						// on demand; collect them all so each gets its own summary line.
+						const lazyFiles: string[] = [];
+						const lazyRe = /Lazy-loading words from ([^\r\n\]]+)/gi;
+						let lazyM: RegExpExecArray | null;
+						while ((lazyM = lazyRe.exec(engineOut)) !== null)
+							lazyFiles.push(lazyM[1].trim());
+						// Read times are reported per type (all .kbb together, all .dict together).
 						const kbbReadMatch = engineOut.match(/READ kbb files time\s*=\s*([0-9.]+)/);
 						const dictReadMatch = engineOut.match(/READ dict files time\s*=\s*([0-9.]+)/);
 						const kbSec = kbMatch ? parseFloat(kbMatch[1]) : 0;
@@ -200,12 +206,25 @@ export class NLPFile extends TextFile {
 						const summary: string[] = ['Analyzing ' + typeStr + ': ' + filename];
 						summary.push('Setup (extension): ' + rSetup.toFixed(2) + ' sec');
 						summary.push('Engine startup: ' + rEngine.toFixed(2) + ' sec');
-						if (kbMatch) {
+						if (kbMatch)
 							summary.push('Loaded knowledge base: ' + rKb.toFixed(2) + ' sec');
-							if (lazyKbb && kbbReadMatch)
-								summary.push('  Lazy-loaded KB: ' + round2(parseFloat(kbbReadMatch[1])).toFixed(2) + ' sec');
-							if (lazyDict && dictReadMatch)
-								summary.push('  Lazy-loaded dictionary: ' + round2(parseFloat(dictReadMatch[1])).toFixed(2) + ' sec');
+						// One line per lazy-loaded file. These render whether or not an eager
+						// "Loaded knowledge base" line was present (a lazy KB replaces it), and
+						// are indented as a sub-line only when it is. The per-type read time is
+						// attached to the first file of each type, since it is an aggregate.
+						const lazyTimeShown = new Set<string>();
+						for (const lazyFile of lazyFiles) {
+							const isDict = /\.dict$/i.test(lazyFile);
+							const readMatch = isDict ? dictReadMatch : kbbReadMatch;
+							const typeKey = isDict ? 'dict' : 'kbb';
+							let timeStr = '';
+							if (readMatch && !lazyTimeShown.has(typeKey)) {
+								timeStr = ': ' + round2(parseFloat(readMatch[1])).toFixed(2) + ' sec';
+								lazyTimeShown.add(typeKey);
+							} else if (readMatch) {
+								timeStr = ' (incl. above)';
+							}
+							summary.push((kbMatch ? '  ' : '') + 'Lazy-loaded ' + path.basename(lazyFile) + timeStr);
 						}
 						if (anaMatch)
 							summary.push('Loaded ' + anaMatch[1] + ': ' + rAna.toFixed(2) + ' sec');

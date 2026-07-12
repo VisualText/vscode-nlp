@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.2
+Show each lazy-loaded KB and dictionary file in the analyzer log.
+
+- The analyzer LOGGING summary only reported lazy-load timings when an eager `Loaded knowledge base` line was also present. The engine now lazy-loads the KB itself, which *replaces* that line, so the lazy-load info silently disappeared. It now renders independently of that line.
+- Each lazy-loaded file gets its own line, e.g. `Lazy-loaded en-full.kbb: 0.28 sec`. The per-type read time is shown on the first file of each type (`.kbb`, `.dict`); additional files of the same type are marked `(incl. above)`, since the engine reports one combined read time per type.
+
 ### 3.4.1
 Add a "copy file path" action to the Help view.
 
