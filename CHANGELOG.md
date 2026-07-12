@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.1
+Add a "copy file path" action to the Help view.
+
+- File-backed items in the Help view (markdown help pages and LLM prompt files) now show an inline **copy** icon on hover; clicking it copies the file's full local path to the clipboard. Category headers and external Helpful Links (which aren't local files) don't show it.
+
 ### 3.4.0
 Add anonymous, opt-out usage telemetry.
 

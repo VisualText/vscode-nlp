@@ -46,6 +46,12 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
         } else if (!item.collapsible && !item.isVersionRoot && item.page) {
             ti.command = { command: 'helpView.openVscodeHelp', title: 'Open Help', arguments: [item] };
         }
+        // File-backed items (a markdown page or a prompt file that exists on the
+        // local drive) get the inline "copy path" action; categories and
+        // external Helpful Links do not.
+        const filePath = helpView.helpFilePath(item);
+        if (filePath && fs.existsSync(filePath))
+            ti.contextValue = 'helpFile';
         return ti;
     }
 
@@ -124,6 +130,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.openPrompt', (item) => this.openPrompt(item));
         vscode.commands.registerCommand('helpView.openLink', (item) => this.openLink(item));
         vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
+        vscode.commands.registerCommand('helpView.copyPath', (item) => this.copyHelpPath(item));
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -254,6 +261,33 @@ export class HelpView {
     openLink(item: HelpItem) {
         if (item && item.url)
             vscode.env.openExternal(vscode.Uri.parse(item.url));
+    }
+
+    // ----- Copy file path -----------------------------------------------------
+
+    // Absolute path of the local file backing a Help item -- a prompt file or a
+    // markdown help page -- resolved the same way the open commands do. Returns
+    // undefined for items that aren't file-backed (category headers, external
+    // Helpful Links). Existence on disk is checked by the caller.
+    helpFilePath(item: HelpItem): string | undefined {
+        if (!item) return undefined;
+        if (item.promptFile)
+            return path.join(this.promptsDir(), item.promptFile);
+        if (item.page)
+            return path.join(visualText.getVisualTextDirectory('Help'), 'markdown', item.page + '.md');
+        return undefined;
+    }
+
+    // Inline action on file-backed Help items: copy the file's full path to the
+    // clipboard.
+    async copyHelpPath(item: HelpItem) {
+        const filePath = this.helpFilePath(item);
+        if (filePath && fs.existsSync(filePath)) {
+            await vscode.env.clipboard.writeText(filePath);
+            vscode.window.showInformationMessage(`Copied path: ${filePath}`);
+        } else {
+            vscode.window.showErrorMessage('This help item has no local file to copy.');
+        }
     }
 
     // ----- LLM prompt library -------------------------------------------------
