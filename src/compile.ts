@@ -60,6 +60,121 @@ export class NLPCompile {
         await this.runCompile(analyzerDir, compileTarget.ANALYZER_ONLY);
     }
 
+    // Export a stand-alone, runnable compiled analyzer into a separate folder.
+    // The result contains ONLY the compiled library (staged under bin/ as the
+    // run/kb entry points the engine loads) and the lazy "*full.dict"/"*full.kbb"
+    // files, which cannot be compiled and must remain on disk for stream lookup.
+    // Everything else — spec/*.nlp, input/, and the non-full .kb/.dict sources
+    // (now baked into the library) — is deliberately left out, so the shipped
+    // folder exposes only the full files.
+    async deployCompiledAnalyzer(analyzerDir: vscode.Uri): Promise<void> {
+        const anapath = analyzerDir.fsPath;
+        const analyzerName = path.basename(anapath.replace(/[\\/]+$/, ''));
+        const ext = this.sharedLibraryExt();
+
+        // The "Compile Analyzer and KB" target produces <analyzerName><ext>, a single
+        // library exporting both run_analyzer and kb_setup. That combined lib is what a
+        // fully-compiled (analyzer + KB) deployment needs, so require it here.
+        const compiledLib = path.join(anapath, `${analyzerName}${ext}`);
+        if (!fs.existsSync(compiledLib)) {
+            const choice = await vscode.window.showErrorMessage(
+                `No compiled library found (${analyzerName}${ext}). Run "Compile Analyzer and KB to C++ Library" first, then deploy.`,
+                'Compile Analyzer and KB'
+            );
+            if (choice === 'Compile Analyzer and KB') {
+                await this.compileAnalyzer(analyzerDir);
+            }
+            return;
+        }
+
+        // The lazy files are the only data that must ship alongside the library.
+        const kbUserDir = path.join(anapath, 'kb', 'user');
+        const fullFiles = this.findFullKBFiles(kbUserDir);
+
+        // Ask where to write the deployment. Pick a parent directory; the analyzer
+        // folder is created (or replaced) inside it.
+        const picked = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: 'Select deployment location',
+            title: `Deploy compiled analyzer "${analyzerName}" into…`
+        });
+        if (!picked || picked.length === 0) {
+            return;
+        }
+        const destParent = picked[0].fsPath;
+        const destDir = path.join(destParent, analyzerName);
+
+        if (path.resolve(destDir) === path.resolve(anapath)) {
+            vscode.window.showErrorMessage('Deployment target cannot be the analyzer folder itself. Choose a different location.');
+            return;
+        }
+
+        if (fs.existsSync(destDir)) {
+            const overwrite = await vscode.window.showWarningMessage(
+                `"${destDir}" already exists. Replace it?`,
+                { modal: true },
+                'Replace'
+            );
+            if (overwrite !== 'Replace') {
+                return;
+            }
+            try {
+                fs.rmSync(destDir, { recursive: true, force: true });
+            } catch (err: any) {
+                vscode.window.showErrorMessage(`Could not remove existing folder: ${err?.message ?? err}`);
+                return;
+            }
+        }
+
+        try {
+            // bin/ — the engine loads <appdir>/bin/run<ext> (analyzer body, via -COMPILED)
+            // and <appdir>/bin/kb<ext> (compiled KB, auto-detected). The combined library
+            // exports both entry points, so it is copied to every name the engine may look
+            // up. This mirrors nlp.ts stageCompiledAnalyzer() for RunMode.COMPILED.
+            const binDir = path.join(destDir, 'bin');
+            fs.mkdirSync(binDir, { recursive: true });
+            for (const name of ['run', 'runu', 'kb', 'kbu']) {
+                fs.copyFileSync(compiledLib, path.join(binDir, `${name}${ext}`));
+            }
+
+            // kb/user/ — only the lazy full files. openFullFiles() in the engine scans
+            // this directory when the compiled KB is loaded and stream-searches them.
+            const destKbUser = path.join(destDir, 'kb', 'user');
+            fs.mkdirSync(destKbUser, { recursive: true });
+            for (const f of fullFiles) {
+                fs.copyFileSync(f, path.join(destKbUser, path.basename(f)));
+            }
+
+            // Runtime working directories the engine writes into.
+            for (const d of ['input', 'output', 'logs', 'tmp']) {
+                fs.mkdirSync(path.join(destDir, d), { recursive: true });
+            }
+
+            const fullMsg = fullFiles.length
+                ? `${fullFiles.length} lazy file(s): ${fullFiles.map(f => path.basename(f)).join(', ')}`
+                : 'no *full.dict/*full.kbb files found (KB is fully compiled into the library)';
+            logView.addMessage(
+                `Deployed compiled analyzer to ${destDir} (bin/${['run', 'runu', 'kb', 'kbu'].map(n => n + ext).join(', ')}; ${fullMsg}).`,
+                logLineType.ANALYER_OUTPUT,
+                analyzerDir
+            );
+            vscode.window.showInformationMessage(
+                `Deployed compiled analyzer "${analyzerName}". Run it with: nlp.exe -ANA "${destDir}" -WORK "<engine>" -COMPILED "<input>". Requires an installed NLP engine (nlp.exe + its data/rfb).`,
+                'Reveal in Explorer'
+            ).then(choice => {
+                if (choice === 'Reveal in Explorer') {
+                    vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(destDir));
+                }
+            });
+        } catch (err: any) {
+            const detail = err?.message ?? String(err);
+            logView.addMessage(`Deploy failed: ${detail}`, logLineType.ANALYER_OUTPUT, analyzerDir);
+            vscode.window.showErrorMessage(`Deploy compiled analyzer failed: ${detail}`);
+        }
+    }
+
     // ---------------------------------------------------------------------------
     // Core compile flow
     // ---------------------------------------------------------------------------
@@ -1052,14 +1167,39 @@ endif()
     // ---------------------------------------------------------------------------
 
     sharedLibraryName(analyzerName: string): string {
+        return analyzerName + this.sharedLibraryExt();
+    }
+
+    private sharedLibraryExt(): string {
         const platform = os.platform();
-        if (platform === 'win32') {
-            return analyzerName + '.dll';
-        } else if (platform === 'darwin') {
-            return analyzerName + '.dylib';
-        } else {
-            return analyzerName + '.so';
+        if (platform === 'win32') return '.dll';
+        if (platform === 'darwin') return '.dylib';
+        return '.so';
+    }
+
+    // Lazy "*full.dict"/"*full.kbb" files under kb/user — the only KB data that
+    // survives compilation and must ship with a deployed compiled analyzer. Mirrors
+    // the engine's CG::stemEndsWithFull ("-full"/"_full" boundary, case-insensitive).
+    private findFullKBFiles(kbUserDir: string): string[] {
+        if (!fs.existsSync(kbUserDir) || !fs.statSync(kbUserDir).isDirectory()) {
+            return [];
         }
+        return fs.readdirSync(kbUserDir)
+            .filter(file => {
+                const lower = file.toLowerCase();
+                if (!lower.endsWith('.dict') && !lower.endsWith('.kbb')) return false;
+                const stem = file.substring(0, file.lastIndexOf('.'));
+                return this.stemEndsWithFull(stem);
+            })
+            .map(file => path.join(kbUserDir, file));
+    }
+
+    private stemEndsWithFull(stem: string): boolean {
+        const lower = stem.toLowerCase();
+        if (!lower.endsWith('full')) return false;
+        if (lower.length === 4) return true; // exactly "full"
+        const before = lower.charAt(lower.length - 5);
+        return before === '-' || before === '_';
     }
 
     // ---------------------------------------------------------------------------

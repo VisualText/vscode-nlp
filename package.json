@@ -1788,6 +1788,14 @@
                 }
             },
             {
+                "command": "analyzerView.deployCompiledAnalyzer",
+                "title": "Deploy Compiled Analyzer to Folder",
+                "icon": {
+                    "light": "resources/light/run.svg",
+                    "dark": "resources/dark/run.svg"
+                }
+            },
+            {
                 "command": "analyzerView.runRegressionTest",
                 "title": "Run Regression Test (All Files)",
                 "icon": "$(beaker)"
@@ -2435,6 +2443,11 @@
                 },
                 {
                     "command": "analyzerView.compileAnalyzerOnly",
+                    "when": "view == analyzerView",
+                    "group": "secondary"
+                },
+                {
+                    "command": "analyzerView.deployCompiledAnalyzer",
                     "when": "view == analyzerView",
                     "group": "secondary"
                 },
@@ -3239,6 +3252,11 @@
                 },
                 {
                     "command": "analyzerView.compileAnalyzerOnly",
+                    "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
+                    "group": "compile"
+                },
+                {
+                    "command": "analyzerView.deployCompiledAnalyzer",
                     "when": "view == analyzerView && viewItem =~ /.*isAnalyzer.*/",
                     "group": "compile"
                 },
