@@ -219,6 +219,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.copyPath', () => this.copyPath());
 		vscode.commands.registerCommand('analyzerView.compileAnalyzer', resource => this.compileAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.compileAnalyzerOnly', resource => this.compileAnalyzerOnly(resource));
+		vscode.commands.registerCommand('analyzerView.deployCompiledAnalyzer', resource => this.deployCompiledAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.runRegressionTest', resource => this.runRegressionTest(resource));
 		vscode.commands.registerCommand('analyzerView.blessRegression', resource => this.blessRegression(resource));
 
@@ -788,6 +789,20 @@ export class AnalyzerView {
 		}
 		const compile = NLPCompile.attach();
 		await compile.compileAnalyzerOnly(analyzerDir);
+	}
+
+	async deployCompiledAnalyzer(analyzerItem: AnalyzerItem) {
+		let analyzerDir: vscode.Uri;
+		if (analyzerItem && analyzerItem.uri) {
+			analyzerDir = dirfuncs.isDir(analyzerItem.uri.fsPath) ? analyzerItem.uri : vscode.Uri.file(path.dirname(analyzerItem.uri.fsPath));
+		} else if (visualText.analyzer.isLoaded()) {
+			analyzerDir = visualText.analyzer.getAnalyzerDirectory();
+		} else {
+			vscode.window.showWarningMessage('No analyzer loaded. Open an analyzer first.');
+			return;
+		}
+		const compile = NLPCompile.attach();
+		await compile.deployCompiledAnalyzer(analyzerDir);
 	}
 
 	// Run the cross-platform golden-file regression tester (nlp_regress.py, shipped
