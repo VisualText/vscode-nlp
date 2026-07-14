@@ -131,6 +131,11 @@ export class NLPCompile {
         }
 
         try {
+            // The destination folder was just removed (or never existed); create it before
+            // writing the first file into it. The later mkdirSync(binDir, {recursive}) also
+            // creates destDir, but the top-level copy below runs first, so do it here.
+            fs.mkdirSync(destDir, { recursive: true });
+
             // Top-level <analyzerName><ext> — the compile output as it sits in a normal
             // analyzer folder. Ship it so (a) the folder opens as an analyzer in the
             // extension and "Run (Compiled)" finds it (stageCompiledAnalyzer looks for
