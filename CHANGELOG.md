@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.5
+Deployed compiled analyzers now include the top-level library.
+
+- **Deploy Compiled Analyzer to Folder** now also writes the top-level `<analyzer>.dll` (alongside the `bin/{run,runu,kb,kbu}` copies the engine loads at run time). The deployed folder now opens and runs as an analyzer in the extension — **Run (Compiled)** finds the library — and shows the expected `.dll`/`.so`/`.dylib` artifact. (Run it with an engine of the same architecture as the compiled library.)
+
 ### 3.4.4
 Deploy compiled analyzers with their python-pass scripts, and expand the Version 3 docs.
 
