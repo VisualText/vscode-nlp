@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.6
+Compile now defaults to the cloud service out of the box.
+
+- `compile.mode` now defaults to **`cloud`** (was `local`), and `compile.dispatcherUrl` now defaults to the hosted dispatcher `https://nlp-compile-dispatcher.dehilster.workers.dev`. Compiling an analyzer works with no local C++ toolchain and no configuration; switch `compile.mode` to `local` to build with CMake on your own machine. ([#1086](https://github.com/VisualText/vscode-nlp/issues/1086))
+
 ### 3.4.5
 Deployed compiled analyzers now include the top-level library.
 

@@ -310,7 +310,7 @@ export class NLPCompile {
                 target === compileTarget.ANALYZER_ONLY ? 'analyzer' :
                 path.basename(anapath);
 
-            const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'local').toLowerCase();
+            const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'cloud').toLowerCase();
             let success = false;
 
             if (compileMode === 'cloud') {
@@ -1260,7 +1260,7 @@ endif()
         progress: vscode.Progress<{ message?: string; increment?: number }>
     ): Promise<boolean> {
         const config = vscode.workspace.getConfiguration('compile');
-        const dispatcherUrl = (config.get<string>('dispatcherUrl') || '').replace(/\/$/, '');
+        const dispatcherUrl = (config.get<string>('dispatcherUrl') || 'https://nlp-compile-dispatcher.dehilster.workers.dev').replace(/\/$/, '');
         if (!dispatcherUrl) {
             vscode.window.showErrorMessage(
                 'compile.dispatcherUrl is not set. Configure the compile service URL or switch compile.mode to "local".'
