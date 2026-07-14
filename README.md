@@ -10,15 +10,37 @@ The first textbook on NLP++ is now available world-wide by [BPB Online](https://
 
 In November of 2023, the [Natural Language Understanding Global Initiative](http://nluglob.org) was born to help coordinate the growing efforts of [students, faculty, and researchers](https://nluglob.org) in the open-source natural language understanding community.
 
-## Version 3 announcement
+## What's New in Version 3
 
-Version 3 adds support for compiling analyzers and the knowledge base (KB).
+Version 3 is the release line in which NLP++ analyzers became **compilable to native code — with one click, in the cloud, and shippable without source**. NLP++ is *glass-box*, **deterministic** NLP: the same input always produces the same output from rules you can read, which makes it a fit for critical-path systems where statistical models can't be trusted. Version 3 makes that engine faster and far easier to deliver.
 
-This provides two major advantages:
-- Faster execution.
-- Protection of native NLP++ source code when delivering analyzers to customers who do not have access to NLP++ source.
+### Compile analyzers to native libraries — one click, no C++ needed
+- **Compile Analyzer and KB** turns an NLP++ analyzer and its knowledge base into a native shared library (`.dll` / `.so` / `.dylib`). Compilation was always technically possible but effectively expert-only; the extension now makes it a single command.
+- **Granular targets** so you only rebuild what changed:
+  - **Compile Analyzer and KB** — the whole analyzer (rules + KB) into one library.
+  - **Compile KB** — just the knowledge base (matching **Compiled KB** run mode).
+  - **Compile Analyzer Only** — just the rules, reusing an already-compiled KB.
+- **Run modes** you can toggle from the status bar: **Interpreted**, **Compiled** (analyzer + KB), **Compiled KB**, and **Compiled Analyzer**. Compiled mode runs the analyzer body from native libraries on **Windows, Linux, and macOS** (early v3 ran compiled rules on Windows only).
 
-Version 3.1 adds a **KB-only** compile path and a matching **Compiled KB** run mode so the knowledge base can be compiled and shipped on its own. With engine 3.1.44+ (shipped in extension 3.1.21), **Compiled** mode now runs the full analyzer body from native shared libraries on Linux and macOS too — previously this was Windows-only with rules staying interpreted on the other platforms.
+### Two big advantages
+- **Faster execution** — native code instead of interpreting rules at run time.
+- **Protection of NLP++ source** — deliver analyzers to customers as compiled libraries, without shipping the `.nlp` rule source.
+
+### Cloud compile — no local toolchain required
+- Set `compile.mode` to **cloud** and the extension submits your analyzer to a **cloud-compile service** that builds the native library for Windows, Linux, and macOS on hosted runners. It verifies the engine release exists, shows live progress, and downloads the finished library — no local C++ compiler, CMake, or Visual Studio needed. Local CMake-based compilation is also supported (`compile.mode = local`).
+
+### Deploy a stand-alone compiled analyzer
+- **Deploy Compiled Analyzer to Folder** exports a runnable, stripped-down copy of a compiled analyzer into a folder you choose: the native library staged as the engine's `bin/` entry points, the lazy `*-full` dictionaries/KBs, and any `spec/*.py` python-pass scripts — while leaving the `.nlp` rule source out. Ideal for delivering a compiled analyzer that exposes only the data the runtime needs. *(Run the deployed folder with an installed NLP engine of the same architecture as the compiled library.)*
+
+### Large lexicons: lazy dictionaries & knowledge bases
+- `*-full.dict` / `*-full.kbb` files **load lazily** — the engine binary-searches the sorted file on disk one word at a time instead of loading the whole lexicon into memory, dramatically cutting memory and startup cost. Multiple lazy files can be open at once, and the analyzer log reports each one.
+- Lazy files are **never compiled into the library** — they stay as data files and are stream-searched at run time, so they behave identically in interpreted and compiled analyzers.
+
+### Python passes (interpreted *and* compiled)
+- A `python` pass can sit anywhere in the analyzer sequence — including **before the tokenizer** (for example, to build a knowledge base from a JSON data file before analysis). As of engine 3.7.10 these passes are emitted into the compiled analyzer and run from the native library, not just when interpreted.
+
+### In-editor markdown help
+- Function, variable, and index help render as **markdown previews inside the editor** (replacing the old browser/HTML help).
 
 ## Version 2 milestone
 
