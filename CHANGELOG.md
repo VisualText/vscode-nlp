@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.7
+Fix a crash when deploying a compiled analyzer.
+
+- **Deploy Compiled Analyzer to Folder** no longer fails with `ENOENT ... copyfile ... <analyzer>.dll` when the destination folder doesn't already exist. The top-level library copy added in 3.4.5 ran before the destination directory was created; the deploy now creates the target folder first.
+
 ### 3.4.6
 Compile now defaults to the cloud service out of the box.
 
