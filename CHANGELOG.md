@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.3
+Deploy a stand-alone compiled analyzer to a separate folder.
+
+- New "Deploy Compiled Analyzer to Folder" command exports a runnable, stripped compiled analyzer: `bin/{run,runu,kb,kbu}` (the compiled library) plus only the lazy `*full.dict`/`*full.kbb` files, with `spec/`, `input/`, and the non-full `.kb`/`.dict` sources omitted. Requires a prior "Compile Analyzer and KB" and an engine that opens the lazy full files when the KB is compiled.
+
 ### 3.4.2
 Show each lazy-loaded KB and dictionary file in the analyzer log.
 
