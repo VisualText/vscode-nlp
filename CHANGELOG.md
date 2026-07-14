@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.4.4
+Deploy compiled analyzers with their python-pass scripts, and expand the Version 3 docs.
+
+- **Deploy Compiled Analyzer to Folder** now also stages `spec/*.py` (and an analyzer-level `python/` folder, if present) into the deployed folder. A compiled `python` pass shells out to `spec/<script>.py` at run time, so those scripts must ship; the `.nlp` rule source is still left out. Requires engine 3.7.10+ for compiled python passes. The completion notice now also reminds you to run the deployed folder with an engine of the same architecture as the compiled library.
+- Rewrote the README's "What's New in Version 3" section (compiled analyzers, granular compile targets, run modes, cloud compile, deploy, lazy dictionaries, compiled python passes, in-editor markdown help).
+
 ### 3.4.3
 Deploy a stand-alone compiled analyzer to a separate folder.
 

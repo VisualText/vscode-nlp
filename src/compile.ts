@@ -61,12 +61,14 @@ export class NLPCompile {
     }
 
     // Export a stand-alone, runnable compiled analyzer into a separate folder.
-    // The result contains ONLY the compiled library (staged under bin/ as the
-    // run/kb entry points the engine loads) and the lazy "*full.dict"/"*full.kbb"
-    // files, which cannot be compiled and must remain on disk for stream lookup.
-    // Everything else — spec/*.nlp, input/, and the non-full .kb/.dict sources
-    // (now baked into the library) — is deliberately left out, so the shipped
-    // folder exposes only the full files.
+    // The result contains the compiled library (staged under bin/ as the run/kb
+    // entry points the engine loads), the lazy "*full.dict"/"*full.kbb" files
+    // (which cannot be compiled and must remain on disk for stream lookup), and
+    // any "spec/*.py" python-pass scripts (a compiled python pass still shells out
+    // to spec/<script>.py at runtime, so the script must ship). The NLP++ rule
+    // source (spec/*.nlp), input/, and the non-full .kb/.dict sources (now baked
+    // into the library) are deliberately left out, so the shipped folder keeps the
+    // rule source hidden while exposing only the data the runtime genuinely needs.
     async deployCompiledAnalyzer(analyzerDir: vscode.Uri): Promise<void> {
         const anapath = analyzerDir.fsPath;
         const analyzerName = path.basename(anapath.replace(/[\\/]+$/, ''));
@@ -147,6 +149,25 @@ export class NLPCompile {
                 fs.copyFileSync(f, path.join(destKbUser, path.basename(f)));
             }
 
+            // spec/*.py — python-pass scripts. A compiled `python` pass generates a
+            // python<N>() that shells out to <appdir>/spec/<script>.py at runtime, so
+            // the script (and any sibling .py helpers) must ship. The .nlp rule files
+            // are NOT copied, keeping the rule source hidden. An analyzer-level python/
+            // package folder, if present, is copied whole for imported modules.
+            const pyFiles = this.findSpecPyFiles(anapath);
+            if (pyFiles.length) {
+                const destSpec = path.join(destDir, 'spec');
+                fs.mkdirSync(destSpec, { recursive: true });
+                for (const f of pyFiles) {
+                    fs.copyFileSync(f, path.join(destSpec, path.basename(f)));
+                }
+            }
+            const analyzerPyDir = path.join(anapath, 'python');
+            const pyDirStaged = fs.existsSync(analyzerPyDir) && fs.statSync(analyzerPyDir).isDirectory();
+            if (pyDirStaged) {
+                fs.cpSync(analyzerPyDir, path.join(destDir, 'python'), { recursive: true });
+            }
+
             // Runtime working directories the engine writes into.
             for (const d of ['input', 'output', 'logs', 'tmp']) {
                 fs.mkdirSync(path.join(destDir, d), { recursive: true });
@@ -155,13 +176,16 @@ export class NLPCompile {
             const fullMsg = fullFiles.length
                 ? `${fullFiles.length} lazy file(s): ${fullFiles.map(f => path.basename(f)).join(', ')}`
                 : 'no *full.dict/*full.kbb files found (KB is fully compiled into the library)';
+            const pyMsg = pyFiles.length
+                ? `; ${pyFiles.length} python script(s): ${pyFiles.map(f => path.basename(f)).join(', ')}${pyDirStaged ? ' + python/' : ''}`
+                : '';
             logView.addMessage(
-                `Deployed compiled analyzer to ${destDir} (bin/${['run', 'runu', 'kb', 'kbu'].map(n => n + ext).join(', ')}; ${fullMsg}).`,
+                `Deployed compiled analyzer to ${destDir} (bin/${['run', 'runu', 'kb', 'kbu'].map(n => n + ext).join(', ')}; ${fullMsg}${pyMsg}).`,
                 logLineType.ANALYER_OUTPUT,
                 analyzerDir
             );
             vscode.window.showInformationMessage(
-                `Deployed compiled analyzer "${analyzerName}". Run it with: nlp.exe -ANA "${destDir}" -WORK "<engine>" -COMPILED "<input>". Requires an installed NLP engine (nlp.exe + its data/rfb).`,
+                `Deployed compiled analyzer "${analyzerName}". Run it with: nlp.exe -ANA "${destDir}" -WORK "<engine>" -COMPILED "<input>". Requires an installed NLP engine (nlp.exe + its data/rfb) of the same architecture as the compiled library.`,
                 'Reveal in Explorer'
             ).then(choice => {
                 if (choice === 'Reveal in Explorer') {
@@ -1192,6 +1216,20 @@ endif()
                 return this.stemEndsWithFull(stem);
             })
             .map(file => path.join(kbUserDir, file));
+    }
+
+    // Python-pass scripts under spec/. A compiled `python` pass shells out to
+    // spec/<script>.py at runtime, so these must ship with a deployed analyzer
+    // (the .nlp rule files, by contrast, are compiled into the library and stay
+    // hidden). Returns every *.py directly under spec/.
+    private findSpecPyFiles(anapath: string): string[] {
+        const specDir = path.join(anapath, 'spec');
+        if (!fs.existsSync(specDir) || !fs.statSync(specDir).isDirectory()) {
+            return [];
+        }
+        return fs.readdirSync(specDir)
+            .filter(file => file.toLowerCase().endsWith('.py'))
+            .map(file => path.join(specDir, file));
     }
 
     private stemEndsWithFull(stem: string): boolean {
