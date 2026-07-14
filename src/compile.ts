@@ -131,10 +131,19 @@ export class NLPCompile {
         }
 
         try {
+            // Top-level <analyzerName><ext> — the compile output as it sits in a normal
+            // analyzer folder. Ship it so (a) the folder opens as an analyzer in the
+            // extension and "Run (Compiled)" finds it (stageCompiledAnalyzer looks for
+            // <name><ext> at the root and stages it into bin/), and (b) it's the
+            // recognizable artifact users expect to see in the folder.
+            fs.copyFileSync(compiledLib, path.join(destDir, `${analyzerName}${ext}`));
+
             // bin/ — the engine loads <appdir>/bin/run<ext> (analyzer body, via -COMPILED)
             // and <appdir>/bin/kb<ext> (compiled KB, auto-detected). The combined library
             // exports both entry points, so it is copied to every name the engine may look
-            // up. This mirrors nlp.ts stageCompiledAnalyzer() for RunMode.COMPILED.
+            // up. Pre-staging bin/ means the folder also runs directly via
+            // `nlp.exe -ANA <folder> -COMPILED` with no extension step. Mirrors
+            // nlp.ts stageCompiledAnalyzer() for RunMode.COMPILED.
             const binDir = path.join(destDir, 'bin');
             fs.mkdirSync(binDir, { recursive: true });
             for (const name of ['run', 'runu', 'kb', 'kbu']) {
@@ -180,7 +189,7 @@ export class NLPCompile {
                 ? `; ${pyFiles.length} python script(s): ${pyFiles.map(f => path.basename(f)).join(', ')}${pyDirStaged ? ' + python/' : ''}`
                 : '';
             logView.addMessage(
-                `Deployed compiled analyzer to ${destDir} (bin/${['run', 'runu', 'kb', 'kbu'].map(n => n + ext).join(', ')}; ${fullMsg}${pyMsg}).`,
+                `Deployed compiled analyzer to ${destDir} (${analyzerName}${ext} + bin/${['run', 'runu', 'kb', 'kbu'].map(n => n + ext).join(', ')}; ${fullMsg}${pyMsg}).`,
                 logLineType.ANALYER_OUTPUT,
                 analyzerDir
             );
