@@ -13,6 +13,8 @@ import { LogView } from './logView';
 import { NLPStatusBar } from './status';
 import { visualText } from './visualText';
 import { registerFormatter } from './format/formatProvider';
+import { registerLanguageFeatures } from './language/providers';
+import { registerEngineDiagnostics } from './language/engineDiagnostics';
 import * as telemetry from './telemetry/telemetry';
 
 export function activate(ctx: vscode.ExtensionContext): void {
@@ -28,6 +30,8 @@ export function activate(ctx: vscode.ExtensionContext): void {
     NLPCommands.attach(ctx);
     NLPStatusBar.attach(ctx);
     registerFormatter(ctx);
+    registerLanguageFeatures(ctx); // outline, hover, go-to-definition, structural diagnostics
+    registerEngineDiagnostics(ctx); // inline squiggles from the engine's err.log
     telemetry.activate(ctx); // no-op unless a connection string is configured
 
     // First-run welcome / new-version notes / announcements (guarded; never

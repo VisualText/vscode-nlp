@@ -12,6 +12,7 @@ import { nlpStatusBar, DevMode, RunMode } from './status';
 import { outputView, outputFileType } from './outputView';
 import { ReformatType as reformatType } from './format/types';
 import { formatRuleText } from './format/rulesRegion';
+import { refreshEngineDiagnostics } from './language/engineDiagnostics';
 import * as telemetry from './telemetry/telemetry';
 
 export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
@@ -147,6 +148,8 @@ export class NLPFile extends TextFile {
 					let syntaxError = logView.syntaxErrorsOutput('err.log');
 					if (!syntaxError)
 						syntaxError = logView.syntaxErrorsLog('make_ana');
+					// Update inline editor squiggles from err.log (clears them on success).
+					refreshEngineDiagnostics();
 					if (err || syntaxError) {
 						if (err)
 							logView.addMessage(err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));

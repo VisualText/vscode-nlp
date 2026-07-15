@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.5.0
+Add IDE language-intelligence for NLP++ pass files.
+
+- New language providers for `.nlp`/`.pat` files: **Outline & breadcrumbs**, **Hover** docs for built-in functions/keywords/`@region` markers, **Go to Definition** (same-file, cross-pass, and KB concepts in `.kbb`), **Find All References**, **occurrence highlighting**, **Rename Symbol** (declared rules/functions/concepts), and **Workspace Symbol** search (Ctrl-T).
+- **Diagnostics**: a structural linter (bracket balance, unterminated comments) plus inline squiggles parsed from the analyzer's `err.log`, so compile/analyze errors appear in the editor and the Problems panel and map back to the offending pass or `.dict` file.
+- Implemented in `src/language/` as pure, editor-agnostic analysis engines with thin VSCode adapters (mirroring the formatter), reusing the existing region splitter and tokenizer.
+
 ### 3.4.7
 Fix a crash when deploying a compiled analyzer.
 
