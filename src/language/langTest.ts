@@ -11,6 +11,7 @@ import { computeProblems } from "./diagnostics";
 import { parseEngineErrors } from "./engineErrors";
 import { parseKbConcepts } from "./kbConcepts";
 import { regionKindAt, RegionKind } from "./completion";
+import { findEnclosingCall } from "./signature";
 import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
 
 let passed = 0;
@@ -63,6 +64,8 @@ _verb <- verb @@
 
 	const decl = syms.find((s) => s.name === "@DECL");
 	check("symbols: myHelper function", !!decl && decl.children.some((c) => c.name === "myHelper"));
+	const helper = decl?.children.find((c) => c.name === "myHelper");
+	eq("symbols: myHelper signature captured", helper?.signature, 'L("x")');
 
 	const names = declaredSymbols(SAMPLE).map((d) => d.name);
 	check("declared: includes myHelper/_noun/_verb",
@@ -141,6 +144,33 @@ attr=value
 	eq("completion: @DECL body is Code", regionKindAt(SAMPLE, SAMPLE.indexOf("myHelper")), RegionKind.Code);
 	eq("completion: @RULES body is Rules", regionKindAt(SAMPLE, SAMPLE.indexOf("_noun")), RegionKind.Rules);
 	eq("completion: @CODE body is Code", regionKindAt(SAMPLE, SAMPLE.indexOf('G("count")')), RegionKind.Code);
+}
+
+// ---- signature help: enclosing call ----------------------------------------
+{
+	// Cursor inside the 2nd argument of foo(...).
+	const code = `@CODE\n   foo(a, b|)\n@@CODE\n`;
+	const off = code.indexOf("|"); // position of the cursor marker
+	const text = code.replace("|", "");
+	const call = findEnclosingCall(text, off);
+	check("signature: call name resolved", !!call && call.name === "foo", JSON.stringify(call));
+	eq("signature: active param index", call ? call.activeParam : -1, 1);
+
+	// Nested call: strval( pnvar("x"|) ) -> cursor is in pnvar's arg 0.
+	const nested = `@CODE\n strval( pnvar("x") )\n@@CODE\n`;
+	const at = nested.indexOf('"x"') + 1;
+	const c2 = findEnclosingCall(nested, at);
+	check("signature: nested call resolves inner fn", !!c2 && c2.name === "pnvar", JSON.stringify(c2));
+	eq("signature: nested active param", c2 ? c2.activeParam : -1, 0);
+
+	// A comma inside a string must not advance the active parameter.
+	const str = `@CODE\n bar("a, b, c"|)\n@@CODE\n`;
+	const soff = str.indexOf("|");
+	const c3 = findEnclosingCall(str.replace("|", ""), soff);
+	eq("signature: comma in string ignored", c3 ? c3.activeParam : -1, 0);
+
+	// Not inside any call.
+	check("signature: no call outside parens", findEnclosingCall("@CODE\n x = 1\n@@CODE\n", 12) === undefined);
 }
 
 // ---- built-in data tables --------------------------------------------------
