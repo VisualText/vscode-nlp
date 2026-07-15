@@ -13,6 +13,7 @@ import { computeProblems } from "./diagnostics";
 import { nlpWorkspaceIndex, IndexedSymbol } from "./workspaceIndex";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
+import { foldingRanges } from "./folding";
 import {
 	BUILTIN_SET, BUILTIN_FUNCTIONS, KEYWORDS, KEYWORD_SET, RULE_KEYWORDS,
 	REGION_MARKERS, LETTER_FUNCTIONS,
@@ -306,6 +307,20 @@ const completionProvider: vscode.CompletionItemProvider = {
 	},
 };
 
+// ---- Folding ---------------------------------------------------------------
+
+const foldingProvider: vscode.FoldingRangeProvider = {
+	provideFoldingRanges(doc) {
+		try {
+			return foldingRanges(doc.getText()).map(
+				(r) => new vscode.FoldingRange(r.start, r.end, vscode.FoldingRangeKind.Region),
+			);
+		} catch {
+			return [];
+		}
+	},
+};
+
 // ---- Signature help --------------------------------------------------------
 
 // Split a raw parameter list into individual parameters, respecting nested
@@ -391,6 +406,7 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 		vscode.languages.registerRenameProvider(NLP, renameProvider),
 		vscode.languages.registerCompletionItemProvider(NLP, completionProvider, "@"),
 		vscode.languages.registerSignatureHelpProvider(NLP, signatureProvider, "(", ","),
+		vscode.languages.registerFoldingRangeProvider(NLP, foldingProvider),
 	);
 
 	// Keep the cross-pass index fresh. It builds lazily on first use; here we

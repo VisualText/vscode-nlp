@@ -12,6 +12,7 @@ import { parseEngineErrors } from "./engineErrors";
 import { parseKbConcepts } from "./kbConcepts";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
+import { foldingRanges } from "./folding";
 import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
 
 let passed = 0;
@@ -171,6 +172,38 @@ attr=value
 
 	// Not inside any call.
 	check("signature: no call outside parens", findEnclosingCall("@CODE\n x = 1\n@@CODE\n", 12) === undefined);
+}
+
+// ---- folding ---------------------------------------------------------------
+{
+	// A multi-line rule so we can assert a per-rule fold, plus regions.
+	const src = [
+		"@RULES",          // line 0
+		"_np <-",          // line 1
+		"    adj [s]",     // line 2
+		"    noun @@",     // line 3
+		"@@",              // line 4
+		"@CODE",           // line 5
+		'   G("x") = 1;',  // line 6
+		"   y = 2;",       // line 7
+		"@@CODE",          // line 8
+		"",                // line 9
+	].join("\n");
+	const folds = foldingRanges(src);
+	// Every fold must span more than one line.
+	check("folding: all ranges multi-line", folds.every((f) => f.end > f.start), JSON.stringify(folds));
+	// The @RULES region fold starts at line 0.
+	check("folding: @RULES region folds from line 0", folds.some((f) => f.start === 0 && f.end >= 3), JSON.stringify(folds));
+	// The multi-line rule _np (lines 1-3) folds.
+	check("folding: rule _np folds", folds.some((f) => f.start === 1 && f.end === 3), JSON.stringify(folds));
+	// The @CODE region (lines 5-8) folds.
+	check("folding: @CODE region folds", folds.some((f) => f.start === 5 && f.end >= 7), JSON.stringify(folds));
+
+	// A region that is only its marker line (nothing below) yields no fold.
+	eq("folding: marker-only region no fold", foldingRanges("@RULES\n").length, 0);
+	// A single-line rule produces no per-rule fold (region still folds if multi-line).
+	check("folding: single-line rule not folded",
+		!foldingRanges("@RULES\n_x <- a @@\n_y <- b @@\n").some((f) => f.start === f.end));
 }
 
 // ---- built-in data tables --------------------------------------------------
