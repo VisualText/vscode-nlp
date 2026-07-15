@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.7.0
+Add signature help for NLP++ function calls.
+
+- Typing inside a function call's argument list now shows the callee's signature and highlights the argument you're on. Your own `@DECL` functions show their full parameter list (resolved across passes); built-in functions show a name-only signature.
+- The enclosing-call detection works on the tokenized source, so parens and commas inside strings or comments don't throw it off, and nested calls resolve to the innermost function.
+
 ### 3.6.0
 Add context-aware IntelliSense completion for NLP++.
 
