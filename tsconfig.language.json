@@ -1,0 +1,28 @@
+// Standalone build for the pure-TS language-intelligence engines + test harness.
+// Mirrors tsconfig.format.json: emits to out-language/ (gitignored, not shipped)
+// and excludes the VSCode adapters (providers / engineDiagnostics / workspaceIndex)
+// so the pure analysis logic can be exercised with plain Node. Run via:
+//   npm run test:language
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-language",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"sourceMap": false
+	},
+	"include": ["src/language/**/*.ts", "src/format/**/*.ts"],
+	"exclude": [
+		"src/language/providers.ts",
+		"src/language/engineDiagnostics.ts",
+		"src/language/workspaceIndex.ts",
+		"src/format/formatProvider.ts",
+		"src/format/corpusTest.ts"
+	]
+}

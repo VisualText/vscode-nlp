@@ -3440,6 +3440,7 @@
         "pretest": "npm run compile && npm run lint",
         "test": "node ./dist/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
+        "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
         "vsce-package": "npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
