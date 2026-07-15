@@ -19,6 +19,7 @@ export interface IndexedSymbol {
 	kind: IndexKind;
 	uri: vscode.Uri;
 	range: vscode.Range; // the identifier's range (precomputed at index time)
+	signature?: string;  // for functions: the raw parameter list
 }
 
 // A usage (reference) occurrence of an identifier -- powers Find All References
@@ -91,8 +92,8 @@ export class NlpWorkspaceIndex {
 		else this.indexNlp(uri, text);
 	}
 
-	private addDecl(uri: vscode.Uri, name: string, kind: IndexKind, range: vscode.Range, bucket: IndexedSymbol[]): void {
-		const entry: IndexedSymbol = { name, kind, uri, range };
+	private addDecl(uri: vscode.Uri, name: string, kind: IndexKind, range: vscode.Range, bucket: IndexedSymbol[], signature?: string): void {
+		const entry: IndexedSymbol = { name, kind, uri, range, signature };
 		bucket.push(entry);
 		const list = this.byName.get(name) ?? [];
 		list.push(entry);
@@ -107,7 +108,7 @@ export class NlpWorkspaceIndex {
 					offsetToPosition(text, d.selStart),
 					offsetToPosition(text, d.selEnd),
 				);
-				this.addDecl(uri, d.name, d.kind, range, syms);
+				this.addDecl(uri, d.name, d.kind, range, syms, d.signature);
 			}
 		} catch { /* keep whatever parsed; still index usages below */ }
 		this.byFile.set(uri.toString(), syms);

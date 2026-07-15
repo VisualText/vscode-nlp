@@ -21,6 +21,7 @@ export interface NlpSymbol {
 	selStart: number; // the identifier itself (what gets highlighted on reveal)
 	selEnd: number;
 	children: NlpSymbol[];
+	signature?: string; // for functions: the raw parameter list, e.g. "L(\"x\"), N(\"n\")"
 }
 
 // A rule head inside an @RULES region looks like:  _name <- ... @@
@@ -32,7 +33,7 @@ const RULE_HEAD = /([_\w]+)\s*(?:\[[^\]]*\])*\s*<-/g;
 // A user function/declaration inside @DECL/@CODE, C-style:  name( ... ) {
 // Heuristic and deliberately conservative -- only matches an identifier followed
 // by a parenthesized arg list and an opening brace, at the start of a line.
-const FUNC_DECL = /(^|\n)[ \t]*([A-Za-z_][\w]*)\s*\([^;{}]*\)\s*\{/g;
+const FUNC_DECL = /(^|\n)[ \t]*([A-Za-z_][\w]*)\s*\(([^;{}]*)\)\s*\{/g;
 
 function scanRules(text: string, base: number): NlpSymbol[] {
 	const out: NlpSymbol[] = [];
@@ -77,6 +78,7 @@ function scanFunctions(text: string, base: number): NlpSymbol[] {
 			selStart,
 			selEnd: selStart + name.length,
 			children: [],
+			signature: m[3].trim(),
 		});
 	}
 	return out;

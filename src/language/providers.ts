@@ -12,6 +12,7 @@ import { analyzeSymbols, declaredSymbols, NlpSymbol } from "./symbols";
 import { computeProblems } from "./diagnostics";
 import { nlpWorkspaceIndex, IndexedSymbol } from "./workspaceIndex";
 import { regionKindAt, RegionKind } from "./completion";
+import { findEnclosingCall } from "./signature";
 import {
 	BUILTIN_SET, BUILTIN_FUNCTIONS, KEYWORDS, KEYWORD_SET, RULE_KEYWORDS,
 	REGION_MARKERS, LETTER_FUNCTIONS,
@@ -305,6 +306,55 @@ const completionProvider: vscode.CompletionItemProvider = {
 	},
 };
 
+// ---- Signature help --------------------------------------------------------
+
+// Split a raw parameter list into individual parameters, respecting nested
+// parens/brackets (an NLP++ param like N("x") contains its own parens).
+function splitParams(sig: string): string[] {
+	if (!sig.trim()) return [];
+	const parts: string[] = [];
+	let depth = 0;
+	let cur = "";
+	for (const ch of sig) {
+		if (ch === "(" || ch === "[" || ch === "{") depth++;
+		else if (ch === ")" || ch === "]" || ch === "}") depth--;
+		if (ch === "," && depth === 0) { parts.push(cur.trim()); cur = ""; }
+		else cur += ch;
+	}
+	if (cur.trim()) parts.push(cur.trim());
+	return parts;
+}
+
+const signatureProvider: vscode.SignatureHelpProvider = {
+	async provideSignatureHelp(doc, pos) {
+		const call = findEnclosingCall(doc.getText(), doc.offsetAt(pos));
+		if (!call) return undefined;
+		await nlpWorkspaceIndex.ensureBuilt();
+
+		// Prefer a user-declared function with a known parameter list.
+		const decl = nlpWorkspaceIndex.lookup(call.name).find((s) => s.kind === "function" && s.signature !== undefined);
+		let sigInfo: vscode.SignatureInformation;
+		if (decl) {
+			const params = splitParams(decl.signature ?? "");
+			sigInfo = new vscode.SignatureInformation(`${call.name}(${params.join(", ")})`);
+			sigInfo.parameters = params.map((p) => new vscode.ParameterInformation(p));
+			sigInfo.documentation = new vscode.MarkdownString("NLP++ user function");
+		} else if (BUILTIN_SET.has(call.name.toLowerCase())) {
+			// Built-in: no parameter table available, show a name-only signature.
+			sigInfo = new vscode.SignatureInformation(`${call.name}( … )`);
+			sigInfo.documentation = new vscode.MarkdownString("NLP++ built-in function");
+		} else {
+			return undefined;
+		}
+
+		const help = new vscode.SignatureHelp();
+		help.signatures = [sigInfo];
+		help.activeSignature = 0;
+		help.activeParameter = Math.min(call.activeParam, Math.max(0, sigInfo.parameters.length - 1));
+		return help;
+	},
+};
+
 // ---- Diagnostics -----------------------------------------------------------
 
 function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
@@ -340,6 +390,7 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 		vscode.languages.registerDocumentHighlightProvider(NLP, highlightProvider),
 		vscode.languages.registerRenameProvider(NLP, renameProvider),
 		vscode.languages.registerCompletionItemProvider(NLP, completionProvider, "@"),
+		vscode.languages.registerSignatureHelpProvider(NLP, signatureProvider, "(", ","),
 	);
 
 	// Keep the cross-pass index fresh. It builds lazily on first use; here we
