@@ -11,8 +11,10 @@ import * as vscode from "vscode";
 import { analyzeSymbols, declaredSymbols, NlpSymbol } from "./symbols";
 import { computeProblems } from "./diagnostics";
 import { nlpWorkspaceIndex, IndexedSymbol } from "./workspaceIndex";
+import { regionKindAt, RegionKind } from "./completion";
 import {
-	BUILTIN_SET, KEYWORD_SET, REGION_MARKERS, LETTER_FUNCTIONS,
+	BUILTIN_SET, BUILTIN_FUNCTIONS, KEYWORDS, KEYWORD_SET, RULE_KEYWORDS,
+	REGION_MARKERS, LETTER_FUNCTIONS,
 } from "./nlpxxData";
 
 const NLP = { language: "nlp" } as const;
@@ -233,6 +235,76 @@ const highlightProvider: vscode.DocumentHighlightProvider = {
 	},
 };
 
+// ---- Completion (IntelliSense) ---------------------------------------------
+
+// Static suggestion sets, built once. Region markers, built-in functions,
+// keywords, rule-element keywords, and node accessors never change at runtime.
+function staticItem(label: string, kind: vscode.CompletionItemKind, detail: string, doc?: string): vscode.CompletionItem {
+	const item = new vscode.CompletionItem(label, kind);
+	item.detail = detail;
+	if (doc) item.documentation = new vscode.MarkdownString(doc);
+	return item;
+}
+
+const BUILTIN_ITEMS = BUILTIN_FUNCTIONS.map((f) =>
+	staticItem(f, vscode.CompletionItemKind.Function, "NLP++ built-in function"));
+const KEYWORD_ITEMS = KEYWORDS.map((k) =>
+	staticItem(k, vscode.CompletionItemKind.Keyword, "NLP++ keyword"));
+const RULE_KEYWORD_ITEMS = RULE_KEYWORDS.map((k) =>
+	staticItem(k, vscode.CompletionItemKind.Keyword, "rule-element modifier"));
+const LETTER_ITEMS = Object.entries(LETTER_FUNCTIONS).map(([name, doc]) =>
+	staticItem(name, vscode.CompletionItemKind.Function, "node accessor", doc));
+const REGION_ITEMS = Object.entries(REGION_MARKERS).map(([name, doc]) =>
+	staticItem(name, vscode.CompletionItemKind.Keyword, "@region marker", doc));
+
+// Index-derived items (rules / functions / concepts) rebuilt per request so new
+// declarations show up. Deduped by name so a symbol declared in many passes
+// appears once.
+function indexItems(kinds: Set<string>): vscode.CompletionItem[] {
+	const seen = new Set<string>();
+	const out: vscode.CompletionItem[] = [];
+	for (const s of nlpWorkspaceIndex.search("")) {
+		if (!kinds.has(s.kind) || seen.has(s.name)) continue;
+		seen.add(s.name);
+		const kind = s.kind === "concept" ? vscode.CompletionItemKind.Class
+			: s.kind === "function" ? vscode.CompletionItemKind.Method
+			: vscode.CompletionItemKind.Function;
+		out.push(staticItem(s.name, kind, `NLP++ ${s.kind}`));
+	}
+	return out;
+}
+
+const completionProvider: vscode.CompletionItemProvider = {
+	async provideCompletionItems(doc, pos) {
+		const linePrefix = doc.lineAt(pos.line).text.slice(0, pos.character);
+
+		// Typing an "@directive": offer region markers (e.g. @RULES, @CODE).
+		if (/@@?\w*$/.test(linePrefix)) {
+			return REGION_ITEMS;
+		}
+
+		await nlpWorkspaceIndex.ensureBuilt();
+		const region = regionKindAt(doc.getText(), doc.offsetAt(pos));
+
+		if (region === RegionKind.Rules) {
+			// Rule element context: modifiers + concepts + rule names.
+			return [
+				...RULE_KEYWORD_ITEMS,
+				...indexItems(new Set(["concept", "rule"])),
+			];
+		}
+
+		// Code (and Other/Preamble fallback): functions + keywords + accessors +
+		// user-declared functions.
+		return [
+			...BUILTIN_ITEMS,
+			...KEYWORD_ITEMS,
+			...LETTER_ITEMS,
+			...indexItems(new Set(["function"])),
+		];
+	},
+};
+
 // ---- Diagnostics -----------------------------------------------------------
 
 function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
@@ -267,6 +339,7 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 		vscode.languages.registerReferenceProvider(NLP, referenceProvider),
 		vscode.languages.registerDocumentHighlightProvider(NLP, highlightProvider),
 		vscode.languages.registerRenameProvider(NLP, renameProvider),
+		vscode.languages.registerCompletionItemProvider(NLP, completionProvider, "@"),
 	);
 
 	// Keep the cross-pass index fresh. It builds lazily on first use; here we

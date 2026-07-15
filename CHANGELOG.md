@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.6.0
+Add context-aware IntelliSense completion for NLP++.
+
+- Autocomplete in `.nlp`/`.pat` files, filtered by where the cursor is: typing `@…` suggests **region markers** (`@RULES`, `@CODE`, `@DECL`, …); **code regions** suggest built-in functions, keywords, `N/S/X/G/L` node accessors, and your own `@DECL` functions; **rule regions** suggest rule-element modifiers (`opt`, `star`, `plus`, `trig`, …), KB concepts, and rule names from across the analyzer.
+- Draws on the same workspace index and built-in tables as the 3.5.0 navigation features; completion for your rules/functions/concepts updates as you edit.
+
 ### 3.5.0
 Add IDE language-intelligence for NLP++ pass files.
 
