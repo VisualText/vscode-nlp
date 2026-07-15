@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.8.0
+Add code folding for NLP++ pass files.
+
+- Regions (`@RULES`, `@CODE`, `@DECL`, …) can now be collapsed, and each multi-line rule inside an `@RULES` region folds on its own — making long pass files much easier to scan and navigate.
+
 ### 3.7.0
 Add signature help for NLP++ function calls.
 
