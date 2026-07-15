@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
+import { refreshEngineDiagnostics } from './language/engineDiagnostics';
 
 export enum compileTarget { ANALYZER, KB_ONLY, ANALYZER_ONLY }
 
@@ -377,6 +378,9 @@ export class NLPCompile {
             vscode.commands.executeCommand('logView.refreshAll');
             vscode.commands.executeCommand('analyzerView.refreshAll');
             vscode.commands.executeCommand('kbView.refreshAll');
+
+            // Surface any nlp.exe -COMPILE errors as inline squiggles in the pass/dict files.
+            refreshEngineDiagnostics();
 
             progress.report({ increment: 40, message: success ? 'Done.' : 'Failed.' });
         });
