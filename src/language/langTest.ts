@@ -13,6 +13,8 @@ import { parseKbConcepts } from "./kbConcepts";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
 import { foldingRanges } from "./folding";
+import { classifyTokens } from "./semanticTokens";
+import { findUnknownCalls, levenshtein } from "./quickfix";
 import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
 
 let passed = 0;
@@ -204,6 +206,52 @@ attr=value
 	// A single-line rule produces no per-rule fold (region still folds if multi-line).
 	check("folding: single-line rule not folded",
 		!foldingRanges("@RULES\n_x <- a @@\n_y <- b @@\n").some((f) => f.start === f.end));
+}
+
+// ---- semantic tokens -------------------------------------------------------
+{
+	const sets = {
+		letters: new Set(["N", "S", "X", "G", "L"]),
+		userFuncs: new Set(["myHelper"]),
+		concepts: new Set(["animal"]),
+		rules: new Set(["_noun"]),
+		builtins: new Set(["strlength", "pnvar"]),
+	};
+	const code = `@CODE\n x = strlength("a");\n myHelper(L("y"));\n animal\n _noun\n@@CODE\n`;
+	const toks = classifyTokens(code, sets);
+	const typeOf = (name: string) => {
+		const off = code.indexOf(name);
+		return toks.find((t) => t.start === off)?.type;
+	};
+	eq("semantic: builtin -> function", typeOf("strlength"), "function");
+	eq("semantic: user func -> method", typeOf("myHelper"), "method");
+	eq("semantic: accessor L -> macro", typeOf("L("), "macro"); // indexOf('L(') lands on the L token
+	eq("semantic: concept -> class", typeOf("animal"), "class");
+	eq("semantic: rule -> type", typeOf("_noun"), "type");
+	// Unknown identifier 'x' is not classified.
+	check("semantic: unknown identifier skipped", !toks.some((t) => code.substr(t.start, t.length) === "x"));
+}
+
+// ---- quick fix: misspelled function calls ----------------------------------
+{
+	eq("levenshtein: identical", levenshtein("pnvar", "pnvar"), 0);
+	eq("levenshtein: one edit", levenshtein("pnvarr", "pnvar"), 1);
+
+	const known = ["pnvar", "strlength", "findconcept"];
+	const isKnown = (w: string) => known.includes(w) || w === "if";
+	// 'pnvarr(' is a close typo of 'pnvar' inside a code region -> flagged.
+	const src = `@CODE\n   x = pnvarr("a");\n@@CODE\n`;
+	const found = findUnknownCalls(src, isKnown, known);
+	eq("quickfix: one unknown call", found.length, 1);
+	eq("quickfix: word", found[0]?.word, "pnvarr");
+	eq("quickfix: suggestion", found[0]?.suggestion, "pnvar");
+
+	// A known call is not flagged.
+	eq("quickfix: known call ignored", findUnknownCalls(`@CODE\n pnvar("a");\n@@CODE\n`, isKnown, known).length, 0);
+	// A call in a RULES region is out of scope (not code).
+	eq("quickfix: rules region ignored", findUnknownCalls(`@RULES\n pnvarr("a")\n@@\n`, isKnown, known).length, 0);
+	// A far-off identifier (no close match) is not flagged -- high precision.
+	eq("quickfix: no close match ignored", findUnknownCalls(`@CODE\n zzqqxx("a");\n@@CODE\n`, isKnown, known).length, 0);
 }
 
 // ---- built-in data tables --------------------------------------------------
