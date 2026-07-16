@@ -908,6 +908,16 @@
                 }
             },
             {
+                "command": "nlp.showTreeGraph",
+                "category": "NLP",
+                "title": "View Parse Tree Graphic",
+                "description": "Draw the parse tree as a linguistic tree diagram",
+                "icon": {
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
+                }
+            },
+            {
                 "command": "sequenceView.reveal",
                 "title": "Analyzer Sequence: Reveal"
             },
@@ -1900,6 +1910,11 @@
             "editor/title": [
                 {
                     "command": "nlp.video",
+                    "group": "navigation"
+                },
+                {
+                    "when": "resourceLangId == tree",
+                    "command": "nlp.showTreeGraph",
                     "group": "navigation"
                 }
             ],
@@ -3441,6 +3456,7 @@
         "test": "node ./dist/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
+        "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "vsce-package": "npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {

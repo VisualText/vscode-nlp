@@ -1,0 +1,21 @@
+// Standalone build for the pure tree-visualization engines + test harness.
+// Mirrors tsconfig.language.json: emits to out-treeview/ (gitignored) and excludes
+// the VSCode webview adapter so the parse/layout/render logic runs under plain
+// Node. Run via: npm run test:treeview
+{
+	"compilerOptions": {
+		"rootDir": "src/treeview",
+		"outDir": "out-treeview",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"sourceMap": false
+	},
+	"include": ["src/treeview/**/*.ts"],
+	"exclude": ["src/treeview/treeGraphView.ts"]
+}

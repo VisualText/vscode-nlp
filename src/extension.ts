@@ -15,6 +15,7 @@ import { visualText } from './visualText';
 import { registerFormatter } from './format/formatProvider';
 import { registerLanguageFeatures } from './language/providers';
 import { registerEngineDiagnostics } from './language/engineDiagnostics';
+import { registerTreeGraph } from './treeview/treeGraphView';
 import * as telemetry from './telemetry/telemetry';
 
 export function activate(ctx: vscode.ExtensionContext): void {
@@ -32,6 +33,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     registerFormatter(ctx);
     registerLanguageFeatures(ctx); // outline, hover, go-to-definition, structural diagnostics
     registerEngineDiagnostics(ctx); // inline squiggles from the engine's err.log
+    registerTreeGraph(ctx); // linguistic parse-tree graphic for .tree files
     telemetry.activate(ctx); // no-op unless a connection string is configured
 
     // First-run welcome / new-version notes / announcements (guarded; never
