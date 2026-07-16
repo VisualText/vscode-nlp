@@ -107,9 +107,12 @@ const hoverProvider: vscode.HoverProvider = {
 			);
 		}
 		if (BUILTIN_SET.has(lower)) {
+			// Deep-link to the function's own help page (Help/markdown/<name>.md),
+			// falling back to the aggregate Functions page for the few without one.
+			const arg = encodeURIComponent(JSON.stringify([word]));
 			const md = new vscode.MarkdownString(
 				`**${word}** — NLP++ built-in function\n\n` +
-				`[Open Functions Help](command:helpView.openFunctionHelp)`,
+				`[Open help for \`${word}\`](command:helpView.openFunctionPage?${arg})`,
 			);
 			md.isTrusted = true;
 			return new vscode.Hover(md, range);

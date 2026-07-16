@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.9.1
+Hovering a built-in function now links to that function's own help page.
+
+- The built-in-function hover previously offered a link to the general Functions help page. It now links directly to the specific function's markdown help (`Help/markdown/<name>.md`), falling back to the aggregate Functions page for the few built-ins without a dedicated page.
+
 ### 3.9.0
 Add semantic highlighting and quick fixes for NLP++.
 

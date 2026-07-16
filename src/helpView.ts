@@ -122,6 +122,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.windowCHMHelp', (resource) => this.windowCHMHelp(resource));
         vscode.commands.registerCommand('helpView.openHelpIndex', () => this.openHelpIndex());
         vscode.commands.registerCommand('helpView.openFunctionHelp', () => this.openFunctionHelp());
+        vscode.commands.registerCommand('helpView.openFunctionPage', (name) => this.openFunctionPage(name));
         vscode.commands.registerCommand('helpView.openVariableHelp', () => this.openVariableHelp());
         vscode.commands.registerCommand('helpView.openHome', () => this.openHome());
         vscode.commands.registerCommand('helpView.openVscodeHelp', (item) => this.openVscodeHelp(item));
@@ -210,6 +211,25 @@ export class HelpView {
 
     openFunctionHelp() {
         this.displayMarkdownHelp(path.join('NLP_PP_Stuff', 'Functions'));
+    }
+
+    // Open the per-function markdown help page (Help/markdown/<name>.md) if it
+    // exists, e.g. from a hover link. Most built-ins have their own page; for the
+    // few that don't, fall back to the aggregate Functions page so the link never
+    // dead-ends.
+    openFunctionPage(name: string) {
+        if (typeof name === 'string' && name.length) {
+            if (this.helpExists(name)) {
+                this.displayMarkdownHelp(name);
+                return;
+            }
+            const lower = name.toLowerCase();
+            if (lower !== name && this.helpExists(lower)) {
+                this.displayMarkdownHelp(lower);
+                return;
+            }
+        }
+        this.openFunctionHelp();
     }
 
     openVariableHelp() {
