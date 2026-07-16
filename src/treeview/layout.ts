@@ -79,3 +79,23 @@ export function flatten(node: LayoutNode, out: LayoutNode[] = []): LayoutNode[] 
 	for (const c of node.children) flatten(c, out);
 	return out;
 }
+
+export function countNodes(n: TreeNode): number {
+	return 1 + n.children.reduce((s, c) => s + countNodes(c), 0);
+}
+
+// The set of node ids collapsed when the view first opens. With openDepth = 1
+// only the root is expanded, so its children show as collapsed markers and the
+// user drills in one node at a time (expanding a node reveals just its immediate
+// children, which stay collapsed). Trees at or under `bigThreshold` nodes open
+// fully expanded, since they are small enough to read at a glance.
+export function defaultCollapsed(root: TreeNode, openDepth = 1, bigThreshold = 30): Set<number> {
+	const set = new Set<number>();
+	if (countNodes(root) <= bigThreshold) return set;
+	const walk = (n: TreeNode, depth: number) => {
+		if (depth >= openDepth && n.children.length) set.add(n.id);
+		n.children.forEach((c) => walk(c, depth + 1));
+	};
+	walk(root, 0);
+	return set;
+}

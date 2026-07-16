@@ -11,12 +11,8 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { parseTree, TreeNode } from "./parseTree";
-import { layoutTree } from "./layout";
+import { layoutTree, defaultCollapsed } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
-
-// Trees larger than this open collapsed below DEFAULT_OPEN_DEPTH.
-const BIG_TREE = 60;
-const DEFAULT_OPEN_DEPTH = 2;
 
 interface ViewState {
 	root: TreeNode;
@@ -33,23 +29,6 @@ function nonce(): string {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	for (let i = 0; i < 24; i++) s += chars[Math.floor(Math.random() * chars.length)];
 	return s;
-}
-
-function countNodes(n: TreeNode): number {
-	return 1 + n.children.reduce((s, c) => s + countNodes(c), 0);
-}
-
-// Collapse internal nodes at/below DEFAULT_OPEN_DEPTH for big trees, so the
-// initial view is compact. Small trees open fully expanded.
-function defaultCollapsed(root: TreeNode): Set<number> {
-	const set = new Set<number>();
-	if (countNodes(root) <= BIG_TREE) return set;
-	const walk = (n: TreeNode, depth: number) => {
-		if (depth >= DEFAULT_OPEN_DEPTH && n.children.length) set.add(n.id);
-		n.children.forEach((c) => walk(c, depth + 1));
-	};
-	walk(root, 0);
-	return set;
 }
 
 function renderSvg(): string {
@@ -102,7 +81,7 @@ function html(svg: string, n: string): string {
 </head>
 <body>
 <div id="wrap">${svg}</div>
-<div id="hint">scroll = zoom · drag = pan · click a phrase node = expand/collapse · click a word = reveal in text</div>
+<div id="hint">scroll = zoom · drag = pan · click a phrase node = open its children (one level) · click a word = reveal in text</div>
 <script nonce="${n}">
   const vscode = acquireVsCodeApi();
   const wrap = document.getElementById('wrap');

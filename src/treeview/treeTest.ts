@@ -2,7 +2,7 @@
 // Runs under plain Node via tsconfig.treeview.json; `npm run test:treeview`.
 
 import { parseTree } from "./parseTree";
-import { layoutTree, flatten } from "./layout";
+import { layoutTree, flatten, defaultCollapsed, countNodes } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
 
 let passed = 0, failed = 0;
@@ -104,6 +104,46 @@ const TREE = [
 	// XML-escaping: a label with special chars must be escaped.
 	const amp = renderTreeSvg(layoutTree(parseTree("_ROOT [0,1,0,1,0,0,node]\n   a&b [0,1,0,1,0,0,alpha]\n")!));
 	check("render: escapes ampersand", amp.includes("a&amp;b") && !amp.includes("a&b<"));
+}
+
+// ---- default collapse: drill one level at a time --------------------------
+{
+	// Build a deep-ish tree big enough to trip the threshold: root -> A -> B -> C -> leaf,
+	// repeated so countNodes > threshold.
+	const deep: string[] = ["_ROOT [0,99,0,99,0,0,node]"];
+	for (let i = 0; i < 12; i++) {
+		deep.push("   _S [0,9,0,9,0,0,node]");
+		deep.push("      _NP [0,4,0,4,0,0,node]");
+		deep.push("         w" + i + " [0,1,0,1,0,0,alpha]");
+	}
+	const root = parseTree(deep.join("\n"))!;
+	check("default: tree is big enough to collapse", countNodes(root) > 30);
+
+	const set = defaultCollapsed(root); // openDepth = 1
+	check("default: root is NOT collapsed", !set.has(root.id));
+	// Every depth-1 internal node IS collapsed (only the root opens).
+	const depth1 = root.children.filter((c) => c.children.length);
+	check("default: all depth-1 internal nodes collapsed", depth1.every((c) => set.has(c.id)), String(depth1.length));
+
+	// Rendering with the default: only root + its direct children are visible.
+	const visible = flatten(layoutTree(root, { isCollapsed: (id) => set.has(id) }).root);
+	const expected = 1 + root.children.length; // root + immediate children
+	eq("default: only root + immediate children shown", visible.length, expected);
+
+	// Expanding ONE depth-1 node reveals only that node's children (one level).
+	const target = depth1[0];
+	set.delete(target.id);
+	const afterVisible = flatten(layoutTree(root, { isCollapsed: (id) => set.has(id) }).root);
+	eq("default: expanding one node adds exactly its children",
+		afterVisible.length, expected + target.children.length);
+	// The grandchildren of the expanded node stay collapsed (not revealed).
+	const grandkids = target.children.flatMap((c) => c.children.map((g) => g.id));
+	check("default: grandchildren remain hidden",
+		grandkids.every((gid) => !afterVisible.some((n) => n.id === gid)));
+
+	// A small tree opens fully expanded.
+	const small = parseTree("_ROOT [0,2,0,2,0,0,node]\n   a [0,1,0,1,0,0,alpha]\n   b [1,2,1,2,0,0,alpha]\n")!;
+	eq("default: small tree not collapsed", defaultCollapsed(small).size, 0);
 }
 
 console.log(`\ntreeview tests: ${passed} passed, ${failed} failed`);
