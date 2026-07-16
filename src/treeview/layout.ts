@@ -84,6 +84,23 @@ export function countNodes(n: TreeNode): number {
 	return 1 + n.children.reduce((s, c) => s + countNodes(c), 0);
 }
 
+export function findNode(root: TreeNode, id: number): TreeNode | undefined {
+	if (root.id === id) return root;
+	for (const c of root.children) {
+		const f = findNode(c, id);
+		if (f) return f;
+	}
+	return undefined;
+}
+
+// Ids in the subtree rooted at `node`. With internalOnly, only nodes that have
+// children (i.e. the collapsible ones). Used by expand-all / collapse-all.
+export function subtreeIds(node: TreeNode, internalOnly = false, out: number[] = []): number[] {
+	if (!internalOnly || node.children.length) out.push(node.id);
+	for (const c of node.children) subtreeIds(c, internalOnly, out);
+	return out;
+}
+
 // The set of node ids collapsed when the view first opens. With openDepth = 1
 // only the root is expanded, so its children show as collapsed markers and the
 // user drills in one node at a time (expanding a node reveals just its immediate
