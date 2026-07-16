@@ -10,7 +10,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { parseTree, TreeNode } from "./parseTree";
+import { parseTree, subtreeText, TreeNode } from "./parseTree";
 import { layoutTree, defaultCollapsed } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
 
@@ -124,17 +124,12 @@ function html(svg: string, n: string): string {
 </html>`;
 }
 
-export function showTreeGraph(ctx: vscode.ExtensionContext, treeUri: vscode.Uri): void {
-	let text: string;
-	try {
-		text = fs.readFileSync(treeUri.fsPath, "utf8");
-	} catch {
-		vscode.window.showErrorMessage("Could not read tree file: " + treeUri.fsPath);
-		return;
-	}
+// Core: parse `text` and open/refresh the graphic. `titleSuffix` distinguishes a
+// full tree from a selection/subtree in the panel title.
+function openGraph(ctx: vscode.ExtensionContext, text: string, treeUri: vscode.Uri, titleSuffix: string): void {
 	const root = parseTree(text);
 	if (!root) {
-		vscode.window.showInformationMessage("No parse tree found in this file.");
+		vscode.window.showInformationMessage("No parse tree found to graph.");
 		return;
 	}
 
@@ -142,7 +137,7 @@ export function showTreeGraph(ctx: vscode.ExtensionContext, treeUri: vscode.Uri)
 		root,
 		collapsed: defaultCollapsed(root),
 		inputFile: inputFileForTree(treeUri.fsPath),
-		title: "Parse Tree — " + path.basename(treeUri.fsPath),
+		title: "Parse Tree — " + path.basename(treeUri.fsPath) + titleSuffix,
 	};
 	const svg = renderSvg();
 
@@ -171,6 +166,44 @@ export function showTreeGraph(ctx: vscode.ExtensionContext, treeUri: vscode.Uri)
 	}, undefined, ctx.subscriptions);
 }
 
+// Graph the entire tree file.
+function showTreeGraph(ctx: vscode.ExtensionContext, treeUri: vscode.Uri): void {
+	// Prefer the open document's text (reflects any edits) over a disk read.
+	const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === treeUri.toString());
+	let text: string;
+	if (open) {
+		text = open.getText();
+	} else {
+		try { text = fs.readFileSync(treeUri.fsPath, "utf8"); }
+		catch { vscode.window.showErrorMessage("Could not read tree file: " + treeUri.fsPath); return; }
+	}
+	openGraph(ctx, text, treeUri, "");
+}
+
+// Graph just the selected portion: the selected lines if there's a selection,
+// otherwise the subtree rooted at the cursor's line.
+function showTreeGraphSelection(ctx: vscode.ExtensionContext): void {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor || editor.document.languageId !== "tree") {
+		vscode.window.showInformationMessage("Select part of a .tree file to graph it.");
+		return;
+	}
+	const doc = editor.document;
+	const sel = editor.selection;
+	let text: string;
+	let suffix: string;
+	if (!sel.isEmpty) {
+		const lines: string[] = [];
+		for (let i = sel.start.line; i <= sel.end.line; i++) lines.push(doc.lineAt(i).text);
+		text = lines.join("\n");
+		suffix = " (selection)";
+	} else {
+		text = subtreeText(doc.getText(), sel.active.line);
+		suffix = " (subtree)";
+	}
+	openGraph(ctx, text, doc.uri, suffix);
+}
+
 export function registerTreeGraph(ctx: vscode.ExtensionContext): void {
 	ctx.subscriptions.push(
 		vscode.commands.registerCommand("nlp.showTreeGraph", (uri?: vscode.Uri) => {
@@ -181,5 +214,6 @@ export function registerTreeGraph(ctx: vscode.ExtensionContext): void {
 			}
 			showTreeGraph(ctx, target);
 		}),
+		vscode.commands.registerCommand("nlp.showTreeGraphSelection", () => showTreeGraphSelection(ctx)),
 	);
 }

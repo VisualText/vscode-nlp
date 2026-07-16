@@ -4,9 +4,10 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ### 3.11.1
-Parse-tree graphic now drills in one node at a time.
+Parse-tree graphic: drill-down and right-click graphing.
 
 - The graphic opens with just the root expanded; clicking a phrase node reveals only that node's immediate children (which stay collapsed), so you drill down one node at a time instead of opening whole levels. Small trees still open fully.
+- New right-click items on a `.tree` file: **Graph Entire Tree**, and **Graph Selected Portion of Tree** — graphs the selected lines, or (with no selection) the subtree under the cursor's line, so you can visualize just one phrase.
 
 ### 3.11.0
 Collapsible nodes and faster opening for the parse-tree graphic.
