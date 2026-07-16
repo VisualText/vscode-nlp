@@ -8,6 +8,7 @@
 // ("*****", "PASS N (...)") and blank lines are skipped.
 
 export interface TreeNode {
+	id: number;    // stable pre-order id (used to track collapse state)
 	label: string;
 	type: string;
 	start: number; // char offset span in the analyzed text
@@ -52,7 +53,7 @@ export function parseTree(text: string, opts: ParseOptions = {}): TreeNode | und
 		if (skipWs && type === "white") continue;
 
 		const indent = raw.search(/\S/);
-		const node: TreeNode = { label, type, start, end, children: [] };
+		const node: TreeNode = { id: 0, label, type, start, end, children: [] };
 
 		while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
 		if (stack.length) stack[stack.length - 1].node.children.push(node);
@@ -60,7 +61,16 @@ export function parseTree(text: string, opts: ParseOptions = {}): TreeNode | und
 		stack.push({ node, indent });
 	}
 
-	if (roots.length === 1) return roots[0];
-	if (roots.length > 1) return { label: "TREE", type: "root", start: 0, end: 0, children: roots };
-	return undefined;
+	let root: TreeNode | undefined;
+	if (roots.length === 1) root = roots[0];
+	else if (roots.length > 1) root = { id: 0, label: "TREE", type: "root", start: 0, end: 0, children: roots };
+	if (root) assignIds(root);
+	return root;
+}
+
+// Assign stable pre-order ids so collapse state survives re-layout.
+function assignIds(root: TreeNode): void {
+	let next = 0;
+	const walk = (n: TreeNode) => { n.id = next++; n.children.forEach(walk); };
+	walk(root);
 }

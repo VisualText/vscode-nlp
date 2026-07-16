@@ -11,12 +11,15 @@
 import { TreeNode } from "./parseTree";
 
 export interface LayoutNode {
+	id: number;
 	label: string;
 	type: string;
 	start: number;
 	end: number;
 	x: number; // pixel center
 	y: number; // pixel top of the row
+	hasKids: boolean;   // node has children in the source tree
+	collapsed: boolean; // children are currently hidden
 	children: LayoutNode[];
 }
 
@@ -30,19 +33,24 @@ export interface LayoutOptions {
 	colWidth?: number;  // horizontal spacing between adjacent leaves
 	rowHeight?: number; // vertical spacing between depths
 	margin?: number;    // padding around the drawing
+	isCollapsed?: (id: number) => boolean; // hide this node's subtree
 }
 
 export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResult {
 	const colWidth = opts.colWidth ?? 90;
 	const rowHeight = opts.rowHeight ?? 64;
 	const margin = opts.margin ?? 24;
+	const isCollapsed = opts.isCollapsed ?? (() => false);
 
 	let nextLeaf = 0;
 	let maxDepth = 0;
 
 	const place = (node: TreeNode, depth: number): LayoutNode => {
 		if (depth > maxDepth) maxDepth = depth;
-		const children = node.children.map((c) => place(c, depth + 1));
+		const hasKids = node.children.length > 0;
+		const collapsed = hasKids && isCollapsed(node.id);
+		// A collapsed node is drawn as a leaf; its subtree is not laid out.
+		const children = collapsed ? [] : node.children.map((c) => place(c, depth + 1));
 		let x: number;
 		if (children.length === 0) {
 			x = margin + nextLeaf * colWidth;
@@ -51,8 +59,8 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 			x = (children[0].x + children[children.length - 1].x) / 2;
 		}
 		return {
-			label: node.label, type: node.type, start: node.start, end: node.end,
-			x, y: margin + depth * rowHeight, children,
+			id: node.id, label: node.label, type: node.type, start: node.start, end: node.end,
+			x, y: margin + depth * rowHeight, hasKids, collapsed, children,
 		};
 	};
 

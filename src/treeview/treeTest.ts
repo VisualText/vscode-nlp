@@ -70,6 +70,27 @@ const TREE = [
 	const npY = layout.root.children[0].y;
 	check("layout: child rows are below parent rows", npY > rootY);
 	check("layout: positive canvas size", layout.width > 0 && layout.height > 0);
+	check("layout: _NP marked hasKids", layout.root.children[0].hasKids === true);
+	check("layout: leaf not hasKids", leaves[0].hasKids === false);
+}
+
+// ---- collapse --------------------------------------------------------------
+{
+	const root = parseTree(TREE)!;
+	const npId = root.children[0].id; // the _NP node
+	const full = flatten(layoutTree(root).root).length;
+	const collapsed = layoutTree(root, { isCollapsed: (id) => id === npId });
+	const nodes = flatten(collapsed.root);
+	check("collapse: fewer nodes when _NP collapsed", nodes.length < full, `${nodes.length} vs ${full}`);
+	const np = nodes.find((n) => n.id === npId)!;
+	check("collapse: _NP now shows as collapsed", np.collapsed === true && np.children.length === 0);
+	check("collapse: _NP's words are hidden", !nodes.some((n) => n.label === "John"));
+	check("collapse: collapsed node still hasKids", np.hasKids === true);
+
+	// Render marks it: data-haskids and a marker.
+	const svg = renderTreeSvg(collapsed);
+	check("collapse: render sets data-haskids", svg.includes('data-haskids="1"'));
+	check("collapse: render draws a marker", svg.includes('class="marker"'));
 }
 
 // ---- render ----------------------------------------------------------------

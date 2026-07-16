@@ -31,11 +31,17 @@ export function renderTreeSvg(layout: LayoutResult): string {
 	}
 
 	for (const n of nodes) {
-		const leaf = n.children.length === 0;
-		const cls = leaf ? "node leaf" : "node internal";
+		const cls = "node" +
+			(n.hasKids ? " internal" : " leaf") +
+			(n.collapsed ? " collapsed" : "");
+		// A collapsed node gets a marker dot hinting at hidden children.
+		const marker = n.collapsed
+			? `<circle class="marker" cx="${n.x}" cy="${n.y + LINK_BOTTOM + 2}" r="3"/>`
+			: "";
 		labels.push(
-			`<g class="${cls}" data-start="${n.start}" data-end="${n.end}">` +
+			`<g class="${cls}" data-id="${n.id}" data-start="${n.start}" data-end="${n.end}" data-haskids="${n.hasKids ? 1 : 0}">` +
 			`<text x="${n.x}" y="${n.y + TEXT_DY}" text-anchor="middle">${esc(n.label)}</text>` +
+			marker +
 			`</g>`,
 		);
 	}

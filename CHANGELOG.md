@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.0
+Collapsible nodes and faster opening for the parse-tree graphic.
+
+- **Click a phrase node to collapse or expand** its subtree — large trees stay manageable, and you can drill into just the part you care about.
+- **Opening is instant**: the graphic reuses a single panel, large trees open collapsed (below depth 2) so the first draw is small, and the tree **fits to the window** on open. Collapsing keeps your zoom/pan.
+- Clicking a **word (leaf)** still reveals its span in the analyzed text.
+
 ### 3.10.0
 Draw the parse tree as a linguistic tree graphic.
 
