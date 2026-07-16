@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.9.0
+Add semantic highlighting and quick fixes for NLP++.
+
+- **Semantic highlighting** colors identifiers by what they are — built-in function, your own `@DECL` function, KB concept, rule, or `N/S/X/G/L` node accessor each get a distinct color, layered on top of the existing syntax coloring.
+- **Quick fixes** for misspelled function calls: a call like `pnvarr(...)` that closely matches a real function (`pnvar`) is flagged with a warning and a one-click "Replace with…" fix. It only fires when there's a close match, so it stays quiet on ordinary variables and new identifiers.
+
 ### 3.8.0
 Add code folding for NLP++ pass files.
 

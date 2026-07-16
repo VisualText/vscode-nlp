@@ -14,10 +14,30 @@ import { nlpWorkspaceIndex, IndexedSymbol } from "./workspaceIndex";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
 import { foldingRanges } from "./folding";
+import { classifyTokens, SymbolSets, SemType } from "./semanticTokens";
+import { findUnknownCalls } from "./quickfix";
 import {
 	BUILTIN_SET, BUILTIN_FUNCTIONS, KEYWORDS, KEYWORD_SET, RULE_KEYWORDS,
 	REGION_MARKERS, LETTER_FUNCTIONS,
 } from "./nlpxxData";
+
+// Symbol sets from the workspace index + static tables, shared by the semantic
+// highlighter and the unknown-call quick fix.
+function gatherSymbolSets(): SymbolSets {
+	const userFuncs = new Set<string>();
+	const concepts = new Set<string>();
+	const rules = new Set<string>();
+	for (const s of nlpWorkspaceIndex.search("")) {
+		if (s.kind === "function") userFuncs.add(s.name);
+		else if (s.kind === "concept") concepts.add(s.name);
+		else if (s.kind === "rule") rules.add(s.name);
+	}
+	return {
+		letters: new Set(Object.keys(LETTER_FUNCTIONS)),
+		userFuncs, concepts, rules,
+		builtins: BUILTIN_SET,
+	};
+}
 
 const NLP = { language: "nlp" } as const;
 
@@ -370,13 +390,73 @@ const signatureProvider: vscode.SignatureHelpProvider = {
 	},
 };
 
+// ---- Semantic highlighting -------------------------------------------------
+
+const SEM_TYPES: SemType[] = ["function", "method", "class", "type", "macro"];
+export const semanticLegend = new vscode.SemanticTokensLegend(SEM_TYPES as string[]);
+const SEM_INDEX = new Map<SemType, number>(SEM_TYPES.map((t, i) => [t, i]));
+
+const semanticProvider: vscode.DocumentSemanticTokensProvider = {
+	async provideDocumentSemanticTokens(doc) {
+		await nlpWorkspaceIndex.ensureBuilt();
+		const builder = new vscode.SemanticTokensBuilder(semanticLegend);
+		const text = doc.getText();
+		try {
+			for (const t of classifyTokens(text, gatherSymbolSets())) {
+				const pos = doc.positionAt(t.start);
+				builder.push(pos.line, pos.character, t.length, SEM_INDEX.get(t.type)!, 0);
+			}
+		} catch { /* fall back to TextMate coloring */ }
+		return builder.build();
+	},
+};
+
+// ---- Quick fixes (misspelled function calls) -------------------------------
+
+const UNKNOWN_FN_CODE = "nlp.unknown-function";
+
+// Known callable names (built-ins + user functions) and a membership test that
+// also treats keywords, node accessors, concepts, and rules as "known" so the
+// unknown-call check only fires on genuine unrecognized calls.
+function knownFunctions(sets: SymbolSets): { names: string[]; isKnown: (w: string) => boolean } {
+	const names = [...BUILTIN_FUNCTIONS, ...sets.userFuncs];
+	const isKnown = (w: string) =>
+		sets.builtins.has(w.toLowerCase()) ||
+		KEYWORD_SET.has(w.toLowerCase()) ||
+		sets.letters.has(w) ||
+		sets.userFuncs.has(w) ||
+		sets.concepts.has(w) ||
+		sets.rules.has(w);
+	return { names, isKnown };
+}
+
+const codeActionProvider: vscode.CodeActionProvider = {
+	provideCodeActions(doc, range, context) {
+		const actions: vscode.CodeAction[] = [];
+		for (const diag of context.diagnostics) {
+			if (diag.code !== UNKNOWN_FN_CODE) continue;
+			// Suggestion is encoded in the message: "... did you mean 'X'?"
+			const m = /did you mean '([^']+)'/.exec(diag.message);
+			if (!m) continue;
+			const fix = new vscode.CodeAction(`Replace with '${m[1]}'`, vscode.CodeActionKind.QuickFix);
+			fix.edit = new vscode.WorkspaceEdit();
+			fix.edit.replace(doc.uri, diag.range, m[1]);
+			fix.diagnostics = [diag];
+			fix.isPreferred = true;
+			actions.push(fix);
+		}
+		return actions;
+	},
+};
+
 // ---- Diagnostics -----------------------------------------------------------
 
-function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.DiagnosticCollection): void {
+async function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.DiagnosticCollection): Promise<void> {
 	if (doc.languageId !== "nlp") return;
+	const text = doc.getText();
 	let problems;
 	try {
-		problems = computeProblems(doc.getText());
+		problems = computeProblems(text);
 	} catch {
 		return;
 	}
@@ -392,6 +472,24 @@ function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.Diagnos
 		d.code = p.code;
 		return d;
 	});
+
+	// Misspelled function calls -> warning with a "did you mean" suggestion the
+	// quick-fix reads back. Best-effort: needs the index for user functions.
+	try {
+		await nlpWorkspaceIndex.ensureBuilt();
+		const { names, isKnown } = knownFunctions(gatherSymbolSets());
+		for (const u of findUnknownCalls(text, isKnown, names)) {
+			const d = new vscode.Diagnostic(
+				new vscode.Range(doc.positionAt(u.start), doc.positionAt(u.start + u.length)),
+				`Unknown function '${u.word}' — did you mean '${u.suggestion}'?`,
+				vscode.DiagnosticSeverity.Warning,
+			);
+			d.source = "nlp++";
+			d.code = UNKNOWN_FN_CODE;
+			diags.push(d);
+		}
+	} catch { /* index unavailable; structural diagnostics still apply */ }
+
 	collection.set(doc.uri, diags);
 }
 
@@ -407,6 +505,10 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 		vscode.languages.registerCompletionItemProvider(NLP, completionProvider, "@"),
 		vscode.languages.registerSignatureHelpProvider(NLP, signatureProvider, "(", ","),
 		vscode.languages.registerFoldingRangeProvider(NLP, foldingProvider),
+		vscode.languages.registerDocumentSemanticTokensProvider(NLP, semanticProvider, semanticLegend),
+		vscode.languages.registerCodeActionsProvider(NLP, codeActionProvider, {
+			providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
+		}),
 	);
 
 	// Keep the cross-pass index fresh. It builds lazily on first use; here we
