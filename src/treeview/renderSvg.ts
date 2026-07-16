@@ -34,21 +34,36 @@ export function renderTreeSvg(layout: LayoutResult): string {
 		const cls = "node" +
 			(n.hasKids ? " internal" : " leaf") +
 			(n.collapsed ? " collapsed" : "");
-		// A collapsed node gets a marker dot hinting at hidden children.
+		// A generous, invisible hit rectangle makes the whole label easy to click
+		// (the text glyphs alone are a tiny target). Width scales with the label
+		// but is capped so adjacent nodes don't overlap and steal each other's
+		// clicks; height spans the row.
+		const hitW = Math.min(84, Math.max(30, n.label.length * 8 + 16));
+		const hit =
+			`<rect class="hit" x="${(n.x - hitW / 2).toFixed(1)}" y="${n.y - 2}" ` +
+			`width="${hitW}" height="${LINK_BOTTOM + 8}" rx="3"/>`;
+		// A collapsed node gets a marker hinting at hidden children.
 		const marker = n.collapsed
-			? `<circle class="marker" cx="${n.x}" cy="${n.y + LINK_BOTTOM + 2}" r="3"/>`
+			? `<circle class="marker" cx="${n.x}" cy="${n.y + LINK_BOTTOM + 3}" r="5"/>`
 			: "";
 		labels.push(
 			`<g class="${cls}" data-id="${n.id}" data-start="${n.start}" data-end="${n.end}" data-haskids="${n.hasKids ? 1 : 0}">` +
+			hit +
 			`<text x="${n.x}" y="${n.y + TEXT_DY}" text-anchor="middle">${esc(n.label)}</text>` +
 			marker +
 			`</g>`,
 		);
 	}
 
+	// The <svg> fills its container (width/height 100%) and the full tree size is
+	// carried in data-w/data-h for fit-to-window. We deliberately do NOT set an
+	// intrinsic pixel width/height equal to the tree: a very wide tree (tens of
+	// thousands of px) would exceed the compositor's max texture size and render
+	// as black tiles. Zoom/pan is applied via the #viewport transform, and content
+	// outside the viewport is clipped (SVG overflow is hidden by default).
 	return (
-		`<svg id="tree" width="${layout.width}" height="${layout.height}" ` +
-		`viewBox="0 0 ${layout.width} ${layout.height}" xmlns="http://www.w3.org/2000/svg">` +
+		`<svg id="tree" width="100%" height="100%" ` +
+		`data-w="${layout.width}" data-h="${layout.height}" xmlns="http://www.w3.org/2000/svg">` +
 		`<g id="viewport">${links.join("")}${labels.join("")}</g>` +
 		`</svg>`
 	);

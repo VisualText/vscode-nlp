@@ -11,7 +11,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { parseTree, subtreeText, TreeNode } from "./parseTree";
-import { layoutTree, defaultCollapsed } from "./layout";
+import { layoutTree, defaultCollapsed, findNode, subtreeIds } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
 
 interface ViewState {
@@ -68,44 +68,69 @@ function html(svg: string, n: string): string {
     font-family: var(--vscode-editor-font-family, sans-serif); }
   #wrap { width:100vw; height:100vh; overflow:hidden; cursor:grab; }
   #wrap.grabbing { cursor:grabbing; }
-  svg { user-select:none; }
+  svg { user-select:none; display:block; width:100%; height:100%; }
   .link { stroke: var(--vscode-editorIndentGuide-background, #888); stroke-width:1.2; }
-  .node text { font-size:13px; fill: var(--vscode-editor-foreground); }
+  .node text { font-size:13px; fill: var(--vscode-editor-foreground); pointer-events:none; }
   .node.internal text { font-weight:600; fill: var(--vscode-symbolIcon-functionForeground, #b58900); }
   .node.collapsed text { text-decoration: underline dotted; }
-  .marker { fill: var(--vscode-symbolIcon-functionForeground, #b58900); }
+  .marker { fill: var(--vscode-symbolIcon-functionForeground, #b58900); pointer-events:none; }
+  .hit { fill: transparent; }
   .node { cursor:pointer; }
+  .node:hover .hit { fill: var(--vscode-editor-hoverHighlightBackground, rgba(120,140,200,.22)); }
   .node:hover text { fill: var(--vscode-textLink-activeForeground, #4daafc); }
   #hint { position:fixed; bottom:8px; left:10px; font-size:11px; opacity:.6; }
+  #menu { position:fixed; display:none; z-index:10; min-width:150px; padding:4px 0; font-size:12px;
+    background: var(--vscode-menu-background, #252526); color: var(--vscode-menu-foreground, #ccc);
+    border:1px solid var(--vscode-menu-border, #454545); border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+  #menu div { padding:5px 16px; cursor:pointer; }
+  #menu div:hover { background: var(--vscode-menu-selectionBackground, #094771); color: var(--vscode-menu-selectionForeground, #fff); }
 </style>
 </head>
 <body>
 <div id="wrap">${svg}</div>
-<div id="hint">scroll = zoom · drag = pan · click a phrase node = open its children (one level) · click a word = reveal in text</div>
+<div id="hint">scroll = zoom · drag = pan · click a phrase node = open its children (one level) · right-click = expand/collapse all · click a word = reveal in text</div>
+<div id="menu"><div data-act="expand">Expand all below</div><div data-act="collapse">Collapse all below</div></div>
 <script nonce="${n}">
   const vscode = acquireVsCodeApi();
   const wrap = document.getElementById('wrap');
+  const menu = document.getElementById('menu');
+  let menuId = -1;
   let scale = 1, tx = 0, ty = 0, panning = false, sx = 0, sy = 0;
+  function hideMenu(){ menu.style.display = 'none'; }
   function vp(){ return document.getElementById('viewport'); }
   function apply(){ const v = vp(); if(v) v.setAttribute('transform','translate('+tx+','+ty+') scale('+scale+')'); }
   function fit(){
     const svg = document.getElementById('tree'); if(!svg) return;
-    const w = +svg.getAttribute('width'), h = +svg.getAttribute('height');
+    const w = +svg.getAttribute('data-w'), h = +svg.getAttribute('data-h');
     const vw = wrap.clientWidth, vh = wrap.clientHeight;
-    scale = Math.max(0.1, Math.min(1, (vw-20)/w, (vh-20)/h));
+    scale = Math.max(0.02, Math.min(1, (vw-20)/w, (vh-20)/h));
     tx = Math.max(0, (vw - w*scale)/2); ty = 10;
     apply();
   }
   wrap.addEventListener('wheel', (e) => {
-    e.preventDefault();
+    e.preventDefault(); hideMenu();
     const f = e.deltaY < 0 ? 1.1 : 1/1.1;
     scale = Math.max(0.1, Math.min(6, scale * f));
     apply();
   }, { passive:false });
-  wrap.addEventListener('mousedown', (e) => { panning = true; sx = e.clientX - tx; sy = e.clientY - ty; wrap.classList.add('grabbing'); });
+  wrap.addEventListener('mousedown', (e) => { hideMenu(); panning = true; sx = e.clientX - tx; sy = e.clientY - ty; wrap.classList.add('grabbing'); });
+  wrap.addEventListener('contextmenu', (e) => {
+    const g = e.target.closest && e.target.closest('.node');
+    if(g && g.getAttribute('data-haskids') === '1'){
+      e.preventDefault();
+      menuId = +g.getAttribute('data-id');
+      menu.style.left = e.clientX + 'px'; menu.style.top = e.clientY + 'px'; menu.style.display = 'block';
+    }
+  });
+  menu.addEventListener('click', (e) => {
+    const act = e.target && e.target.getAttribute('data-act');
+    if(act && menuId >= 0) vscode.postMessage({ type: act === 'expand' ? 'expandAll' : 'collapseAll', id: menuId });
+    hideMenu();
+  });
   window.addEventListener('mousemove', (e) => { if(panning){ tx = e.clientX - sx; ty = e.clientY - sy; apply(); } });
   window.addEventListener('mouseup', () => { panning = false; wrap.classList.remove('grabbing'); });
   wrap.addEventListener('click', (e) => {
+    hideMenu();
     const g = e.target.closest && e.target.closest('.node'); if(!g) return;
     if(g.getAttribute('data-haskids') === '1') {
       vscode.postMessage({ type:'toggle', id: +g.getAttribute('data-id') });
@@ -162,6 +187,18 @@ function openGraph(ctx: vscode.ExtensionContext, text: string, treeUri: vscode.U
 			if (state.collapsed.has(m.id)) state.collapsed.delete(m.id);
 			else state.collapsed.add(m.id);
 			panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
+		} else if (m?.type === "expandAll" || m?.type === "collapseAll") {
+			const node = findNode(state.root, m.id);
+			if (node) {
+				if (m.type === "expandAll") {
+					// Reveal the whole subtree: nothing under (or at) this node collapsed.
+					subtreeIds(node, false).forEach((id) => state!.collapsed.delete(id));
+				} else {
+					// Hide the whole subtree: this node and every collapsible descendant.
+					subtreeIds(node, true).forEach((id) => state!.collapsed.add(id));
+				}
+				panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
+			}
 		}
 	}, undefined, ctx.subscriptions);
 }

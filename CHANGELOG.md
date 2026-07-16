@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.2
+Parse-tree graphic: rendering and interaction fixes.
+
+- **Fixed "black squares" on large trees.** A very wide tree gave the SVG a huge intrinsic size that overflowed the browser's max texture size and rendered as black tiles. The graphic now fills the view and zooms/pans within it, so it renders cleanly at any size.
+- **Bigger click targets.** Each node now has a generous invisible hit area (with a hover highlight), and collapse markers are larger — no more hunting for a tiny dot.
+- **Right-click a node → Expand all below / Collapse all below**, to open or close a whole subtree at once (shown only for nodes that have children).
+
 ### 3.11.1
 Parse-tree graphic: drill-down and right-click graphing.
 

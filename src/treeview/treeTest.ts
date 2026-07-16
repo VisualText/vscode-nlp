@@ -2,7 +2,7 @@
 // Runs under plain Node via tsconfig.treeview.json; `npm run test:treeview`.
 
 import { parseTree, subtreeText } from "./parseTree";
-import { layoutTree, flatten, defaultCollapsed, countNodes } from "./layout";
+import { layoutTree, flatten, defaultCollapsed, countNodes, findNode, subtreeIds } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
 
 let passed = 0, failed = 0;
@@ -98,6 +98,18 @@ const TREE = [
 	const svg = renderTreeSvg(layoutTree(parseTree(TREE)!));
 	check("render: is an <svg>", svg.startsWith("<svg") && svg.endsWith("</svg>"));
 	check("render: has a viewport group", svg.includes('id="viewport"'));
+	// Regression: the svg must fill the container (width/height 100%) and carry the
+	// tree size in data-w/data-h, NOT as a giant intrinsic width that overflows the
+	// compositor's max texture size (the "big black squares" bug).
+	check("render: svg fills container", svg.includes('width="100%"') && svg.includes('height="100%"'));
+	check("render: tree size in data attrs", svg.includes("data-w=") && svg.includes("data-h="));
+	check("render: no giant intrinsic width", !/<svg[^>]*\swidth="\d{3,}"/.test(svg));
+	// Each node has a generous invisible hit rect (bigger click target than the glyphs).
+	const hits = (svg.match(/class="hit"/g) || []).length;
+	const nodeCount = (svg.match(/class="node/g) || []).length;
+	eq("render: one hit rect per node", hits, nodeCount);
+	const mw = /class="hit"[^>]*\bwidth="(\d+)"/.exec(svg);
+	check("render: hit width is generous (>=30)", !!mw && +mw[1] >= 30, mw?.[1]);
 	check("render: nodes carry data-start", svg.includes("data-start="));
 	// One link per parent->child edge: _ROOT->_NP, _ROOT->likes, _NP->John, _NP->Smith = 4.
 	eq("render: link count", (svg.match(/class="link"/g) || []).length, 4);
@@ -179,6 +191,27 @@ const TREE = [
 	const range = lines.split("\n").slice(2, 7).join("\n");
 	const forest = parseTree(range)!;
 	check("selection: NP and VP are siblings under a wrapper", forest.children.length === 2, forest.label);
+}
+
+// ---- expand-all / collapse-all subtree helpers -----------------------------
+{
+	const root = parseTree(TREE)!;          // _ROOT -> (_NP -> John, Smith), likes
+	const np = root.children[0];            // _NP
+	check("findNode: locates _NP by id", findNode(root, np.id)?.label === "_NP");
+	check("findNode: missing id -> undefined", findNode(root, 9999) === undefined);
+
+	// All ids under _NP: _NP + John + Smith = 3.
+	eq("subtreeIds: all under _NP", subtreeIds(np).length, 3);
+	// Internal-only under _NP: just _NP (John/Smith are leaves).
+	eq("subtreeIds: internal-only under _NP", subtreeIds(np, true).length, 1);
+
+	// Collapse-all under root then expand-all under root round-trips visibility.
+	const collapsed = new Set<number>(subtreeIds(root, true));
+	const afterCollapse = flatten(layoutTree(root, { isCollapsed: (id) => collapsed.has(id) }).root);
+	eq("collapse-all: only root visible", afterCollapse.length, 1);
+	subtreeIds(root, false).forEach((id) => collapsed.delete(id));
+	const afterExpand = flatten(layoutTree(root, { isCollapsed: (id) => collapsed.has(id) }).root);
+	eq("expand-all: whole tree visible", afterExpand.length, countNodes(root));
 }
 
 console.log(`\ntreeview tests: ${passed} passed, ${failed} failed`);
