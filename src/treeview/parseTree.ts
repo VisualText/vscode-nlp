@@ -74,3 +74,27 @@ function assignIds(root: TreeNode): void {
 	const walk = (n: TreeNode) => { n.id = next++; n.children.forEach(walk); };
 	walk(root);
 }
+
+function indentOf(line: string): number {
+	const i = line.search(/\S/);
+	return i < 0 ? Infinity : i;
+}
+
+// The text of the subtree rooted at `line`: that line plus every following line
+// indented deeper than it (stopping at the next line at the same-or-shallower
+// indent). Used to graph just the node under the cursor. Blank lines inside the
+// subtree are kept; a banner/blank never ends it prematurely.
+export function subtreeText(text: string, line: number): string {
+	const lines = text.split(/\r?\n/);
+	if (line < 0 || line >= lines.length) return "";
+	const base = indentOf(lines[line]);
+	if (!isFinite(base)) return lines[line];
+	const out = [lines[line]];
+	for (let i = line + 1; i < lines.length; i++) {
+		const ind = indentOf(lines[i]);
+		if (!isFinite(ind)) { out.push(lines[i]); continue; } // blank line: keep, don't stop
+		if (ind <= base) break;
+		out.push(lines[i]);
+	}
+	return out.join("\n");
+}

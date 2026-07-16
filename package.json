@@ -910,8 +910,18 @@
             {
                 "command": "nlp.showTreeGraph",
                 "category": "NLP",
-                "title": "View Parse Tree Graphic",
-                "description": "Draw the parse tree as a linguistic tree diagram",
+                "title": "Graph Entire Tree",
+                "description": "Draw the whole parse tree as a linguistic tree diagram",
+                "icon": {
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
+                }
+            },
+            {
+                "command": "nlp.showTreeGraphSelection",
+                "category": "NLP",
+                "title": "Graph Selected Portion of Tree",
+                "description": "Draw the selected lines (or the subtree under the cursor) as a tree diagram",
                 "icon": {
                     "light": "resources/light/tree.svg",
                     "dark": "resources/dark/tree.svg"
@@ -1919,6 +1929,16 @@
                 }
             ],
             "editor/context": [
+                {
+                    "when": "resourceLangId == tree",
+                    "command": "nlp.showTreeGraph",
+                    "group": "nlp"
+                },
+                {
+                    "when": "resourceLangId == tree",
+                    "command": "nlp.showTreeGraphSelection",
+                    "group": "nlp"
+                },
                 {
                     "when": "resourceExtname == .txt",
                     "command": "nlp.analyze",

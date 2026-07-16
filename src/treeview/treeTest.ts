@@ -1,7 +1,7 @@
 // Pure-logic tests for the tree-visualization engines (parse / layout / render).
 // Runs under plain Node via tsconfig.treeview.json; `npm run test:treeview`.
 
-import { parseTree } from "./parseTree";
+import { parseTree, subtreeText } from "./parseTree";
 import { layoutTree, flatten, defaultCollapsed, countNodes } from "./layout";
 import { renderTreeSvg } from "./renderSvg";
 
@@ -144,6 +144,41 @@ const TREE = [
 	// A small tree opens fully expanded.
 	const small = parseTree("_ROOT [0,2,0,2,0,0,node]\n   a [0,1,0,1,0,0,alpha]\n   b [1,2,1,2,0,0,alpha]\n")!;
 	eq("default: small tree not collapsed", defaultCollapsed(small).size, 0);
+}
+
+// ---- subtreeText (graph selected portion) ----------------------------------
+{
+	const lines = [
+		"_ROOT [0,20,0,20,0,0,node]",     // 0
+		"   _S [0,20,0,20,0,0,node]",      // 1
+		"      _NP [0,9,0,9,0,0,node]",    // 2
+		"         John [0,3,0,3,0,0,alpha]", // 3
+		"         Smith [5,9,5,9,0,0,alpha]", // 4
+		"      _VP [11,20,11,20,0,0,node]", // 5
+		"         likes [11,15,11,15,0,0,alpha]", // 6
+	].join("\n");
+
+	// Subtree at the _NP line (2) = _NP + its two words (lines 2..4), not _VP.
+	const npSub = subtreeText(lines, 2);
+	const npRoot = parseTree(npSub)!;
+	eq("subtree: _NP root", npRoot.label, "_NP");
+	eq("subtree: _NP has 2 word children", npRoot.children.length, 2);
+	check("subtree: does not include _VP", !npSub.includes("_VP"));
+
+	// Subtree at the root line (0) = the whole tree.
+	const whole = parseTree(subtreeText(lines, 0))!;
+	eq("subtree: root gives whole tree", whole.label, "_ROOT");
+	check("subtree: whole tree includes _VP", subtreeText(lines, 0).includes("_VP"));
+
+	// Subtree at a leaf line (3) = just that leaf.
+	const leaf = parseTree(subtreeText(lines, 3))!;
+	eq("subtree: leaf line yields single node", leaf.label, "John");
+	eq("subtree: leaf has no children", leaf.children.length, 0);
+
+	// A selected line range (lines 2..6) parses as a forest -> wrapped root.
+	const range = lines.split("\n").slice(2, 7).join("\n");
+	const forest = parseTree(range)!;
+	check("selection: NP and VP are siblings under a wrapper", forest.children.length === 2, forest.label);
 }
 
 console.log(`\ntreeview tests: ${passed} passed, ${failed} failed`);
