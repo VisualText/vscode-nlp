@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.9.1",
+    "version": "3.10.0",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -902,6 +902,16 @@
             {
                 "command": "nlp.passTree",
                 "title": "Display Pass Tree",
+                "icon": {
+                    "light": "resources/light/tree.svg",
+                    "dark": "resources/dark/tree.svg"
+                }
+            },
+            {
+                "command": "nlp.showTreeGraph",
+                "category": "NLP",
+                "title": "View Parse Tree Graphic",
+                "description": "Draw the parse tree as a linguistic tree diagram",
                 "icon": {
                     "light": "resources/light/tree.svg",
                     "dark": "resources/dark/tree.svg"
@@ -1900,6 +1910,11 @@
             "editor/title": [
                 {
                     "command": "nlp.video",
+                    "group": "navigation"
+                },
+                {
+                    "when": "resourceLangId == tree",
+                    "command": "nlp.showTreeGraph",
                     "group": "navigation"
                 }
             ],
@@ -3441,6 +3456,7 @@
         "test": "node ./dist/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
+        "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "vsce-package": "npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {

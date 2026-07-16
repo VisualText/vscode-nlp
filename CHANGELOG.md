@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.10.0
+Draw the parse tree as a linguistic tree graphic.
+
+- A new **View Parse Tree Graphic** button on the `.tree` editor title bar opens a graphical, alternative view of the parse tree beside the text — the classic linguistic tree diagram drawn as SVG. **Scroll to zoom, drag to pan, and click any node** to reveal its text span in the analyzed input file.
+- The whitespace tokens and pass banners are hidden for a cleaner tree; the same view works from any `.tree` file (tokenizer passes render flat and wide, later phrase-structure passes render as proper trees).
+
 ### 3.9.1
 Hovering a built-in function now links to that function's own help page.
 

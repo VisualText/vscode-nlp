@@ -1,4 +1,5 @@
 node_modules/
 out-format/
 out-language/
+out-treeview/
 *.vsix
