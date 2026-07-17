@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.4
+Version alignment — no functional changes from 3.11.3.
+
+- Republishes the 3.11.3 parse-tree graphic improvements under a fresh version number so the Marketplace and repository stay in sync after a publishing mix-up. See 3.11.3 below for the feature list.
+
 ### 3.11.3
 Parse-tree graphic: instant opening, global menu, and horizontal spacing control.
 
