@@ -27,12 +27,14 @@ export interface LayoutResult {
 	root: LayoutNode;
 	width: number;
 	height: number;
+	colWidth: number; // effective horizontal spacing (for sizing hit areas)
 }
 
 export interface LayoutOptions {
 	colWidth?: number;  // horizontal spacing between adjacent leaves
 	rowHeight?: number; // vertical spacing between depths
 	margin?: number;    // padding around the drawing
+	stagger?: number;   // vertical offset for alternate leaves (0 = off); avoids label overlap
 	isCollapsed?: (id: number) => boolean; // hide this node's subtree
 }
 
@@ -40,10 +42,12 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 	const colWidth = opts.colWidth ?? 90;
 	const rowHeight = opts.rowHeight ?? 64;
 	const margin = opts.margin ?? 24;
+	const stagger = opts.stagger ?? 22;
 	const isCollapsed = opts.isCollapsed ?? (() => false);
 
 	let nextLeaf = 0;
 	let maxDepth = 0;
+	let staggered = false;
 
 	const place = (node: TreeNode, depth: number): LayoutNode => {
 		if (depth > maxDepth) maxDepth = depth;
@@ -52,15 +56,20 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 		// A collapsed node is drawn as a leaf; its subtree is not laid out.
 		const children = collapsed ? [] : node.children.map((c) => place(c, depth + 1));
 		let x: number;
+		let dy = 0;
 		if (children.length === 0) {
-			x = margin + nextLeaf * colWidth;
+			// Leaf (or collapsed): spread left-to-right. Push every other leaf down
+			// by `stagger` so adjacent long labels don't overlap horizontally.
+			const idx = nextLeaf;
+			x = margin + idx * colWidth;
 			nextLeaf++;
+			if (stagger > 0 && idx % 2 === 1) { dy = stagger; staggered = true; }
 		} else {
 			x = (children[0].x + children[children.length - 1].x) / 2;
 		}
 		return {
 			id: node.id, label: node.label, type: node.type, start: node.start, end: node.end,
-			x, y: margin + depth * rowHeight, hasKids, collapsed, children,
+			x, y: margin + depth * rowHeight + dy, hasKids, collapsed, children,
 		};
 	};
 
@@ -69,7 +78,8 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 	return {
 		root: laid,
 		width: margin * 2 + (leaves - 1) * colWidth + colWidth, // room for last label
-		height: margin * 2 + maxDepth * rowHeight + rowHeight,
+		height: margin * 2 + maxDepth * rowHeight + rowHeight + (staggered ? stagger : 0),
+		colWidth,
 	};
 }
 
@@ -103,14 +113,16 @@ export function subtreeIds(node: TreeNode, internalOnly = false, out: number[] =
 
 // The set of node ids collapsed when the view first opens. With openDepth = 1
 // only the root is expanded, so its children show as collapsed markers and the
-// user drills in one node at a time (expanding a node reveals just its immediate
-// children, which stay collapsed). Trees at or under `bigThreshold` nodes open
-// fully expanded, since they are small enough to read at a glance.
-export function defaultCollapsed(root: TreeNode, openDepth = 1, bigThreshold = 30): Set<number> {
+// user drills in one node at a time. A node with more than `maxFanout` children
+// is also collapsed regardless of depth, so a very wide node (e.g. the flat
+// tokenizer row of hundreds of tokens) never dumps everything at once and the
+// initial draw stays small and instant. Trees at or under `bigThreshold` nodes
+// open fully expanded, since they are small enough to read at a glance.
+export function defaultCollapsed(root: TreeNode, openDepth = 1, bigThreshold = 30, maxFanout = 60): Set<number> {
 	const set = new Set<number>();
 	if (countNodes(root) <= bigThreshold) return set;
 	const walk = (n: TreeNode, depth: number) => {
-		if (depth >= openDepth && n.children.length) set.add(n.id);
+		if (n.children.length && (depth >= openDepth || n.children.length > maxFanout)) set.add(n.id);
 		n.children.forEach((c) => walk(c, depth + 1));
 	};
 	walk(root, 0);

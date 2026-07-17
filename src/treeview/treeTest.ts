@@ -70,8 +70,21 @@ const TREE = [
 	const npY = layout.root.children[0].y;
 	check("layout: child rows are below parent rows", npY > rootY);
 	check("layout: positive canvas size", layout.width > 0 && layout.height > 0);
+	eq("layout: reports its colWidth", layout.colWidth, 100);
+	// Tighter spacing yields a narrower canvas (horizontal squeeze).
+	const tight = layoutTree(root, { colWidth: 30, rowHeight: 50, margin: 10 });
+	check("layout: smaller colWidth -> narrower", tight.width < layout.width, `${tight.width} < ${layout.width}`);
 	check("layout: _NP marked hasKids", layout.root.children[0].hasKids === true);
 	check("layout: leaf not hasKids", leaves[0].hasKids === false);
+
+	// Adjacent leaves are staggered vertically so long labels don't overlap.
+	const st = flatten(layoutTree(root, { colWidth: 100, rowHeight: 50, margin: 10, stagger: 22 }).root)
+		.filter((n) => n.children.length === 0);
+	check("layout: adjacent leaves staggered in y", st.length >= 2 && st[0].y !== st[1].y, `${st[0]?.y} vs ${st[1]?.y}`);
+	// With stagger off, leaves share a row.
+	const flat = flatten(layoutTree(root, { colWidth: 100, rowHeight: 50, margin: 10, stagger: 0 }).root)
+		.filter((n) => n.children.length === 0);
+	check("layout: stagger:0 keeps leaves on one row", flat[0].y === flat[1].y);
 }
 
 // ---- collapse --------------------------------------------------------------
@@ -156,6 +169,16 @@ const TREE = [
 	// A small tree opens fully expanded.
 	const small = parseTree("_ROOT [0,2,0,2,0,0,node]\n   a [0,1,0,1,0,0,alpha]\n   b [1,2,1,2,0,0,alpha]\n")!;
 	eq("default: small tree not collapsed", defaultCollapsed(small).size, 0);
+
+	// A very wide node (flat tokenizer row) is collapsed by default so the first
+	// draw stays small — even though it's at depth 0. Keeps opening instant.
+	const wide: string[] = ["_ROOT [0,999,0,999,0,0,node]"];
+	for (let i = 0; i < 120; i++) wide.push("   w" + i + " [0,1,0,1,0,0,alpha]");
+	const wideRoot = parseTree(wide.join("\n"))!;
+	const wideSet = defaultCollapsed(wideRoot);
+	check("default: high-fanout root collapsed", wideSet.has(wideRoot.id));
+	const visibleWide = flatten(layoutTree(wideRoot, { isCollapsed: (id) => wideSet.has(id) }).root);
+	eq("default: wide tree draws just the root initially", visibleWide.length, 1);
 }
 
 // ---- subtreeText (graph selected portion) ----------------------------------
@@ -212,6 +235,12 @@ const TREE = [
 	subtreeIds(root, false).forEach((id) => collapsed.delete(id));
 	const afterExpand = flatten(layoutTree(root, { isCollapsed: (id) => collapsed.has(id) }).root);
 	eq("expand-all: whole tree visible", afterExpand.length, countNodes(root));
+
+	// Tree-level "Collapse all" = every internal node except the root -> only the
+	// root and its immediate children show.
+	const collapseAllTree = new Set(subtreeIds(root, true).filter((id) => id !== root.id));
+	const compact = flatten(layoutTree(root, { isCollapsed: (id) => collapseAllTree.has(id) }).root);
+	eq("collapse-all-tree: root + immediate children", compact.length, 1 + root.children.length);
 }
 
 console.log(`\ntreeview tests: ${passed} passed, ${failed} failed`);
