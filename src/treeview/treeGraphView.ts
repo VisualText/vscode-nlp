@@ -19,10 +19,18 @@ interface ViewState {
 	collapsed: Set<number>;
 	inputFile: string | undefined;
 	title: string;
+	colWidth: number; // horizontal spacing between nodes (adjustable via Shift+scroll)
 }
+
+// Tighter default than the old 90 so trees read more compactly out of the box.
+const DEFAULT_COL_WIDTH = 52;
+const MIN_COL_WIDTH = 16;
+const MAX_COL_WIDTH = 160;
 
 let panel: vscode.WebviewPanel | undefined;
 let state: ViewState | undefined;
+let panelReady = false;   // the webview has loaded and can receive messages
+let pendingFlush = false;  // a tree is waiting to be sent once the webview is ready
 
 function nonce(): string {
 	let s = "";
@@ -33,7 +41,10 @@ function nonce(): string {
 
 function renderSvg(): string {
 	if (!state) return "";
-	const layout = layoutTree(state.root, { isCollapsed: (id) => state!.collapsed.has(id) });
+	const layout = layoutTree(state.root, {
+		colWidth: state.colWidth,
+		isCollapsed: (id) => state!.collapsed.has(id),
+	});
 	return renderTreeSvg(layout);
 }
 
@@ -55,7 +66,7 @@ function revealSpan(inputFile: string, start: number, end: number): void {
 	});
 }
 
-function html(svg: string, n: string): string {
+function html(n: string): string {
 	return `<!DOCTYPE html>
 <html>
 <head>
@@ -82,14 +93,15 @@ function html(svg: string, n: string): string {
   #menu { position:fixed; display:none; z-index:10; min-width:150px; padding:4px 0; font-size:12px;
     background: var(--vscode-menu-background, #252526); color: var(--vscode-menu-foreground, #ccc);
     border:1px solid var(--vscode-menu-border, #454545); border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.4); }
-  #menu div { padding:5px 16px; cursor:pointer; }
-  #menu div:hover { background: var(--vscode-menu-selectionBackground, #094771); color: var(--vscode-menu-selectionForeground, #fff); }
+  #menu div.item { padding:5px 16px; cursor:pointer; }
+  #menu div.item:hover { background: var(--vscode-menu-selectionBackground, #094771); color: var(--vscode-menu-selectionForeground, #fff); }
+  #menu div.sep { height:1px; margin:4px 0; background: var(--vscode-menu-separatorBackground, #454545); }
 </style>
 </head>
 <body>
-<div id="wrap">${svg}</div>
-<div id="hint">scroll = zoom · drag = pan · click a phrase node = open its children (one level) · right-click = expand/collapse all · click a word = reveal in text</div>
-<div id="menu"><div data-act="expand">Expand all below</div><div data-act="collapse">Collapse all below</div></div>
+<div id="wrap"></div>
+<div id="hint">scroll = zoom · shift+scroll = squeeze/spread · drag = pan · click = open one level · right-click = menu · click a word = reveal in text</div>
+<div id="menu"></div>
 <script nonce="${n}">
   const vscode = acquireVsCodeApi();
   const wrap = document.getElementById('wrap');
@@ -109,22 +121,43 @@ function html(svg: string, n: string): string {
   }
   wrap.addEventListener('wheel', (e) => {
     e.preventDefault(); hideMenu();
+    if(e.shiftKey){
+      // Shift+scroll squeezes/spreads horizontal spacing between nodes.
+      const d = (e.deltaY !== 0 ? e.deltaY : e.deltaX);
+      vscode.postMessage({ type:'colWidth', delta: d > 0 ? -6 : 6 });
+      return;
+    }
     const f = e.deltaY < 0 ? 1.1 : 1/1.1;
-    scale = Math.max(0.1, Math.min(6, scale * f));
+    scale = Math.max(0.02, Math.min(6, scale * f));
     apply();
   }, { passive:false });
   wrap.addEventListener('mousedown', (e) => { hideMenu(); panning = true; sx = e.clientX - tx; sy = e.clientY - ty; wrap.classList.add('grabbing'); });
-  wrap.addEventListener('contextmenu', (e) => {
-    const g = e.target.closest && e.target.closest('.node');
-    if(g && g.getAttribute('data-haskids') === '1'){
-      e.preventDefault();
-      menuId = +g.getAttribute('data-id');
-      menu.style.left = e.clientX + 'px'; menu.style.top = e.clientY + 'px'; menu.style.display = 'block';
+  function buildMenu(nodeId){
+    let h = '';
+    if(nodeId >= 0){
+      h += '<div class="item" data-act="expand">Expand all below</div>';
+      h += '<div class="item" data-act="collapse">Collapse all below</div>';
+      h += '<div class="sep"></div>';
     }
+    h += '<div class="item" data-act="center">Center all</div>';
+    h += '<div class="item" data-act="expandAll">Expand all</div>';
+    h += '<div class="item" data-act="collapseAll">Collapse all</div>';
+    menu.innerHTML = h;
+  }
+  wrap.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const g = e.target.closest && e.target.closest('.node');
+    menuId = (g && g.getAttribute('data-haskids') === '1') ? +g.getAttribute('data-id') : -1;
+    buildMenu(menuId);
+    menu.style.left = e.clientX + 'px'; menu.style.top = e.clientY + 'px'; menu.style.display = 'block';
   });
   menu.addEventListener('click', (e) => {
     const act = e.target && e.target.getAttribute('data-act');
-    if(act && menuId >= 0) vscode.postMessage({ type: act === 'expand' ? 'expandAll' : 'collapseAll', id: menuId });
+    if(act === 'center') fit();
+    else if(act === 'expand' && menuId >= 0) vscode.postMessage({ type:'expandAll', id: menuId });
+    else if(act === 'collapse' && menuId >= 0) vscode.postMessage({ type:'collapseAll', id: menuId });
+    else if(act === 'expandAll') vscode.postMessage({ type:'expandAllTree' });
+    else if(act === 'collapseAll') vscode.postMessage({ type:'collapseAllTree' });
     hideMenu();
   });
   window.addEventListener('mousemove', (e) => { if(panning){ tx = e.clientX - sx; ty = e.clientY - sy; apply(); } });
@@ -143,43 +176,68 @@ function html(svg: string, n: string): string {
     const m = ev.data;
     if(m.type === 'update'){ wrap.innerHTML = m.svg; if(m.reset) fit(); else apply(); }
   });
-  fit();
+  // Tell the extension the webview is live so it can send the tree. Sending
+  // before this would be lost (the listener above wouldn't exist yet).
+  vscode.postMessage({ type:'ready' });
 </script>
 </body>
 </html>`;
 }
 
-// Core: parse `text` and open/refresh the graphic. `titleSuffix` distinguishes a
-// full tree from a selection/subtree in the panel title.
+// Post the current tree to the webview once it's ready; buffer if it isn't yet.
+function flush(): void {
+	if (!panel || !state) return;
+	panel.title = state.title;
+	if (panelReady) {
+		panel.webview.postMessage({ type: "update", svg: renderSvg(), reset: true });
+	} else {
+		pendingFlush = true; // webview will flush on its "ready" message
+	}
+}
+
+// Core: open/refresh the graphic for `text`. The panel is created and revealed
+// immediately (so the click feels instant); parsing, layout and SVG generation
+// are deferred to the next tick and only sent once the webview signals ready —
+// so a large tree never blocks the click, and no message is lost.
 function openGraph(ctx: vscode.ExtensionContext, text: string, treeUri: vscode.Uri, titleSuffix: string): void {
-	const root = parseTree(text);
-	if (!root) {
-		vscode.window.showInformationMessage("No parse tree found to graph.");
-		return;
-	}
+	ensurePanel(ctx);
+	panel!.reveal(vscode.ViewColumn.Beside, true);
 
-	state = {
-		root,
-		collapsed: defaultCollapsed(root),
-		inputFile: inputFileForTree(treeUri.fsPath),
-		title: "Parse Tree — " + path.basename(treeUri.fsPath) + titleSuffix,
-	};
-	const svg = renderSvg();
+	setTimeout(() => {
+		const root = parseTree(text);
+		if (!root) {
+			vscode.window.showInformationMessage("No parse tree found to graph.");
+			return;
+		}
+		state = {
+			root,
+			collapsed: defaultCollapsed(root),
+			inputFile: inputFileForTree(treeUri.fsPath),
+			title: "Parse Tree — " + path.basename(treeUri.fsPath) + titleSuffix,
+			colWidth: state?.colWidth ?? DEFAULT_COL_WIDTH, // keep the user's spacing across re-opens
+		};
+		flush();
+	}, 0);
+}
 
-	if (panel) {
-		panel.title = state.title;
-		panel.webview.postMessage({ type: "update", svg, reset: true });
-		panel.reveal(vscode.ViewColumn.Beside, true);
-		return;
-	}
-
+// Create the reusable webview panel (with an empty shell) and wire its messages,
+// once. Subsequent opens reuse it.
+function ensurePanel(ctx: vscode.ExtensionContext): void {
+	if (panel) return;
+	panelReady = false;
+	pendingFlush = false;
 	panel = vscode.window.createWebviewPanel(
-		"nlpTreeGraph", state.title, vscode.ViewColumn.Beside,
+		"nlpTreeGraph", "Parse Tree", vscode.ViewColumn.Beside,
 		{ enableScripts: true, retainContextWhenHidden: true },
 	);
-	panel.webview.html = html(svg, nonce());
-	panel.onDidDispose(() => { panel = undefined; state = undefined; }, undefined, ctx.subscriptions);
+	panel.webview.html = html(nonce());
+	panel.onDidDispose(() => { panel = undefined; state = undefined; panelReady = false; }, undefined, ctx.subscriptions);
 	panel.webview.onDidReceiveMessage((m) => {
+		if (m?.type === "ready") {
+			panelReady = true;
+			if (pendingFlush) { pendingFlush = false; flush(); }
+			return;
+		}
 		if (!state) return;
 		if (m?.type === "reveal" && state.inputFile) {
 			revealSpan(state.inputFile, m.start, m.end);
@@ -199,6 +257,17 @@ function openGraph(ctx: vscode.ExtensionContext, text: string, treeUri: vscode.U
 				}
 				panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
 			}
+		} else if (m?.type === "expandAllTree") {
+			state.collapsed.clear();
+			panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
+		} else if (m?.type === "collapseAllTree") {
+			// Collapse every internal node except the root, so only the root's
+			// immediate children show (the compact starting view).
+			state.collapsed = new Set(subtreeIds(state.root, true).filter((id) => id !== state!.root.id));
+			panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
+		} else if (m?.type === "colWidth") {
+			state.colWidth = Math.max(MIN_COL_WIDTH, Math.min(MAX_COL_WIDTH, state.colWidth + (m.delta || 0)));
+			panel?.webview.postMessage({ type: "update", svg: renderSvg(), reset: false });
 		}
 	}, undefined, ctx.subscriptions);
 }

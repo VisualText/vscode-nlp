@@ -36,9 +36,12 @@ export function renderTreeSvg(layout: LayoutResult): string {
 			(n.collapsed ? " collapsed" : "");
 		// A generous, invisible hit rectangle makes the whole label easy to click
 		// (the text glyphs alone are a tiny target). Width scales with the label
-		// but is capped so adjacent nodes don't overlap and steal each other's
-		// clicks; height spans the row.
-		const hitW = Math.min(84, Math.max(30, n.label.length * 8 + 16));
+		// but is capped just under the column spacing so adjacent nodes don't
+		// overlap and steal each other's clicks; height spans the row.
+		const hitW = Math.min(
+			Math.max(20, layout.colWidth - 4),
+			Math.max(24, n.label.length * 8 + 16),
+		);
 		const hit =
 			`<rect class="hit" x="${(n.x - hitW / 2).toFixed(1)}" y="${n.y - 2}" ` +
 			`width="${hitW}" height="${LINK_BOTTOM + 8}" rx="3"/>`;

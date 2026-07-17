@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.3
+Parse-tree graphic: instant opening, global menu, and horizontal spacing control.
+
+- **Opens instantly.** The graphic window now appears immediately on click and the tree is drawn a tick later, so a large tree never blocks. Very wide nodes (like the flat tokenizer row of hundreds of tokens) start collapsed, so the first draw is always small and fast.
+- **Right-click anywhere** for **Center all**, **Expand all**, and **Collapse all** (right-clicking a phrase node still adds Expand/Collapse all *below* that node).
+- **Tighter default spacing** so trees read more compactly, and **Shift+scroll** squeezes or spreads the horizontal space between nodes on the fly.
+- **Staggered leaf labels** — alternate leaves sit slightly lower so long word/token labels no longer overlap when packed close together.
+
 ### 3.11.2
 Parse-tree graphic: rendering and interaction fixes.
 
