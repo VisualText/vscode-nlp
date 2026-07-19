@@ -1058,8 +1058,9 @@ export class SequenceView {
 		const dir = visualText.analyzer.getOutputDirectory();
 		const finalTree = path.join(dir.fsPath, 'final.tree');
 		if (fs.existsSync(finalTree)) {
-			visualText.colorizeAnalyzer();
+			// Open first; colorization must not block the tree from displaying.
 			vscode.window.showTextDocument(vscode.Uri.file(finalTree));
+			setTimeout(() => visualText.colorizeAnalyzer(), 0);
 		} else {
 			vscode.window.showInformationMessage('No final tree found');
 		}
@@ -1153,8 +1154,9 @@ export class SequenceView {
 				return;
 			}
 			visualText.analyzer.saveCurrentPass(seqItem.uri, seqItem.passNum);
-			visualText.colorizeAnalyzer();
+			// Open first; colorization must not block the pass from displaying.
 			vscode.window.showTextDocument(seqItem.uri);
+			setTimeout(() => visualText.colorizeAnalyzer(), 0);
 		}
 	}
 
@@ -1183,11 +1185,14 @@ export class SequenceView {
 	public openTreeFile(passNum: number) {
 		const logfile = this.treeFile.anaFile(passNum, nlpFileType.TREE);
 		if (fs.existsSync(logfile.fsPath)) {
-			visualText.colorizeAnalyzer();
+			// Open first so the tree displays immediately; colorization may touch
+			// .vscode/settings.json (making VSCode re-apply token colors) and must
+			// never block the file from coming up.
 			vscode.commands.executeCommand(
 				'vscode.open',
 				vscode.Uri.file(logfile.fsPath)
 			);
+			setTimeout(() => visualText.colorizeAnalyzer(), 0);
 		}
 		else
 			vscode.window.showWarningMessage('No tree file ' + path.basename(logfile.fsPath));
@@ -1196,8 +1201,9 @@ export class SequenceView {
 	public openRuleMatchFile(passNum: number) {
 		const firefile = this.treeFile.firedFile(passNum);
 		if (fs.existsSync(firefile.fsPath)) {
-			visualText.colorizeAnalyzer();
+			// Open first; colorization must not block the file from displaying.
 			vscode.window.showTextDocument(firefile);
+			setTimeout(() => visualText.colorizeAnalyzer(), 0);
 		} else
 			vscode.window.showWarningMessage('No rule matches file with this pass');
 	}

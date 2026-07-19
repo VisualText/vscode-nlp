@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.7
+Fix the delay opening files after running an analyzer.
+
+- Running an analyzer writes knowledge-base files, and each newly created `.nlp`/`.pat`/`.kbb` file was triggering a **full re-index of every such file in the workspace**. Those repeated rebuilds tied up the extension while you were trying to open a tree file. A new or changed file is now indexed **on its own**, and file changes cost nothing at all until the cross-pass index is actually needed. Analyzer log folders are also skipped when indexing.
+- Opening a tree file also no longer waits on the analyzer colorization step, which re-read (and sometimes rewrote) the workspace `.vscode/settings.json` on **every** file open. It now runs at most once per session and happens *after* the file is displayed, so tree, pass, and rule-match files come up immediately.
+
 ### 3.11.5
 Opening tree files is instant; the graphic is strictly on-demand.
 
