@@ -1489,7 +1489,18 @@ export class VisualText {
         visualText.fileOps.stopAll();
     }
 
+    // Ensures the workspace settings carry the NLP token colorization. This is
+    // called before opening pass/tree/match files, so it must stay cheap: it used
+    // to re-read and re-parse .vscode/settings.json on EVERY open (and rewrite it
+    // when the block was missing, which makes VSCode re-apply token colors) —
+    // visibly delaying the file from coming up. The work only needs doing once per
+    // session, so repeated calls short-circuit. Pass overwrite=true to force it
+    // (the "Update Colorizer" command).
+    private colorizeChecked = false;
+
     colorizeAnalyzer(overwrite: boolean = false) {
+        if (this.colorizeChecked && !overwrite) return;
+        this.colorizeChecked = true;
         if (vscode.workspace.workspaceFolders) {
             let add = false;
             const toDir = vscode.workspace.workspaceFolders[0].uri;

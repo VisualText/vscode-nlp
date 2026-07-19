@@ -517,11 +517,16 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 	// Keep the cross-pass index fresh. It builds lazily on first use; here we
 	// just invalidate/update incrementally so navigation stays correct as files
 	// change, are created, or are deleted.
+	//
+	// IMPORTANT: a created file indexes only ITSELF. This used to trigger a full
+	// workspace rebuild (re-reading and re-parsing every .nlp/.pat/.kbb file), so
+	// an analyzer run — which writes KB files — kicked off repeated full rebuilds
+	// that tied up the extension host and made opening files feel slow.
 	const watcher = vscode.workspace.createFileSystemWatcher("**/*.{nlp,pat,kbb}");
 	ctx.subscriptions.push(
 		watcher,
 		watcher.onDidDelete((uri) => nlpWorkspaceIndex.removeFile(uri)),
-		watcher.onDidCreate(() => { void nlpWorkspaceIndex.rebuild(); }),
+		watcher.onDidCreate((uri) => { void nlpWorkspaceIndex.indexUri(uri); }),
 		vscode.workspace.onDidSaveTextDocument((d) => {
 			if (d.languageId === "nlp" || d.languageId === "kbb")
 				nlpWorkspaceIndex.indexText(d.uri, d.getText());

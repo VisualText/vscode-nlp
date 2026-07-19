@@ -68,7 +68,11 @@ export class NlpWorkspaceIndex {
 		this.refsByName.clear();
 		this.refsByFile.clear();
 		// .nlp/.pat carry rules + functions (and usages); .kbb carries concepts.
-		const files = await vscode.workspace.findFiles("**/*.{nlp,pat,kbb}", "**/node_modules/**", 5000);
+		// Skip node_modules and per-input analyzer log dirs (<text>_log/), which
+		// hold engine output rather than source worth indexing.
+		const files = await vscode.workspace.findFiles(
+			"**/*.{nlp,pat,kbb}", "{**/node_modules/**,**/*_log/**}", 5000,
+		);
 		for (const uri of files) {
 			try {
 				const bytes = await vscode.workspace.fs.readFile(uri);
@@ -83,6 +87,21 @@ export class NlpWorkspaceIndex {
 
 	private isKb(uri: vscode.Uri): boolean {
 		return uri.path.toLowerCase().endsWith(".kbb");
+	}
+
+	// (Re)index one file read from disk. Used for file-watcher events: indexing a
+	// single created/changed file instead of rebuilding the whole workspace. If
+	// the index hasn't been built yet, this is a no-op — the lazy ensureBuilt()
+	// will pick the file up, so background file churn (e.g. an analyzer run
+	// writing KB files) costs nothing.
+	async indexUri(uri: vscode.Uri): Promise<void> {
+		if (!this.built) return;
+		try {
+			const bytes = await vscode.workspace.fs.readFile(uri);
+			this.indexText(uri, Buffer.from(bytes).toString("utf8"));
+		} catch {
+			// unreadable / deleted between events — ignore
+		}
 	}
 
 	// (Re)index a single file from in-memory text (used on save / on change).
