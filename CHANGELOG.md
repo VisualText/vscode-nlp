@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.5
+Opening tree files is instant; the graphic is strictly on-demand.
+
+- Opening a `.tree` file no longer does any graphic-related work, so it comes up instantly like any text file.
+- The parse-tree **graphic (webview) starts only when you ask for it** — the title-bar tree icon or the right-click menu. It never opens on its own.
+
 ### 3.11.4
 Version alignment — no functional changes from 3.11.3.
 

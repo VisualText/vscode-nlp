@@ -90,6 +90,8 @@ function html(n: string): string {
   .node:hover .hit { fill: var(--vscode-editor-hoverHighlightBackground, rgba(120,140,200,.22)); }
   .node:hover text { fill: var(--vscode-textLink-activeForeground, #4daafc); }
   #hint { position:fixed; bottom:8px; left:10px; font-size:11px; opacity:.6; }
+  #ph { position:absolute; top:50%; left:0; right:0; transform:translateY(-50%); text-align:center;
+    opacity:.5; font-size:13px; line-height:1.6; padding:0 20px; }
   #menu { position:fixed; display:none; z-index:10; min-width:150px; padding:4px 0; font-size:12px;
     background: var(--vscode-menu-background, #252526); color: var(--vscode-menu-foreground, #ccc);
     border:1px solid var(--vscode-menu-border, #454545); border-radius:4px; box-shadow:0 2px 8px rgba(0,0,0,.4); }
@@ -99,7 +101,7 @@ function html(n: string): string {
 </style>
 </head>
 <body>
-<div id="wrap"></div>
+<div id="wrap"><div id="ph">Rendering parse tree…</div></div>
 <div id="hint">scroll = zoom · shift+scroll = squeeze/spread · drag = pan · click = open one level · right-click = menu · click a word = reveal in text</div>
 <div id="menu"></div>
 <script nonce="${n}">
@@ -227,7 +229,8 @@ function ensurePanel(ctx: vscode.ExtensionContext): void {
 	panelReady = false;
 	pendingFlush = false;
 	panel = vscode.window.createWebviewPanel(
-		"nlpTreeGraph", "Parse Tree", vscode.ViewColumn.Beside,
+		"nlpTreeGraph", "Parse Tree",
+		{ viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, // don't steal focus when pre-warming
 		{ enableScripts: true, retainContextWhenHidden: true },
 	);
 	panel.webview.html = html(nonce());
@@ -311,6 +314,9 @@ function showTreeGraphSelection(ctx: vscode.ExtensionContext): void {
 }
 
 export function registerTreeGraph(ctx: vscode.ExtensionContext): void {
+	// The graphic is strictly on-demand: the webview is created only when the
+	// user asks for it (title-bar icon or right-click). Nothing here runs when a
+	// .tree file is merely opened, so opening a tree file is never slowed by it.
 	ctx.subscriptions.push(
 		vscode.commands.registerCommand("nlp.showTreeGraph", (uri?: vscode.Uri) => {
 			const target = uri ?? vscode.window.activeTextEditor?.document.uri;
