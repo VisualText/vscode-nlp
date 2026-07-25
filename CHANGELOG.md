@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.11
+Parse-tree graphic: stagger overlapping labels at every level.
+
+- The overlap-aware staggering now applies to **all** node levels — parts of speech and phrase labels, not just the bottom row of words. Long internal labels that used to overlap (e.g. `_substantivo`, `determinante`) now split into as few extra rows as needed, and each level expands vertically only when it has collisions. Levels that fit stay on one line.
+
 ### 3.11.10
 Parse-tree graphic: smarter leaf staggering.
 
