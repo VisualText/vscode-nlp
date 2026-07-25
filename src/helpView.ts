@@ -355,8 +355,16 @@ export class HelpView {
             });
     }
 
+    // Copy the ready-to-use prompt to the clipboard and let the user know, so a
+    // prompt they open is immediately pasteable into their LLM (#1104).
+    private async copyPromptToClipboard(text: string) {
+        await vscode.env.clipboard.writeText(text);
+        vscode.window.showInformationMessage('LLM prompt copied to clipboard — paste it into your LLM.');
+    }
+
     // Read a prompt file, drop its title line, fill ${...} variables, and open the
-    // result in a new editor ready to paste into an LLM.
+    // result in a new editor ready to paste into an LLM. The prompt is also copied
+    // to the clipboard.
     async openPromptByFile(file: string) {
         const full = path.join(this.promptsDir(), file);
         if (!fs.existsSync(full)) {
@@ -370,6 +378,7 @@ export class HelpView {
         const content = this.fillPromptVariables(body).replace(/^\s+/, '');
         const doc = await vscode.workspace.openTextDocument({ content, language: 'markdown' });
         await vscode.window.showTextDocument(doc);
+        await this.copyPromptToClipboard(content);
     }
 
     openPrompt(item: HelpItem) {
@@ -394,6 +403,12 @@ export class HelpView {
         const tmpFile = path.join(tmpDir, file);
         fs.writeFileSync(tmpFile, content, 'utf8');
         vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(tmpFile));
+
+        // Copy the ready-to-paste prompt (body without the title heading) to the
+        // clipboard so clicking a prompt makes it immediately usable in an LLM (#1104).
+        const nl = raw.indexOf('\n');
+        const body = this.fillPromptVariables(nl >= 0 ? raw.slice(nl + 1) : raw).replace(/^\s+/, '');
+        await this.copyPromptToClipboard(body);
     }
 
     // The toolbar button / quickstart link: open the first prompt in the library,
