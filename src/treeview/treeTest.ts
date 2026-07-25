@@ -77,14 +77,34 @@ const TREE = [
 	check("layout: _NP marked hasKids", layout.root.children[0].hasKids === true);
 	check("layout: leaf not hasKids", leaves[0].hasKids === false);
 
-	// Adjacent leaves are staggered vertically so long labels don't overlap.
-	const st = flatten(layoutTree(root, { colWidth: 100, rowHeight: 50, margin: 10, stagger: 22 }).root)
-		.filter((n) => n.children.length === 0);
-	check("layout: adjacent leaves staggered in y", st.length >= 2 && st[0].y !== st[1].y, `${st[0]?.y} vs ${st[1]?.y}`);
-	// With stagger off, leaves share a row.
-	const flat = flatten(layoutTree(root, { colWidth: 100, rowHeight: 50, margin: 10, stagger: 0 }).root)
-		.filter((n) => n.children.length === 0);
-	check("layout: stagger:0 keeps leaves on one row", flat[0].y === flat[1].y);
+	// Smart stagger — isolate it with a FLAT tree (all leaves at the same depth,
+	// so any y difference is stagger, not depth).
+	const flatTree = parseTree([
+		"_ROOT [0,40,0,40,0,0,node]",
+		"   alpha [0,5,0,5,0,0,alpha]",
+		"   bravo [6,11,6,11,0,0,alpha]",
+		"   charlie [12,19,12,19,0,0,alpha]",
+		"   delta [20,25,20,25,0,0,alpha]",
+	].join("\n"))!;
+	const leavesAt = (colWidth: number, stagger = 22) =>
+		flatten(layoutTree(flatTree, { colWidth, rowHeight: 50, margin: 10, stagger }).root)
+			.filter((n) => n.children.length === 0);
+
+	// Wide spacing -> no overlap -> every leaf stays on one line.
+	const wide = leavesAt(140);
+	check("layout: no overlap -> leaves stay in line", wide.every((n) => n.y === wide[0].y), wide.map((n) => n.y).join(","));
+
+	// Tight spacing -> labels collide -> some leaves get pushed to another row.
+	const tightLeaves = leavesAt(24);
+	check("layout: overlap -> some leaves staggered", tightLeaves.some((n) => n.y !== tightLeaves[0].y), tightLeaves.map((n) => n.y).join(","));
+
+	// Spreading the same tree back out returns every leaf to the single baseline.
+	const spread = leavesAt(200);
+	check("layout: spreading returns leaves to one line", spread.every((n) => n.y === spread[0].y));
+
+	// stagger:0 disables it entirely, even when tight.
+	const off = leavesAt(24, 0);
+	check("layout: stagger:0 keeps leaves on one row", off.every((n) => n.y === off[0].y));
 }
 
 // ---- collapse --------------------------------------------------------------
