@@ -47,20 +47,20 @@ function halfWidth(label: string, charWidth: number, pad: number): number {
 	return (label.length * charWidth + pad) / 2;
 }
 
-// Assign each leaf a stagger "row" so that labels on the same row never overlap.
-// Leaves are processed left-to-right and placed on the lowest row whose last
-// label ends far enough to the left (greedy lane packing = minimum rows). When
-// the tree is spread out and nothing overlaps, every leaf lands on row 0 and the
-// baseline is a single straight line. Returns the deepest row used.
-function staggerLeaves(leaves: LayoutNode[], stagger: number, charWidth: number, labelGap: number, maxRows: number): number {
-	if (stagger <= 0 || leaves.length === 0) return 0;
-	const sorted = [...leaves].sort((a, b) => a.x - b.x);
+// Assign each node in one depth level a stagger "row" so that labels on the same
+// level never overlap. Nodes are processed left-to-right and placed on the lowest
+// row whose last label ends far enough to the left (greedy lane packing = minimum
+// rows). When nothing overlaps, every node lands on row 0 (a straight line).
+// Returns a row index per node (by identity) and the number of rows used.
+function assignStaggerRows(nodes: LayoutNode[], charWidth: number, labelGap: number, maxRows: number): { rowOf: Map<LayoutNode, number>; rows: number } {
+	const rowOf = new Map<LayoutNode, number>();
+	const sorted = [...nodes].sort((a, b) => a.x - b.x);
 	const rowRight: number[] = []; // right edge of the last label placed on each row
 	let maxRow = 0;
-	for (const leaf of sorted) {
-		const hw = halfWidth(leaf.label, charWidth, 8);
-		const left = leaf.x - hw;
-		const right = leaf.x + hw;
+	for (const n of sorted) {
+		const hw = halfWidth(n.label, charWidth, 8);
+		const left = n.x - hw;
+		const right = n.x + hw;
 		let row = -1;
 		for (let r = 0; r < rowRight.length; r++) {
 			if (left >= rowRight[r] + labelGap) { row = r; break; } // fits on this row
@@ -78,10 +78,10 @@ function staggerLeaves(leaves: LayoutNode[], stagger: number, charWidth: number,
 		} else {
 			rowRight[row] = right;
 		}
-		leaf.y += row * stagger;
+		rowOf.set(n, row);
 		if (row > maxRow) maxRow = row;
 	}
-	return maxRow;
+	return { rowOf, rows: maxRow + 1 };
 }
 
 export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResult {
@@ -96,7 +96,7 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 
 	let nextLeaf = 0;
 	let maxDepth = 0;
-	const leafNodes: LayoutNode[] = [];
+	const byDepth: LayoutNode[][] = []; // nodes grouped by tree depth (y is set later)
 
 	const place = (node: TreeNode, depth: number): LayoutNode => {
 		if (depth > maxDepth) maxDepth = depth;
@@ -113,20 +113,33 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 		}
 		const laidNode: LayoutNode = {
 			id: node.id, label: node.label, type: node.type, start: node.start, end: node.end,
-			x, y: margin + depth * rowHeight, hasKids, collapsed, children,
+			x, y: 0, hasKids, collapsed, children,
 		};
-		if (children.length === 0) leafNodes.push(laidNode);
+		(byDepth[depth] ??= []).push(laidNode);
 		return laidNode;
 	};
 
 	const laid = place(root, 0);
-	// Stagger only leaves whose labels would collide; the rest stay on the baseline.
-	const maxRow = staggerLeaves(leafNodes, stagger, charWidth, labelGap, maxStaggerRows);
+
+	// Vertical placement: each depth is staggered independently so overlapping
+	// labels (at ANY level — parts of speech, phrases, words) split into rows, and
+	// each level's vertical band expands only by the rows it actually needs. Levels
+	// with no collisions stay on a single line.
+	let top = margin;
+	for (let d = 0; d <= maxDepth; d++) {
+		const nodes = byDepth[d] ?? [];
+		const { rowOf, rows } = stagger > 0
+			? assignStaggerRows(nodes, charWidth, labelGap, maxStaggerRows)
+			: { rowOf: new Map<LayoutNode, number>(), rows: 1 };
+		for (const n of nodes) n.y = top + (rowOf.get(n) ?? 0) * stagger;
+		top += rowHeight + (rows - 1) * stagger; // advance the baseline for the next level
+	}
+
 	const leaves = Math.max(1, nextLeaf);
 	return {
 		root: laid,
 		width: margin * 2 + (leaves - 1) * colWidth + colWidth, // room for last label
-		height: margin * 2 + maxDepth * rowHeight + rowHeight + maxRow * stagger,
+		height: top + margin,
 		colWidth,
 	};
 }

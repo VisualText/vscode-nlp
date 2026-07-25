@@ -105,6 +105,24 @@ const TREE = [
 	// stagger:0 disables it entirely, even when tight.
 	const off = leavesAt(24, 0);
 	check("layout: stagger:0 keeps leaves on one row", off.every((n) => n.y === off[0].y));
+
+	// Internal nodes stagger too: long part-of-speech labels on the same level,
+	// packed close, must split into rows (this is the overlap in the screenshot).
+	const posTree = parseTree([
+		"_ROOT [0,30,0,30,0,0,node]",
+		"   _substantivo [0,3,0,3,0,0,node]",
+		"      Ele [0,3,0,3,0,0,alpha]",
+		"   verbo [4,10,4,10,0,0,node]",
+		"      chutou [4,10,4,10,0,0,alpha]",
+		"   determinante [11,12,11,12,0,0,node]",
+		"      a [11,12,11,12,0,0,alpha]",
+		"   substantivo [13,17,13,17,0,0,node]",
+		"      bola [13,17,13,17,0,0,alpha]",
+	].join("\n"))!;
+	const posNodes = flatten(layoutTree(posTree, { colWidth: 52, rowHeight: 50, margin: 10, stagger: 22 }).root)
+		.filter((n) => ["_substantivo", "verbo", "determinante", "substantivo"].includes(n.label));
+	check("layout: overlapping internal (POS) labels stagger", new Set(posNodes.map((n) => n.y)).size > 1,
+		posNodes.map((n) => n.label + "@" + n.y).join(" "));
 }
 
 // ---- collapse --------------------------------------------------------------
