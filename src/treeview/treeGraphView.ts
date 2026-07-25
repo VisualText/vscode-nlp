@@ -134,13 +134,17 @@ function html(n: string): string {
     apply();
   }, { passive:false });
   wrap.addEventListener('mousedown', (e) => { hideMenu(); panning = true; sx = e.clientX - tx; sy = e.clientY - ty; wrap.classList.add('grabbing'); });
-  function buildMenu(nodeId){
+  let menuStart = -1, menuEnd = -1;
+  function buildMenu(nodeId, hasSpan, hasKids){
     let h = '';
-    if(nodeId >= 0){
+    if(hasSpan){
+      h += '<div class="item" data-act="reveal">Reveal Text</div>';
+    }
+    if(hasKids){
       h += '<div class="item" data-act="expand">Expand all below</div>';
       h += '<div class="item" data-act="collapse">Collapse all below</div>';
-      h += '<div class="sep"></div>';
     }
+    if(hasSpan || hasKids) h += '<div class="sep"></div>';
     h += '<div class="item" data-act="center">Center all</div>';
     h += '<div class="item" data-act="expandAll">Expand all</div>';
     h += '<div class="item" data-act="collapseAll">Collapse all</div>';
@@ -149,13 +153,17 @@ function html(n: string): string {
   wrap.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     const g = e.target.closest && e.target.closest('.node');
-    menuId = (g && g.getAttribute('data-haskids') === '1') ? +g.getAttribute('data-id') : -1;
-    buildMenu(menuId);
+    const hasKids = !!(g && g.getAttribute('data-haskids') === '1');
+    menuId = hasKids ? +g.getAttribute('data-id') : -1;
+    menuStart = g ? +g.getAttribute('data-start') : -1;
+    menuEnd = g ? +g.getAttribute('data-end') : -1;
+    buildMenu(menuId, !!g && menuEnd >= menuStart, hasKids);
     menu.style.left = e.clientX + 'px'; menu.style.top = e.clientY + 'px'; menu.style.display = 'block';
   });
   menu.addEventListener('click', (e) => {
     const act = e.target && e.target.getAttribute('data-act');
-    if(act === 'center') fit();
+    if(act === 'reveal' && menuEnd >= menuStart) vscode.postMessage({ type:'reveal', start: menuStart, end: menuEnd });
+    else if(act === 'center') fit();
     else if(act === 'expand' && menuId >= 0) vscode.postMessage({ type:'expandAll', id: menuId });
     else if(act === 'collapse' && menuId >= 0) vscode.postMessage({ type:'collapseAll', id: menuId });
     else if(act === 'expandAll') vscode.postMessage({ type:'expandAllTree' });
