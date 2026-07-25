@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.10
+Parse-tree graphic: smarter leaf staggering.
+
+- Leaf labels now stagger vertically **only where they would actually overlap**, using the minimum number of rows needed — instead of always offsetting every other leaf. When labels don't collide (or you spread the tree out with Shift+scroll), they **fall back into a single line**. The result is cleaner: no needless stair-stepping, and no overlapping node names.
+
 ### 3.11.9
 Parse-tree graphic: "Reveal Text" on the right-click menu for any node.
 

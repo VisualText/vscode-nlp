@@ -34,8 +34,54 @@ export interface LayoutOptions {
 	colWidth?: number;  // horizontal spacing between adjacent leaves
 	rowHeight?: number; // vertical spacing between depths
 	margin?: number;    // padding around the drawing
-	stagger?: number;   // vertical offset for alternate leaves (0 = off); avoids label overlap
+	stagger?: number;   // vertical offset per stagger row (0 = off); avoids label overlap
+	charWidth?: number; // approx px per character, for estimating label width
+	labelGap?: number;  // minimum horizontal gap required between two labels
+	maxStaggerRows?: number; // cap on stagger depth before accepting slight overlap
 	isCollapsed?: (id: number) => boolean; // hide this node's subtree
+}
+
+// Estimated on-screen half-width of a label (SVG text metrics aren't available
+// pre-render, so approximate from character count).
+function halfWidth(label: string, charWidth: number, pad: number): number {
+	return (label.length * charWidth + pad) / 2;
+}
+
+// Assign each leaf a stagger "row" so that labels on the same row never overlap.
+// Leaves are processed left-to-right and placed on the lowest row whose last
+// label ends far enough to the left (greedy lane packing = minimum rows). When
+// the tree is spread out and nothing overlaps, every leaf lands on row 0 and the
+// baseline is a single straight line. Returns the deepest row used.
+function staggerLeaves(leaves: LayoutNode[], stagger: number, charWidth: number, labelGap: number, maxRows: number): number {
+	if (stagger <= 0 || leaves.length === 0) return 0;
+	const sorted = [...leaves].sort((a, b) => a.x - b.x);
+	const rowRight: number[] = []; // right edge of the last label placed on each row
+	let maxRow = 0;
+	for (const leaf of sorted) {
+		const hw = halfWidth(leaf.label, charWidth, 8);
+		const left = leaf.x - hw;
+		const right = leaf.x + hw;
+		let row = -1;
+		for (let r = 0; r < rowRight.length; r++) {
+			if (left >= rowRight[r] + labelGap) { row = r; break; } // fits on this row
+		}
+		if (row === -1) {
+			if (rowRight.length < maxRows) {
+				row = rowRight.length; // open a new row
+				rowRight.push(right);
+			} else {
+				// Out of rows: use the one whose last label ends soonest (least overlap).
+				row = 0;
+				for (let r = 1; r < rowRight.length; r++) if (rowRight[r] < rowRight[row]) row = r;
+				rowRight[row] = Math.max(rowRight[row], right);
+			}
+		} else {
+			rowRight[row] = right;
+		}
+		leaf.y += row * stagger;
+		if (row > maxRow) maxRow = row;
+	}
+	return maxRow;
 }
 
 export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResult {
@@ -43,11 +89,14 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 	const rowHeight = opts.rowHeight ?? 64;
 	const margin = opts.margin ?? 24;
 	const stagger = opts.stagger ?? 22;
+	const charWidth = opts.charWidth ?? 7.5;
+	const labelGap = opts.labelGap ?? 4;
+	const maxStaggerRows = opts.maxStaggerRows ?? 4;
 	const isCollapsed = opts.isCollapsed ?? (() => false);
 
 	let nextLeaf = 0;
 	let maxDepth = 0;
-	let staggered = false;
+	const leafNodes: LayoutNode[] = [];
 
 	const place = (node: TreeNode, depth: number): LayoutNode => {
 		if (depth > maxDepth) maxDepth = depth;
@@ -56,29 +105,28 @@ export function layoutTree(root: TreeNode, opts: LayoutOptions = {}): LayoutResu
 		// A collapsed node is drawn as a leaf; its subtree is not laid out.
 		const children = collapsed ? [] : node.children.map((c) => place(c, depth + 1));
 		let x: number;
-		let dy = 0;
 		if (children.length === 0) {
-			// Leaf (or collapsed): spread left-to-right. Push every other leaf down
-			// by `stagger` so adjacent long labels don't overlap horizontally.
-			const idx = nextLeaf;
-			x = margin + idx * colWidth;
+			x = margin + nextLeaf * colWidth; // leaf/collapsed: spread left-to-right
 			nextLeaf++;
-			if (stagger > 0 && idx % 2 === 1) { dy = stagger; staggered = true; }
 		} else {
 			x = (children[0].x + children[children.length - 1].x) / 2;
 		}
-		return {
+		const laidNode: LayoutNode = {
 			id: node.id, label: node.label, type: node.type, start: node.start, end: node.end,
-			x, y: margin + depth * rowHeight + dy, hasKids, collapsed, children,
+			x, y: margin + depth * rowHeight, hasKids, collapsed, children,
 		};
+		if (children.length === 0) leafNodes.push(laidNode);
+		return laidNode;
 	};
 
 	const laid = place(root, 0);
+	// Stagger only leaves whose labels would collide; the rest stay on the baseline.
+	const maxRow = staggerLeaves(leafNodes, stagger, charWidth, labelGap, maxStaggerRows);
 	const leaves = Math.max(1, nextLeaf);
 	return {
 		root: laid,
 		width: margin * 2 + (leaves - 1) * colWidth + colWidth, // room for last label
-		height: margin * 2 + maxDepth * rowHeight + rowHeight + (staggered ? stagger : 0),
+		height: margin * 2 + maxDepth * rowHeight + rowHeight + maxRow * stagger,
 		colWidth,
 	};
 }
