@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.8
+Opening an LLM prompt now copies it to the clipboard.
+
+- Clicking an LLM prompt in the Help view (or the "Create Claude Prompt" toolbar button) still shows the filled-in prompt, and now also **copies it to the clipboard**, with a notification — so you can paste it straight into your LLM without selecting and copying by hand. ([#1104](https://github.com/VisualText/vscode-nlp/issues/1104))
+
 ### 3.11.7
 Fix the delay opening files after running an analyzer.
 
