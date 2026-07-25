@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.9
+Parse-tree graphic: "Reveal Text" on the right-click menu for any node.
+
+- Right-click **any** node in the parse-tree graphic — phrase nodes as well as words — and choose **Reveal Text** to select that node's span in the analyzed input file. (Left-clicking a word still reveals it; this adds it to the menu and extends it to phrase nodes, which reveal the whole phrase's text.) ([#1105](https://github.com/VisualText/vscode-nlp/issues/1105))
+
 ### 3.11.8
 Opening an LLM prompt now copies it to the clipboard.
 
