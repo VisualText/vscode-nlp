@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.12
+NLP++ math functions: `floor`, `ceiling`, `round` and friends.
+
+- The editor now knows the new engine math builtins — `floor`, `ceiling`, `round`, `truncate`, `sqrt`, `pow` and `log` — so they colorize as functions and offer completions and snippets.
+- Also registers `abs`, `mod` and `randomint`, which the engine has had for a while but which were never added to the grammar or language data (they had snippets but showed up unhighlighted).
+
 ### 3.11.11
 Parse-tree graphic: stagger overlapping labels at every level.
 
