@@ -329,6 +329,7 @@ export class HelpView {
             templatesDir: visualText.getVisualTextDirectory('analyzer-templates'),
             languagesDir: visualText.getVisualTextDirectory('languages'),
             miscDir: visualText.getVisualTextDirectory('misc'),
+            helpDir: path.join(visualText.getVisualTextDirectory('Help'), 'markdown'),
             currentAnalyzer: (cur && cur.fsPath && cur.fsPath.length > 1) ? cur.fsPath : '(no analyzer loaded)',
         };
     }
