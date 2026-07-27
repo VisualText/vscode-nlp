@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.13
+LLM prompts can point at the help files.
+
+- Prompt files can now use a `{{helpDir}}` placeholder, filled in with your machine's `Help/markdown` directory. The **Prime Claude for NLP++** prompt uses it to send Claude to the per-function help pages and the `vscode/home.md` index instead of guessing function signatures.
+
 ### 3.11.12
 NLP++ math functions: `floor`, `ceiling`, `round` and friends.
 
