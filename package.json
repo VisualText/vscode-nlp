@@ -4,6 +4,7 @@
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
     "version": "3.11.13",
+    "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
     "engines": {
@@ -162,27 +163,27 @@
             {
                 "language": "nlp",
                 "scopeName": "source.nlp",
-                "path": "./syntaxes/nlp.tmLanguage.json"
+                "path": "./grammars/syntaxes/nlp.tmLanguage.json"
             },
             {
                 "language": "txxt",
                 "scopeName": "source.txxt",
-                "path": "./syntaxes/txxt.tmLanguage.json"
+                "path": "./grammars/syntaxes/txxt.tmLanguage.json"
             },
             {
                 "language": "tree",
                 "scopeName": "source.tree",
-                "path": "./syntaxes/tree.tmLanguage.json"
+                "path": "./grammars/syntaxes/tree.tmLanguage.json"
             },
             {
                 "language": "kbb",
                 "scopeName": "source.kbb",
-                "path": "./syntaxes/kbb.tmLanguage.json"
+                "path": "./grammars/syntaxes/kbb.tmLanguage.json"
             },
             {
                 "language": "dict",
                 "scopeName": "source.dict",
-                "path": "./syntaxes/dict.tmLanguage.json"
+                "path": "./grammars/syntaxes/dict.tmLanguage.json"
             }
         ],
         "snippets": [
@@ -3466,8 +3467,9 @@
         "webpack": "webpack --mode development",
         "webpack-dev": "webpack --mode development --watch",
         "webpack-prod": "webpack --mode production --devtool hidden-source-map",
-        "package": "npm run webpack-prod && vsce package",
-        "publish": "npm run webpack-prod && vsce publish",
+        "check-grammars": "node ./scripts/check-grammars.js",
+        "package": "npm run check-grammars && npm run webpack-prod && vsce package",
+        "publish": "npm run check-grammars && npm run webpack-prod && vsce publish",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "lint": "eslint src/**/*.ts",
@@ -3477,7 +3479,7 @@
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
-        "vsce-package": "npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
+        "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
     "devDependencies": {
         "@types/mocha": "^10.0.10",
