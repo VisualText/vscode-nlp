@@ -1400,25 +1400,17 @@ export class VisualText {
         return vtDir;
     }
 
+    // What makes a directory an analyzer is its pass sequence: spec/analyzer.seq.
+    // This used to also demand kb/ and input/ folders, which quietly demoted real
+    // analyzers to plain folders (no gear icon, no analyzer commands) whenever those
+    // folders were empty — git does not store empty directories, so a freshly cloned
+    // analyzer repo routinely arrives without them. dirfuncs.analyzerFolderCount()
+    // has always used the sequence-file test; this matches it.
     isAnalyzerDirectory(dirPath: vscode.Uri): boolean {
-        const dirs = dirfuncs.getDirectories(dirPath);
-        let spec = false;
-        let kb = false;
-        let input = false;
-
-        for (const dir of dirs) {
-            if (path.basename(dir.fsPath).localeCompare(visualText.ANALYZER_SEQUENCE_FOLDER) == 0) {
-                spec = true;
-            }
-            else if (path.basename(dir.fsPath).localeCompare('kb') == 0) {
-                kb = true;
-            }
-            else if (path.basename(dir.fsPath).localeCompare('input') == 0) {
-                input = true;
-            }
-        }
-
-        return spec && kb && input;
+        if (!dirPath.fsPath.length)
+            return false;
+        const seqFile = path.join(dirPath.fsPath, visualText.ANALYZER_SEQUENCE_FOLDER, visualText.ANALYZER_SEQUENCE_FILE);
+        return fs.existsSync(seqFile);
     }
 
     hasLogFiles(dirPath: vscode.Uri): boolean {

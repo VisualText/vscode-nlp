@@ -843,6 +843,8 @@ export class TextView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'dirname', prompt: 'Enter directory name' }).then(newdir => {
 				if (newdir) {
+					// The analyzer may have been cloned without an input folder.
+					visualText.analyzer.ensureInputDirectory();
 					let dirPath = visualText.analyzer.getInputDirectory().fsPath;
 					if (textItem && !top)
 						dirPath = dirfuncs.getDirPath(textItem.uri.fsPath);
@@ -858,6 +860,8 @@ export class TextView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter text file name' }).then(newname => {
 				if (newname) {
+					// The analyzer may have been cloned without an input folder.
+					visualText.analyzer.ensureInputDirectory();
 					let dirPath = visualText.analyzer.getInputDirectory().fsPath;
 					if (textItem && !top)
 						dirPath = dirfuncs.getDirPath(textItem.uri.fsPath);

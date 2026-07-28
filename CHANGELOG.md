@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.16
+Analyzers without an `input` folder are analyzers again.
+
+- **The analyzer view was demoting real analyzers to plain folders.** A directory only counted as an analyzer if `spec`, `kb` **and** `input` all existed on disk, so an analyzer whose `input` folder was empty or absent lost its gear icon, its right-click analyzer commands and its place in the analyzer lists. Git never stores empty directories, which made this routine: clone an analyzer repo and the input folder simply isn't there. Recognition now keys off `spec/analyzer.seq` — the pass sequence that actually defines an analyzer, and the same test `analyzerFolderCount()` has always used to decide whether a workspace holds analyzers at all.
+- This makes it practical to publish an analyzer with **no input text at all**, which matters when the sample documents contain sensitive material and shouldn't be committed.
+- **The input folder is recreated on open.** Opening an analyzer that has no `input` directory now creates one, so the Text view has somewhere to put files. Without it, **New Folder** in the Text view failed outright on the missing parent directory.
+
 ### 3.11.15
 More highlighting gaps closed, found by building a second colorizer.
 
