@@ -9,6 +9,7 @@ Syntax highlighting fixes, and the grammars now live in their own repository.
 - **Operators colorize at last.** `>`, `<`, `=`, `<>`, `&&`, `||`, `++`, `--`, `==`, `!=`, `<=` and `>=` were all wrapped in word-boundary anchors that punctuation can never satisfy, so not one of them was ever highlighted. `<>` was also ordered after `<` and could never match as a single token, and `++`, `--`, `&&` and `||` were missing from the rule entirely.
 - **`_xWILD`, `_xNUM`, `_xWHITE` and the rest colorize as constants** inside `@RULES` regions instead of as ordinary tokens. The constant rule existed but was losing a tie to the general token rule and never won.
 - A number at the very first character of a file now colorizes.
+- The **Colorize Analyzer** template gives wildcard nodes and operators explicit colors in both light and dark themes — teal for `_xWILD` and friends, blue for operators — rather than leaving the two newly-fixed scopes to whatever the active theme happens to do with them.
 - The TextMate grammars moved to [VisualText/nlpplus-tmbundle](https://github.com/VisualText/nlpplus-tmbundle) and are pulled in here as a submodule, so GitHub, Shiki, `bat` and other tools can colorize NLP++ using exactly the grammars this extension ships. Contributors should clone with `--recurse-submodules`.
 - Smaller download — the package no longer carries per-module `tsc` output and source maps that were never loaded.
 

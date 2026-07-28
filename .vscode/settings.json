@@ -28,6 +28,22 @@
                     }
                 },
                 {
+                    "scope": "keyword.constants.nlp",
+                    "settings": {
+                        "foreground": "#0a7b83",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": [
+                        "keyword.operator.nlp",
+                        "keyword.operator.word.nlp"
+                    ],
+                    "settings": {
+                        "foreground": "#1f6feb"
+                    }
+                },
+                {
                     "scope": "constant.numeric.tree",
                     "settings": {
                         "foreground": "#5596f0"
@@ -137,6 +153,22 @@
                     "scope": "keyword.attribute.nlp",
                     "settings": {
                         "foreground": "#f293fb"
+                    }
+                },
+                {
+                    "scope": "keyword.constants.nlp",
+                    "settings": {
+                        "foreground": "#4ec9b0",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": [
+                        "keyword.operator.nlp",
+                        "keyword.operator.word.nlp"
+                    ],
+                    "settings": {
+                        "foreground": "#8ab4f8"
                     }
                 },
                 {
