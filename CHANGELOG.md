@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.14
+Syntax highlighting fixes, and the grammars now live in their own repository.
+
+- **Operators colorize at last.** `>`, `<`, `=`, `<>`, `&&`, `||`, `++`, `--`, `==`, `!=`, `<=` and `>=` were all wrapped in word-boundary anchors that punctuation can never satisfy, so not one of them was ever highlighted. `<>` was also ordered after `<` and could never match as a single token, and `++`, `--`, `&&` and `||` were missing from the rule entirely.
+- **`_xWILD`, `_xNUM`, `_xWHITE` and the rest colorize as constants** inside `@RULES` regions instead of as ordinary tokens. The constant rule existed but was losing a tie to the general token rule and never won.
+- A number at the very first character of a file now colorizes.
+- The TextMate grammars moved to [VisualText/nlpplus-tmbundle](https://github.com/VisualText/nlpplus-tmbundle) and are pulled in here as a submodule, so GitHub, Shiki, `bat` and other tools can colorize NLP++ using exactly the grammars this extension ships. Contributors should clone with `--recurse-submodules`.
+- Smaller download — the package no longer carries per-module `tsc` output and source maps that were never loaded.
+
 ### 3.11.13
 LLM prompts can point at the help files.
 

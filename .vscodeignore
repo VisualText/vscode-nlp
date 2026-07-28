@@ -21,6 +21,11 @@ telemetry-worker/**
 # Formatter test-harness build output (npm run test:format) - never shipped
 out-format/**
 
+# Webpack output: ship the bundle only. `tsc` (npm run compile) also emits per-module
+# .js/.js.map here, and without this every one of them would be packaged - dead code,
+# since package.json main points at dist/extension.js. Re-included below.
+dist/**
+
 # Build artifacts we don't need
 *.vsix
 .vscode/**
@@ -47,6 +52,7 @@ test/**
 # Keep only what's needed for the extension
 !dist/extension.js
 !dist/extension.js.map
+!dist/extension.js.LICENSE.txt
 !resources/**
 !snippets/**
 !grammars/syntaxes/**
