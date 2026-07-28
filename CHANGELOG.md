@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.17
+The analyzer view shows analyzers, not a file browser.
+
+- **Only analyzers and the folders that group them appear.** The view listed every file and folder it found, so a workspace holding anything besides analyzers — a README, notes, corpora, fixtures, scratch directories — buried the analyzers in unrelated entries. An entry now survives only if it is an analyzer or has an analyzer somewhere beneath it. Nested layouts are unaffected: a grouping folder stays visible, at any depth, as long as something under it is an analyzer.
+- The search stops at an analyzer (analyzers do not nest inside one another), skips `_log` and `_test` folders, and is depth-capped, so expanding the tree does not walk into a `node_modules` or a checked-out engine directory.
+- Note that **Rename File**, **Delete File** and **Generate Manifest** only ever appeared on file entries and are no longer reachable from this view.
+
 ### 3.11.16
 Analyzers without an `input` folder are analyzers again.
 
