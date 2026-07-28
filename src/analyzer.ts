@@ -453,10 +453,24 @@ export class Analyzer {
             this.inputDir = this.constructDir(directory, anaSubDir.INPUT);
             this.kbDir = this.constructDir(directory, anaSubDir.KB);
             this.logDir = this.constructDir(directory, anaSubDir.LOGS);
+            this.ensureInputDirectory();
             this.loaded = true;
         }
         else
             this.loaded = false;
+    }
+
+    // An analyzer cloned without its input folder is still a valid analyzer — git
+    // does not store empty directories, and analyzers whose text is sensitive are
+    // deliberately published with no input at all. Recreate the folder when such an
+    // analyzer is opened so the Text view has somewhere to put new files; without it
+    // "New Text File"/"New Folder" fail on a missing parent directory.
+    ensureInputDirectory() {
+        if (!visualText.isAnalyzerDirectory(this.analyzerDir))
+            return;
+        if (!this.inputDir.fsPath.length || fs.existsSync(this.inputDir.fsPath))
+            return;
+        dirfuncs.makeDir(this.inputDir.fsPath);
     }
 
     constructDir(analyzerDir: vscode.Uri, dir: anaSubDir): vscode.Uri {
