@@ -386,6 +386,33 @@ export namespace dirfuncs {
 		return dirPath.endsWith(visualText.LOG_SUFFIX);
 	}
 
+    // Does this folder hold an analyzer anywhere below it? The analyzer view uses
+    // this to keep a grouping folder visible while hiding folders that lead nowhere.
+    // Analyzers are not nested inside one another, so an analyzer directory ends the
+    // descent — there is no point walking its spec/kb/input. Log and test folders are
+    // skipped for the same reason, and the depth cap stops a stray deep tree (a
+    // node_modules, a checked-out engine directory) from turning a view refresh into
+    // a full-disk walk.
+    export const ANALYZER_SEARCH_MAX_DEPTH = 6;
+
+    export function containsAnalyzer(dir: vscode.Uri, depth: number = ANALYZER_SEARCH_MAX_DEPTH): boolean {
+        if (depth <= 0)
+            return false;
+
+        for (const entry of dirfuncs.getDirectoryTypes(dir)) {
+            if (entry.type != vscode.FileType.Directory)
+                continue;
+            if (dirfuncs.directoryIsLog(entry.uri.fsPath) || entry.uri.fsPath.endsWith(visualText.TEST_SUFFIX))
+                continue;
+            if (visualText.isAnalyzerDirectory(entry.uri))
+                return true;
+            if (dirfuncs.containsAnalyzer(entry.uri, depth - 1))
+                return true;
+        }
+
+		return false;
+	}
+
     export function fileHasLog(filePath: string): boolean {
         return dirfuncs.isDir(filePath + visualText.LOG_SUFFIX);
     }

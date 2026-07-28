@@ -110,6 +110,13 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		return treeItem;
 	}
 
+	// The view shows analyzers and nothing else: an entry survives only if it is an
+	// analyzer, or a folder with an analyzer somewhere beneath it. Loose files
+	// (README.md, .ecl, stray .nlp) and folders that lead to no analyzer are dropped,
+	// so a workspace of mixed content reads as a list of analyzers rather than a file
+	// browser. getTreeItem keeps its file branches: the item types are still declared
+	// and the file rendering is what the ECL/README commands expect if the tree is
+	// ever asked to show files again.
 	getKeepers(dir: vscode.Uri): AnalyzerItem[] {
 		const keepers = Array();
 		const entries = dirfuncs.getDirectoryTypes(dir);
@@ -117,14 +124,13 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 
 		for (const entry of entries) {
 			if (entry.type == vscode.FileType.Directory) {
-				type = visualText.isAnalyzerDirectory(entry.uri) ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
+				const isAnalyzer = visualText.isAnalyzerDirectory(entry.uri);
+				if (!isAnalyzer && !dirfuncs.containsAnalyzer(entry.uri))
+					continue;
+				type = isAnalyzer ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
 				const hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
 				const hasReadme = dirfuncs.hasFile(entry.uri, "README.md");
 				keepers.push({ uri: entry.uri, type: type, hasLogs: hasLogs, hasPats: false, hasReadme: hasReadme, moveUp: false, moveDown: false });
-
-			} else if (entry.type == vscode.FileType.File) {
-				type = this.typeFromExtension(entry.uri);
-				keepers.push({ uri: entry.uri, type: type, hasLogs: false, hasPats: false, hasReadme: false, moveUp: false, moveDown: false });
 			}
 		}
 
