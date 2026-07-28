@@ -4,9 +4,26 @@
 * This folder contains all of the files necessary for your extension.
 * `package.json` - this is the manifest file in which you declare your language support and define
 the location of the grammar file that has been copied into your extension.
-* `syntaxes/nlp.tmLanguage.json` - this is the Text mate grammar file that is used for tokenization.
+* `grammars/syntaxes/nlp.tmLanguage.json` - this is the Text mate grammar file that is used for tokenization.
 * `language-configuration.json` - this is the language configuration, defining the tokens that are used for
 comments and brackets.
+
+## Clone with the grammar submodule
+The TextMate grammars live in their own repository,
+[VisualText/nlpplus-tmbundle](https://github.com/VisualText/nlpplus-tmbundle), so that
+GitHub Linguist, Shiki, `bat` and other tools vendor exactly the files this extension ships.
+It is wired in as the `grammars/` submodule, so clone with:
+
+```
+git clone --recurse-submodules https://github.com/VisualText/vscode-nlp.git
+```
+
+If you already cloned without it, run `git submodule update --init --recursive`. Without the
+submodule there is no syntax highlighting. `npm run check-grammars` verifies the wiring, and
+runs automatically before `npm run package` and `npm run publish`.
+
+To change a grammar, edit it inside `grammars/`, commit and push there, then commit the
+updated submodule pointer here.
 
 ## Get up and running straight away
 * Make sure the language configuration settings in `language-configuration.json` are accurate.

@@ -3,6 +3,18 @@ src/**
 tsconfig.json
 webpack.config.js
 
+# Build/CI helpers - never shipped
+scripts/**
+
+# Grammar submodule (VisualText/nlpplus-tmbundle): ship syntaxes/ only, not the
+# bundle's own docs, samples, packaging files or git metadata
+grammars/README.md
+grammars/language-configuration/**
+grammars/LICENSE
+grammars/package.json
+grammars/samples/**
+grammars/.git*
+
 # Standalone Cloudflare telemetry worker (deployed separately, never shipped)
 telemetry-worker/**
 
@@ -37,7 +49,7 @@ test/**
 !dist/extension.js.map
 !resources/**
 !snippets/**
-!syntaxes/**
+!grammars/syntaxes/**
 !themes/**
 !*.md
 !*.html

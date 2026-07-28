@@ -2,7 +2,7 @@
 //
 // PURE MODULE: must not import 'vscode' -- it feeds both the pure analysis layers
 // (diagnostics/symbols) and the thin VSCode providers. The built-in lists are
-// transcribed from syntaxes/nlp.tmLanguage.json so hover/completion/diagnostics
+// transcribed from grammars/syntaxes/nlp.tmLanguage.json so hover/completion/diagnostics
 // agree with what the colorizer already recognizes. Keep this in sync with the
 // grammar when either changes.
 
