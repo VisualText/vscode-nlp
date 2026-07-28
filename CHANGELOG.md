@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.11.15
+More highlighting gaps closed, found by building a second colorizer.
+
+- **`!` now colorizes.** The operator rule had `!=` but not bare `!`, so the logical not in `if (!L("con"))` was uncolored everywhere — 2,620 occurrences in the English parser alone. `<<` and `>>` were missing too, which is what `cout` and file output use constantly.
+- **Array subscripts colorize.** Square brackets are a rule element's modifier block inside `@RULES`, but an array subscript in code, and the two go through different parts of the grammar. Function calls and operators inside a subscript — `L("arr")[L("i") + 1]` — were being left plain.
+- **Rule attributes like `[min=0 max=2]`** now colorize their `=` and their numbers, the way the `match=(...)` form always did.
+
+These surfaced while writing an NLP++ lexer for [Pygments](https://pygments.org), which powers highlighting on Wikipedia, Sphinx, Jupyter and LaTeX. A TextMate grammar never complains about text it can't match, so the gaps had been invisible for years; Pygments flags every unmatched character, which made them impossible to miss.
+
 ### 3.11.14
 Syntax highlighting fixes, and the grammars now live in their own repository.
 
