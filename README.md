@@ -244,7 +244,17 @@ Can now display fired rules from dictionaries.
 
 # Telemetry
 
-This extension can send **anonymous usage data** to help prioritize features and catch errors in the field. It records only counts and metadata — for example, that a document was formatted, which analyzer run mode was used, or that a handled error occurred. It **never** sends file contents, analyzer/KB/dictionary source, file names, paths, or any text being analyzed.
+This extension can send **anonymous usage data** to help prioritize features and catch errors in the field. It records only counts and metadata. It **never** sends file contents, analyzer/KB/dictionary source, file names, paths, analyzer names, or any text being analyzed — and never the text of an error message, since those routinely quote paths and rule source.
+
+What is recorded:
+
+- **Environment**, attached to every record: extension version, VS Code version, OS platform and CPU architecture, the NLP++ engine version once detected, and whether the window is local, remote (WSL/SSH), or web.
+- **Sessions**: an activation record noting whether this was a fresh install, an upgrade (and from which version), or an ordinary relaunch.
+- **Feature usage**: which extension commands and language features (hover, go-to-definition, find references, rename, completion, signature help) were used, as periodic counts. Command identifiers are fixed strings from this extension — never anything you typed.
+- **Analyzer runs**: run mode, dev mode, whether the target was a file or a folder, and the timing breakdown already shown in the log view (setup, engine startup, KB load, analyzer load, exec, post-processing). On failure, only whether it was a syntax or execution error.
+- **Compiles**: target and route (local or cloud), success or failure, elapsed time, and for failures a fixed stage name such as `no-cmake`, `codegen`, or `release-not-found`. For cloud compiles: the platform key, whether the build was a cache hit, runner wait time, and the payload size in KB. Deploying a compiled analyzer records how many lazy KB files and python scripts were copied — never the destination or any file name.
+- **Engine updates**: which component was downloaded or unzipped, its public release tag, elapsed time, and whether it succeeded.
+- **Regression runs**: number of files, and how many passed, failed, were missing, or were blessed.
 
 Telemetry respects two independent opt-outs, and sends nothing if either is off:
 

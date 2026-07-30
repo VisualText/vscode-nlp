@@ -20,6 +20,26 @@ import {
 	BUILTIN_SET, BUILTIN_FUNCTIONS, KEYWORDS, KEYWORD_SET, RULE_KEYWORDS,
 	REGION_MARKERS, LETTER_FUNCTIONS,
 } from "./nlpxxData";
+import * as telemetry from "../telemetry/telemetry";
+
+// Anonymous usage counting for the language features. Wraps one provider method
+// and counts a hit only when the feature actually produced something, so the
+// numbers mean "this helped a user" rather than "VS Code polled us". The id is a
+// literal below; nothing about the document, the symbol, or the result is sent.
+// Counts are batched by the telemetry module -- hover fires on mouse movement.
+function counted<T extends object>(id: string, method: keyof T, provider: T): T {
+	const original = provider[method] as unknown as Function;
+	const record = (result: any) => {
+		if (result && (!Array.isArray(result) || result.length))
+			telemetry.countEvent("language", id);
+		return result;
+	};
+	(provider as any)[method] = function (this: any, ...args: any[]) {
+		const result = original.apply(this, args);
+		return result && typeof result.then === "function" ? result.then(record) : record(result);
+	};
+	return provider;
+}
 
 // Symbol sets from the workspace index + static tables, shared by the semantic
 // highlighter and the unknown-call quick fix.
@@ -499,14 +519,17 @@ async function refreshDiagnostics(doc: vscode.TextDocument, collection: vscode.D
 export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 	ctx.subscriptions.push(
 		vscode.languages.registerDocumentSymbolProvider(NLP, symbolProvider),
-		vscode.languages.registerHoverProvider(NLP, hoverProvider),
-		vscode.languages.registerDefinitionProvider(NLP, definitionProvider),
+		// Only the deliberate features are counted. Folding, semantic tokens,
+		// highlight and outline fire continuously as a side effect of editing and
+		// would say nothing about whether anyone finds them useful.
+		vscode.languages.registerHoverProvider(NLP, counted("hover", "provideHover", hoverProvider)),
+		vscode.languages.registerDefinitionProvider(NLP, counted("definition", "provideDefinition", definitionProvider)),
 		vscode.languages.registerWorkspaceSymbolProvider(workspaceSymbolProvider),
-		vscode.languages.registerReferenceProvider(NLP, referenceProvider),
+		vscode.languages.registerReferenceProvider(NLP, counted("references", "provideReferences", referenceProvider)),
 		vscode.languages.registerDocumentHighlightProvider(NLP, highlightProvider),
-		vscode.languages.registerRenameProvider(NLP, renameProvider),
-		vscode.languages.registerCompletionItemProvider(NLP, completionProvider, "@"),
-		vscode.languages.registerSignatureHelpProvider(NLP, signatureProvider, "(", ","),
+		vscode.languages.registerRenameProvider(NLP, counted("rename", "provideRenameEdits", renameProvider)),
+		vscode.languages.registerCompletionItemProvider(NLP, counted("completion", "provideCompletionItems", completionProvider), "@"),
+		vscode.languages.registerSignatureHelpProvider(NLP, counted("signature", "provideSignatureHelp", signatureProvider), "(", ","),
 		vscode.languages.registerFoldingRangeProvider(NLP, foldingProvider),
 		vscode.languages.registerDocumentSemanticTokensProvider(NLP, semanticProvider, semanticLegend),
 		vscode.languages.registerCodeActionsProvider(NLP, codeActionProvider, {

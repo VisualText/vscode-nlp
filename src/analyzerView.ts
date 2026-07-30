@@ -110,13 +110,16 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		return treeItem;
 	}
 
-	// The view shows analyzers and nothing else: an entry survives only if it is an
-	// analyzer, or a folder with an analyzer somewhere beneath it. Loose files
-	// (README.md, .ecl, stray .nlp) and folders that lead to no analyzer are dropped,
-	// so a workspace of mixed content reads as a list of analyzers rather than a file
-	// browser. getTreeItem keeps its file branches: the item types are still declared
-	// and the file rendering is what the ECL/README commands expect if the tree is
-	// ever asked to show files again.
+	// The view shows analyzers and the folders that organize them: an entry survives
+	// only if it is an analyzer, a folder with an analyzer somewhere beneath it, or an
+	// empty folder — empty folders stay because that is what a user just made to move
+	// analyzers into, and a view that hid it would look like the folder failed to be
+	// created. Loose files (README.md, .ecl, stray .nlp) and folders that lead to
+	// neither an analyzer nor an empty folder are dropped, so a workspace of mixed
+	// content reads as a list of analyzers rather than a file browser. getTreeItem
+	// keeps its file branches: the item types are still declared and the file
+	// rendering is what the ECL/README commands expect if the tree is ever asked to
+	// show files again.
 	getKeepers(dir: vscode.Uri): AnalyzerItem[] {
 		const keepers = Array();
 		const entries = dirfuncs.getDirectoryTypes(dir);
@@ -125,7 +128,7 @@ export class AnalyzerTreeDataProvider implements vscode.TreeDataProvider<Analyze
 		for (const entry of entries) {
 			if (entry.type == vscode.FileType.Directory) {
 				const isAnalyzer = visualText.isAnalyzerDirectory(entry.uri);
-				if (!isAnalyzer && !dirfuncs.containsAnalyzer(entry.uri))
+				if (!isAnalyzer && !dirfuncs.containsAnalyzerOrEmptyFolder(entry.uri))
 					continue;
 				type = isAnalyzer ? analyzerItemType.ANALYZER : analyzerItemType.FOLDER;
 				const hasLogs = dirfuncs.analyzerHasLogFiles(entry.uri);
