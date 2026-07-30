@@ -32,8 +32,8 @@ export default {
 
 		const stmt = env.DB.prepare(
 			`INSERT INTO events
-			   (ts, event, is_error, version, vscode, platform, machine_id, props, metrics)
-			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			   (ts, event, is_error, version, vscode, platform, arch, engine, machine_id, session_id, props, metrics)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		).bind(
 			Date.now(),
 			clamp(data.event, 64),
@@ -41,7 +41,10 @@ export default {
 			clamp(data.v, 32),
 			clamp(data.vscode, 32),
 			clamp(data.platform, 32),
+			clamp(data.arch, 16),
+			clamp(data.engine, 32),
 			clamp(data.id, 64),
+			clamp(data.session, 64),
 			data.props ? JSON.stringify(data.props).slice(0, 512) : null,
 			data.metrics ? JSON.stringify(data.metrics).slice(0, 512) : null,
 		);

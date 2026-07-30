@@ -3,6 +3,17 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.0
+Anonymous telemetry that can actually answer a question, and empty folders are back in the analyzer view.
+
+- **Five events could not describe an extension with 224 commands.** Telemetry recorded activation, two formatter events and which run mode an analyzer used — so there was no way to tell which features anyone touches, whether the language intelligence added in 3.5.0 gets used, or how often a compile fails and why. Command usage is now recorded for every contributed command by wrapping command registration once at startup, rather than by touching the eleven view files that register them, and the deliberate language features — hover, go to definition, find references, rename, completion, signature help — count a use only when they actually returned something. Both are batched in memory and flushed once a minute, so a command like **Refresh All** costs one row a minute instead of one per click.
+- **Compiling was entirely unmeasured**, which is awkward for the feature the cloud compile service exists to rescue. A compile now reports its target, its route (local or cloud), whether it succeeded, and how long it took. Failures carry a fixed stage name rather than a message: `no-cmake` and `no-engine-libs` are recorded separately, so "how many people simply cannot build locally" is finally a number. Cloud builds add the platform, whether the build was a cache hit, how long the runner made the user wait, and the payload size.
+- **Analyzer runs now report the timing breakdown they were already computing.** The setup / engine startup / KB load / analyzer load / exec / post-processing split shown in the log view was discarded; it is now recorded alongside the run mode, so where time actually goes in the field is visible per mode. A failed run records only whether it was a syntax or an execution error.
+- Engine downloads and unzips, regression runs, and compiled-analyzer deployments report success, counts and elapsed time. Every record now carries CPU architecture and the installed engine version, which is what decides whether a compiled library can load at all, and activation distinguishes a fresh install from an upgrade from an ordinary relaunch.
+- **Nothing new is sent about your work.** No file contents, no file or analyzer names, no paths, and no error message text — a failure is reported as a fixed reason string chosen in the source, or at most an error class name, because messages routinely quote paths and rule source. The two existing opt-outs are unchanged and either one still switches everything off: VS Code's global `telemetry.telemetryLevel`, and `nlp.telemetry.enable`. Counts are not even buffered while telemetry is off, so turning it on cannot send back history. The README lists every category collected.
+- **A folder with nothing in it now shows.** Filtering the view down to analyzers took empty folders with it, so creating a folder to move analyzers into looked like the folder was never created. An empty folder is exactly where analyzers are about to go, so it stays visible. Folders with an empty folder somewhere below them stay visible too, which keeps a freshly made `Projects/Group A` reachable.
+- Folders holding only other content — a corpus of text files, notes, fixtures — are still hidden, as are loose files.
+
 ### 3.11.17
 The analyzer view shows analyzers, not a file browser.
 

@@ -17,6 +17,7 @@ import * as os from 'os';
 import * as cp from 'child_process';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
+import * as telemetry from './telemetry/telemetry';
 
 const LOG_DIR_SUFFIX = '_log';
 const DEFAULT_EXCLUDE_NAMES = new Set(['sources.md', 'readme.md']);
@@ -102,6 +103,7 @@ export class RegressionRunner {
         this.refresh();
 
         let passed = 0, failed = 0, missing = 0, blessed = 0;
+        const elapsed = telemetry.timer();
 
         for (const inp of inputs) {
             const rel = path.relative(path.join(anaPath, 'input'), inp);
@@ -142,6 +144,14 @@ export class RegressionRunner {
                 this.log('      (output structure changed; see test/expected/ vs run)', inputUri);
             this.refresh();
         }
+
+        // Counts and elapsed time only -- never the analyzer name, the input
+        // paths, or any part of a golden file or diff.
+        telemetry.sendEvent(
+            'regression.run',
+            { command, scope: scope ? (this.isFile(scope.fsPath) ? 'file' : 'folder') : 'all' },
+            { files: inputs.length, passed, failed, missing, blessed, ms: elapsed() },
+        );
 
         if (command === 'bless') {
             const msg = `${name}: blessed ${blessed} golden(s) under test/expected/`;

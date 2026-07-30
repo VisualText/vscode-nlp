@@ -5,6 +5,7 @@ import * as os from 'os';
 import { visualText } from './visualText';
 import { logView, logLineType } from './logView';
 import { refreshEngineDiagnostics } from './language/engineDiagnostics';
+import * as telemetry from './telemetry/telemetry';
 
 export enum compileTarget { ANALYZER, KB_ONLY, ANALYZER_ONLY }
 
@@ -80,6 +81,9 @@ export class NLPCompile {
         // fully-compiled (analyzer + KB) deployment needs, so require it here.
         const compiledLib = path.join(anapath, `${analyzerName}${ext}`);
         if (!fs.existsSync(compiledLib)) {
+            // Deploying before compiling is the common first-time mistake; worth
+            // knowing how often the prompt below has to catch it.
+            telemetry.sendError('deploy.failed', 'no-library');
             const choice = await vscode.window.showErrorMessage(
                 `No compiled library found (${analyzerName}${ext}). Run "Compile Analyzer and KB to C++ Library" first, then deploy.`,
                 'Compile Analyzer and KB'
@@ -188,6 +192,12 @@ export class NLPCompile {
                 fs.mkdirSync(path.join(destDir, d), { recursive: true });
             }
 
+            // Counts only -- never the destination path or any file name.
+            telemetry.sendEvent('deploy.done', undefined, {
+                lazy: fullFiles.length,
+                py: pyFiles.length,
+            });
+
             const fullMsg = fullFiles.length
                 ? `${fullFiles.length} lazy file(s): ${fullFiles.map(f => path.basename(f)).join(', ')}`
                 : 'no *full.dict/*full.kbb files found (KB is fully compiled into the library)';
@@ -209,6 +219,8 @@ export class NLPCompile {
             });
         } catch (err: any) {
             const detail = err?.message ?? String(err);
+            // Error class only; `detail` is a filesystem message full of paths.
+            telemetry.sendError('deploy.failed', 'copy:' + (err?.constructor?.name ?? 'Error'));
             logView.addMessage(`Deploy failed: ${detail}`, logLineType.ANALYER_OUTPUT, analyzerDir);
             vscode.window.showErrorMessage(`Deploy compiled analyzer failed: ${detail}`);
         }
@@ -227,6 +239,20 @@ export class NLPCompile {
             target === compileTarget.KB_ONLY ? '-COMPILEKB' :
             target === compileTarget.ANALYZER_ONLY ? '-COMPILEANA' :
             '-COMPILE';
+
+        // Anonymous compile telemetry. Read the mode here (a plain config lookup)
+        // so the whole run, including the C++ generation step below, is attributed
+        // to the route it took. Props are our own enum names -- no paths or names.
+        const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'cloud').toLowerCase();
+        const teleProps = { target: compileTarget[target], mode: compileMode };
+        // sendError takes a single reason string, so the route and target are
+        // folded into it: "cloud:ANALYZER:codegen". Low cardinality by design.
+        const teleFailed = (stage: string, ms?: number) =>
+            telemetry.sendError(
+                'compile.failed',
+                `${compileMode}:${compileTarget[target]}:${stage}`,
+                ms === undefined ? undefined : { ms },
+            );
 
         // 1. Check NLP engine executable
         const exe = visualText.exePath().fsPath;
@@ -273,6 +299,8 @@ export class NLPCompile {
             title: `Compile ${targetLabel}`,
             cancellable: false
         }, async (progress) => {
+            const teleElapsed = telemetry.timer();
+            telemetry.sendEvent('compile.start', teleProps);
             progress.report({ increment: 10, message: 'Generating C++ code...' });
             logView.addMessage(`Compiling ${targetLabel}: ${path.basename(analyzerDir.fsPath)}`, logLineType.ANALYER_OUTPUT, analyzerDir);
             vscode.commands.executeCommand('logView.refreshAll');
@@ -292,6 +320,9 @@ export class NLPCompile {
             if (cppFiles.length === 0) {
                 const detail = compileResult.stderr?.trim() || compileResult.stdout?.trim() || 'No diagnostics returned by nlp.exe.';
                 const message = `C++ generation failed for ${targetLabel}: ${detail}`;
+                // `detail` is nlp.exe's diagnostic text and is NOT sent -- it can
+                // quote rule source and paths. Only the stage name goes out.
+                teleFailed('codegen', teleElapsed());
                 logView.addMessage(message, logLineType.ANALYER_OUTPUT, analyzerDir);
                 vscode.window.showErrorMessage(message);
                 progress.report({ increment: 100, message: 'C++ generation failed.' });
@@ -316,7 +347,6 @@ export class NLPCompile {
                 target === compileTarget.ANALYZER_ONLY ? 'analyzer' :
                 path.basename(anapath);
 
-            const compileMode = (vscode.workspace.getConfiguration('compile').get<string>('mode') || 'cloud').toLowerCase();
             let success = false;
 
             if (compileMode === 'cloud') {
@@ -334,6 +364,10 @@ export class NLPCompile {
 
                 const compileSupport = await this.resolveCompileSupport(anapath);
                 if (!compileSupport) {
+                    // The headline number for the cloud-compile service: how often
+                    // a local machine simply cannot build (no CMake, no toolchain,
+                    // missing engine headers/libs).
+                    teleFailed(await this.hasCMake() ? 'no-engine-libs' : 'no-cmake', teleElapsed());
                     vscode.commands.executeCommand('logView.refreshAll');
                     return;
                 }
@@ -341,6 +375,11 @@ export class NLPCompile {
                 progress.report({ increment: 20, message: 'Compiling C++ library...' });
                 success = await this.compileCppWithCMake(anapath, compileSupport, libBaseName, kbOnly);
             }
+
+            if (success)
+                telemetry.sendEvent('compile.done', teleProps, { ms: teleElapsed() });
+            else
+                teleFailed('build', teleElapsed());
 
             if (success) {
                 const libName = this.sharedLibraryName(libBaseName);
@@ -1269,8 +1308,14 @@ endif()
         progress: vscode.Progress<{ message?: string; increment?: number }>
     ): Promise<boolean> {
         const config = vscode.workspace.getConfiguration('compile');
+        // Anonymous cloud-compile telemetry. Reasons are fixed strings chosen here;
+        // dispatcher/GitHub response bodies are never sent (they can quote source).
+        const cloudElapsed = telemetry.timer();
+        const cloudFail = (reason: string) =>
+            telemetry.sendError('compile.cloud', reason, { ms: cloudElapsed() });
         const dispatcherUrl = (config.get<string>('dispatcherUrl') || 'https://nlp-compile-dispatcher.dehilster.workers.dev').replace(/\/$/, '');
         if (!dispatcherUrl) {
+            cloudFail('no-dispatcher-url');
             vscode.window.showErrorMessage(
                 'compile.dispatcherUrl is not set. Configure the compile service URL or switch compile.mode to "local".'
             );
@@ -1279,6 +1324,7 @@ endif()
 
         const rawEngineVersion = (visualText.exeEngineVersion || visualText.repoEngineVersion || '').trim();
         if (!rawEngineVersion) {
+            cloudFail('no-engine-version');
             vscode.window.showErrorMessage(
                 'Unable to determine engine version. Run the updater to refresh nlp.exe before using cloud compile.'
             );
@@ -1290,6 +1336,9 @@ endif()
 
         const platformKey = this.cloudPlatformKey();
         if (!platformKey) {
+            // platform/arch already ride on every payload, so the reason alone
+            // is enough to see which combinations are being turned away.
+            cloudFail('platform-unsupported');
             vscode.window.showErrorMessage(`Cloud compile not supported on platform: ${os.platform()}/${process.arch}.`);
             return false;
         }
@@ -1302,6 +1351,7 @@ endif()
         progress.report({ message: `Verifying engine release ${engineVersion}...` });
         const releaseExists = await this.verifyEngineReleaseExists(engineVersion);
         if (!releaseExists) {
+            cloudFail('release-not-found');
             vscode.window.showErrorMessage(
                 `Engine release ${engineVersion} not found on GitHub (VisualText/nlp-engine). ` +
                 `The cloud compile service can only build against published engine releases. ` +
@@ -1343,6 +1393,11 @@ endif()
             const buildRes = await fetch(`${dispatcherUrl}/build`, { method: 'POST', body: form });
             if (!buildRes.ok) {
                 const body = await buildRes.text();
+                // Status code only; the body is the dispatcher's error text.
+                telemetry.sendError('compile.cloud', `submit-${buildRes.status}`, {
+                    ms: cloudElapsed(),
+                    kb: Math.round(tarBytes.length / 1024),
+                });
                 vscode.window.showErrorMessage(`Compile service rejected request: ${buildRes.status} ${body}`);
                 return false;
             }
@@ -1354,6 +1409,7 @@ endif()
 
             // 4. Cache hit short-circuits the poll.
             let artifactUrl = submitted.artifactUrl;
+            let buildMs = 0; // 0 on a cache hit: no runner was involved
             if (!submitted.cached) {
                 // Live elapsed-time tick on the status-bar progress message so
                 // the user can see the wait progressing rather than guessing
@@ -1370,9 +1426,16 @@ endif()
                 try {
                     const polled = await this.pollCloudJob(dispatcherUrl, submitted.jobId, anapath);
                     if (polled.status !== 'done' || !polled.artifactUrl) {
+                        // How long users wait before a build gives up -- the number
+                        // that decides whether the runner pool is big enough.
+                        telemetry.sendError('compile.cloud', `job-${polled.status ?? 'unknown'}`, {
+                            ms: cloudElapsed(),
+                            build: Date.now() - tickStart,
+                        });
                         return false;
                     }
                     artifactUrl = polled.artifactUrl;
+                    buildMs = Date.now() - tickStart;
                 } finally {
                     clearInterval(tick);
                 }
@@ -1382,11 +1445,28 @@ endif()
             progress.report({ message: 'Downloading library...' });
             const libName = this.sharedLibraryName(analyzerName);
             const dest = path.join(anapath, libName);
+            const downloadElapsed = telemetry.timer();
             await this.downloadToFile(artifactUrl!, dest);
+            // Cache-hit rate, runner wait, and payload size in one row -- the
+            // operating picture for the compile service. Sizes in KB, no names.
+            telemetry.sendEvent(
+                'compile.cloud.done',
+                { platform: platformKey, cached: submitted.cached ? 'yes' : 'no', kbOnly: kbOnly ? 'yes' : 'no' },
+                {
+                    ms: cloudElapsed(),
+                    build: buildMs,
+                    download: downloadElapsed(),
+                    kb: Math.round(tarBytes.length / 1024),
+                },
+            );
             logView.addMessage(`Cloud compile output: ${dest}`, logLineType.ANALYER_OUTPUT, logUri);
             return true;
 
         } catch (err: any) {
+            // Error class only -- err.message here routinely contains paths/URLs.
+            telemetry.sendError('compile.cloud', 'exception:' + (err?.constructor?.name ?? 'Error'), {
+                ms: cloudElapsed(),
+            });
             logView.addMessage(`Cloud compile failed: ${err?.message ?? err}`, logLineType.ANALYER_OUTPUT, logUri);
             vscode.window.showErrorMessage(`Cloud compile failed: ${err?.message ?? err}`);
             return false;

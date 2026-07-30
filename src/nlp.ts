@@ -108,8 +108,16 @@ export class NLPFile extends TextFile {
 
 			const runMode = nlpStatusBar.getRunMode();
 			const usingCompiled = runMode === RunMode.COMPILED || runMode === RunMode.COMPILED_KB || runMode === RunMode.COMPILED_ANALYZER;
-			// Anonymous: which run mode was used. No file names, paths, or content.
-			telemetry.sendEvent('analyzer.run', { mode: usingCompiled ? 'compiled' : 'interpreted' });
+			// Anonymous: how the run was configured. No file names, paths, or content.
+			// Sent up front so a run that hangs or crashes the host still shows up;
+			// the outcome and timings follow in analyzer.done / analyzer.failed.
+			const runProps = {
+				mode: usingCompiled ? 'compiled' : 'interpreted',
+				runMode: RunMode[runMode],
+				devMode: DevMode[mode],
+				target: typeStr, // "file" or "directory" -- not the name
+			};
+			telemetry.sendEvent('analyzer.run', runProps);
 			if (usingCompiled) {
 				const staged = visualText.nlp.stageCompiledAnalyzer(anapath, engineDir, filepath, runMode);
 				if (!staged) {
@@ -151,6 +159,11 @@ export class NLPFile extends TextFile {
 					// Update inline editor squiggles from err.log (clears them on success).
 					refreshEngineDiagnostics();
 					if (err || syntaxError) {
+						// Which kind of failure, and how long it took to get there. The
+						// engine's own message is deliberately not sent: it embeds paths.
+						telemetry.sendError('analyzer.failed', syntaxError ? 'syntax' : 'exec', {
+							secs: Math.round((Date.now() - analyzeStart) / 100) / 10,
+						});
 						if (err)
 							logView.addMessage(err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
 						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.FAILED);
@@ -235,6 +248,19 @@ export class NLPFile extends TextFile {
 							summary.push('Exec analyzer time: ' + rExec.toFixed(2) + ' sec');
 						summary.push('Post-processing (extension): ' + rPost.toFixed(2) + ' sec');
 						summary.push('Done analyzing ' + typeStr + ': ' + filename + '  (' + secs + ' sec)');
+						// The same disjoint segments the summary above shows, as anonymous
+						// numbers: where analysis time actually goes in the field, split by
+						// run mode. Seconds and counts only -- no names, sizes, or content.
+						telemetry.sendEvent('analyzer.done', runProps, {
+							secs: rTotal,
+							setup: rSetup,
+							engine: rEngine,
+							kb: rKb,
+							load: rAna,
+							exec: rExec,
+							post: rPost,
+							lazy: lazyFiles.length,
+						});
 						// Persist the concise timing summary to its own log file (retrievable via the toolbar).
 						dirfuncs.writeFile(visualText.analyzer.getOutputDirectory('analyze.log').fsPath, summary.join('\n') + '\n');
 						// The "Analyzing" line is already live in the log; show the rest.

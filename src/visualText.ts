@@ -12,6 +12,7 @@ import { NLPFile } from './nlp';
 import { ModFile } from './modFile';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
+import * as telemetry from './telemetry/telemetry';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -832,10 +833,16 @@ export class VisualText {
                 directory: dir,
                 filename: filename
             });
+            // Component name and release tag only -- both are public constants of
+            // ours, never a user path. Tells us whether the updater is working in
+            // the field and how slow downloads are for real users.
+            const dlProps = { component: upComp[op.component], version: op.version };
+            const elapsed = telemetry.timer();
             try {
                 visualText.debugMessage('Downloading: ' + url, logLineType.UPDATER);
                 await downloader.download();
                 visualText.debugMessage('DONE DOWNLOAD: ' + url, logLineType.UPDATER);
+                telemetry.sendEvent('update.download', dlProps, { ms: elapsed() });
                 if (op.type == upType.UNZIP && !visualText.stopAll) {
                     op.operation = upOp.UNZIP;
                     op.status = upStat.START;
@@ -848,6 +855,7 @@ export class VisualText {
             }
             catch (error) {
                 op.status = upStat.FAILED;
+                telemetry.sendError('update.download', upComp[op.component], { ms: elapsed() });
                 visualText.debugMessage('FAILED download: ' + url + '\n' + error, logLineType.UPDATER);
             }
         })();
@@ -962,12 +970,16 @@ export class VisualText {
 
                 dirfuncs.delDir(tmpDir);
                 op.status = upStat.DONE;
+                telemetry.sendEvent('update.unzip', { component: upComp[op.component] });
                 dirfuncs.delFile(toPath);
             }
             catch (err) {
                 this.debugMessage('Could not unzip file: ' + toPath + '\n' + err, logLineType.UPDATER);
                 if (fs.existsSync(tmpDir)) dirfuncs.delDir(tmpDir);
                 op.status = upStat.FAILED;
+                // The unzip timeout above is the interesting failure here; the
+                // message is not sent because it carries the archive path.
+                telemetry.sendError('update.unzip', upComp[op.component]);
             }
         })();
     }
@@ -1169,6 +1181,9 @@ export class VisualText {
                 // non-empty line and strip CR/LF/whitespace either way.
                 const lines = stdout.split(/\r?\n/).map(s => s.trim()).filter(s => s.length);
                 visualText.exeEngineVersion = lines.length ? lines[lines.length - 1] : '';
+                // Anonymous: which engine version is actually installed. Release
+                // tags are public, and this rides along on later events too.
+                telemetry.setEngineVersion(visualText.exeEngineVersion);
                 if (debug) visualText.debugMessage('version found: [' + visualText.exeEngineVersion + ']', logLineType.UPDATER);
                 resolve(visualText.exeEngineVersion);
             };

@@ -19,6 +19,12 @@ import { registerTreeGraph } from './treeview/treeGraphView';
 import * as telemetry from './telemetry/telemetry';
 
 export function activate(ctx: vscode.ExtensionContext): void {
+    // Telemetry goes first: it is a no-op unless an endpoint is configured, and
+    // instrumentCommands has to patch registerCommand before the views below
+    // register theirs. Both respect the user's opt-outs at send time.
+    telemetry.activate(ctx);
+    telemetry.instrumentCommands();
+
     TextView.attach(ctx);
     LogView.attach(ctx);
     VisualText.attach(ctx);
@@ -34,7 +40,6 @@ export function activate(ctx: vscode.ExtensionContext): void {
     registerLanguageFeatures(ctx); // outline, hover, go-to-definition, structural diagnostics
     registerEngineDiagnostics(ctx); // inline squiggles from the engine's err.log
     registerTreeGraph(ctx); // linguistic parse-tree graphic for .tree files
-    telemetry.activate(ctx); // no-op unless a connection string is configured
 
     // First-run welcome / new-version notes / announcements (guarded; never
     // blocks activation). Shows at most one popup, version notes taking priority.

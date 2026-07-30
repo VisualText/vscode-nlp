@@ -386,8 +386,12 @@ export namespace dirfuncs {
 		return dirPath.endsWith(visualText.LOG_SUFFIX);
 	}
 
-    // Does this folder hold an analyzer anywhere below it? The analyzer view uses
-    // this to keep a grouping folder visible while hiding folders that lead nowhere.
+    // Does this folder belong in the analyzer view? It does if an analyzer sits
+    // anywhere below it, which keeps a grouping folder visible while hiding folders
+    // that lead nowhere, and it does if it is empty — an empty folder is somewhere to
+    // move analyzers into, so hiding it would hide the folder the user just made. An
+    // empty folder further down keeps its parents visible too, so a freshly created
+    // Projects/Group A is reachable.
     // Analyzers are not nested inside one another, so an analyzer directory ends the
     // descent — there is no point walking its spec/kb/input. Log and test folders are
     // skipped for the same reason, and the depth cap stops a stray deep tree (a
@@ -395,18 +399,22 @@ export namespace dirfuncs {
     // a full-disk walk.
     export const ANALYZER_SEARCH_MAX_DEPTH = 6;
 
-    export function containsAnalyzer(dir: vscode.Uri, depth: number = ANALYZER_SEARCH_MAX_DEPTH): boolean {
+    export function containsAnalyzerOrEmptyFolder(dir: vscode.Uri, depth: number = ANALYZER_SEARCH_MAX_DEPTH): boolean {
         if (depth <= 0)
             return false;
 
-        for (const entry of dirfuncs.getDirectoryTypes(dir)) {
+        const entries = dirfuncs.getDirectoryTypes(dir);
+        if (entries.length == 0)
+            return true;
+
+        for (const entry of entries) {
             if (entry.type != vscode.FileType.Directory)
                 continue;
             if (dirfuncs.directoryIsLog(entry.uri.fsPath) || entry.uri.fsPath.endsWith(visualText.TEST_SUFFIX))
                 continue;
             if (visualText.isAnalyzerDirectory(entry.uri))
                 return true;
-            if (dirfuncs.containsAnalyzer(entry.uri, depth - 1))
+            if (dirfuncs.containsAnalyzerOrEmptyFolder(entry.uri, depth - 1))
                 return true;
         }
 
