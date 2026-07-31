@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.3
+Standard editor behaviors for NLP++ files (language configuration).
+
+- **Word selection** (`wordPattern`) — `_noun`, `_ROOT`, and `$var` now select, rename, and find-references as a single word instead of splitting on `_`/`$`.
+- **Auto-indent** (`indentationRules`) — code indents inside `{ }` / `( )` and after `@CODE`/`@DECL`/`@PRE`/`@POST`/`@CHECK`, and outdents on `}` / `)` / `@@`.
+- **On-Enter rules** — `#` line comments continue on Enter; braces open with smart indentation; and C-style `/* */` block comments continue with ` * `.
+- **Block-comment toggling** (`Shift+Alt+A`) — enabled via `blockComment`. Note: this depends on `/* */` support landing in the NLP++ engine; hold the Marketplace publish until the engine ships it.
+
 ### 3.12.2
 The screenshot at the top of the README opens full size.
 
