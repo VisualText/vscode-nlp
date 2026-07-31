@@ -3,6 +3,16 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.1
+The README describes the extension as it exists today.
+
+- **The front page had stopped keeping up.** "What's New in Version 3" covered compiling analyzers and stopped there, at 3.1 — so nothing shipped since was mentioned anywhere: the parse-tree graphic, the whole IDE language-intelligence layer added across 3.5.0–3.9.0, the formatter, the regression runner, the Help sidebar, the LLM prompt library. A third of the file was a second copy of this changelog, 24 entries deep, ending at a 2022 release; it now links here instead. The result is about 60% of the previous length and describes the current extension.
+- **Local compilation was documented as the default, and it hasn't been since 3.4.6.** Anyone reading the README was told they needed a C++ toolchain, CMake ≥ 3.16 and Visual Studio Build Tools before they could compile — which is exactly the requirement the cloud compile service exists to remove. Cloud is the default and is now described as such.
+- **New sections on what NLP++ actually is.** A comparison against regex and LLMs across determinism, auditability, linguistic structure, world knowledge, fixability and cost; and an explanation that an analyzer is four things working together — the parse tree, rules, dictionaries and knowledge bases, and the functions that reach into all three — rather than the "rule-based" label it usually gets. Also new: how NLP++ and LLMs work together, the built-in prompt library, the [NLP Foundation](https://nlp.foundation), the Python and Node packages that run analyzers outside the editor, and a reading list from the [VisualText blog](https://visualtext.org/category/blog/).
+- **The screenshot is from 2020 no longer.** The new one shows the parse-tree graphic, a dictionary, knowledge-base output and the run log at once.
+- The development instructions now clone with `--recurse-submodules`. Without it the grammar submodule added in 3.11.14 is missing and the build is broken.
+- The extension had **no `keywords`** in its manifest, so Marketplace search had nothing but the description to match against. Added.
+
 ### 3.12.0
 Anonymous telemetry that can actually answer a question, and empty folders are back in the analyzer view.
 

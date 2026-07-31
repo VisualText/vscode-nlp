@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.12.0",
+    "version": "3.12.1",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -14,6 +14,20 @@
         "Programming Languages",
         "Snippets",
         "Linters"
+    ],
+    "keywords": [
+        "nlp",
+        "nlp++",
+        "natural language processing",
+        "text analysis",
+        "information extraction",
+        "entity extraction",
+        "parser",
+        "deterministic",
+        "rule-based",
+        "linguistics",
+        "knowledge base",
+        "visualtext"
     ],
     "main": "./dist/extension.js",
     "author": {
