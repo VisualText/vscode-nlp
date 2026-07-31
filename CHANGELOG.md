@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.4
+Block comments are live: the NLP++ engine now parses `/* */`.
+
+- 3.12.3 added `blockComment` and the on-Enter rule that continues a block comment, but held the release because the engine still knew only `#` line comments -- writing `/* */` in a pass file died with `[Syntax error.]`. **Engine 3.7.14 ships that support**, so **Toggle Block Comment** (`Shift+Alt+A`) now produces something the analyzer will actually build.
+- Block comments work in pass files (`.nlp`/`.pat`) and in the line-oriented data files (`.seq`, `.kb`, `.dict`, `.kbb`). They follow C: they do not nest (the first `*/` closes), a delimiter inside a string or after a `#` is ordinary text, and an unterminated `/*` is reported as an error.
+- **Requires nlp-engine 3.7.14 or later.** On an older engine the syntax colouring still treats `/* */` as a comment, but the analyzer will not build.
+
 ### 3.12.3
 Standard editor behaviors for NLP++ files (language configuration).
 
