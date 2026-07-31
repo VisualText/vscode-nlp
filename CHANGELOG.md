@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.2
+The screenshot at the top of the README opens full size.
+
+- The new hero screenshot shows six panels at once, which makes it small enough that the parse tree and the knowledge-base output can't be read at the width a README renders at. **Clicking it now opens the full-size image**, on both GitHub and the Marketplace, rather than doing nothing.
+
 ### 3.12.1
 The README describes the extension as it exists today.
 

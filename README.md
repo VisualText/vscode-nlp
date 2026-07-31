@@ -2,7 +2,9 @@
 
 Build, debug, and ship **glass-box** text analyzers in Visual Studio Code.
 
-![The NLP++ extension in VS Code: analyzer sequence, source text, parse tree graphic, dictionaries, knowledge-base output, and the run log](resources/VSCodeNLP.png)
+[![The NLP++ extension in VS Code: analyzer sequence, source text, parse tree graphic, dictionaries, knowledge-base output, and the run log](resources/VSCodeNLP.png)](https://raw.githubusercontent.com/VisualText/vscode-nlp/master/resources/VSCodeNLP.png)
+
+<sub>*Click the screenshot for a full-size view.*</sub>
 
 [NLP++](https://visualtext.org/nlp/) is the only programming language built exclusively for text and natural language processing. This extension brings the full [VisualText](http://visualtext.org) development environment — which ran on Windows for two decades — into VS Code on **Windows, Linux, and macOS**, and bundles the NLP-ENGINE that runs it. Build up a parse tree, consult your dictionaries and knowledge bases, watch every rule fire, then compile the whole analyzer to a native library you can ship.
 
