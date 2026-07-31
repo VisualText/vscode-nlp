@@ -3,3 +3,6 @@ out-format/
 out-language/
 out-treeview/
 *.vsix
+
+# Per-workspace VisualText state written at run time, not project configuration
+.vscode/state.json
