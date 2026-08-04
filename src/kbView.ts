@@ -8,6 +8,7 @@ import { dirfuncs, getFileTypes } from './dirfuncs';
 import { TextFile } from './textFile';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import * as fs from 'fs';
+import { blankBlockCommentLines, hasMultiLineBlockComment, isCommentOnly } from './language/blockComment';
 import * as os from 'os';
 import { anaSubDir } from './analyzer';
 import { NLPCompile } from './compile';
@@ -363,7 +364,31 @@ export class KBView {
 		try {
 			const original = fs.readFileSync(fsPath, 'utf8');
 			const eol = original.includes('\r\n') ? '\r\n' : '\n';
-			const lines = original.split(/\r?\n/).filter(l => l.length > 0);
+			const rawLines = original.split(/\r?\n/);
+
+			// Engine 3.7.14 allows /* */ here. A comment that spans lines cannot be
+			// sorted -- its lines would scatter -- and the engine's lazy load rejects
+			// such a file anyway, since a binary-search seek cannot tell it landed
+			// inside a comment. Say so rather than shuffling the file into garbage.
+			if (hasMultiLineBlockComment(rawLines)) {
+				vscode.window.showWarningMessage(
+					`${name} holds a multi-line /* */ comment. The engine's lazy dictionary load ` +
+					`accepts single-line comments only, so this file was left untouched.`);
+				return;
+			}
+			// Classify against a copy with the comments blanked out (columns preserved,
+			// then the trailing whitespace a blanked comment leaves behind removed --
+			// a .kbb word line with trailing whitespace does not parse). Every line is
+			// still WRITTEN from the original, so comments survive the sort verbatim.
+			const rawBlank = blankBlockCommentLines(rawLines);
+			const lines: string[] = [];
+			const blank: string[] = [];
+			for (let i = 0; i < rawLines.length; i++) {
+				if (rawLines[i].length == 0) continue;
+				lines.push(rawLines[i]);
+				blank.push(rawBlank[i].replace(/\s+$/, ''));
+			}
+			const isComment = (i: number) => lines[i].startsWith('#') || isCommentOnly(lines[i], blank[i]);
 			const cmp = (a: string, b: string) => Buffer.from(a, 'utf8').compare(Buffer.from(b, 'utf8'));
 			let out: string[];
 			let count: number;
@@ -375,13 +400,14 @@ export class KBView {
 				const entries: { key: string, block: string[] }[] = [];
 				let started = false;
 				let pending: string[] = [];
-				for (const line of lines) {
-					if (line.startsWith('#')) {
+				for (let i = 0; i < lines.length; i++) {
+					const line = lines[i];
+					if (isComment(i)) {
 						if (started) pending.push(line); else header.push(line);
 						continue;
 					}
 					started = true;
-					entries.push({ key: line.split(' ', 1)[0], block: pending.concat([line]) });
+					entries.push({ key: blank[i].split(' ', 1)[0], block: pending.concat([line]) });
 					pending = [];
 				}
 				entries.sort((a, b) => cmp(a.key, b.key));   // stable: same word stays grouped
@@ -395,14 +421,15 @@ export class KBView {
 				let cur: { key: string, block: string[] } | null = null;
 				let seenDict = false;
 				let pending: string[] = [];
-				for (const line of lines) {
-					const s = line.trim();
+				for (let i = 0; i < lines.length; i++) {
+					const line = lines[i];
+					const s = blank[i].trim();
 					if (s === 'dictionary') { seenDict = true; continue; }
-					if (line.startsWith('#')) {
+					if (isComment(i)) {
 						if (seenDict) pending.push(line); else header.push(line);
 						continue;
 					}
-					if (/^ {2}\S.*:$/.test(line) && !line.startsWith('    ')) {
+					if (/^ {2}\S.*:$/.test(blank[i]) && !blank[i].startsWith('    ')) {
 						cur = { key: s.slice(0, -1), block: pending.concat([line]) };
 						blocks.push(cur);
 						pending = [];

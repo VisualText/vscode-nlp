@@ -61,6 +61,32 @@ for (const l of contributes.languages || []) {
     if (l.configuration) checkJsonFile(l.configuration, `language "${l.id}" configuration`);
 }
 
+// The language configurations exist twice: the copies at the repo root are what VSCode
+// loads, and identical copies live in the grammar submodule, which is what Linguist,
+// Shiki and friends vendor. Nothing links them, so an edit to one silently drifts from
+// the other -- exactly how the submodule's nlp-configuration.json came to be missing
+// blockComment and the indentation rules for two releases. Require the pairs to match.
+const SUBMODULE_CONFIG_DIR = 'grammars/language-configuration';
+for (const l of contributes.languages || []) {
+    if (!l.configuration) continue;
+    const rootAbs = path.join(root, l.configuration);
+    const twinRel = path.posix.join(SUBMODULE_CONFIG_DIR, path.basename(l.configuration));
+    const twinAbs = path.join(root, twinRel);
+    if (!fs.existsSync(rootAbs)) continue;   // already reported above
+    if (!fs.existsSync(twinAbs)) {
+        errors.push(`language "${l.id}" configuration: no submodule copy — expected ${twinRel}`);
+        continue;
+    }
+    // Line endings are whatever core.autocrlf handed each checkout, so compare content.
+    const norm = (p) => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
+    if (norm(rootAbs) !== norm(twinAbs)) {
+        errors.push(
+            `language "${l.id}" configuration: ${l.configuration} and ${twinRel} have drifted ` +
+            `— copy one over the other so the vendored grammars match what we ship`
+        );
+    }
+}
+
 if (errors.length) {
     console.error('\n  Grammar check FAILED:\n');
     for (const e of errors) console.error(`    - ${e}`);
