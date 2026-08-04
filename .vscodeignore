@@ -3,6 +3,17 @@ src/**
 tsconfig.json
 webpack.config.js
 
+# Standalone tsc projects behind the test harnesses. Their build output is not
+# gitignored-by-accident cruft: whether it exists depends on whether anyone ran
+# `npm run test:*` before packaging, so without these the vsix contents differ
+# between a clean checkout and a developer machine.
+tsconfig.format.json
+tsconfig.language.json
+tsconfig.treeview.json
+
+# VSCode proposed-API typings: a build-time .d.ts, never loaded at runtime
+vscode.proposed.d.ts
+
 # Build/CI helpers - never shipped
 scripts/**
 
@@ -18,8 +29,11 @@ grammars/.git*
 # Standalone Cloudflare telemetry worker (deployed separately, never shipped)
 telemetry-worker/**
 
-# Formatter test-harness build output (npm run test:format) - never shipped
+# Test-harness build output (npm run test:format / test:language / test:treeview)
+# - never shipped
 out-format/**
+out-language/**
+out-treeview/**
 
 # Webpack output: ship the bundle only. `tsc` (npm run compile) also emits per-module
 # .js/.js.map here, and without this every one of them would be packaged - dead code,
