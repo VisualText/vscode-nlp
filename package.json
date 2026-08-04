@@ -171,6 +171,26 @@
                     "dict"
                 ],
                 "configuration": "./dict-configuration.json"
+            },
+            {
+                "id": "kb",
+                "extensions": [
+                    "kb"
+                ],
+                "aliases": [
+                    "kb"
+                ],
+                "configuration": "./kb-configuration.json"
+            },
+            {
+                "id": "seq",
+                "extensions": [
+                    "seq"
+                ],
+                "aliases": [
+                    "seq"
+                ],
+                "configuration": "./seq-configuration.json"
             }
         ],
         "grammars": [
@@ -198,6 +218,16 @@
                 "language": "dict",
                 "scopeName": "source.dict",
                 "path": "./grammars/syntaxes/dict.tmLanguage.json"
+            },
+            {
+                "language": "kb",
+                "scopeName": "source.kb",
+                "path": "./grammars/syntaxes/kb.tmLanguage.json"
+            },
+            {
+                "language": "seq",
+                "scopeName": "source.seq",
+                "path": "./grammars/syntaxes/seq.tmLanguage.json"
             }
         ],
         "snippets": [

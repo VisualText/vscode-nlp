@@ -16,6 +16,9 @@ import { foldingRanges } from "./folding";
 import { classifyTokens } from "./semanticTokens";
 import { findUnknownCalls, levenshtein } from "./quickfix";
 import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
+import {
+	blankBlockCommentLines, blankBlockComments, hasMultiLineBlockComment, isCommentOnly,
+} from "./blockComment";
 
 let passed = 0;
 let failed = 0;
@@ -252,6 +255,43 @@ attr=value
 	eq("quickfix: rules region ignored", findUnknownCalls(`@RULES\n pnvarr("a")\n@@\n`, isKnown, known).length, 0);
 	// A far-off identifier (no close match) is not flagged -- high precision.
 	eq("quickfix: no close match ignored", findUnknownCalls(`@CODE\n zzqqxx("a");\n@@CODE\n`, isKnown, known).length, 0);
+}
+
+// ---- block-comment blanking (data formats) ---------------------------------
+{
+	const one = (s: string) => blankBlockCommentLines([s])[0];
+
+	// Comments become spaces, so every other column keeps its offset.
+	eq("blank: same length", one("nlp\tfoo\t/* c */").length, "nlp\tfoo\t/* c */".length);
+	eq("blank: comment gone", one("nlp\tfoo\t/* c */"), "nlp\tfoo\t       ");
+	// Non-nesting: the FIRST '*/' closes.
+	eq("blank: no nesting", one("a /* x /* y */ b"), "a              b");
+	// A star inside the comment is not a terminator.
+	eq("blank: star inside", one("/* a * b */x"), "           x");
+	// Delimiters inside a string or after '#' are ordinary text.
+	eq("blank: string wins", one('a "/* not */" b'), 'a "/* not */" b');
+	eq("blank: line comment wins", one("a # /* not */"), "a # /* not */");
+	// Unterminated runs to end of input.
+	eq("blank: unterminated", one("a /* b"), "a     ");
+
+	// State carries across lines; the middle line vanishes entirely.
+	const span = blankBlockCommentLines(["a /* x", "y", "z */ b"]);
+	eq("blank: multiline first", span[0], "a     ");
+	eq("blank: multiline middle", span[1], " ");
+	eq("blank: multiline last", span[2], "     b");
+	check("blank: multiline detected", hasMultiLineBlockComment(["a /* x", "z */ b"]));
+	check("blank: single line not multiline", !hasMultiLineBlockComment(["a /* x */ b", "c"]));
+	// An unterminated string must not leak into the next line.
+	check("blank: string does not leak", !hasMultiLineBlockComment(['a "unclosed', "b /* c */"]));
+
+	// isCommentOnly separates a comment line from content and from blank lines.
+	check("blank: comment-only line", isCommentOnly("  /* note */  ", one("  /* note */  ")));
+	check("blank: content line not comment-only", !isCommentOnly("nlp\tfoo\t/* c */", one("nlp\tfoo\t/* c */")));
+	check("blank: empty line not comment-only", !isCommentOnly("   ", "   "));
+
+	// The whole-text wrapper preserves separators, CRLF included.
+	eq("blank: text keeps CRLF", blankBlockComments("a /* x */\r\nb"), "a        \r\nb");
+	eq("blank: text keeps trailing newline", blankBlockComments("a\n"), "a\n");
 }
 
 // ---- built-in data tables --------------------------------------------------

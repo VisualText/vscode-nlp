@@ -356,7 +356,8 @@ const foldingProvider: vscode.FoldingRangeProvider = {
 	provideFoldingRanges(doc) {
 		try {
 			return foldingRanges(doc.getText()).map(
-				(r) => new vscode.FoldingRange(r.start, r.end, vscode.FoldingRangeKind.Region),
+				(r) => new vscode.FoldingRange(r.start, r.end,
+					r.kind === "comment" ? vscode.FoldingRangeKind.Comment : vscode.FoldingRangeKind.Region),
 			);
 		} catch {
 			return [];

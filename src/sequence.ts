@@ -7,6 +7,7 @@ import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { TreeFile } from './treeFile';
 import { NLPFile } from './nlp';
+import { blankBlockCommentLines, isCommentOnly } from './language/blockComment';
 
 export enum moveDirection { UP, DOWN }
 export enum newPassType { RULES, CODE, DECL }
@@ -17,6 +18,9 @@ export class PassItem {
 	public text: string = '';
 	public name: string = '';
 	public comment: string = '';
+	// Set only for lines the sequence parser will not rebuild from typeStr/name/comment
+	// -- block comments. saveFile() writes these back byte for byte.
+	public raw: string | undefined = undefined;
 	public passNum: number = 0;
 	public row: number = 0;
 	public tokenizer: boolean = false;
@@ -136,8 +140,17 @@ export class SequenceFile extends TextFile {
 		let folder = '';
 		let row = 0;
 
-		for (const passStr of this.getLines()) {
-			const passItem = this.setPass(passStr,passNum);
+		// Engine 3.7.14 allows /* */ in analyzer.seq. Parse against a copy with the
+		// comments blanked out -- a leading '/' already means "inactive pass", so an
+		// unblanked "/*" reads as a pass named "*" (the same collision ana.cpp had).
+		// Blanking preserves column positions, so the two line arrays stay aligned and
+		// the comment field can still be sliced out of the original text.
+		const passLines = this.getLines();
+		const blankLines = blankBlockCommentLines(passLines);
+
+		for (let i = 0; i < passLines.length; i++) {
+			const passStr = passLines[i];
+			const passItem = this.setPass(passStr,blankLines[i],passNum);
 			if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
 				folder = passItem.name;
 			} else if (folder.length) {
@@ -196,31 +209,49 @@ export class SequenceFile extends TextFile {
 		return true;
 	}
 
-	setPass(passStr: string, passNum: number): PassItem {
+	setPass(passStr: string, blankStr: string, passNum: number): PassItem {
 		const passItem = new PassItem();
 		const tokens = passStr.split(/[\t\s]/);
+		// Same split over the blanked copy: identical length and indexing, but with any
+		// block comment reduced to spaces. Classification reads this one; the comment
+		// field still comes from the original so the text survives a saveFile().
+		const blanks = blankStr.split(/[\t\s]/);
+
+		// Two lines that carry no pass: one that is nothing but block comment, and one
+		// where a comment swallowed the type column (no type left to classify). Keep
+		// both verbatim -- saveFile() regenerates the whole file from these items, so a
+		// line without a raw copy is dropped the next time the user reorders a pass.
+		// They behave like a '#' line otherwise, which is how the tree view renders them.
+		if (isCommentOnly(passStr,blankStr) || (blanks[0].length == 0 && tokens[0].length > 0)) {
+			passItem.text = passStr;
+			passItem.raw = passStr;
+			passItem.typeStr = '#';
+			passItem.passNum = passNum;
+			passItem.empty = false;
+			return passItem;
+		}
 
 		if (tokens.length >= 3) {
 			passItem.text = passStr;
 			passItem.passNum = passNum;
 
-			if (tokens[0].localeCompare('#') == 0) {
+			if (blanks[0].localeCompare('#') == 0) {
 				passItem.comment = this.tokenStr(tokens,2);
 				passItem.typeStr = '#';
 
 			} else {
-				const clean = tokens[0].replace('/','');
-				if (clean.length < tokens[0].length) {
+				const clean = blanks[0].replace('/','');
+				if (clean.length < blanks[0].length) {
 					passItem.active = false;
 					passItem.typeStr = clean;
 				} else {
 					passItem.active = true;
-					passItem.typeStr = tokens[0];
+					passItem.typeStr = blanks[0];
 					if (passItem.isTokenizer()) {
 						passItem.tokenizer = true;
 					}
 				}
-				passItem.name = tokens[1];
+				passItem.name = blanks[1];
 				if (passItem.typeStr.localeCompare('pat') == 0) {
 					passItem.typeStr = 'nlp';
 				}
@@ -260,6 +291,8 @@ export class SequenceFile extends TextFile {
 	}
 
 	passString(passItem: PassItem): string {
+		if (passItem.raw !== undefined)
+			return passItem.raw;
 		const activeStr = passItem.active ? '' : '/';
 		return activeStr + passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
 	}

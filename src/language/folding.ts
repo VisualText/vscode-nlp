@@ -7,10 +7,13 @@
 // would be misleading). The VSCode adapter maps these to vscode.FoldingRange.
 
 import { analyzeSymbols } from "./symbols";
+import { tokenize } from "../format/tokenizer";
+import { TokenKind } from "../format/types";
 
 export interface FoldRange {
 	start: number; // 0-based start line (stays visible when folded)
 	end: number;   // 0-based end line
+	kind?: "comment";
 }
 
 function lineAt(text: string, offset: number): number {
@@ -35,6 +38,16 @@ export function foldingRanges(src: string): FoldRange[] {
 		for (const child of region.children) {
 			if (child.kind === "rule") add(child.start, child.end);
 		}
+	}
+
+	// A registered folding provider replaces VSCode's indentation fallback entirely, so
+	// without this a multi-line /* */ would be the one block in the file that cannot be
+	// collapsed. The tokenizer already isolates the comment, delimiters and all.
+	for (const t of tokenize(src)) {
+		if (t.kind !== TokenKind.BlockComment) continue;
+		const s = lineAt(src, t.start);
+		const e = lineAt(src, t.start + t.text.length - 1);
+		if (e > s) ranges.push({ start: s, end: e, kind: "comment" });
 	}
 	return ranges;
 }
