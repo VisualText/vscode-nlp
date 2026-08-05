@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.6
+Corrected label in the README screenshot.
+
+- **The logging panel was labeled "Text Being Analyzed".** That label already belonged to the editor at the top of the shot, so the bottom-right panel — which shows the per-stage timings from an analyzer run — carried a name for something else entirely. It now reads **Log Window**.
+- The alt text follows the image, and also picks up the dictionary panel it had been skipping.
+
 ### 3.12.5
 A labeled screenshot at the top of the README.
 
