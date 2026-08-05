@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.5
+A labeled screenshot at the top of the README.
+
+- **The hero screenshot now names what you are looking at.** The previous image showed the full environment but left a newcomer to work out which panel was which, and the caption could only list them in prose. Each region is now labeled in the image itself: the development corpus, the NLP pipeline of passes, the text being analyzed, the parse tree graphic, the rule matches display, the output tree, dictionaries and knowledge bases, the knowledge base output, analyzer run output, the analyzer list, help including LLM prompts, and the run log. Clicking it still opens the full-size view.
+- The image is palettized to 256 colors, which is visually identical on flat editor chrome and keeps the package from growing by a megabyte.
+- Also folds in a `.vscodeignore` fix from the 3.12.4 branch that never reached master: the test-harness build output (`out-format/`, `out-language/`, `out-treeview/`) is kept out of the `.vsix`.
+
 ### 3.12.4
 Block comments are live: the NLP++ engine now parses `/* */`.
 

@@ -2,7 +2,7 @@
 
 Build, debug, and ship **glass-box** text analyzers in Visual Studio Code.
 
-[![The NLP++ extension in VS Code: analyzer sequence, source text, parse tree graphic, dictionaries, knowledge-base output, and the run log](resources/VSCodeNLP.png)](https://raw.githubusercontent.com/VisualText/vscode-nlp/master/resources/VSCodeNLP.png)
+[![The NLP++ extension in VS Code, with each panel labeled: the development corpus, the NLP pipeline of analyzer passes, the text being analyzed, a traditional parse tree display, the rule matches display, the output tree, dictionaries and knowledge bases, the knowledge base output, help including LLM prompts, analyzer run output, the analyzer list, and the run log](resources/VSCodeNLP.png)](https://raw.githubusercontent.com/VisualText/vscode-nlp/master/resources/VSCodeNLP.png)
 
 <sub>*Click the screenshot for a full-size view.*</sub>
 
