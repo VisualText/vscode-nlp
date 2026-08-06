@@ -40,7 +40,7 @@ export class ModFile extends TextFile {
 			items.push({label: 'Abort', description: 'Abort this attempt' });
 
 			await vscode.window.showQuickPick(items, {title: 'Mod File', canPickMany: false, placeHolder: 'Choose create or abort'}).then(async selection => {
-				if (typeof selection === undefined || !selection || selection.label == 'Abort')
+				if (!selection || selection.label == 'Abort')
                     retVal = false;
                 else
                     // Await creation so the mod file exists and is selected before addFile
@@ -199,7 +199,7 @@ export class ModFile extends TextFile {
                     const items: vscode.QuickPickItem[] = [];
                     seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,'');
                     await vscode.window.showQuickPick(items, {title: 'Choose Pass', canPickMany: false, placeHolder: 'Choose pass to insert after'}).then(selection => {
-                        if (typeof selection === undefined || !selection) {
+                        if (!selection) {
                             this.seqInsertPoint = 'abort';
                         } else {
                             this.seqInsertPoint = selection.description;

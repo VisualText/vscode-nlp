@@ -1,0 +1,128 @@
+# Continuous integration for the NLP++ VSCode extension.
+#
+# Three jobs, split by what they need rather than by what they do:
+#
+#   checks   - everything that runs against this repository alone. Needs the
+#              grammars/ submodule, because check-grammars validates the vendored
+#              TextMate bundle and the language-configuration twins.
+#   format   - the formatter corpus harness, which needs real NLP++ to chew on.
+#              No .nlp file lives in this repository, so the corpus is cloned from
+#              the org's public analyzer repos.
+#   package  - proves the vsix still builds and ships the right files. This is the
+#              job that would have caught the .vscodeignore fix that never reached
+#              master before 3.12.5.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# A new push to a branch makes the in-flight run for that branch obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # grammars/ is the VisualText/nlpplus-tmbundle submodule; check-grammars
+          # fails loudly without it, which is the whole point of that script.
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          # VSCode 1.95 (our engines floor) runs on Electron's Node 20.
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Grammar and language-configuration guard
+        run: npm run check-grammars
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Language intelligence tests
+        run: npm run test:language
+
+      - name: Tree view tests
+        run: npm run test:treeview
+
+  format:
+    name: Formatter corpus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # The corpus. These are the org's public NLP++ analyzers -- roughly a
+      # thousand .nlp/.pat files of real, hand-written code, which is the only
+      # thing that meaningfully exercises a lossless formatter. Add repos here to
+      # widen coverage; the harness takes any number of directories.
+      - uses: actions/checkout@v4
+        with:
+          repository: VisualText/analyzers
+          path: corpus/analyzers
+      - uses: actions/checkout@v4
+        with:
+          repository: VisualText/parse-en-us
+          path: corpus/parse-en-us
+      - uses: actions/checkout@v4
+        with:
+          repository: VisualText/package-analyzers
+          path: corpus/package-analyzers
+      - uses: actions/checkout@v4
+        with:
+          repository: VisualText/analyzer-templates
+          path: corpus/analyzer-templates
+
+      - run: npm ci
+
+      # Checks tokenizer/region round-trips, idempotency, and range-vs-full
+      # equivalence on every file. The harness fails on an empty corpus, so a
+      # checkout that silently produced nothing cannot pass this job.
+      - name: Formatter invariants over the public analyzer corpus
+        run: npm run test:format -- corpus/analyzers corpus/parse-en-us corpus/package-analyzers corpus/analyzer-templates
+
+  package:
+    name: Build vsix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Package
+        run: npm run vsce-package
+
+      # Downloadable from the run summary, so a reviewer can install the exact
+      # build a PR produces instead of building it themselves.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-nlp-vsix
+          path: vscode.nlp.vsix
+          if-no-files-found: error

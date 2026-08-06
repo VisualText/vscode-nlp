@@ -496,7 +496,7 @@ export class TextFile {
         let lineNumber = 0;
         let found = false;
 
-        while (line = liner.next()) {
+        while ((line = liner.next())) {
             if (lineNumber++ >= max) {
                 found = true;
                 break;
@@ -515,7 +515,7 @@ export class TextFile {
 
         let line = '';
 
-        while (line = liner.next()) {
+        while ((line = liner.next())) {
             break;
         }
 

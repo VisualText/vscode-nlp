@@ -121,9 +121,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active
 				});
 
-			} else if (passItem.isEnd(passItem.name)) {
-				const donothing = true;
-
 			} else if (passItem.isRuleFile()) {
 				conVal = conVal + 'filenotok';
 				if (treeFile.hasFileType(passItem.uri, passItem.passNum, nlpFileType.TREE))
