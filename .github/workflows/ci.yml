@@ -32,13 +32,13 @@ jobs:
     name: Typecheck, lint and unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # grammars/ is the VisualText/nlpplus-tmbundle submodule; check-grammars
           # fails loudly without it, which is the whole point of that script.
           submodules: recursive
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # VSCode 1.95 (our engines floor) runs on Electron's Node 20.
           node-version: '20'
@@ -65,9 +65,9 @@ jobs:
     name: Formatter corpus
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -76,40 +76,51 @@ jobs:
       # thousand .nlp/.pat files of real, hand-written code, which is the only
       # thing that meaningfully exercises a lossless formatter. Add repos here to
       # widen coverage; the harness takes any number of directories.
-      - uses: actions/checkout@v4
+      #
+      # submodules: recursive is load-bearing. Three of these four repos embed
+      # their analyzers as submodules, and without it the corpus checks out at
+      # 376 files instead of 934 -- a job that passes while silently verifying
+      # 40% of what it claims to.
+      - uses: actions/checkout@v7
         with:
           repository: VisualText/analyzers
           path: corpus/analyzers
-      - uses: actions/checkout@v4
+          submodules: recursive
+      - uses: actions/checkout@v7
         with:
           repository: VisualText/parse-en-us
           path: corpus/parse-en-us
-      - uses: actions/checkout@v4
+          submodules: recursive
+      - uses: actions/checkout@v7
         with:
           repository: VisualText/package-analyzers
           path: corpus/package-analyzers
-      - uses: actions/checkout@v4
+          submodules: recursive
+      - uses: actions/checkout@v7
         with:
           repository: VisualText/analyzer-templates
           path: corpus/analyzer-templates
+          submodules: recursive
 
       - run: npm ci
 
       # Checks tokenizer/region round-trips, idempotency, and range-vs-full
-      # equivalence on every file. The harness fails on an empty corpus, so a
-      # checkout that silently produced nothing cannot pass this job.
+      # equivalence on every file. --min is the guard against a corpus that
+      # quietly shrinks: the four repos currently supply 934 files, so anything
+      # under 900 means a clone or a submodule did not arrive and the job fails
+      # rather than reporting success over a fraction of the corpus.
       - name: Formatter invariants over the public analyzer corpus
-        run: npm run test:format -- corpus/analyzers corpus/parse-en-us corpus/package-analyzers corpus/analyzer-templates
+        run: npm run test:format -- --min 900 corpus/analyzers corpus/parse-en-us corpus/package-analyzers corpus/analyzer-templates
 
   package:
     name: Build vsix
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -121,7 +132,7 @@ jobs:
 
       # Downloadable from the run summary, so a reviewer can install the exact
       # build a PR produces instead of building it themselves.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vscode-nlp-vsix
           path: vscode.nlp.vsix
