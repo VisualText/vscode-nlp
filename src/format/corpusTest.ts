@@ -47,7 +47,20 @@ function firstDiff(a: string, b: string): string {
 }
 
 function main(): void {
-	const dirs = process.argv.slice(2);
+	// --min N fails the run if fewer than N files were found. The empty-corpus
+	// check below catches a corpus that vanished entirely; this catches one that
+	// merely shrank -- which is what happened when CI cloned the analyzer repos
+	// without their submodules and verified 376 files while reporting success.
+	const argv = process.argv.slice(2);
+	const dirs: string[] = [];
+	let min = 0;
+	for (let i = 0; i < argv.length; i++) {
+		if (argv[i] === "--min") {
+			min = parseInt(argv[++i], 10) || 0;
+			continue;
+		}
+		dirs.push(argv[i]);
+	}
 	if (dirs.length === 0) dirs.push("c:\\git");
 
 	const files: string[] = [];
@@ -133,6 +146,15 @@ function main(): void {
 	// checkout fails or a path argument is wrong.
 	if (files.length === 0) {
 		console.log(`\nNo .nlp or .pat files found. Nothing was verified.`);
+		process.exitCode = 1;
+		return;
+	}
+
+	if (min && files.length < min) {
+		console.log(
+			`\nExpected at least ${min} files but found ${files.length}. ` +
+			`The corpus is incomplete -- check that every repo cloned, including its submodules.`
+		);
 		process.exitCode = 1;
 		return;
 	}
