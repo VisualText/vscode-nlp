@@ -127,6 +127,16 @@ function main(): void {
 	}
 
 	console.log(`\nScanned ${files.length} files across: ${dirs.join(", ")}`);
+
+	// A corpus of nothing satisfies every invariant. Without this the harness is a
+	// green check that proves nothing -- exactly what happens in CI if the corpus
+	// checkout fails or a path argument is wrong.
+	if (files.length === 0) {
+		console.log(`\nNo .nlp or .pat files found. Nothing was verified.`);
+		process.exitCode = 1;
+		return;
+	}
+
 	console.log(`  passed: ${ok}`);
 	console.log(`  failed: ${files.length - ok}`);
 	console.log(`  reformatted (differ from original): ${changed}`);

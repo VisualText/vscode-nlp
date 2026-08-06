@@ -433,6 +433,8 @@ export class VisualText {
                 if (v === '22.04') return 'ubuntu-22.04.zip';
             }
         } catch (e) {
+            // Not a Linux box, or /etc/os-release is unreadable: fall through to the
+            // generic build rather than guessing at a distribution.
         }
         return 'ubuntu-latest.zip';
     }
@@ -1614,8 +1616,6 @@ export class VisualText {
             icon = 'kb.svg';
         } else if (filename.endsWith('.txxt')) {
             icon = 'symbol-keyword.svg';
-        } else if (filename.endsWith('.dict')) {
-            icon = 'dict.svg';
         } else if (filename.endsWith('.nlm')) {
             icon = 'mod.svg';
         } else if (filename.endsWith('.test')) {

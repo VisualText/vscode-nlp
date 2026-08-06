@@ -52,7 +52,9 @@ node_modules/**
 
 # Development files
 .git*
+.github/**
 .eslintrc.json
+eslint.config.js
 npm-debug.log*
 *.log
 .nyc_output
