@@ -35,9 +35,12 @@ out-format/**
 out-language/**
 out-treeview/**
 
-# Webpack output: ship the bundle only. `tsc` (npm run compile) also emits per-module
-# .js/.js.map here, and without this every one of them would be packaged - dead code,
-# since package.json main points at dist/extension.js. Re-included below.
+# tsc output (npm run compile / watch). Only the webpack bundle ships; this is
+# here purely so a developer who ran `tsc` does not change what gets packaged.
+out/**
+
+# Webpack output: ship the bundle only, never any stale sibling a build left behind.
+# package.json main points at dist/extension.js; the re-includes are at the bottom.
 dist/**
 
 # Build artifacts we don't need
