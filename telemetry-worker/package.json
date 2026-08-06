@@ -2,6 +2,9 @@
 	"name": "nlp-telemetry-worker",
 	"private": true,
 	"description": "Cloudflare Worker that records anonymous NLP++ extension usage into D1",
+	"engines": {
+		"node": ">=22"
+	},
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy",
@@ -9,5 +12,8 @@
 	},
 	"devDependencies": {
 		"wrangler": "^4.114.0"
+	},
+	"overrides": {
+		"undici": "^7.29.0"
 	}
 }
