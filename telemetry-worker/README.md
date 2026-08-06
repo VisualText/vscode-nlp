@@ -24,6 +24,24 @@ npx wrangler d1 execute nlp-telemetry --remote \
   --command "CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id)"
 ```
 
+## Requirements
+
+**Node 22 or newer.** `wrangler` 4.114+ declares `node >= 22`, and on Node 20 it
+refuses to run. Nothing else in this repository needs Node 22 — the extension
+itself runs on the Node bundled inside VS Code, and CI pins its own version.
+
+### Why `overrides` is in package.json
+
+`miniflare` depends on **exactly** `undici@7.28.0`, which is the top of the
+vulnerable range in a batch of undici advisories (`7.0.0 - 7.28.0`); the fix is
+`7.29.0`. Because the pin is exact and transitive, npm cannot resolve past it and
+Dependabot cannot propose an update — its security PRs for this directory failed
+repeatedly for exactly this reason. The `overrides` block forces `7.29.0`.
+
+Remove it once Cloudflare ships a miniflare that depends on undici 7.29.0 or
+later; until then, deleting it silently reintroduces twelve advisories. Check
+with `npm audit` after any wrangler bump.
+
 ## One-time deploy
 
 `wrangler` is installed locally here as a devDependency, so run it with `npx`
