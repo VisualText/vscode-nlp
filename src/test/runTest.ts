@@ -1,4 +1,4 @@
-// Launcher for the VS Code integration suite.
+﻿// Launcher for the VS Code integration suite.
 //
 // This half runs in ordinary Node. It downloads a VS Code build (cached under
 // .vscode-test/), starts it with this extension loaded from source, and points

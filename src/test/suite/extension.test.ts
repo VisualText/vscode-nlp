@@ -25,13 +25,30 @@ export async function activationTests(): Promise<void> {
 		return;
 	}
 
+	// Report the stack, not just the message. An activation failure is the one
+	// error here that explains every later failure, and "Cannot read properties
+	// of undefined" without a frame is close to useless on a CI runner you
+	// cannot attach a debugger to.
 	try {
 		await ext.activate();
 	} catch (err) {
-		check("extension activates without throwing", false, String(err));
+		check(
+			"extension activates without throwing",
+			false,
+			err instanceof Error ? (err.stack ?? err.message) : String(err)
+		);
 		return;
 	}
 	eq("extension reports itself active", ext.isActive, true);
+
+	// Diagnostic context for whoever reads a failure above: activation behaves
+	// differently with and without a folder open, and CI opens one.
+	const folders = vscode.workspace.workspaceFolders;
+	check(
+		"a workspace folder is open",
+		folders !== undefined && folders.length > 0,
+		`workspaceFolders = ${folders ? `[${folders.length}]` : "undefined"}`
+	);
 }
 
 // ---- command registration --------------------------------------------------
