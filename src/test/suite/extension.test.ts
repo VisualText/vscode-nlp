@@ -153,3 +153,110 @@ export async function providerTests(): Promise<void> {
 	);
 	check("a document symbol provider answers for .nlp documents", Array.isArray(symbols));
 }
+
+// ---- language features -----------------------------------------------------
+// registerLanguageFeatures() binds eleven providers to { language: "nlp" }, and
+// langTest.ts already covers the engines behind them. What it cannot cover is
+// whether each one is reachable through VS Code for an .nlp document -- a
+// provider registered against the wrong selector, or not registered at all,
+// looks identical to a provider that simply had nothing to say.
+//
+// So each check below uses input the engine is known to answer on, and requires
+// a non-empty result. Asserting merely "an array came back" would pass just as
+// happily with no provider registered, since VS Code returns an empty array in
+// both cases.
+//
+// Definition, references and rename are deliberately absent: they resolve across
+// passes via the workspace index, which needs a real analyzer on disk rather than
+// an untitled buffer. langTest.ts exercises that logic directly.
+
+async function openNlp(content: string): Promise<vscode.TextDocument> {
+	return vscode.workspace.openTextDocument({ language: "nlp", content });
+}
+
+export async function languageFeatureTests(): Promise<void> {
+	// Hover: over the @NODES region marker, which the provider documents.
+	{
+		const doc = await openNlp(SAMPLE_PASS);
+		const pos = doc.positionAt(SAMPLE_PASS.indexOf("@NODES") + 3);
+		const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+			"vscode.executeHoverProvider",
+			doc.uri,
+			pos
+		);
+		check(
+			"hover answers on a region marker",
+			Array.isArray(hovers) && hovers.length > 0,
+			`got ${Array.isArray(hovers) ? `${hovers.length} hovers` : typeof hovers}`
+		);
+	}
+
+	// Completion: after an "@", where the provider offers the region markers.
+	{
+		const content = `${SAMPLE_PASS}\n@`;
+		const doc = await openNlp(content);
+		const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+			"vscode.executeCompletionItemProvider",
+			doc.uri,
+			doc.positionAt(content.length),
+			"@"
+		);
+		check(
+			"completion offers region markers after @",
+			(list?.items?.length ?? 0) > 0,
+			`got ${list?.items?.length ?? 0} items`
+		);
+	}
+
+	// Signature help: cursor inside a call in a @CODE region.
+	{
+		const content = '@CODE\n  strval( pnvar("x") )\n@@CODE\n';
+		const doc = await openNlp(content);
+		const help = await vscode.commands.executeCommand<vscode.SignatureHelp | undefined>(
+			"vscode.executeSignatureHelpProvider",
+			doc.uri,
+			doc.positionAt(content.indexOf('"x"') + 1),
+			"("
+		);
+		check(
+			"signature help answers inside a call",
+			(help?.signatures?.length ?? 0) > 0,
+			`got ${help ? `${help.signatures.length} signatures` : "undefined"}`
+		);
+	}
+
+	// Folding: the region structure of a pass file.
+	{
+		const doc = await openNlp(SAMPLE_PASS);
+		const ranges = await vscode.commands.executeCommand<vscode.FoldingRange[]>(
+			"vscode.executeFoldingRangeProvider",
+			doc.uri
+		);
+		check(
+			"folding ranges cover the pass regions",
+			Array.isArray(ranges) && ranges.length > 0,
+			`got ${Array.isArray(ranges) ? ranges.length : typeof ranges} ranges`
+		);
+	}
+
+	// Semantic tokens: the colouring layered over the TextMate grammar.
+	//
+	// Needs a @CODE region containing something classifiable from the *static*
+	// tables -- a builtin (strlength) and a node accessor (L). Concepts, rules
+	// and user functions are classified from the workspace index, which an
+	// untitled buffer has nothing to contribute to, so a rules-only sample
+	// produces zero tokens and says nothing about whether the provider is wired.
+	{
+		const content = '@CODE\n  x = strlength("a");\n  L("y");\n@@CODE\n';
+		const doc = await openNlp(content);
+		const tokens = await vscode.commands.executeCommand<vscode.SemanticTokens | undefined>(
+			"vscode.provideDocumentSemanticTokens",
+			doc.uri
+		);
+		check(
+			"semantic tokens are produced",
+			(tokens?.data?.length ?? 0) > 0,
+			`got ${tokens ? `${tokens.data.length} ints` : "undefined"}`
+		);
+	}
+}
