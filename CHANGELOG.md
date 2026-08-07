@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.7
+Two failures that only ever showed up away from a developer's machine.
+
+- **The extension could fail to activate at all.** `getExtensionPath()` looked for an installed copy of the extension under the extensions directory, and read `extensionItems[-1].uri` when it found none -- throwing `Cannot read properties of undefined (reading 'uri')` straight out of `activate()`. Nothing registered after that: no command, no view, no provider, and one line in a log to explain it. Having no installed copy is the *normal* state whenever the extension runs from source rather than the marketplace -- F5 development on a clean machine -- so it stayed invisible on any machine that already had it installed. It now falls back to where the running code actually lives.
+- **The analyzer directory was never remembered.** `analyzer.directory` is written to your settings on every activation, but it was never declared in the extension's configuration, and VS Code rejects writes to settings it does not know about. The write failed every single time, silently, so an analyzer folder outside the workspace was re-derived from the engine directory on each start instead of persisting.
+- **Six commands are gone from the Command Palette.** `nlp.opendisplayMatchedRules`, `sequenceView.reveal`, `sequenceView.changeTitle`, `analyzerView.deleteFileLogs`, `logView.matches` and `logView.setClearFlag` were declared but never registered, so choosing any of them produced "command not found". Four were leftovers from renames; their working replacements -- `nlp.displayMatchedRules`, `textView.deleteFileLogs`, `outputView.matches` and `logView.clear` -- are unaffected.
+- Under the hood, every pull request now runs the test suites on GitHub Actions, including a new one that launches a real VS Code and checks that the extension activates and that all 218 declared commands are registered. That suite is what found the first two items above.
+
 ### 3.12.6
 Corrected label in the README screenshot.
 
