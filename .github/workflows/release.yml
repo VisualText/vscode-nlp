@@ -151,14 +151,20 @@ jobs:
           VERSION="${{ steps.decide.outputs.version }}"
           VSIX="${{ steps.build.outputs.vsix }}"
 
+          # A missing token is a warning, not a failure. Global PATs stop being
+          # supported on 1 December 2026 and this one is the scope vsce needs, so
+          # an expired or revoked token is an expected end state rather than a
+          # bug. The tag, the release and the downloadable vsix are all done by
+          # this point; only the Marketplace push is outstanding, and
+          # `npm run publish` from a laptop still covers it. Turning a complete
+          # release red would misreport what happened.
           if [[ -z "${VSCE_PAT:-}" ]]; then
-            echo "::error::VSCE_PAT is not set. Create an Azure DevOps personal access token with Marketplace > Manage scope and add it as a repository secret named VSCE_PAT. The GitHub release above already succeeded; re-run this workflow once the secret exists."
-            exit 1
+            echo "::warning::VSCE_PAT is not set, so ${VERSION} was not published to the Marketplace. The GitHub release is complete. To automate this step, create an Azure DevOps token with the Marketplace > Manage scope and add it as a repository secret named VSCE_PAT, then re-run this workflow."
+            exit 0
           fi
 
           # A Marketplace version cannot be replaced once published, so check
-          # before trying. vsce would fail anyway; this makes a re-run of an
-          # already-published version a no-op instead of a red build.
+          # before trying, and make a re-run a no-op instead of a red build.
           ALREADY=$(npx vsce show dehilster.nlp --json 2>/dev/null \
             | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).versions.some(v=>v.version==='${VERSION}')?'yes':'no')}catch{console.log('unknown')}})")
 
@@ -169,5 +175,21 @@ jobs:
 
           # Publish the exact artifact attached to the release, rather than
           # letting vsce build a second one that could differ.
-          npx vsce publish --packagePath "${VSIX}"
-          echo "Published ${VERSION} to the Marketplace."
+          #
+          # The check above cannot be trusted on its own: a freshly published
+          # version sits in "verifying" for a few minutes and does not appear in
+          # `vsce show` while it does, so a re-run inside that window would try to
+          # publish again. Treat a duplicate-version rejection as success -- the
+          # version is there either way -- and fail only on something else.
+          if npx vsce publish --packagePath "${VSIX}" > /tmp/publish.log 2>&1; then
+            cat /tmp/publish.log
+            echo "Published ${VERSION} to the Marketplace."
+          else
+            cat /tmp/publish.log
+            if grep -qiE "already exists|already published" /tmp/publish.log; then
+              echo "::warning::${VERSION} was already published (likely still verifying from an earlier run). Nothing to do."
+              exit 0
+            fi
+            echo "::error::Publishing ${VERSION} to the Marketplace failed for a reason other than the version already existing. The GitHub release is complete; fix the cause and re-run this workflow."
+            exit 1
+          fi
