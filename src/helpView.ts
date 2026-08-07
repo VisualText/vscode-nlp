@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { visualText } from './visualText';
-import { ETIME } from 'constants';
 
 // One entry in the Help tree view. `page` is a path under Help/markdown/ (no .md).
 export interface HelpItem {
@@ -146,7 +145,7 @@ export class HelpView {
         return helpView;
     }
 
-    lookup(resource: vscode.Uri) {
+    lookup(_resource: vscode.Uri) {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             const cursorPosition = editor.selection.start;
@@ -182,7 +181,7 @@ export class HelpView {
         return 'Not found: ' + term;
     }
 
-    windowCHMHelp(resource: vscode.Uri) {
+    windowCHMHelp(_resource: vscode.Uri) {
         if (os.platform() == 'win32') {
             const helpPath = path.join(visualText.getVisualTextDirectory('Help'), 'Help.chm');
             if (fs.existsSync(helpPath)) {

@@ -37,7 +37,7 @@ export class FindTreeDataProvider implements vscode.TreeDataProvider<FindItem> {
 		};
 	}
 
-	public getChildren(element?: FindItem): FindItem[] {
+	public getChildren(_element?: FindItem): FindItem[] {
 		return findView.getFinds();
 	}
 }
@@ -53,7 +53,7 @@ export class FindView {
 	public findItems: FindItem[] = [];
 	private searchWord: string = '';
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const findViewProvider = new FindTreeDataProvider();
 		this.findView = vscode.window.createTreeView('findView', { treeDataProvider: findViewProvider });
 		vscode.commands.registerCommand('findView.refreshAll', () => findViewProvider.refresh());

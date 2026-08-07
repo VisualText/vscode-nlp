@@ -48,7 +48,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 		};
 	}
 
-	public getChildren(outputItem?: OutputItem): OutputItem[] {
+	public getChildren(_outputItem?: OutputItem): OutputItem[] {
 		if (visualText.hasWorkspaceFolder()) {
 			const children: OutputItem[] = new Array();
 			for (const folder of outputView.getOutputFiles()) {
@@ -70,7 +70,7 @@ export class OutputView {
 	private testDirectory: vscode.Uri;
 	private type: outputFileType;
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const outputViewProvider = new OutputTreeDataProvider();
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
 		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());

@@ -257,7 +257,7 @@ export class NLPCompile {
         // 1. Check NLP engine executable
         const exe = visualText.exePath().fsPath;
         if (!exe.length || !fs.existsSync(exe)) {
-            vscode.window.showErrorMessage('NLP Engine missing', 'Download Now').then(response => {
+            vscode.window.showErrorMessage('NLP Engine missing', 'Download Now').then(_response => {
                 visualText.startUpdater();
             });
             return;

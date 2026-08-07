@@ -33,7 +33,7 @@ export class TextFile {
             this.setFile(vscode.Uri.file(filepath), separateLines);
     }
 
-    runPython(editor: vscode.TextEditor) {
+    runPython(_editor: vscode.TextEditor) {
         if (vscode.window.activeTextEditor) {
             const editor = vscode.window.activeTextEditor;
             if (editor) {

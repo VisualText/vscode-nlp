@@ -257,7 +257,7 @@ export class KBView {
 	private findFile = new FindFile();
 	private textFile = new TextFile();
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.kbView = vscode.window.createTreeView('kbView', { treeDataProvider });
 		vscode.commands.registerCommand('kbView.refreshAll', () => treeDataProvider.refresh());
@@ -286,7 +286,7 @@ export class KBView {
 		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
 		vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate());
 		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
-		vscode.commands.registerCommand('kbView.langLibs', (KBItem) => this.langLibs());
+		vscode.commands.registerCommand('kbView.langLibs', (_KBItem) => this.langLibs());
 		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
 		vscode.commands.registerCommand('kbView.compileKB', (item?: any) => this.compileKB(item));
 	}
