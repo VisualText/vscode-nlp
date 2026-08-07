@@ -12,6 +12,7 @@ import {
 	configurationTests,
 	providerTests,
 	languageFeatureTests,
+	crossPassTests,
 } from "./extension.test";
 
 export async function run(): Promise<void> {
@@ -22,6 +23,7 @@ export async function run(): Promise<void> {
 		["configuration", configurationTests],
 		["providers", providerTests],
 		["language features", languageFeatureTests],
+		["cross-pass resolution", crossPassTests],
 	];
 
 	for (const [name, fn] of groups) {

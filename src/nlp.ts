@@ -631,7 +631,7 @@ export class NLPFile extends TextFile {
 		if (this.getFileType() == nlpFileType.NLP || this.getFileType() == nlpFileType.DICT || this.getFileType() == nlpFileType.KBB) {
 			const position = editor.selection.active;
 			const lines = this.getLines(true);
-			let line = lines[position.line];
+			const line = lines[position.line];
 			const posEnd = new vscode.Position(position.line + 1, 0);
 			const rang = new vscode.Selection(posEnd, posEnd);
 			// appendText escapes snippet metacharacters (\, $, }) so a literal "\\" is
