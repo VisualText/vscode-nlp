@@ -1213,7 +1213,21 @@ export class VisualText {
     }
 
     getExtensionPath(): vscode.Uri {
-        return this.extensionItems[this.latestExtIndex].uri;
+        const latest = this.extensionItems[this.latestExtIndex];
+        if (latest) return latest.uri;
+
+        // No installed copy found under the extensions directory. getExtensionDirs
+        // leaves latestExtIndex at -1 in that case, and indexing extensionItems
+        // with it yields undefined -- so this used to throw "Cannot read properties
+        // of undefined (reading 'uri')" straight out of activate(), killing the
+        // whole extension.
+        //
+        // That is the normal state whenever the extension is loaded from source
+        // rather than installed: F5 development on a clean machine, and any CI
+        // run using --extensionDevelopmentPath. Fall back to where this code is
+        // actually running from, which is what the caller wanted anyway.
+        const self = vscode.extensions.getExtension(this.EXTENSION_NAME);
+        return self ? self.extensionUri : vscode.Uri.file(path.resolve(__dirname, '..'));
     }
 
     getExtensionDirs() {
