@@ -3497,7 +3497,7 @@
     },
     "devDependencies": {
         "@types/moment-duration-format": "^2.2.7",
-        "@types/node": "^22.0.0",
+        "@types/node": "^26.1.2",
         "@types/vscode": "^1.95.0",
         "@typescript-eslint/eslint-plugin": "^8.58.1",
         "@typescript-eslint/parser": "^8.58.1",
