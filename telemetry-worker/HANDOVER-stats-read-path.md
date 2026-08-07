@@ -1,7 +1,8 @@
 # Hand-over: how visualtext.org/vscode-activity-stats gets its numbers
 
-**Written** 2026-08-07, from the `vscode-nlp` repository side.
+**Written** 2026-08-07, from the `vscode-nlp` repository side. Figures refreshed 18:30 UTC.
 **For** the session with access to the visualtext.org WordPress install.
+**Read §0 first.** It is the only part that blocks anything; §6a can wait weeks.
 **Supersedes the premise of** `HANDOVER-wordpress-shortcodes.md`, which assumed the stats page did not exist yet. It does, it works, and it is rendering live data. The open question is no longer *what to build* — it is *how the data is currently getting out of the database*, because the documented path does not exist.
 
 ---
@@ -108,15 +109,16 @@ Get the source into `vscode-nlp` alongside `telemetry-worker/worker.js` — eith
 
 ## 4. Numbers to check your work against
 
-I read these from D1 directly on 2026-08-07 at about 13:15 UTC. The page agreed with them exactly, which is how I know it is live rather than cached from a snapshot:
+I read these from D1 directly on 2026-08-07. The page agreed with the 13:15 UTC reading exactly, which is how I know it is live rather than cached from a snapshot:
 
-| | |
-|---|---|
-| Total events | **2,620** |
-| Distinct machines | **165** |
-| Database size | ~1.02 MB |
-| Rows read by a `count(*)` | 2,620 (a full scan) |
-| Earliest data | 2026-07-11 |
+| | 13:15 UTC | 18:30 UTC |
+|---|---|---|
+| Total events | 2,620 | **2,632** |
+| Distinct machines | 165 | **169** |
+| Database size | ~1.02 MB | ~1.05 MB |
+| Earliest data | 2026-07-11 | 2026-07-11 |
+
+A `count(*)` is a full scan — about 2,600 row reads.
 
 At this size, live aggregation is comfortably viable — D1's free tier allows 5M row reads per day, so a full scan costs about 0.05% of the daily budget. **Caching is needed to survive traffic, not to survive the query.** Do not build a pre-aggregated summary table; it is not warranted yet.
 
@@ -158,6 +160,73 @@ The page's "Most Used Commands" currently shows `logView.refreshAll` at 2,512 us
 
 ---
 
+## 6a. Two new metrics — published, but not yet worth a panel
+
+Extension **3.12.8 was published to the Marketplace on 2026-08-07 at 18:04 UTC** and records **which of the shipped analyzers and templates people use**. The page cannot show this today because the fields did not exist when its queries were written.
+
+**Do not build the panel yet — there is nothing in it.** As of 18:30 UTC, half an hour after publication:
+
+| | |
+|---|---|
+| Machines on 3.12.8 | **3** (of ~169 seen, ~6,335 installed) |
+| Events from 3.12.8 | 6 — all `extension.activated` and `format.document` |
+| Runs carrying `example` | **0** |
+| `analyzer.created` events | **0** |
+
+Those zeros mean "nobody on the new version has run or created an analyzer yet", not "the field is broken" — the three machines have activated and formatted a document, nothing more.
+
+Nothing is retroactive, and adoption is the limiting factor: 3 machines of 6,335 installs in the first half hour. For the first couple of weeks these numbers will describe *who upgrades quickly* rather than what is popular. Run this before building anything, and build when it returns something worth showing:
+
+```sql
+SELECT count(*) FROM events WHERE json_extract(props,'$.example') IS NOT NULL;
+```
+
+### The fields
+
+| Event | New field | Meaning |
+| --- | --- | --- |
+| `analyzer.run` | `props.example` | The analyzer's name — **only when it is one the extension ships**. Absent for a user's own analyzer. |
+| `analyzer.created` (new event) | `props.template` | Which shipped template was chosen. Several blocks combine as `A+B+C`, sorted. |
+| | `props.blocks` | How many blocks were combined, as a string. `1` means "chose this template"; more means "assembled from parts on top of Bare Minimum". |
+
+The values are folder names from two public repositories — `analyzer-templates` (Address Parser, Bare English, Bare Minimum, Date and Times, Email Addresses, Knowledge Base, NLPPlus Interface, Paragraphs Sentences, parse-en-us, Telephone Numbers, URLs, xout) and the `analyzers` repo (corporate, files, nlp-tutorials, nlpfix-analyzers, parse-en-us). The extension derives the list from the folders it downloads, so new templates appear without an extension release, and the list above will drift.
+
+### The one thing to get right
+
+**A missing `example` is not "unknown" — it means the user was running their own analyzer.** That is a real, reportable number, and mislabelling it as unknown or dropping it silently would misrepresent the split. Present it as its own row:
+
+```sql
+-- Shipped examples vs a user's own work
+SELECT COALESCE(json_extract(props,'$.example'), '(their own analyzer)') AS analyzer,
+       count(*)                   AS runs,
+       count(DISTINCT machine_id) AS machines
+FROM events
+WHERE event = 'analyzer.run'
+GROUP BY analyzer
+ORDER BY machines DESC, runs DESC;
+```
+
+### Which templates people start from
+
+```sql
+SELECT json_extract(props,'$.template')       AS template,
+       CAST(json_extract(props,'$.blocks') AS INTEGER) AS blocks,
+       count(*)                   AS created,
+       count(DISTINCT machine_id) AS machines
+FROM events
+WHERE event = 'analyzer.created'
+GROUP BY template, blocks
+ORDER BY created DESC;
+```
+
+Combinations arrive as a single `A+B` string. If the interesting question is "how often is each block used", split on `+` in PHP after the query rather than in SQL — SQLite has no split function and simulating one is not worth it at this data size.
+
+### Keep the existing safeguards
+
+Both panels are subject to §1: aggregate only, and keep the small-bucket floor. With 165 machines a template chosen once is close to identifying, and `(their own analyzer)` should never be broken down further.
+
+---
+
 ## 7. Reference
 
 - **Worker source, schema, deploy steps, example queries:** `telemetry-worker/` in `github.com/VisualText/vscode-nlp`
@@ -176,3 +245,5 @@ The page's "Most Used Commands" currently shows `logView.refreshAll` at 2,512 us
 4. **Where the shortcode lives** — file path and shortcode tag.
 
 That is enough for the vscode-nlp side to build the `/stats` route to match, so the swap is a one-line change on the website.
+
+**Do §0–§3 first.** The new metrics in §6a are additive and can wait; the read path is the part with a security question attached, and it is also the part that decides where the §6a queries should live. If the answer is "a `/stats` route", the two new panels belong in that route rather than being added to whatever runs today and then moved.
