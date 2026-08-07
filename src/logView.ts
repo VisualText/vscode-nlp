@@ -372,7 +372,6 @@ export class LogView {
 
 		switch (logItem.type) {
 			case logLineType.SYNTAX_ERROR:
-				const seqFile = visualText.analyzer.seqFile;
 				if (logItem.uri) {
 					vscode.window.showTextDocument(logItem.uri).then(editor => {
 						const pos = new vscode.Position(logItem.line - 1, 0);

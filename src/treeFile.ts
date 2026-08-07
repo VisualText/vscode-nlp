@@ -128,7 +128,6 @@ export class TreeFile extends TextFile {
 	matchDictLine(original: string, line: string): boolean {
 		const tokens = line.split('=');
 		if (tokens.length > 1) {
-			const toks = tokens[0].split('\s');
 			const lastIndex: number = tokens[0].lastIndexOf(" ");
 			const str = tokens[0].substring(0, lastIndex);
 			return str.localeCompare(original, undefined, { sensitivity: 'base' }) == 0;
@@ -225,10 +224,8 @@ export class TreeFile extends TextFile {
 		this.selectedLines = [];
 		this.selStart = -1;
 		this.selEnd = -1;
-		let lineCount = 0;
 
 		for (const line of lines) {
-			lineCount++;
 			const treeLine = this.parseTreeLine(line);
 			if (this.selStart < 0 || treeLine.ustart < this.selStart) {
 				this.selStart = treeLine.ustart;
@@ -314,7 +311,6 @@ export class TreeFile extends TextFile {
 	findSelectedTreeStr(editor: vscode.TextEditor): boolean {
 		this.setDocument(editor);
 		this.selectedTreeStr = '';
-		const type: nlpFileType = this.getFileType();
 		if (this.getFileType() == nlpFileType.TXXT || this.getFileType() == nlpFileType.TXT) {
 			if (this.getFileType() == nlpFileType.TXT) {
 				this.setFilesNames(visualText.analyzer.getTreeFile().fsPath);
@@ -330,7 +326,6 @@ export class TreeFile extends TextFile {
 
 	generateRule(editor: vscode.TextEditor, genType: generateType) {
 		if (visualText.analyzer.hasText()) {
-			const ruleStr = '';
 			const type = this.getFileType();
 			const nlp = new NLPFile();
 
@@ -445,7 +440,6 @@ ${ruleStr}
 		let i = 0;
 		const tokens: string[] = [];
 		let tok = '';
-		const isDigit: boolean = false;
 		enum charType { UNKNOWN, ALPHA, DIGIT, SPACE, SPECIAL }
 		let type: charType = charType.UNKNOWN;
 		let lastType: charType = charType.UNKNOWN;
@@ -526,7 +520,6 @@ ${ruleStr}
 	}
 
 	openTemporaryFile(filepath: string, content: string) {
-		const newFile = vscode.Uri.parse('untitled:' + filepath);
 		const tempDir = path.resolve(
 			vscode.workspace
 				.getConfiguration('createtmpfile')
@@ -604,14 +597,12 @@ ${ruleStr}
 		const sep = file.getSeparatorNormalized();
 		let from = 0;
 		let to = 0;
-		let add = false;
 		this.selectedLines = [];
 		this.selectedTreeStr = '';
 
 		for (const line of file.getLines()) {
 			from = 0;
 			to = 0;
-			add = false;
 
 			const tokens = line.split('[');
 			if (tokens.length > 1) {
@@ -786,8 +777,6 @@ ${ruleStr}
 
 		let textfire = '';
 		let lastTo = 0;
-		const between = '';
-		const Highlight = '';
 		let from = 0;
 		let to = 0;
 		let built = false;

@@ -280,7 +280,6 @@ export class FileOps {
                             visualText.analyzer.seqFile.getPassFiles(op.uriFile2.fsPath,true);
                         else
                             visualText.analyzer.seqFile.renumberPasses();
-                        const r = visualText.fileOps.seqRow;
                         visualText.fileOps.seqRow = visualText.analyzer.seqFile.insertNewFolderPass(visualText.fileOps.seqRow,op.extension1,op.extension2);
                         visualText.fileOps.doneRefresh(op);
                     }

@@ -99,7 +99,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			}
 
 			if (passItem.isEnd(passItem.name) || (inFolder && !openingFolder)) {
-				const donothing = true;
+				// Contributes no tree item: an end marker, or a pass belonging to a
+				// folder that is not the one being expanded.
 
 			} else if (passItem.isFolder()) {
 				conVal = conVal + 'foldernotok';
@@ -180,7 +181,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			}
 		}
 
-		const specDir: vscode.Uri = visualText.analyzer.getSpecDirectory();
 		const anaName = visualText.getCurrentAnalyzerName();
 		if (hasPat && analyzerView.converting == false && anaName.length) {
 			const button = "Convert to .nlp";
@@ -516,7 +516,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		const lines = textFile.getLines();
 		const newName = path.parse(passFile.fsPath).name;
 		if (lines.length >= 7) {
-			const fileLine = lines[1];
 			const newLine = "# FILE: " + newName;
 			lines[1] = newLine;
 			textFile.saveFileLines();
@@ -552,7 +551,6 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		if (visualText.hasWorkspaceFolder()) {
 			const seqFile = visualText.analyzer.seqFile;
 			vscode.window.showInputBox({ title: 'Rename Folder', value: seqItem.name, prompt: 'Enter new name for folder' }).then(newname => {
-				const original = seqItem.uri;
 				if (newname) {
 					const exists = seqFile.findPass('folder', newname);
 					if (exists.name.length) {
@@ -809,7 +807,6 @@ export class SequenceView {
 
 		const sequence = new SequenceFile;
 		sequence.getPassFiles(fromDir);
-		let orderCount = 0;
 		for (const pi of sequence.getPassItems()) {
 			if (pi.uri.path.length > 2 && pi.name != "nil") {
 				const basename = path.basename(pi.uri.path);
@@ -821,7 +818,6 @@ export class SequenceView {
 					visualText.fileOps.addFileOperation(fromUri, toUri, [fileOpRefresh.ANALYZER], fileOperation.ANAFILE, basename);
 				}
 			}
-			orderCount++;
 		}
 		visualText.fileOps.addFileOperation(vscode.Uri.file(""), vscode.Uri.file(""), [fileOpRefresh.ANALYZER], fileOperation.ANAFOLDER, folder, "end");
 
@@ -882,7 +878,6 @@ export class SequenceView {
 
 	insertOrphan(seqItem: SequenceItem) {
 		if (visualText.getWorkspaceFolder()) {
-			const dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
 			const items: vscode.QuickPickItem[] = [];
 
 			const nlpFiles = dirfuncs.getFiles(visualText.analyzer.getSpecDirectory(), ['.pat', '.nlp']);
@@ -1014,7 +1009,10 @@ export class SequenceView {
 	}
 
 	reveal(nlpFilePath: string) {
-		const passItem: PassItem = this.passItemFromPath(nlpFilePath);
+		// Called for its logging: passItemFromPath reports which pass this file maps
+		// to, or that it is not in the sequence. The returned item is unused while
+		// the reveal below stays commented out.
+		this.passItemFromPath(nlpFilePath);
 		// let label = passItem.passNum.toString() + ' ' + passItem.text;
 		// let seqItem: SequenceItem = {uri: passItem.uri, library: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: 'missing', inFolder: passItem.inFolder,
 		// type: 'nlp', passNum: passItem.passNum, row: passItem.row, collapsibleState: vscode.TreeItemCollapsibleState.Expanded, active: passItem.active};

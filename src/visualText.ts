@@ -468,7 +468,6 @@ export class VisualText {
 
     updaterTimer() {
         let op = visualText.opsQueue[0];
-        const q = visualText.opsQueue;
         let allDone = true;
 
         for (const o of visualText.opsQueue) {
@@ -622,7 +621,6 @@ export class VisualText {
                 break;
 
             case upStat.RUNNING:
-                const donothing = 1;
                 break;
         }
     }
@@ -1269,7 +1267,6 @@ export class VisualText {
 
     getTextFastLoad(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('textView');
-        const version = config.get<string>('visualText');
         return config.get<boolean>('fast');
     }
 
@@ -1281,7 +1278,6 @@ export class VisualText {
 
     getAutoUpdate(): boolean | undefined {
         const config = vscode.workspace.getConfiguration('update');
-        const version = config.get<string>('visualText');
         return config.get<boolean>('auto');
     }
 
@@ -1297,7 +1293,6 @@ export class VisualText {
 
     getVTFilesVersion(): string | undefined {
         const config = vscode.workspace.getConfiguration('engine');
-        const version = config.get<string>('visualtext');
         return config.get<string>('visualtext');
     }
 
@@ -1309,7 +1304,6 @@ export class VisualText {
 
     getAnalyzersVersion(): string | undefined {
         const config = vscode.workspace.getConfiguration('engine');
-        const version = config.get<string>('analyzers');
         return config.get<string>('analyzers');
     }
 
@@ -1663,7 +1657,6 @@ export class VisualText {
     }
 
     analyzerFolderList(specFlag: boolean = false): vscode.QuickPickItem[] {
-        const dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
         const items: vscode.QuickPickItem[] = [];
         return this.analyzerFolderListRecurse(visualText.getWorkspaceFolder(), items, 0, specFlag);
     }
@@ -1767,10 +1760,7 @@ export class VisualText {
             if (firstLine[0] == '#') {
                 descr = firstLine.substring(1);
             }
-            const icon = visualText.fileIconFromExt(dictFile.fsPath);
             const label = path.basename(dictFile.fsPath);
-            const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
-            const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
             items.push({ label: label, description: descr });
         }
 

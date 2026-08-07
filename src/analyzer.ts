@@ -201,7 +201,6 @@ export class Analyzer {
             return { title: "", description: "" };
         const textFile = new TextFile(filepath);
 
-        let line = "";
         let description = "";
         let count = 0;
         let title = "";

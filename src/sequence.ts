@@ -116,9 +116,6 @@ export class SequenceFile extends TextFile {
 	libraryFileCheck() {
 		for (const passItem of this.passItems) {
 			passItem.library = vscode.Uri.file(this.getLibraryFile(passItem.uri.fsPath));
-			if (passItem.library.fsPath.length > 2) {
-				const moose = 1;
-			}
 		}
 	}
 
@@ -337,7 +334,6 @@ export class SequenceFile extends TextFile {
 
 	cleanPasses() {
 		this.cleanpasses = [];
-		const passNum = 1;
 		for (const passItem of this.passItems) {
 			this.cleanpasses.push(this.passString(passItem));
 		}
@@ -831,7 +827,6 @@ export class SequenceFile extends TextFile {
 			if (passItem.isRuleFile())
 				passNum++;
 			passItem.passNum = passNum;
-			const pause = 1;
 		}
 		this.passItems;
 	}
@@ -924,8 +919,6 @@ export class SequenceFile extends TextFile {
 	}
 
 	findPass(type: string, name: string): PassItem {
-		const row = 1;
-		const found = false;
 		for (const passItem of this.passItems) {
 			if (type.localeCompare(passItem.typeStr) == 0 && name.localeCompare(passItem.name) == 0) {
 				return passItem;
@@ -935,7 +928,6 @@ export class SequenceFile extends TextFile {
 	}
 
 	findPassFromUri(filepath: string): PassItem {
-		const found = false;
 		for (const passItem of this.passItems) {
 			if (filepath == 'tokenizer pass' || filepath == passItem.uri.fsPath) {
 				return passItem;
@@ -1002,7 +994,6 @@ export class SequenceFile extends TextFile {
 
 	public getLibraryFile(filepath: string): string {
 		const name = path.basename(filepath);
-		const count = visualText.getLibraryFiles().length;
 		for (const file of visualText.getLibraryFiles()) {
 			const base = path.basename(file);
 			if (base === name) {

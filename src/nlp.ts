@@ -405,9 +405,7 @@ export class NLPFile extends TextFile {
 
 	analyzerTimer() {
 		let op: analyzerRun = visualText.nlp.anaQueue[0];
-		const len = visualText.nlp.anaQueue.length;
 		let alldone = true;
-		let opNum = 0;
 
 		if (visualText.nlp.stopAllFlag) {
 			visualText.nlp.shutDown();
@@ -415,7 +413,6 @@ export class NLPFile extends TextFile {
 		}
 
 		for (const o of visualText.nlp.anaQueue) {
-			opNum++;
 			if (o.status == analyzerStatus.UNKNOWN || o.status == analyzerStatus.ANALYZING) {
 				op = o;
 				alldone = false;
@@ -632,7 +629,6 @@ export class NLPFile extends TextFile {
 	duplicateLine(editor: vscode.TextEditor) {
 		this.setDocument(editor);
 		if (this.getFileType() == nlpFileType.NLP || this.getFileType() == nlpFileType.DICT || this.getFileType() == nlpFileType.KBB) {
-			const rulestr = '';
 			const position = editor.selection.active;
 			const lines = this.getLines(true);
 			let line = lines[position.line];
@@ -657,7 +653,6 @@ export class NLPFile extends TextFile {
 		const lines = this.getLines(true);
 		let line = lines[lineStart];
 		let lastline = line;
-		let multilined = false;
 		let arrowFlag = false;
 		let atSignFlag = false;
 		let pos = 0;
@@ -666,7 +661,6 @@ export class NLPFile extends TextFile {
 			rulestr = line + rulestr;
 			lastline = line;
 			line = lines[--lineStart];
-			multilined = true;
 			arrowFlag = true;
 		}
 		rulestr = line + rulestr;
@@ -675,7 +669,6 @@ export class NLPFile extends TextFile {
 		else
 			charStart = pos + 3;
 
-		multilined = false;
 		line = lines[lineEnd];
 		let firsttime = true;
 		while ((pos = line.search('@@')) < 0) {
