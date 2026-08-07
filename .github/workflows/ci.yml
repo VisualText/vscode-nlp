@@ -52,6 +52,12 @@ jobs:
       - name: Grammar and language-configuration guard
         run: npm run check-grammars
 
+      # No job builds telemetry-worker/, so nothing here would notice its undici
+      # override being dropped -- which would silently restore twelve advisories.
+      # This reads the lockfile rather than installing, so it costs nothing.
+      - name: Telemetry worker dependency guard
+        run: npm run check-worker
+
       - name: Typecheck
         run: npm run typecheck
 
