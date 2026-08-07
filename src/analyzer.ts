@@ -149,8 +149,7 @@ export class Analyzer {
                     const basename = path.basename(file.fsPath);
                     if (dirfuncs.isDir(file.fsPath)) {
                         const readme = path.join(file.fsPath, "README.md");
-                        let descr: string, tit: string;
-                        ({ title: tit, description: descr } = this.readDescription(readme));
+                        const { title: tit, description: descr } = this.readDescription(readme);
                         const item: vscode.QuickPickItem = { label: tit, description: descr };
                         if (basename === "Knowledge Base") {
                             // Default choice: pre-check the Knowledge Base template and float it to the top.
@@ -169,7 +168,7 @@ export class Analyzer {
                         return false;
                     }
                     if (selections.length == 1) {
-                        let dirName = dirMap[selections[0].label];
+                        const dirName = dirMap[selections[0].label];
                         this.makeNewAnalyzer(fromDir, dirName);
                         visualText.fileOps.startFileOps();
                         this.loaded = true;

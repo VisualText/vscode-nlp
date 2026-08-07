@@ -87,6 +87,10 @@ module.exports = [
                 caughtErrors: 'none',
             }],
 
+            // A `let` that is never reassigned misreports the author's intent, and
+            // reading one costs a moment working out whether it changes later.
+            'prefer-const': 'error',
+
             // --- rules the compiler already covers, or that fight the code style ------
             'no-undef': 'off',                   // tsc does this properly for TS
             'no-unused-vars': 'off',             // superseded by the typed rule above

@@ -166,9 +166,8 @@ export async function providerTests(): Promise<void> {
 // happily with no provider registered, since VS Code returns an empty array in
 // both cases.
 //
-// Definition, references and rename are deliberately absent: they resolve across
-// passes via the workspace index, which needs a real analyzer on disk rather than
-// an untitled buffer. langTest.ts exercises that logic directly.
+// Definition, references and rename are not here because they need files on disk
+// rather than an untitled buffer; they are covered in crossPassTests below.
 
 async function openNlp(content: string): Promise<vscode.TextDocument> {
 	return vscode.workspace.openTextDocument({ language: "nlp", content });
@@ -239,6 +238,8 @@ export async function languageFeatureTests(): Promise<void> {
 		);
 	}
 
+	// Cross-pass resolution is covered separately, in crossPassTests.
+
 	// Semantic tokens: the colouring layered over the TextMate grammar.
 	//
 	// Needs a @CODE region containing something classifiable from the *static*
@@ -259,4 +260,96 @@ export async function languageFeatureTests(): Promise<void> {
 			`got ${tokens ? `${tokens.data.length} ints` : "undefined"}`
 		);
 	}
+}
+
+// ---- cross-pass resolution -------------------------------------------------
+// Definition, references and rename resolve a name declared in ONE pass file
+// from a use in ANOTHER, through nlpWorkspaceIndex. langTest.ts covers the
+// symbol parsing in isolation; only a real workspace exercises the index that
+// joins the files together, which is where the cross-pass logic actually lives.
+//
+// The fixture is two .nlp files written into the temp workspace by runTest.ts
+// before VS Code starts: pass1_declares.nlp has `_fixtureSharedRule <- ... @@`
+// and pass2_references.nlp uses that name on a rule's right-hand side.
+
+const FIXTURE_RULE = "_fixtureSharedRule";
+const FIXTURE_DECL_FILE = "pass1_declares.nlp";
+const FIXTURE_REF_FILE = "pass2_references.nlp";
+
+function fixtureUri(name: string): vscode.Uri | undefined {
+	const folder = vscode.workspace.workspaceFolders?.[0];
+	return folder ? vscode.Uri.joinPath(folder.uri, name) : undefined;
+}
+
+export async function crossPassTests(): Promise<void> {
+	const refUri = fixtureUri(FIXTURE_REF_FILE);
+	const declUri = fixtureUri(FIXTURE_DECL_FILE);
+	if (!refUri || !declUri) {
+		unreachable("cross-pass definition resolves to the declaring file", "no workspace folder");
+		return;
+	}
+
+	let refDoc: vscode.TextDocument;
+	try {
+		refDoc = await vscode.workspace.openTextDocument(refUri);
+	} catch (err) {
+		unreachable("cross-pass definition resolves to the declaring file", String(err));
+		return;
+	}
+
+	// Position on the *use* of the shared rule in pass two.
+	const useOffset = refDoc.getText().indexOf(FIXTURE_RULE);
+	check(`${FIXTURE_REF_FILE} contains a use of ${FIXTURE_RULE}`, useOffset >= 0);
+	if (useOffset < 0) return;
+	const usePos = refDoc.positionAt(useOffset + 2);
+
+	// Definition: must land in the other file, not merely return something.
+	const defs = await vscode.commands.executeCommand<vscode.Location[]>(
+		"vscode.executeDefinitionProvider",
+		refUri,
+		usePos
+	);
+	const landedInDecl = (defs ?? []).some((d) => d.uri.fsPath === declUri.fsPath);
+	check(
+		"cross-pass definition resolves to the declaring file",
+		landedInDecl,
+		`got ${(defs ?? []).length} location(s): ${(defs ?? []).map((d) => d.uri.path.split("/").pop()).join(", ") || "none"}`
+	);
+
+	// References: both the declaration and the use, in two different files.
+	const refs = await vscode.commands.executeCommand<vscode.Location[]>(
+		"vscode.executeReferenceProvider",
+		refUri,
+		usePos
+	);
+	const files = new Set((refs ?? []).map((r) => r.uri.fsPath));
+	check(
+		"references span both pass files",
+		files.has(declUri.fsPath) && files.has(refUri.fsPath),
+		`got ${(refs ?? []).length} reference(s) across ${files.size} file(s)`
+	);
+
+	// Rename: the edit has to reach the declaring file too, or renaming from a
+	// use would leave the declaration behind and silently break the analyzer.
+	// The provider rejects a name it cannot resolve -- "not a declared rule,
+	// function, or concept" -- by throwing rather than returning nothing, so a
+	// bare await would abort the group and lose the checks above it.
+	let edit: vscode.WorkspaceEdit | undefined;
+	try {
+		edit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
+			"vscode.executeDocumentRenameProvider",
+			refUri,
+			usePos,
+			"_fixtureRenamed"
+		);
+	} catch (err) {
+		check("rename edits both pass files", false, `rename provider threw: ${String(err)}`);
+		return;
+	}
+	const touched = edit ? edit.entries().map(([uri]) => uri.fsPath) : [];
+	check(
+		"rename edits both pass files",
+		touched.includes(declUri.fsPath) && touched.includes(refUri.fsPath),
+		`edits ${touched.length} file(s): ${touched.map((p) => p.split(/[\\/]/).pop()).join(", ") || "none"}`
+	);
 }
