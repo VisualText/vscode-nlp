@@ -3416,6 +3416,12 @@
                     "default": "",
                     "description": "User name for top pass file comments"
                 },
+                "analyzer.directory": {
+                    "type": "string",
+                    "scope": "application",
+                    "default": "",
+                    "description": "Folder holding your analyzers, used when the open workspace folder does not contain any. Written automatically; normally there is no need to set this by hand."
+                },
                 "analyzer.current": {
                     "type": "string",
                     "scope": "resource",

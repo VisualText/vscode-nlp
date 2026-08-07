@@ -93,6 +93,30 @@ export async function languageTests(): Promise<void> {
 	}
 }
 
+// ---- configuration ---------------------------------------------------------
+// A setting the extension writes has to be declared in contributes.configuration
+// or VS Code rejects the write outright, leaving one line in the log and a value
+// that never persists. analyzer.directory sat broken that way: written on every
+// activation, declared nowhere, so the analyzer folder was re-derived from
+// scratch each time. A declared property always reports a defaultValue.
+
+const WRITTEN_SETTINGS: Array<[string, string]> = [
+	["analyzer", "directory"],
+	["analyzer", "current"],
+	["textView", "fast"],
+];
+
+export async function configurationTests(): Promise<void> {
+	for (const [section, key] of WRITTEN_SETTINGS) {
+		const inspected = vscode.workspace.getConfiguration(section).inspect(key);
+		check(
+			`${section}.${key} is a registered configuration`,
+			inspected !== undefined && inspected.defaultValue !== undefined,
+			"declared in contributes.configuration? VS Code rejects writes to settings that are not"
+		);
+	}
+}
+
 // ---- provider wiring -------------------------------------------------------
 // test:format proves the formatting engine is lossless over ~1000 real files.
 // It cannot prove the DocumentFormattingEditProvider is bound to .nlp documents
