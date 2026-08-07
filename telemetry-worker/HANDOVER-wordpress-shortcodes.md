@@ -76,7 +76,8 @@ Everything the extension can send. Events marked **batched** are the ones most l
 | `command` **batched** | `id` — the command id, e.g. `analyzerView.refreshAll` | `n` — occurrences since last flush |
 | `command.error` | `reason` — `"<commandId>:<ErrorClass>"` | — |
 | `language` **batched** | `id` — `hover`/`definition`/`references`/`rename`/`completion`/`signature` | `n` |
-| `analyzer.run` | `mode` (`compiled`/`interpreted`), `runMode`, `devMode`, `target` (`file`/`directory`) | — |
+| `analyzer.run` | `mode` (`compiled`/`interpreted`), `runMode`, `devMode`, `target` (`file`/`directory`), `example` — **present only when the analyzer is one the extension ships**; absent for a user's own | — |
+| `analyzer.created` | `template` (shipped template name, or several joined with `+`), `blocks` (how many were combined) | — |
 | `analyzer.done` | same four as `analyzer.run` | `secs`, `setup`, `engine`, `kb`, `load`, `exec`, `post` (all **seconds**), `lazy` (file count) |
 | `analyzer.failed` | `reason` — `syntax` / `exec` | `secs` |
 | `compile.start` | `target` (`ANALYZER`/`KB_ONLY`/`ANALYZER_ONLY`), `mode` (`local`/`cloud`) | — |

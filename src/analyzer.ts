@@ -10,6 +10,7 @@ import { nlpFileType } from "./textFile";
 import { logLineType } from "./logView";
 import { fileOpRefresh, fileOperation } from "./fileOps";
 import { sequenceView } from "./sequenceView";
+import * as telemetry from "./telemetry/telemetry";
 
 export enum anaSubDir { UNKNOWN, INPUT, KB, LOGS, OUTPUT, SPEC };
 
@@ -167,6 +168,16 @@ export class Analyzer {
                     if (!selections) {
                         return false;
                     }
+                    // Which templates people actually start from. The names come
+                    // from the analyzer-templates directory the updater downloads,
+                    // so they are public strings -- nothing here is user-authored.
+                    // Picking several blocks builds on Bare Minimum, so the count
+                    // distinguishes "chose this one" from "assembled from parts".
+                    telemetry.sendEvent("analyzer.created", {
+                        template: selections.map((s) => dirMap[s.label] ?? s.label).sort().join("+").slice(0, 120),
+                        blocks: String(selections.length),
+                    });
+
                     if (selections.length == 1) {
                         const dirName = dirMap[selections[0].label];
                         this.makeNewAnalyzer(fromDir, dirName);

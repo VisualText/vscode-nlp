@@ -1363,6 +1363,52 @@ export class VisualText {
         return this.analyzer.getName();
     }
 
+    // ---- public analyzer names -------------------------------------------------
+    // Telemetry may name an analyzer only when the extension shipped it. The two
+    // directories below are the ones the updater downloads from public GitHub
+    // repositories -- analyzer-templates from visualtext-files, and the analyzers
+    // repo -- so every folder name in them is already public. A name that is not
+    // in this set belongs to the user and never leaves the machine.
+    //
+    // Derived from disk rather than hard-coded, so a template added to either
+    // repository is covered without an extension release.
+    private publicAnalyzerNamesCache: Set<string> | undefined;
+
+    publicAnalyzerNames(): Set<string> {
+        if (this.publicAnalyzerNamesCache) return this.publicAnalyzerNamesCache;
+
+        const names = new Set<string>();
+        const roots: string[] = [];
+        try {
+            roots.push(this.getVisualTextDirectory('analyzer-templates'));
+            roots.push(this.getBlockAnalyzersPath().fsPath);
+        } catch {
+            // Engine directory not resolved yet; fall through with what we have.
+        }
+
+        for (const root of roots) {
+            if (!root || !dirfuncs.isDir(root)) continue;
+            for (const dir of dirfuncs.getDirectories(vscode.Uri.file(root))) {
+                const name = path.basename(dir.fsPath);
+                if (name && !name.startsWith('.')) names.add(name);
+            }
+        }
+
+        // Only cache once something was found: the directories arrive with the
+        // updater's first download, so an empty result early in a fresh install
+        // would otherwise be remembered for the rest of the session.
+        if (names.size) this.publicAnalyzerNamesCache = names;
+        return names;
+    }
+
+    // The analyzer's own name when the extension ships it, otherwise undefined --
+    // which is what callers send, so an unrecognised name is simply absent rather
+    // than replaced by a placeholder.
+    publicAnalyzerName(name: string): string | undefined {
+        if (!name) return undefined;
+        return this.publicAnalyzerNames().has(name) ? name : undefined;
+    }
+
     hasAnalyzers(): boolean {
         return this.analyzers.length ? true : false;
     }
