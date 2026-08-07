@@ -6,14 +6,15 @@
 	"compilerOptions": {
 		"rootDir": "src/treeview",
 		"outDir": "out-treeview",
-		"module": "commonjs",
-		"moduleResolution": "node",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"target": "es2019",
 		"lib": ["es2019"],
 		"strict": true,
 		"noImplicitAny": false,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
+		"types": ["node"],
 		"sourceMap": false
 	},
 	"include": ["src/treeview/**/*.ts"],

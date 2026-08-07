@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "rootDir": "src",
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "node16",
+        "moduleResolution": "node16",
         "target": "es6",
         "outDir": "out",
         "sourceMap": true,
@@ -18,6 +18,13 @@
         // @types/eslint-scope, a transitive dependency of webpack that no source
         // file here imports.
         "skipLibCheck": true,
+        // Declared explicitly rather than left to the automatic @types scan.
+        // Under module/moduleResolution node16 the scan stopped contributing
+        // @types/node's globals, so `require`, `process` and `__dirname` went
+        // unresolved across visualText.ts. Naming them also makes the set
+        // deterministic: it no longer depends on which @types packages happen to
+        // be installed alongside.
+        "types": ["node", "vscode"],
         "lib": [
             "es2019",
             "es6",
