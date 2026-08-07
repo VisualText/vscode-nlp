@@ -44,7 +44,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 		};
 	}
 
-	public getChildren(element?: LogItem): LogItem[] {
+	public getChildren(_element?: LogItem): LogItem[] {
 		if (visualText.hasWorkspaceFolder()) {
 			return logView.getLogs();
 		}
@@ -53,7 +53,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 
 	// Required for TreeView.reveal() (used to auto-scroll to the newest line).
 	// The log is a flat list, so every item is a root node with no parent.
-	public getParent(element: LogItem): LogItem | undefined {
+	public getParent(_element: LogItem): LogItem | undefined {
 		return undefined;
 	}
 }
@@ -405,7 +405,7 @@ export class LogView {
 				const pos = line.indexOf('.json');
 				const filepath = line.substring(18, pos + 5);
 				const msg = 'Json error(s) in file: ' + filepath;
-				vscode.window.showErrorMessage(msg, "Click to fix file").then(response => {
+				vscode.window.showErrorMessage(msg, "Click to fix file").then(_response => {
 					vscode.window.showTextDocument(vscode.Uri.file(filepath));
 				});
 				break;

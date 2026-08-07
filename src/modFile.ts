@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { visualText } from './visualText';
-import { TextFile, nlpFileType } from './textFile';
+import { TextFile } from './textFile';
 import { SequenceFile, PassItem } from './sequence';
 import { logView, logLineType } from './logView';
 import { anaSubDir } from './analyzer';

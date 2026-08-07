@@ -303,7 +303,7 @@ export namespace dirfuncs {
         return filenames.length ? true : false;
     }
 
-    export function hasLogDirs(dir: vscode.Uri, first: boolean): boolean {
+    export function hasLogDirs(dir: vscode.Uri, _first: boolean): boolean {
         if (dirfuncs.isDir(dir.fsPath)) {
             const entries = dirfuncs.getDirectoryTypes(dir);
 

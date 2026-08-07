@@ -668,7 +668,7 @@ export class SequenceView {
 		return sequenceView;
 	}
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
 
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });

@@ -28,12 +28,6 @@ interface analyzerRun {
 	type: analyzerType;
 }
 
-interface ruleParse {
-	suggested: string,
-	rule: string,
-	comment: string
-}
-
 export let nlpFile: NLPFile;
 export class NLPFile extends TextFile {
 
@@ -72,7 +66,7 @@ export class NLPFile extends TextFile {
 			// Check to see if the engine executable is there
 			const exe = visualText.exePath().fsPath;
 			if (!exe.length || !fs.existsSync(exe)) {
-				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(response => {
+				vscode.window.showErrorMessage("NLP Engine missing", "Download Now").then(_response => {
 					visualText.startUpdater();
 				});
 			}
@@ -501,7 +495,7 @@ export class NLPFile extends TextFile {
 		}
 	}
 
-	findLineSelection(line: string): vscode.Selection {
+	findLineSelection(_line: string): vscode.Selection {
 		let contextSel = this.findLineStartsWith('@NODES');
 		if (contextSel.isEmpty)
 			contextSel = this.findLineStartsWith('@PATH');

@@ -652,7 +652,7 @@ export class VisualText {
     }
 
     checkExeVersion(op: updateOp) {
-        visualText.fetchExeVersion(op)?.then(version => {
+        visualText.fetchExeVersion(op)?.then(_version => {
             visualText.checkEngineVersionRepo(op)
                 .then(newerVersion => {
                     if (newerVersion) {
@@ -663,7 +663,7 @@ export class VisualText {
                     visualText.updateVersion(op);
                 })
         })
-            .catch(error => {
+            .catch(_error => {
                 op.status = upStat.FAILED;
             });
         op.status = upStat.RUNNING;
@@ -675,7 +675,7 @@ export class VisualText {
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_ENGINE_LATEST_VERSION, function (res) {
-                res.on('data', function (chunk) {
+                res.on('data', function (_chunk) {
                     let newer = false;
                     if (op.status != upStat.DONE) {
                         const url = res.responseUrl;
@@ -738,7 +738,7 @@ export class VisualText {
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_VISUALTEXT_FILES_LATEST_VERSION, function (res) {
-                res.on('data', function (chunk) {
+                res.on('data', function (_chunk) {
                     let newer = false;
                     if (op.status != upStat.DONE) {
                         const url = res.responseUrl;
@@ -791,7 +791,7 @@ export class VisualText {
             const https = require('follow-redirects').https;
 
             const request = https.get(this.GITHUB_ANALYZERS_LATEST_VERSION, function (res) {
-                res.on('data', function (chunk) {
+                res.on('data', function (_chunk) {
                     let newer = false;
                     if (op.status != upStat.DONE) {
                         const url = res.responseUrl;
@@ -1094,7 +1094,7 @@ export class VisualText {
     }
 
     failedWarning() {
-        vscode.window.showErrorMessage("Update failed", "Click here to see solutions").then(response => {
+        vscode.window.showErrorMessage("Update failed", "Click here to see solutions").then(_response => {
             logView.downloadHelp();
         });
     }
@@ -1317,7 +1317,7 @@ export class VisualText {
         const config = vscode.workspace.getConfiguration('user');
         const username = config.get<string>('name');
         if (!username) {
-            vscode.window.showErrorMessage("No user name for comments.", "Enter user name").then(response => {
+            vscode.window.showErrorMessage("No user name for comments.", "Enter user name").then(_response => {
                 vscode.window.showInputBox({ value: 'Your Name', prompt: 'Enter author name for comments' }).then(username => {
                     if (username) {
                         visualText.username = username;

@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
-import { textView, TextItem } from './textView';
+import { textView } from './textView';
 import { fileOpRefresh, fileOperation } from './fileOps';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
@@ -189,7 +189,7 @@ export class AnalyzerView {
 	public converting: boolean;
 	private sequenceFile = new SequenceFile;
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const analyzerViewProvider = new AnalyzerTreeDataProvider();
 		this.analyzerView = vscode.window.createTreeView('analyzerView', { treeDataProvider: analyzerViewProvider });
 		vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh());
@@ -197,7 +197,7 @@ export class AnalyzerView {
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteFile', resource => this.deleteFile(resource));
 		vscode.commands.registerCommand('analyzerView.deleteFolder', resource => this.deleteFolder(resource));
-		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', resource => this.loadExampleAnalyzers());
+		vscode.commands.registerCommand('analyzerView.loadExampleAnalyzers', _resource => this.loadExampleAnalyzers());
 		vscode.commands.registerCommand('analyzerView.openAnalyzer', resource => this.openAnalyzer(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAnalyzerLogs', resource => this.deleteAnalyzerLogs(resource));
 		vscode.commands.registerCommand('analyzerView.deleteAllAnalyzerLogs', () => this.deleteAllAnalyzerLogs());
@@ -258,7 +258,7 @@ export class AnalyzerView {
 		return items;
 	}
 
-	newECLFile(analyzerItem: AnalyzerItem) {
+	newECLFile(_analyzerItem: AnalyzerItem) {
 		if (visualText.hasWorkspaceFolder() && this.checkForECLAnalyzersDir().length > 0) {
 			vscode.window.showInputBox({ value: 'filename', prompt: 'Enter ECL file name' }).then(newname => {
 				if (newname) {

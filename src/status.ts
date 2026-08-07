@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { visualText,updateOp } from './visualText';
+import { visualText } from './visualText';
 import { TreeFile } from './treeFile';
 import { nlpFileType } from './textFile';
 import * as os from 'os';

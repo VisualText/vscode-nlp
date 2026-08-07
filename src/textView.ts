@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { visualText, closeFileIfOpen } from './visualText';
+import { visualText } from './visualText';
 import { NLPFile, analyzerType } from './nlp';
 import { FindFile } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { nlpStatusBar, DevMode, FiredMode } from './status';
+import { nlpStatusBar, DevMode } from './status';
 import { fileOperation, fileOpRefresh } from './fileOps';
 import { anaSubDir } from './analyzer';
 import { regressionRunner } from './regression';
@@ -153,7 +153,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		return keepers;
 	}
 
-	checkFileCount(dir: string) {
+	checkFileCount(_dir: string) {
 		const count = dirfuncs.fileCount(visualText.analyzer.getInputDirectory());
 		if (!visualText.fastAnswered && count > 100 && !visualText.getTextFastLoad()) {
 			const items: vscode.QuickPickItem[] = [];
@@ -294,7 +294,7 @@ export class TextView {
 	private findFile = new FindFile();
 	public folderUri: vscode.Uri | undefined;
 
-	constructor(context: vscode.ExtensionContext) {
+	constructor(_context: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.textView = vscode.window.createTreeView('textView', { treeDataProvider, showCollapseAll: true, canSelectMany: true });
 		vscode.commands.registerCommand('textView.refreshAll', () => treeDataProvider.refresh());
@@ -485,7 +485,7 @@ export class TextView {
 		}
 	}
 
-	exploreAll(textItem: TextItem) {
+	exploreAll(_textItem: TextItem) {
 		const inputDir = visualText.analyzer.getInputDirectory().fsPath;
 		if (fs.existsSync(inputDir)) {
 			visualText.openFileManager(inputDir);

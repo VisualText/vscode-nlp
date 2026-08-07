@@ -6,7 +6,7 @@
 // click-to-reveal. Colors/fonts are left to the host stylesheet (CSS classes),
 // so the same markup themes correctly in light and dark VS Code.
 
-import { LayoutResult, LayoutNode, flatten } from "./layout";
+import { LayoutResult, flatten } from "./layout";
 
 function esc(s: string): string {
 	return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
