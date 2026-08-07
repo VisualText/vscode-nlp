@@ -9,6 +9,7 @@ import {
 	activationTests,
 	commandTests,
 	languageTests,
+	configurationTests,
 	providerTests,
 } from "./extension.test";
 
@@ -17,6 +18,7 @@ export async function run(): Promise<void> {
 		["activation", activationTests],
 		["commands", commandTests],
 		["languages", languageTests],
+		["configuration", configurationTests],
 		["providers", providerTests],
 	];
 
