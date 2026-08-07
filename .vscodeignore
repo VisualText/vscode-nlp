@@ -81,8 +81,25 @@ test/**
 !snippets/**
 !grammars/syntaxes/**
 !themes/**
-!*.md
+# Named individually rather than as !*.md. vsce applies every negation after the
+# ignore patterns, so a later plain pattern cannot subtract from an earlier
+# re-include -- a blanket !*.md cannot be narrowed afterwards, it can only be
+# replaced. It was shipping vsc-extension-quickstart.md, the extension
+# generator's scaffold notes, and SECURITY.md, which is for contributors here
+# rather than for users of the extension.
+#
+# README.md is the Marketplace page; CHANGELOG.md is rendered on the Changelog
+# tab. Both are shown to users, so both ship.
+!README.md
+!CHANGELOG.md
 !*.html
+
+# Repository documents, not extension documents. Nothing above excludes markdown
+# at the root, so each needs naming: vsc-extension-quickstart.md is the extension
+# generator's scaffold notes, and SECURITY.md is for people working on this
+# repository rather than for people installing the extension.
+vsc-extension-quickstart.md
+SECURITY.md
 !*-configuration.json
 !.vscodeignore
 !package.json
