@@ -19,6 +19,22 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # @types/vscode declares which VS Code API surface we compile against, and
+      # vsce refuses to package when it exceeds engines.vscode -- "@types/vscode
+      # ^1.125.0 greater than engines.vscode ^1.95.0". So this is not a routine
+      # bump: raising it means raising the minimum VS Code version users need,
+      # which is a decision about who gets dropped, not a dependency update.
+      # Bump it by hand, together with engines.vscode.
+      - dependency-name: "@types/vscode"
+
+      # @types/node must describe the Node that VS Code actually runs on -- the
+      # one inside its Electron build, currently Node 20 for VS Code 1.95. Types
+      # ahead of that compile happily and then fail at runtime for users, which
+      # nothing in CI would catch. Minor and patch bumps are fine; a major is a
+      # deliberate choice to follow VS Code's own runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       # One PR for the routine dev-tooling churn instead of six. Majors stay
       # separate, since those are the ones that actually need reading.

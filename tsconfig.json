@@ -11,6 +11,13 @@
         "importHelpers": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
+        // Do not type-check .d.ts files from dependencies. The four harness
+        // tsconfigs already set this; leaving it off here meant a type conflict
+        // between two packages we do not control could fail our build. It did:
+        // bumping eslint to 10 broke `npm run typecheck` with five errors inside
+        // @types/eslint-scope, a transitive dependency of webpack that no source
+        // file here imports.
+        "skipLibCheck": true,
         "lib": [
             "es2019",
             "es6",
