@@ -1,0 +1,54 @@
+# Dependabot configuration.
+#
+# Security updates were already running without this file -- that is a repository
+# setting, not a config one. What this adds is *version* updates: routine bumps
+# for dependencies that have no advisory against them, which is how you avoid the
+# situation where a security fix is three majors away because nothing moved for a
+# year.
+#
+# Safe to have now that CI runs on every pull request. Before that, each of these
+# would have been a manual verification.
+
+version: 2
+
+updates:
+  # The extension itself.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for the routine dev-tooling churn instead of six. Majors stay
+      # separate, since those are the ones that actually need reading.
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore
+
+  # The Cloudflare worker, which has its own lockfile and its own toolchain.
+  #
+  # Note the overrides block in telemetry-worker/package.json pinning undici to
+  # ^7.29.0: miniflare depends on exactly 7.28.0, which carries twelve
+  # advisories. If Dependabot proposes a wrangler bump here, check `npm audit`
+  # afterwards and remove the override only once miniflare has moved off 7.28.0.
+  - package-ecosystem: npm
+    directory: "/telemetry-worker"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+
+  # The actions used by ci.yml and release.yml. These go stale silently -- the v4
+  # actions were being force-migrated to Node 24 by the runners before anyone
+  # noticed the deprecation annotations.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
