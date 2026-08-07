@@ -32,10 +32,15 @@ alarming without context:
   with your permissions.
 - **It sends anonymous usage telemetry**, opt-out via `nlp.telemetry.enable` and
   also honoured through VS Code's own `telemetry.telemetryLevel`. Counts and
-  version metadata only -- never file contents, file names, paths, analyzer
-  names, or error message text. The full schema and the worker that receives it
-  are in [`telemetry-worker/`](telemetry-worker/), and the categories are listed
-  in the README.
+  version metadata only -- never file contents, file names, paths, the names of
+  analyzers you create, or error message text. One deliberate exception: the
+  names of analyzers and templates the extension itself ships are recorded when
+  you run or create one, since those names are already public and knowing which
+  examples get used decides which are worth maintaining. They are matched
+  against the folders the extension downloads, so anything else is omitted
+  rather than redacted. The full schema and the worker that receives it are in
+  [`telemetry-worker/`](telemetry-worker/), and the categories are listed in the
+  README.
 - **It writes inside your workspace**, including a `.vscode/settings.json` for
   colourisation and analyzer output under the analyzer folder.
 

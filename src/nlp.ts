@@ -105,12 +105,18 @@ export class NLPFile extends TextFile {
 			// Anonymous: how the run was configured. No file names, paths, or content.
 			// Sent up front so a run that hangs or crashes the host still shows up;
 			// the outcome and timings follow in analyzer.done / analyzer.failed.
-			const runProps = {
+			// `example` is present only when the analyzer is one the extension itself
+			// ships -- a template, or an analyzer from the public analyzers repo.
+			// publicAnalyzerName() returns undefined for anything else, so a user's
+			// own analyzer name is absent rather than redacted.
+			const exampleName = visualText.publicAnalyzerName(visualText.getCurrentAnalyzerName());
+			const runProps: Record<string, string> = {
 				mode: usingCompiled ? 'compiled' : 'interpreted',
 				runMode: RunMode[runMode],
 				devMode: DevMode[mode],
 				target: typeStr, // "file" or "directory" -- not the name
 			};
+			if (exampleName) runProps.example = exampleName;
 			telemetry.sendEvent('analyzer.run', runProps);
 			if (usingCompiled) {
 				const staged = visualText.nlp.stageCompiledAnalyzer(anapath, engineDir, filepath, runMode);
