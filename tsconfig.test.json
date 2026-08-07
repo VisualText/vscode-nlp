@@ -7,14 +7,15 @@
 	"compilerOptions": {
 		"rootDir": "src",
 		"outDir": "out-test",
-		"module": "commonjs",
-		"moduleResolution": "node",
+		"module": "node16",
+		"moduleResolution": "node16",
 		"target": "es2019",
 		"lib": ["es2019"],
 		"strict": true,
 		"noImplicitAny": false,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
+		"types": ["node", "vscode"],
 		"sourceMap": false
 	},
 	"include": ["src/test/**/*.ts"]
