@@ -165,8 +165,6 @@ export class OutputView {
 
 	addTest(outputItem: OutputItem) {
 		let hasTestFile = true;
-		const parent = path.basename(path.dirname(outputItem.uri.fsPath));
-		const textName = parent.substring(0, parent.length - 4);
 		const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
 
 		if (!fs.existsSync(testFolder.fsPath)) {

@@ -424,7 +424,6 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new Analyzer name' }).then(newname => {
 				if (newname) {
-					const original = analyzerItem.uri;
 					if (path.extname(newname).length == 0)
 						newname = newname + path.extname(analyzerItem.uri.fsPath);
 					const newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
@@ -439,7 +438,6 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new file name' }).then(newname => {
 				if (newname) {
-					const original = analyzerItem.uri;
 					if (path.extname(newname).length == 0)
 						newname = newname + path.extname(analyzerItem.uri.fsPath);
 					const newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
@@ -454,7 +452,6 @@ export class AnalyzerView {
 		if (visualText.hasWorkspaceFolder()) {
 			vscode.window.showInputBox({ value: path.basename(analyzerItem.uri.fsPath), prompt: 'Enter new folder name' }).then(newname => {
 				if (newname) {
-					const original = analyzerItem.uri;
 					const newfile = vscode.Uri.file(path.join(path.dirname(analyzerItem.uri.fsPath), newname));
 					visualText.fileOps.addFileOperation(analyzerItem.uri, newfile, [fileOpRefresh.ANALYZERS], fileOperation.RENAME);
 					visualText.fileOps.startFileOps();
@@ -951,7 +948,6 @@ export class AnalyzerView {
 		if (vscode.workspace.workspaceFolders) {
 			const analyzerUris = visualText.getAnalyzers(true);
 			for (const analyzerUri of analyzerUris) {
-				const analyzerName = path.basename(analyzerUri.fsPath);
 				textView.deleteFolderLogs(analyzerUri);
 			}
 		}

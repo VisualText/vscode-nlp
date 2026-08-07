@@ -73,9 +73,23 @@ module.exports = [
             '@typescript-eslint/no-duplicate-enum-values': 'error',
             '@typescript-eslint/prefer-as-const': 'error',
 
+            // Dead code: an unused import, parameter or local. A name starting with
+            // an underscore is exempt, which is how something that must exist but
+            // is not read says so deliberately -- a parameter satisfying an
+            // interface, or the `_line` in textFile.ts whose assignment is what
+            // advances the reader.
+            // caughtErrors stays off: `catch (err)` without touching err is used
+            // throughout, and no-empty already forces such blocks to explain
+            // themselves.
+            '@typescript-eslint/no-unused-vars': ['error', {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrors: 'none',
+            }],
+
             // --- rules the compiler already covers, or that fight the code style ------
             'no-undef': 'off',                   // tsc does this properly for TS
-            'no-unused-vars': 'off',             // tsc's noUnusedLocals territory
+            'no-unused-vars': 'off',             // superseded by the typed rule above
         },
 
         // Rules worth adopting later, once the existing violations are worked through:

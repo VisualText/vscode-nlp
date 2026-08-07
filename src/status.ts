@@ -218,7 +218,6 @@ export class NLPStatusBar {
     }
 
     setFiredState(firedMode: FiredMode) {
-        const changed = this.firedMode == firedMode ? false : true;
         this.firedMode = firedMode;
         this.updateFiredState();
         this.logFile.updateTxxtFiles(nlpFileType.TXXT);

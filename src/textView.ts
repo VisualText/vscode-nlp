@@ -412,7 +412,6 @@ export class TextView {
 
 	copyToAnalyzer(textItem: TextItem) {
 		if (visualText.getWorkspaceFolder()) {
-			const dirs = dirfuncs.getDirectories(visualText.getWorkspaceFolder());
 			const items: vscode.QuickPickItem[] = visualText.analyzerFolderList();
 			const title = 'Copy to Analyzer';
 			const placeHolder = 'Choose analyzer to copy to';
@@ -560,10 +559,6 @@ export class TextView {
 
 	analyzeDir(textItem: TextItem) {
 		if (textItem.uri.fsPath.length) {
-			const items: vscode.QuickPickItem[] = [];
-			const foldername = path.basename(textItem.uri.fsPath);
-			let msg = '';
-			msg = msg.concat('Analyze all files in folder \'', foldername, '\'?');
 
 			if (nlpStatusBar.getDevMode() == DevMode.DEV) {
 				const fileCount = dirfuncs.fileCount(textItem.uri);
@@ -776,7 +771,6 @@ export class TextView {
 	}
 
 	public deleteFolderLogs(dir: vscode.Uri) {
-		const analyzerName = path.basename(dir.fsPath);
 		const logDirs: TextItem[] = Array();
 		textView.getLogDirs(dir, logDirs, false);
 		const count = logDirs.length;

@@ -72,7 +72,6 @@ export class ModFile extends TextFile {
 
     async load(filePath: vscode.Uri) {
         this.setFile(filePath);
-        const relFilePath = '';
         const filepath = '';
         const content = '';
         this.seqInsertPoint = '';
@@ -136,7 +135,6 @@ export class ModFile extends TextFile {
         let good = true;
         let content = '';
         let started = false;
-        const modItem: ModItem = {uri: vscode.Uri.file(''), parentDir: '', filename: '', type: modType.UNKNOWN, content: '', exists: false};
         this.files = [];
 
         for (const line of this.getLines()) {
@@ -222,7 +220,6 @@ export class ModFile extends TextFile {
         let header = '';
         const filepath = filePath.fsPath;
         let dir = '';
-        const diff = path.win32.normalize(filepath);
         if (filepath.includes(this.MODFILE_KB)) {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
         }

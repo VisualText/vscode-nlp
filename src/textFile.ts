@@ -59,10 +59,7 @@ export class TextFile {
             if (firstLine[0] == '#') {
                 descr = firstLine.substring(1);
             }
-            const icon = visualText.fileIconFromExt(dictFile.fsPath);
             const label = path.basename(dictFile.fsPath);
-            const light = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "light", icon));
-            const dark = vscode.Uri.file(path.join(visualText.getExtensionPath().fsPath, "resources", "dark", icon));
             items.push({ label: label, description: descr, detail: dictFile.fsPath });
         }
 
@@ -492,11 +489,13 @@ export class TextFile {
         const lineByLine = require('n-readlines');
         const liner = new lineByLine(filepath);
 
-        let line;
+        // The line itself is never inspected here -- only counted -- but the
+        // assignment is what advances the reader, so it cannot be dropped.
+        let _line;
         let lineNumber = 0;
         let found = false;
 
-        while ((line = liner.next())) {
+        while ((_line = liner.next())) {
             if (lineNumber++ >= max) {
                 found = true;
                 break;

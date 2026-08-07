@@ -307,7 +307,6 @@ export class KBView {
 		exts.push(".kbb");
 		const dictFiles = dirfuncs.getFiles(vscode.Uri.file(fileDir), exts, getFileTypes.DIRS);
 		for (const dictFile of dictFiles) {
-			const descr = "";
 
 			const language = path.basename(dictFile.fsPath);
 			items.push({ label: language, description: `${language} language dictionaries, knowledge bases, mod files` });
@@ -639,7 +638,6 @@ export class KBView {
 	private mergeDicts(): void {
 		if (visualText.hasWorkspaceFolder()) {
 			const items: vscode.QuickPickItem[] = [];
-			const deleteDescr = '';
 			items.push({ label: 'Yes', description: 'Merge all the dictionary files into all.dict?' });
 			items.push({ label: 'No', description: 'Do not merge dictionary files' });
 
