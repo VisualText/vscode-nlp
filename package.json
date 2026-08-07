@@ -813,12 +813,6 @@
                 "description": "Generate an exact rule from selected text"
             },
             {
-                "command": "nlp.opendisplayMatchedRules",
-                "category": "NLP",
-                "title": "Display Matched Rules",
-                "description": "Display the rule matches for the pass"
-            },
-            {
                 "command": "nlp.commentLines",
                 "category": "NLP",
                 "title": "Comment Line",
@@ -971,14 +965,6 @@
                     "light": "resources/light/tree.svg",
                     "dark": "resources/dark/tree.svg"
                 }
-            },
-            {
-                "command": "sequenceView.reveal",
-                "title": "Analyzer Sequence: Reveal"
-            },
-            {
-                "command": "sequenceView.changeTitle",
-                "title": "Analyzer Sequence: Change Title"
             },
             {
                 "command": "sequenceView.typePat",
@@ -1489,14 +1475,6 @@
                 }
             },
             {
-                "command": "analyzerView.deleteFileLogs",
-                "title": "Delete Log Files in this Analyzer",
-                "icon": {
-                    "light": "resources/light/x-box.svg",
-                    "dark": "resources/dark/x-box.svg"
-                }
-            },
-            {
                 "command": "analyzerView.deleteAllAnalyzerLogs",
                 "title": "Delete Log Files for All Analyzers",
                 "icon": {
@@ -1801,24 +1779,12 @@
                 }
             },
             {
-                "command": "logView.matches",
-                "title": "Rule Matches",
-                "icon": {
-                    "light": "resources/light/symbol-keyword.svg",
-                    "dark": "resources/dark/symbol-keyword.svg"
-                }
-            },
-            {
                 "command": "logView.timing",
                 "title": "Timings",
                 "icon": {
                     "light": "resources/light/watch.svg",
                     "dark": "resources/dark/watch.svg"
                 }
-            },
-            {
-                "command": "logView.setClearFlag",
-                "title": "Clear"
             },
             {
                 "command": "logView.clear",
@@ -3517,6 +3483,7 @@
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "pretest": "npm run typecheck && npm run lint",
         "test": "npm run check-grammars && npm run test:language && npm run test:treeview && npm run test:format",
+        "test:integration": "tsc -p tsconfig.test.json && node ./out-test/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
@@ -3528,6 +3495,7 @@
         "@types/vscode": "^1.95.0",
         "@typescript-eslint/eslint-plugin": "^8.58.1",
         "@typescript-eslint/parser": "^8.58.1",
+        "@vscode/test-electron": "^3.1.0",
         "@vscode/vsce": "^3.7.1",
         "eslint": "^9.39.4",
         "ts-loader": "^9.5.7",

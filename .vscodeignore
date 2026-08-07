@@ -10,6 +10,7 @@ webpack.config.js
 tsconfig.format.json
 tsconfig.language.json
 tsconfig.treeview.json
+tsconfig.test.json
 
 # VSCode proposed-API typings: a build-time .d.ts, never loaded at runtime
 vscode.proposed.d.ts
@@ -34,6 +35,10 @@ telemetry-worker/**
 out-format/**
 out-language/**
 out-treeview/**
+out-test/**
+
+# VS Code builds downloaded by the integration harness - large and never shipped
+.vscode-test/**
 
 # tsc output (npm run compile / watch). Only the webpack bundle ships; this is
 # here purely so a developer who ran `tsc` does not change what gets packaged.
