@@ -1,0 +1,21 @@
+// Standalone build for the VS Code integration suite.
+// Mirrors the other harness tsconfigs: emits to out-test/ (gitignored, not
+// shipped). Unlike them it keeps the `vscode` types, because this is the one
+// harness that runs inside a real extension host. Run via:
+//   npm run test:integration
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-test",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"sourceMap": false
+	},
+	"include": ["src/test/**/*.ts"]
+}

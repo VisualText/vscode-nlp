@@ -8,6 +8,9 @@
 #   format   - the formatter corpus harness, which needs real NLP++ to chew on.
 #              No .nlp file lives in this repository, so the corpus is cloned from
 #              the org's public analyzer repos.
+#   integration - the only suite that runs inside a real VS Code. Covers the layer
+#              the other harnesses deliberately exclude: activation, command
+#              registration and provider wiring. Needs a display, hence xvfb.
 #   package  - proves the vsix still builds and ships the right files. This is the
 #              job that would have caught the .vscodeignore fix that never reached
 #              master before 3.12.5.
@@ -111,6 +114,33 @@ jobs:
       # rather than reporting success over a fraction of the corpus.
       - name: Formatter invariants over the public analyzer corpus
         run: npm run test:format -- --min 900 corpus/analyzers corpus/parse-en-us corpus/package-analyzers corpus/analyzer-templates
+
+  integration:
+    name: VS Code integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      # The harness loads the extension from source via extensionDevelopmentPath,
+      # and package.json main points at the webpack bundle -- so it has to exist
+      # before VS Code starts, or the extension fails to load and every
+      # assertion fails with it.
+      - name: Build the extension bundle
+        run: npm run webpack
+
+      # xvfb-run supplies the display that VS Code needs on a headless runner.
+      # -a picks a free server number rather than colliding on :99.
+      - name: Activation, command registration and provider wiring
+        run: xvfb-run -a npm run test:integration
 
   package:
     name: Build vsix

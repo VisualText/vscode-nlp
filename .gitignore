@@ -8,6 +8,10 @@ out/
 out-format/
 out-language/
 out-treeview/
+out-test/
+
+# VS Code builds downloaded by the integration harness
+.vscode-test/
 *.vsix
 
 # Per-workspace VisualText state written at run time, not project configuration
