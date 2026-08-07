@@ -1,0 +1,173 @@
+# Publishes a release: a GitHub release with the .vsix attached, and the VS Code
+# Marketplace.
+#
+# Fires on either of the two things that mean "a new version exists":
+#
+#   * a pushed vX.Y.Z tag
+#   * a push to master where package.json's version changed -- the tag is then
+#     created for you, since that is the step that gets forgotten (v3.12.4
+#     through v3.12.6 shipped as commits and were never tagged)
+#
+# Every step is idempotent. Re-running on the same version updates the release
+# asset and skips a Marketplace version that is already live, so a failed run can
+# simply be re-run. Note that pushing the tag from here does NOT start a second
+# run of this workflow: GitHub suppresses events triggered with GITHUB_TOKEN.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+    branches: [master]
+
+permissions:
+  contents: write
+
+# Never let two releases interleave. Not cancel-in-progress: a half-finished
+# publish is worse than a queued one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # grammars/ is needed by check-grammars, which `npm run package` runs
+          # first. Depth 2 so the previous commit's package.json can be read.
+          submodules: recursive
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Decide whether this is a release, and of what
+        id: decide
+        run: |
+          set -euo pipefail
+          PKG_VERSION=$(node -p "require('./package.json').version")
+
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+            # A tag that disagrees with package.json would publish something
+            # other than what the tag names. Stop rather than guess which is right.
+            if [[ "${TAG_VERSION}" != "${PKG_VERSION}" ]]; then
+              echo "::error::Tag v${TAG_VERSION} does not match package.json version ${PKG_VERSION}."
+              exit 1
+            fi
+            echo "publish=true"   >> "$GITHUB_OUTPUT"
+            echo "need_tag=false" >> "$GITHUB_OUTPUT"
+            echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "Releasing ${PKG_VERSION} from tag."
+            exit 0
+          fi
+
+          # Push to master: release only when the version actually changed in
+          # this push. Keying off "no tag exists yet" instead would fire on the
+          # first push after this workflow lands and publish whatever is current.
+          PREV_VERSION=""
+          if git show HEAD^:package.json > /tmp/prev-package.json 2>/dev/null; then
+            PREV_VERSION=$(node -p "require('/tmp/prev-package.json').version" 2>/dev/null || echo "")
+          fi
+
+          if [[ -n "${PREV_VERSION}" && "${PREV_VERSION}" != "${PKG_VERSION}" ]]; then
+            echo "publish=true"  >> "$GITHUB_OUTPUT"
+            echo "need_tag=true" >> "$GITHUB_OUTPUT"
+            echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+            echo "Version changed ${PREV_VERSION} -> ${PKG_VERSION}; releasing."
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged at ${PKG_VERSION}; nothing to release."
+          fi
+
+      - name: Install dependencies
+        if: steps.decide.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Build the vsix
+        if: steps.decide.outputs.publish == 'true'
+        id: build
+        run: |
+          set -euo pipefail
+          npm run package
+          VSIX="nlp-${{ steps.decide.outputs.version }}.vsix"
+          if [[ ! -f "${VSIX}" ]]; then
+            echo "::error::Expected ${VSIX} but vsce produced: $(ls -1 ./*.vsix 2>/dev/null || echo 'no .vsix at all')"
+            exit 1
+          fi
+          echo "vsix=${VSIX}" >> "$GITHUB_OUTPUT"
+          ls -lh "${VSIX}"
+
+      - name: Tag the release
+        if: steps.decide.outputs.publish == 'true' && steps.decide.outputs.need_tag == 'true'
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.decide.outputs.version }}"
+          git fetch --tags --quiet
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "${TAG} already exists; leaving it alone."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "${TAG}" -m "${TAG}"
+            git push origin "${TAG}"
+            echo "Created ${TAG}."
+          fi
+
+      - name: Create or update the GitHub release
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+          TAG="v${VERSION}"
+          VSIX="${{ steps.build.outputs.vsix }}"
+
+          # Notes come from CHANGELOG.md, so the release carries the text that was
+          # written for it rather than a list of commit subjects.
+          node scripts/release-notes.js --version "${VERSION}" > /tmp/notes.md
+          TITLE=$(node scripts/release-notes.js --version "${VERSION}" --title)
+
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "Release ${TAG} exists; updating the asset."
+            gh release upload "${TAG}" "${VSIX}" --clobber
+          else
+            gh release create "${TAG}" "${VSIX}" --title "${TITLE}" --notes-file /tmp/notes.md
+            echo "Created release ${TITLE}."
+          fi
+
+      - name: Publish to the VS Code Marketplace
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+          VSIX="${{ steps.build.outputs.vsix }}"
+
+          if [[ -z "${VSCE_PAT:-}" ]]; then
+            echo "::error::VSCE_PAT is not set. Create an Azure DevOps personal access token with Marketplace > Manage scope and add it as a repository secret named VSCE_PAT. The GitHub release above already succeeded; re-run this workflow once the secret exists."
+            exit 1
+          fi
+
+          # A Marketplace version cannot be replaced once published, so check
+          # before trying. vsce would fail anyway; this makes a re-run of an
+          # already-published version a no-op instead of a red build.
+          ALREADY=$(npx vsce show dehilster.nlp --json 2>/dev/null \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).versions.some(v=>v.version==='${VERSION}')?'yes':'no')}catch{console.log('unknown')}})")
+
+          if [[ "${ALREADY}" == "yes" ]]; then
+            echo "${VERSION} is already on the Marketplace; nothing to publish."
+            exit 0
+          fi
+
+          # Publish the exact artifact attached to the release, rather than
+          # letting vsce build a second one that could differ.
+          npx vsce publish --packagePath "${VSIX}"
+          echo "Published ${VERSION} to the Marketplace."
