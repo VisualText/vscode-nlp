@@ -3,6 +3,17 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.8
+Telemetry can now say which of the shipped examples people actually use.
+
+- **Running or creating one of the analyzers this extension ships now records its name.** Until now the question "which examples are worth maintaining?" was unanswerable: analyzer runs deliberately left the name out, and creating an analyzer was not recorded at all. The templates and the analyzers from the [analyzers](https://github.com/VisualText/analyzers) repository are a fixed, public set, so naming one says nothing about you -- the same way a command id does not.
+- **Your own analyzers are still never named.** The name is checked against the folders the extension downloads from those public repositories, and anything else is left out of the record entirely rather than replaced with a placeholder. Because the list comes from those folders rather than being written into the extension, a template added to either repository is covered without waiting for a release.
+- **The Telemetry section of the README says all of this**, as does `SECURITY.md`. The old wording promised that analyzer names were never sent, which this would have made untrue; it now promises that the names *you* create are never sent, and states the exception plainly.
+- Creating an analyzer also records which template you started from and how many blocks you combined -- template names only, never the name you gave the analyzer.
+- **Smaller download.** The bundle drops about 120 KB: `del` is gone, replaced by Node's own `fs.rmSync`, which does the same job for the two places that used it.
+
+Nothing here is retroactive. It answers the question from this release onward.
+
 ### 3.12.7
 Two failures that only ever showed up away from a developer's machine.
 
