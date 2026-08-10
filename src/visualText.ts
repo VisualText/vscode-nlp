@@ -1363,21 +1363,13 @@ export class VisualText {
         return this.analyzer.getName();
     }
 
-    // ---- public analyzer names -------------------------------------------------
-    // Telemetry may name an analyzer only when the extension shipped it. The two
-    // directories below are the ones the updater downloads from public GitHub
-    // repositories -- analyzer-templates from visualtext-files, and the analyzers
-    // repo -- so every folder name in them is already public. A name that is not
-    // in this set belongs to the user and never leaves the machine.
-    //
-    // Derived from disk rather than hard-coded, so a template added to either
-    // repository is covered without an extension release.
-    private publicAnalyzerNamesCache: Set<string> | undefined;
-
-    publicAnalyzerNames(): Set<string> {
-        if (this.publicAnalyzerNamesCache) return this.publicAnalyzerNamesCache;
-
-        const names = new Set<string>();
+    // ---- public (shipped) analyzers --------------------------------------------
+    // Telemetry may name an analyzer only when the extension itself shipped it: a
+    // template from analyzer-templates, or an analyzer from the public `analyzers`
+    // repo (both downloaded by the updater from public GitHub repositories). These
+    // are the roots that hold them; anything OUTSIDE them is the user's own work
+    // and its name never leaves the machine.
+    publicAnalyzerRoots(): string[] {
         const roots: string[] = [];
         try {
             roots.push(this.getVisualTextDirectory('analyzer-templates'));
@@ -1385,28 +1377,25 @@ export class VisualText {
         } catch {
             // Engine directory not resolved yet; fall through with what we have.
         }
-
-        for (const root of roots) {
-            if (!root || !dirfuncs.isDir(root)) continue;
-            for (const dir of dirfuncs.getDirectories(vscode.Uri.file(root))) {
-                const name = path.basename(dir.fsPath);
-                if (name && !name.startsWith('.')) names.add(name);
-            }
-        }
-
-        // Only cache once something was found: the directories arrive with the
-        // updater's first download, so an empty result early in a fresh install
-        // would otherwise be remembered for the rest of the session.
-        if (names.size) this.publicAnalyzerNamesCache = names;
-        return names;
+        return roots.filter(r => !!r);
     }
 
-    // The analyzer's own name when the extension ships it, otherwise undefined --
-    // which is what callers send, so an unrecognised name is simply absent rather
-    // than replaced by a placeholder.
-    publicAnalyzerName(name: string): string | undefined {
-        if (!name) return undefined;
-        return this.publicAnalyzerNames().has(name) ? name : undefined;
+    // The analyzer's folder name IFF it lives under a shipped root (at ANY depth --
+    // the example analyzers nest inside grouping folders like nlp-tutorials/ and
+    // nlpfix-analyzers/), otherwise undefined. PATH-based on purpose: a user's own
+    // analyzer never qualifies even if it shares a name with a shipped one, and it
+    // needs no directory scan. Callers send whatever this returns, so an
+    // unrecognised analyzer is simply absent rather than replaced by a placeholder.
+    publicAnalyzerName(dir: vscode.Uri | undefined): string | undefined {
+        if (!dir || !dir.fsPath) return undefined;
+        const target = path.resolve(dir.fsPath);
+        for (const root of this.publicAnalyzerRoots()) {
+            const rel = path.relative(path.resolve(root), target);
+            if (rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel)) {
+                return path.basename(target);
+            }
+        }
+        return undefined;
     }
 
     hasAnalyzers(): boolean {

@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.9
+Telemetry: recognise shipped example analyzers that live in nested folders.
+
+- The `example` tag on `analyzer.run` was only set when a run's folder name matched a **top-level** shipped folder, so examples nested inside grouping folders (e.g. `nlp-tutorials/`, `nlpfix-analyzers/`) were never recognised and counted as a user's own analyzer. Detection is now **path-based**: an analyzer run from anywhere under the shipped `analyzer-templates` or `analyzers` directories is named, at any depth. A user's own analyzer still never qualifies.
+
 ### 3.12.8
 Telemetry can now say which of the shipped examples people actually use.
 
