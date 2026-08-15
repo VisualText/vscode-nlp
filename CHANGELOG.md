@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.10
+The copy icon on an LLM prompt now copies the prompt.
+
+- **Copying a prompt from the Help view gives you the finished text, not a file path.** The inline copy icon on the LLM Prompts was the same "Copy File Path" action every other help item gets, so it handed back a location on disk -- something an LLM cannot read and you would have to open yourself. It now copies the prompt exactly as it would be handed to an LLM, with the `{{...}}` placeholders already replaced by this machine's paths: the engine executable, the analyzers and templates directories, the currently loaded analyzer, and the rest. Paste it and it works.
+- The title line and the internal tooltip marker are dropped, the same way they already were when you clicked a prompt to preview it -- so the icon and the click now produce identical text.
+- Markdown help pages are unchanged: their copy icon still copies the path.
+
 ### 3.12.9
 Telemetry: recognise shipped example analyzers that live in nested folders.
 

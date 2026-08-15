@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.12.9",
+    "version": "3.12.10",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -642,6 +642,12 @@
                 "command": "helpView.copyPath",
                 "category": "NLP",
                 "title": "Copy File Path",
+                "icon": "$(copy)"
+            },
+            {
+                "command": "helpView.copyPrompt",
+                "category": "NLP",
+                "title": "Copy LLM Prompt",
                 "icon": "$(copy)"
             },
             {
@@ -2564,6 +2570,11 @@
                 {
                     "command": "helpView.copyPath",
                     "when": "view == helpView && viewItem == helpFile",
+                    "group": "inline"
+                },
+                {
+                    "command": "helpView.copyPrompt",
+                    "when": "view == helpView && viewItem == helpPrompt",
                     "group": "inline"
                 },
                 {
