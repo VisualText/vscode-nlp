@@ -46,11 +46,12 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
             ti.command = { command: 'helpView.openVscodeHelp', title: 'Open Help', arguments: [item] };
         }
         // File-backed items (a markdown page or a prompt file that exists on the
-        // local drive) get the inline "copy path" action; categories and
-        // external Helpful Links do not.
+        // local drive) get an inline copy action; categories and external
+        // Helpful Links do not. Prompts copy the filled-out prompt text, other
+        // help files copy their path.
         const filePath = helpView.helpFilePath(item);
         if (filePath && fs.existsSync(filePath))
-            ti.contextValue = 'helpFile';
+            ti.contextValue = item.promptFile ? 'helpPrompt' : 'helpFile';
         return ti;
     }
 
@@ -131,6 +132,7 @@ export class HelpView {
         vscode.commands.registerCommand('helpView.openLink', (item) => this.openLink(item));
         vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
         vscode.commands.registerCommand('helpView.copyPath', (item) => this.copyHelpPath(item));
+        vscode.commands.registerCommand('helpView.copyPrompt', (item) => this.copyPrompt(item));
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
@@ -362,20 +364,26 @@ export class HelpView {
         vscode.window.showInformationMessage('LLM prompt copied to clipboard — paste it into your LLM.');
     }
 
+    // The ready-to-paste text of a prompt file: the tooltip marker and title line
+    // dropped, {{...}} variables filled with this machine's paths. Returns
+    // undefined if the file isn't there.
+    promptText(file: string): string | undefined {
+        const full = path.join(this.promptsDir(), file);
+        if (!fs.existsSync(full)) return undefined;
+        const raw = fs.readFileSync(full, 'utf8').replace(/<!--\s*desc:[\s\S]*?-->\s*/i, '');
+        const nl = raw.indexOf('\n');
+        return this.fillPromptVariables(nl >= 0 ? raw.slice(nl + 1) : raw).replace(/^\s+/, '');
+    }
+
     // Read a prompt file, drop its title line, fill ${...} variables, and open the
     // result in a new editor ready to paste into an LLM. The prompt is also copied
     // to the clipboard.
     async openPromptByFile(file: string) {
-        const full = path.join(this.promptsDir(), file);
-        if (!fs.existsSync(full)) {
-            vscode.window.showErrorMessage(`Prompt file not found: ${full}`);
+        const content = this.promptText(file);
+        if (content === undefined) {
+            vscode.window.showErrorMessage(`Prompt file not found: ${path.join(this.promptsDir(), file)}`);
             return;
         }
-        const raw = fs.readFileSync(full, 'utf8');
-        const nl = raw.indexOf('\n');
-        let body = nl >= 0 ? raw.slice(nl + 1) : '';
-        body = body.replace(/<!--\s*desc:[\s\S]*?-->\s*/i, ''); // drop the tooltip marker
-        const content = this.fillPromptVariables(body).replace(/^\s+/, '');
         const doc = await vscode.workspace.openTextDocument({ content, language: 'markdown' });
         await vscode.window.showTextDocument(doc);
         await this.copyPromptToClipboard(content);
@@ -384,6 +392,18 @@ export class HelpView {
     openPrompt(item: HelpItem) {
         if (item && item.promptFile)
             this.previewPromptByFile(item.promptFile);
+    }
+
+    // Inline action on LLM prompt items: copy the generated prompt -- variables
+    // filled out -- rather than the prompt file's path, so it pastes straight
+    // into an LLM without opening it first.
+    async copyPrompt(item: HelpItem) {
+        const content = item && item.promptFile ? this.promptText(item.promptFile) : undefined;
+        if (content === undefined) {
+            vscode.window.showErrorMessage('This help item has no LLM prompt to copy.');
+            return;
+        }
+        await this.copyPromptToClipboard(content);
     }
 
     // Render a prompt as a markdown preview (consistent with the other help
@@ -406,9 +426,7 @@ export class HelpView {
 
         // Copy the ready-to-paste prompt (body without the title heading) to the
         // clipboard so clicking a prompt makes it immediately usable in an LLM (#1104).
-        const nl = raw.indexOf('\n');
-        const body = this.fillPromptVariables(nl >= 0 ? raw.slice(nl + 1) : raw).replace(/^\s+/, '');
-        await this.copyPromptToClipboard(body);
+        await this.copyPromptToClipboard(this.promptText(file) ?? content);
     }
 
     // The toolbar button / quickstart link: open the first prompt in the library,
