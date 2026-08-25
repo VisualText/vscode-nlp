@@ -850,6 +850,52 @@ export class NLPCompile {
             : `"${analyzerPath}/run/*.cpp" "${analyzerPath}/kb/*.cpp"`;
         const sourceErrorScope = kbOnly ? 'kb/' : 'run/ or kb/';
 
+        // Unity builds batch the generated sources so the engine header block is
+        // parsed once per batch instead of once per file. parse-en-us emits 520
+        // kb/*.cpp plus 139 run/*.cpp, and an 80 KB generated source expands to
+        // ~4.5 MB of headers, so this is most of the compile: measured
+        // 0.71 s/file -> 0.039 s/file, and a full parse-en-us build from 10-15
+        // minutes to about 30 seconds.
+        //
+        // It needs the include guards on kbm/{sym_s,con_s,ptr_s}.h added in
+        // nlp-engine 3.8.7 -- without them a second inclusion inside one TU fails
+        // with "C2011 'sym': 'struct' type redefinition". The user's engine can be
+        // any version, so probe the headers we were handed rather than parsing a
+        // version string, and leave unity off when they predate the guards.
+        const unityBuild = support.includeDirs.some(dir => {
+            for (const rel of ['kbm/sym_s.h', 'Api/kbm/sym_s.h']) {
+                const header = path.join(dir, rel);
+                try {
+                    if (fs.existsSync(header) && fs.readFileSync(header, 'utf8').includes('KBM_SYM_S_H'))
+                        return true;
+                } catch {
+                    // unreadable header: treat as unguarded
+                }
+            }
+            return false;
+        });
+        const unityBlock = unityBuild ? `
+# ~2 batches per core so the compiler pool stays fed, clamped so small analyzers
+# still spread across cores and large ones do not build one enormous TU.
+cmake_host_system_information(RESULT NLP_NPROC QUERY NUMBER_OF_LOGICAL_CORES)
+if(NOT NLP_NPROC OR NLP_NPROC LESS 1)
+    set(NLP_NPROC 4)
+endif()
+list(LENGTH GENERATED_CPP NLP_NSRC)
+math(EXPR NLP_BATCH "\${NLP_NSRC} / (\${NLP_NPROC} * 2)")
+if(NLP_BATCH LESS 8)
+    set(NLP_BATCH 8)
+elseif(NLP_BATCH GREATER 64)
+    set(NLP_BATCH 64)
+endif()
+set_target_properties(nlp_generated PROPERTIES
+    UNITY_BUILD ON
+    UNITY_BUILD_BATCH_SIZE \${NLP_BATCH})
+` : `
+# Unity build off: these engine headers predate the kbm include guards
+# (nlp-engine 3.8.7), so batching sources would hit C2011 redefinition errors.
+`;
+
         return `cmake_minimum_required(VERSION 3.16)
 project(nlp_generated_library LANGUAGES CXX)
 
@@ -875,6 +921,7 @@ endif()
 
 add_library(nlp_generated SHARED \${GENERATED_CPP})
 set_target_properties(nlp_generated PROPERTIES OUTPUT_NAME "${analyzerName}")
+${unityBlock}
 
 target_include_directories(nlp_generated PRIVATE
     "${stubDirCMake}"
@@ -893,7 +940,12 @@ target_link_libraries(nlp_generated PRIVATE \${NLP_ENGINE_LIBRARIES})
 if(WIN32)
     target_compile_definitions(nlp_generated PRIVATE _CRT_SECURE_NO_WARNINGS)
     if(MSVC)
-        target_compile_options(nlp_generated PRIVATE /wd4005 /FI"StdAfx.h")
+        # /MP is not optional: \`cmake --build --parallel N\` with the Visual
+        # Studio generator becomes msbuild /m:N, which parallelises PROJECTS.
+        # There is one project here, so without /MP every source compiles
+        # serially. Measured on 20 generated files with --parallel 4:
+        # 15.08s without, 4.29s with.
+        target_compile_options(nlp_generated PRIVATE /wd4005 /FI"StdAfx.h" /MP)
     endif()
 else()
     target_compile_options(nlp_generated PRIVATE -include StdAfx.h)
