@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.11
+Compiling an analyzer is much faster.
+
+- **A full compile of a large analyzer now takes about 30 seconds instead of 10-15 minutes.** Compiling was spending nearly all its time re-reading the same engine headers: parse-en-us generates 520 knowledge-base source files plus 139 rule files, and each 80 KB generated file pulls in about 4.5 MB of headers -- the same headers, once per file. Those sources are now batched together so the headers are read once per batch. On Windows there was a second problem on top of that: the build asked for four parallel jobs, but the setting it used parallelises *projects*, and an analyzer is a single project, so every file was compiling one after another no matter what. Both are fixed.
+- Requires NLP Engine 3.8.7 or later, which adds include guards the batched build needs. On an older engine the extension detects that and compiles exactly as it did before, so nothing breaks -- upgrade the engine and the speedup appears on its own.
+
 ### 3.12.10
 The copy icon on an LLM prompt now copies the prompt.
 
