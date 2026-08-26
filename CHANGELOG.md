@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.12
+Comments and blank lines in `analyzer.seq` survive the Sequence view.
+
+- **A hand-written `analyzer.seq` is no longer mangled.** The sequence parser required three tab-separated columns and rebuilt the whole file from the parsed fields on every edit, so a file written by hand rather than by the extension came apart: a `#` comment line lost its first word (`# StatuteFrames -- ...` came back as `# -- ...`), and a comment line short enough to be under three columns -- `#` on its own, a `# ------` rule, a blank line -- was dropped from the file entirely the next time a pass was moved or renamed.
+- **A pass with no trailing comment is no longer dropped.** `nlp<TAB>initKB` is two columns, so it never registered as a pass at all: it vanished from the Sequence view and from the file. Two columns is now a whole pass, and one written without a comment is saved back without a trailing tab.
+- **Comment and blank lines stay out of the Sequence view.** They used to become empty rows -- a 10-line file header meant ten blank entries above the first pass. They are now attached to the pass below them and written back byte for byte, so the tree shows passes only. Block comments (`/* */`) get the same treatment, which also fixes the empty rows they left behind since 3.12.4.
+- **Comments stay where you put them.** A section header keeps its place when passes are reordered around it, and deleting the first pass under one hands the header to the pass that follows instead of taking it along. Hand-aligned comment columns keep their spacing.
+
 ### 3.12.11
 Compiling an analyzer is much faster.
 

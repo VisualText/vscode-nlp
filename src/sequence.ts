@@ -7,7 +7,7 @@ import { visualText } from './visualText';
 import { dirfuncs } from './dirfuncs';
 import { TreeFile } from './treeFile';
 import { NLPFile } from './nlp';
-import { blankBlockCommentLines, isCommentOnly } from './language/blockComment';
+import { blankBlockCommentLines } from './language/blockComment';
 
 export enum moveDirection { UP, DOWN }
 export enum newPassType { RULES, CODE, DECL }
@@ -18,9 +18,15 @@ export class PassItem {
 	public text: string = '';
 	public name: string = '';
 	public comment: string = '';
-	// Set only for lines the sequence parser will not rebuild from typeStr/name/comment
-	// -- block comments. saveFile() writes these back byte for byte.
-	public raw: string | undefined = undefined;
+	// The comment and blank lines that sit immediately above this pass in the file.
+	// The parser never rebuilds them from fields, and saveFile() writes them back
+	// byte for byte ahead of the pass -- see SequenceFile.isNonPassLine().
+	public preLines: string[] = [];
+	// The whitespace the author put between the columns. A pass is rewritten from
+	// its fields on every save, so without these a hand-aligned comment column
+	// collapses to one tab the first time a pass is moved.
+	public nameSep: string = '\t';
+	public commentSep: string = '\t';
 	public passNum: number = 0;
 	public row: number = 0;
 	public tokenizer: boolean = false;
@@ -83,6 +89,9 @@ export class PassItem {
 		this.text = '';
 		this.name = '';
 		this.comment = '';
+		this.preLines = [];
+		this.nameSep = '\t';
+		this.commentSep = '\t';
 		this.passNum = 0;
 		this.row = 0;
 		this.typeStr = '';
@@ -97,6 +106,8 @@ export class SequenceFile extends TextFile {
 	private passItems = new Array();
 	private cleanpasses = new Array();
 	private newcontent: string = '';
+	// Comment/blank lines trailing the last pass, with nothing left to attach them to.
+	private tailLines: string[] = [];
 
 	constructor() {
 		super();
@@ -128,6 +139,7 @@ export class SequenceFile extends TextFile {
 		// Surface a missing sequence file instead of rendering a silent empty tree (#770).
 		if (!fs.existsSync(anaFile)) {
 			this.passItems = [];
+			this.tailLines = [];
 			vscode.window.showWarningMessage('Analyzer sequence file missing: ' + anaFile);
 			return;
 		}
@@ -145,8 +157,16 @@ export class SequenceFile extends TextFile {
 		const passLines = this.getLines();
 		const blankLines = blankBlockCommentLines(passLines);
 
+		// Lines that carry no pass are held here until the next pass claims them.
+		let pending: string[] = [];
+		this.tailLines = [];
+
 		for (let i = 0; i < passLines.length; i++) {
 			const passStr = passLines[i];
+			if (this.isNonPassLine(passStr,blankLines[i])) {
+				pending.push(passStr);
+				continue;
+			}
 			const passItem = this.setPass(passStr,blankLines[i],passNum);
 			if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
 				folder = passItem.name;
@@ -161,6 +181,8 @@ export class SequenceFile extends TextFile {
 				passNum++;
 
 			if (passItem.text.length) {
+				passItem.preLines = pending;
+				pending = [];
 				passItem.row = row++;
 				// Keep the .py uri that setPass() assigned to python passes;
 				// only rule passes resolve to a .nlp file here.
@@ -168,8 +190,30 @@ export class SequenceFile extends TextFile {
 					passItem.uri = vscode.Uri.file(path.join(specDir,passItem.name + '.nlp'));
 				passItem.library = vscode.Uri.file(this.getLibraryFile(passItem.uri.fsPath));
 				this.passItems.push(passItem);
+			} else {
+				// Not a pass and not recognized as a comment either -- a lone token, say.
+				// Carry it verbatim rather than dropping it on the next saveFile().
+				pending.push(passStr);
 			}
 		}
+		this.tailLines = pending;
+	}
+
+	// True for a line the sequence file carries but that is not a pass: blank, a '#'
+	// line comment, or a /* */ block comment. The engine skips all three -- next_token
+	// in lite/io.cpp stops at '#', and ana.cpp blanks block comments before parseSeq
+	// sees the buffer -- so the tree must skip them too. But saveFile() regenerates the
+	// whole file from the parsed items, so instead of becoming items of their own these
+	// lines are attached verbatim to the pass below them (PassItem.preLines). They stay
+	// anchored to their position rather than travelling with a pass: reordering passes
+	// leaves a section header where the user put it.
+	isNonPassLine(passStr: string, blankStr: string): boolean {
+		if (blankStr.trim().length == 0)
+			return true;					// blank, or nothing but block comment
+		if (blankStr.trimStart().startsWith('#'))
+			return true;					// '#' line comment
+		// A block comment swallowed the type column, leaving nothing to classify.
+		return blankStr[0] == ' ' && passStr[0] != ' ' && passStr[0] != '\t';
 	}
 
 	public getPassItemFiles(): vscode.Uri[] {
@@ -214,52 +258,42 @@ export class SequenceFile extends TextFile {
 		// field still comes from the original so the text survives a saveFile().
 		const blanks = blankStr.split(/[\t\s]/);
 
-		// Two lines that carry no pass: one that is nothing but block comment, and one
-		// where a comment swallowed the type column (no type left to classify). Keep
-		// both verbatim -- saveFile() regenerates the whole file from these items, so a
-		// line without a raw copy is dropped the next time the user reorders a pass.
-		// They behave like a '#' line otherwise, which is how the tree view renders them.
-		if (isCommentOnly(passStr,blankStr) || (blanks[0].length == 0 && tokens[0].length > 0)) {
-			passItem.text = passStr;
-			passItem.raw = passStr;
-			passItem.typeStr = '#';
-			passItem.passNum = passNum;
-			passItem.empty = false;
-			return passItem;
-		}
-
-		if (tokens.length >= 3) {
+		// Two columns is a whole pass -- the trailing comment is optional, and a
+		// hand-written sequence file leaves the tab off when there is none.
+		// Comment and blank lines never reach here: getPassFiles() peels them off
+		// first, since they belong to the file rather than to any pass.
+		if (tokens.length >= 2) {
 			passItem.text = passStr;
 			passItem.passNum = passNum;
 
-			if (blanks[0].localeCompare('#') == 0) {
-				passItem.comment = this.tokenStr(tokens,2);
-				passItem.typeStr = '#';
-
+			const clean = blanks[0].replace('/','');
+			if (clean.length < blanks[0].length) {
+				passItem.active = false;
+				passItem.typeStr = clean;
 			} else {
-				const clean = blanks[0].replace('/','');
-				if (clean.length < blanks[0].length) {
-					passItem.active = false;
-					passItem.typeStr = clean;
-				} else {
-					passItem.active = true;
-					passItem.typeStr = blanks[0];
-					if (passItem.isTokenizer()) {
-						passItem.tokenizer = true;
-					}
+				passItem.active = true;
+				passItem.typeStr = blanks[0];
+				if (passItem.isTokenizer()) {
+					passItem.tokenizer = true;
 				}
-				passItem.name = blanks[1];
-				if (passItem.typeStr.localeCompare('pat') == 0) {
-					passItem.typeStr = 'nlp';
-				}
+			}
+			passItem.name = blanks[1];
+			if (passItem.typeStr.localeCompare('pat') == 0) {
+				passItem.typeStr = 'nlp';
+			}
 
-				if (passItem.typeStr.localeCompare('nlp') == 0 || passItem.typeStr.localeCompare('rec') == 0) {
-					passItem.uri = this.passItemUri(passItem);
-				}
-				if (passItem.isPython()) {
-					passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,passItem.name + '.py'));
-				}
-				passItem.comment = this.tokenStr(tokens,2);
+			if (passItem.typeStr.localeCompare('nlp') == 0 || passItem.typeStr.localeCompare('rec') == 0) {
+				passItem.uri = this.passItemUri(passItem);
+			}
+			if (passItem.isPython()) {
+				passItem.uri = vscode.Uri.file(path.join(this.specDir.fsPath,passItem.name + '.py'));
+			}
+			passItem.comment = this.tokenStr(tokens,2);
+			const seps = /^[ \t]*[^ \t]+([ \t]+)[^ \t]+(?:([ \t]+)[^ \t])?/.exec(passStr);
+			if (seps) {
+				passItem.nameSep = seps[1];
+				if (seps[2])
+					passItem.commentSep = seps[2];
 			}
 			passItem.empty = false;
 		}
@@ -288,10 +322,11 @@ export class SequenceFile extends TextFile {
 	}
 
 	passString(passItem: PassItem): string {
-		if (passItem.raw !== undefined)
-			return passItem.raw;
 		const activeStr = passItem.active ? '' : '/';
-		return activeStr + passItem.typeStr + '\t' + passItem.name + '\t' + passItem.comment;
+		const line = activeStr + passItem.typeStr + passItem.nameSep + passItem.name;
+		// No comment, no trailing tab: setPass() accepts two columns, so a
+		// hand-written line comes back out the way it went in.
+		return passItem.comment.length ? line + passItem.commentSep + passItem.comment : line;
 	}
 
 	base(passname: string): string {
@@ -570,6 +605,7 @@ export class SequenceFile extends TextFile {
 			this.deletePassInSeqFile(last.typeStr,last.name);
 			this.deletePassInSeqFile(first.typeStr,first.name);
 		} else {
+			this.rehomePreLines(passes[0].row,passes.length);
 			this.passItems.splice(passes[0].row,passes.length);
 		}
 	}
@@ -577,8 +613,26 @@ export class SequenceFile extends TextFile {
 	deletePassInSeqFile(type: string, name: string) {
 		const passItem = this.findPass(type, name);
 		if (passItem) {
+			this.rehomePreLines(passItem.row,1);
 			this.passItems.splice(passItem.row,1);
 		}
+	}
+
+	// Hand the comment lines above the passes about to be spliced out down to whatever
+	// follows them, so deleting the first pass under a section header does not take the
+	// header with it. Nothing follows: they become the file's trailing lines.
+	rehomePreLines(from: number, count: number) {
+		let moved: string[] = [];
+		const end = Math.min(from + count, this.passItems.length);
+		for (let i = from; i < end; i++)
+			moved = moved.concat(this.passItems[i].preLines);
+		if (moved.length == 0)
+			return;
+		const next = this.passItems[from + count];
+		if (next)
+			next.preLines = moved.concat(next.preLines);
+		else
+			this.tailLines = moved.concat(this.tailLines);
 	}
 
 	createNewPassFile(filename: string, type: newPassType): string {
@@ -747,12 +801,17 @@ export class SequenceFile extends TextFile {
 	}
 
 	saveFile() {
-		this.newcontent = '';
+		// Each pass is rebuilt from its parsed fields; the comment and blank lines
+		// above it go back verbatim, and anything trailing the last pass after it.
+		const lines: string[] = [];
 		for (const passItem of this.passItems) {
-			if (this.newcontent.length)
-				this.newcontent = this.newcontent.concat('\n');
-			this.newcontent = this.newcontent.concat(this.passString(passItem));
+			for (const pre of passItem.preLines)
+				lines.push(pre);
+			lines.push(this.passString(passItem));
 		}
+		for (const tail of this.tailLines)
+			lines.push(tail);
+		this.newcontent = lines.join('\n');
 
 		fs.writeFileSync(path.join(this.specDir.fsPath,visualText.ANALYZER_SEQUENCE_FILE),this.newcontent,{flag:'w+'});
 	}
@@ -895,6 +954,8 @@ export class SequenceFile extends TextFile {
 		toItem.inFolder = fromItem.inFolder;
 		toItem.uri = fromItem.uri;
 		toItem.comment = fromItem.comment;
+		toItem.nameSep = fromItem.nameSep;
+		toItem.commentSep = fromItem.commentSep;
 		toItem.active = fromItem.active;
 	}
 
