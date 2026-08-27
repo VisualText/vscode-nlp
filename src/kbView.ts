@@ -18,6 +18,89 @@ export interface KBItem {
 	type: vscode.FileType;
 }
 
+// The mouse-over text for a .dict / .kbb file: the comment block its author
+// wrote at the top of it, which is where they say what the file holds. Without
+// it the tooltip is the file's path -- something the tree already makes obvious.
+// Same idea as the pass comment the Sequence view shows.
+//
+// Only the head of the file is read. en-full.kbb is 10 MB and getTreeItem runs
+// once per row on every refresh, so the body is never touched, and the result is
+// cached until the file changes on disk.
+const HEAD_BYTES = 4096;
+const DESCRIPTION_MAX_LINES = 8;
+
+interface CachedDescription {
+	mtimeMs: number;
+	size: number;
+	text: string;
+}
+const descriptionCache = new Map<string, CachedDescription>();
+
+// Strip the comment markers off one comment line: '#', '/*', '*/', and the '*'
+// that the continuation lines of a block comment are often drawn with.
+function stripCommentMarkers(line: string): string {
+	let text = line.trim();
+	if (text.startsWith('/*')) text = text.substring(2);
+	if (text.endsWith('*/')) text = text.substring(0, text.length - 2);
+	return text.replace(/^[#*\s]+/, '').trim();
+}
+
+// The opening comment paragraph of a KB file: comment lines from the top of the
+// file, stopping at the first line that is not one. A bare '#' ends it, so a
+// long file header contributes its first paragraph rather than all of itself,
+// while a '/*' alone on the line that opens a block comment is stepped over.
+function leadingComment(head: string, truncated: boolean): string {
+	const lines = head.split(/\r?\n/);
+	if (truncated) lines.pop();     // the read stopped mid-line: that line is not whole
+
+	// The blanker stops at a '#' and leaves the rest of the line alone, so '#'
+	// comments are matched directly; blanking is what finds the /* */ ones.
+	const blanked = blankBlockCommentLines(lines);
+
+	const out: string[] = [];
+	for (let i = 0; i < lines.length && out.length < DESCRIPTION_MAX_LINES; i++) {
+		const line = lines[i];
+		if (!line.trim().startsWith('#') && !isCommentOnly(line, blanked[i]))
+			break;
+		const text = stripCommentMarkers(line);
+		if (text.length == 0) {
+			if (out.length == 0) continue;  // '/*' on a line of its own opens the block
+			break;                          // a marker-only line closes the paragraph
+		}
+		out.push(text);
+	}
+	return out.join('\n');
+}
+
+// Empty when the file has no opening comment, cannot be read, or has gone away;
+// the caller then leaves VSCode's default tooltip (the path) in place.
+function fileDescription(filePath: string): string {
+	let stat: fs.Stats;
+	try {
+		stat = fs.statSync(filePath);
+	} catch {
+		return '';
+	}
+	const cached = descriptionCache.get(filePath);
+	if (cached && cached.mtimeMs == stat.mtimeMs && cached.size == stat.size)
+		return cached.text;
+
+	let text = '';
+	try {
+		const fd = fs.openSync(filePath, 'r');
+		try {
+			const buffer = Buffer.alloc(HEAD_BYTES);
+			const read = fs.readSync(fd, buffer, 0, HEAD_BYTES, 0);
+			text = leadingComment(buffer.toString('utf8', 0, read), read == HEAD_BYTES);
+		} finally {
+			fs.closeSync(fd);
+		}
+	} catch { /* unreadable: fall back to the path */ }
+
+	descriptionCache.set(filePath, { mtimeMs: stat.mtimeMs, size: stat.size, text: text });
+	return text;
+}
+
 export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 	public readonly EMPTY_TEXT = '>> right click for libs <<';
@@ -72,8 +155,14 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 				return treeItem;
 			}
 
-			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt'))
+			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt')) {
 				treeItem.contextValue = 'toggle';
+				// What the file is for, taken from the comment at the top of it.
+				// With no such comment the default tooltip (the path) stands.
+				const description = fileDescription(kbItem.uri.fsPath);
+				if (description.length)
+					treeItem.tooltip = description;
+			}
 
 			if (name.endsWith('.kb'))
 				treeItem.contextValue = 'old';

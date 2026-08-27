@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.14
+The KB view shows what a dictionary or knowledge base is for on mouse-over.
+
+- **Hovering a `.dict` or `.kbb` file in the KB view shows the comment written at the top of it**, instead of the file's path on disk. The path tells you where the file lives -- something the tree already makes obvious -- while the header comment is where the author wrote down what the file holds, and it was visible nowhere but inside the file. The same idea the Sequence view picked up for pass comments in 3.12.13.
+- The opening comment paragraph is shown rather than only its first line, so a description that runs across two or three lines arrives whole instead of stopping mid-sentence. A bare `#` closes the paragraph, which keeps a long file header down to its opening statement. Both `#` line comments and `/* */` block comments are understood.
+- A file with no header comment keeps the path tooltip exactly as before -- `en-full.kbb` opens straight onto `dictionary`, so nothing changes for it. Files toggled off (`.dictt`, `.kbbb`) read their comment the same way as the active ones.
+- Only the head of each file is read, and what it yields is held until the file changes on disk. The KB view rebuilds every row on every refresh and `en-full.kbb` is 10MB, so the body of a lexicon is never touched to draw a tooltip.
+
 ### 3.12.13
 The Sequence view shows the pass's comment on mouse-over.
 
