@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.15
+Opening an analyzer that uses the full English lexicon no longer hangs the extension.
+
+- **"Extension host unresponsive" on an analyzer whose `kb/user` holds `en-full.kbb` is fixed.** Building the cross-pass index converted a source offset to a line and column by counting newlines from the start of the file, once for the beginning of each symbol and once for its end. That is quadratic in the size of the file, and the English lexicon is 10MB holding 375,449 concepts: indexing that one file took roughly two and a half hours, during which outline, hover, go-to-definition, references and rename were all unavailable and VSCode reported the extension host as wedged. The same file now indexes in a tenth of a second.
+- The line offsets are now worked out in a single pass when a file is read, and each lookup is a binary search over that table. What it returns is unchanged, down to how an offset past the end of the file is handled.
+- **Per-input log directories are no longer indexed.** A `-DEV` analyzer run writes one `.kbb` per pass into `input/<text>_log/`, and the file watcher picked up every one of them. Those are engine output rather than source; the full index build already skipped them, and the watcher now skips them too, along with `node_modules`.
+
 ### 3.12.14
 The KB view shows what a dictionary or knowledge base is for on mouse-over.
 

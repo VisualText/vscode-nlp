@@ -546,11 +546,17 @@ export function registerLanguageFeatures(ctx: vscode.ExtensionContext): void {
 	// workspace rebuild (re-reading and re-parsing every .nlp/.pat/.kbb file), so
 	// an analyzer run — which writes KB files — kicked off repeated full rebuilds
 	// that tied up the extension host and made opening files feel slow.
+	// Same shape as the rebuild() glob above, minus the excludes -- which the
+	// watcher API cannot express, so onDidCreate re-checks them. A -DEV run writes
+	// one .kbb per pass into input/<text>_log/; those are engine output, and the
+	// full build already skips them.
 	const watcher = vscode.workspace.createFileSystemWatcher("**/*.{nlp,pat,kbb}");
+	const isIndexable = (uri: vscode.Uri): boolean =>
+		!/(^|\/)(node_modules|[^/]*_log)\//.test(uri.path);
 	ctx.subscriptions.push(
 		watcher,
 		watcher.onDidDelete((uri) => nlpWorkspaceIndex.removeFile(uri)),
-		watcher.onDidCreate((uri) => { void nlpWorkspaceIndex.indexUri(uri); }),
+		watcher.onDidCreate((uri) => { if (isIndexable(uri)) void nlpWorkspaceIndex.indexUri(uri); }),
 		vscode.workspace.onDidSaveTextDocument((d) => {
 			if (d.languageId === "nlp" || d.languageId === "kbb")
 				nlpWorkspaceIndex.indexText(d.uri, d.getText());

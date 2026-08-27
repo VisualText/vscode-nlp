@@ -34,17 +34,37 @@ export interface IndexedRef {
 // names (optionally leading underscore), never pure numbers.
 const IDENT = /^_?[A-Za-z][\w]*$/;
 
-// Convert a source offset to a VSCode Position by counting newlines up to it.
-function offsetToPosition(text: string, offset: number): vscode.Position {
-	let line = 0;
-	let last = 0; // offset of the start of the current line
-	for (let i = 0; i < offset && i < text.length; i++) {
-		if (text[i] === "\n") {
-			line++;
-			last = i + 1;
+// Offset -> Position for one file, over a line table built once.
+//
+// This used to be a free function that counted newlines from byte 0 on every
+// call, and indexing a file costs two calls per symbol -- quadratic in the file
+// size. On a real analyzer that is not a slow path, it is a hang: the English
+// lexicon en-full.kbb is 10 MB and parses to 375,449 concepts, so indexing that
+// one file blocked the extension host for roughly two and a half hours, which
+// VSCode reports as "Extension host unresponsive". Building the line table is a
+// single pass; each lookup is then a binary search.
+class LineIndex {
+	// starts[i] = offset of the first character of line i.
+	private readonly starts: number[] = [0];
+
+	constructor(text: string) {
+		for (let i = 0; i < text.length; i++) {
+			if (text[i] === "\n") this.starts.push(i + 1);
 		}
 	}
-	return new vscode.Position(line, offset - last);
+
+	position(offset: number): vscode.Position {
+		// Last line whose start is <= offset. An offset past the end of the text
+		// lands on the final line, matching the old scan-and-clamp behaviour.
+		let lo = 0;
+		let hi = this.starts.length - 1;
+		while (lo < hi) {
+			const mid = (lo + hi + 1) >> 1;
+			if (this.starts[mid] <= offset) lo = mid;
+			else hi = mid - 1;
+		}
+		return new vscode.Position(lo, offset - this.starts[lo]);
+	}
 }
 
 export class NlpWorkspaceIndex {
@@ -107,8 +127,10 @@ export class NlpWorkspaceIndex {
 	// (Re)index a single file from in-memory text (used on save / on change).
 	indexText(uri: vscode.Uri, text: string): void {
 		this.removeFile(uri);
-		if (this.isKb(uri)) this.indexKb(uri, text);
-		else this.indexNlp(uri, text);
+		// One line table per file, shared by every offset conversion below.
+		const lines = new LineIndex(text);
+		if (this.isKb(uri)) this.indexKb(uri, text, lines);
+		else this.indexNlp(uri, text, lines);
 	}
 
 	private addDecl(uri: vscode.Uri, name: string, kind: IndexKind, range: vscode.Range, bucket: IndexedSymbol[], signature?: string): void {
@@ -119,29 +141,23 @@ export class NlpWorkspaceIndex {
 		this.byName.set(name, list);
 	}
 
-	private indexNlp(uri: vscode.Uri, text: string): void {
+	private indexNlp(uri: vscode.Uri, text: string, lines: LineIndex): void {
 		const syms: IndexedSymbol[] = [];
 		try {
 			for (const d of declaredSymbols(text)) {
-				const range = new vscode.Range(
-					offsetToPosition(text, d.selStart),
-					offsetToPosition(text, d.selEnd),
-				);
+				const range = new vscode.Range(lines.position(d.selStart), lines.position(d.selEnd));
 				this.addDecl(uri, d.name, d.kind, range, syms, d.signature);
 			}
 		} catch { /* keep whatever parsed; still index usages below */ }
 		this.byFile.set(uri.toString(), syms);
-		this.indexUsages(uri, text);
+		this.indexUsages(uri, text, lines);
 	}
 
-	private indexKb(uri: vscode.Uri, text: string): void {
+	private indexKb(uri: vscode.Uri, text: string, lines: LineIndex): void {
 		const syms: IndexedSymbol[] = [];
 		try {
 			for (const c of parseKbConcepts(text)) {
-				const range = new vscode.Range(
-					offsetToPosition(text, c.start),
-					offsetToPosition(text, c.end),
-				);
+				const range = new vscode.Range(lines.position(c.start), lines.position(c.end));
 				this.addDecl(uri, c.name, "concept", range, syms);
 			}
 		} catch { /* tolerate */ }
@@ -150,15 +166,12 @@ export class NlpWorkspaceIndex {
 
 	// Record every identifier-like Word token as a reference occurrence. Uses the
 	// tokenizer so matches inside strings and comments are excluded.
-	private indexUsages(uri: vscode.Uri, text: string): void {
+	private indexUsages(uri: vscode.Uri, text: string, lines: LineIndex): void {
 		const refs: IndexedRef[] = [];
 		try {
 			for (const t of tokenize(text)) {
 				if (t.kind !== TokenKind.Word || !IDENT.test(t.text)) continue;
-				const range = new vscode.Range(
-					offsetToPosition(text, t.start),
-					offsetToPosition(text, t.end),
-				);
+				const range = new vscode.Range(lines.position(t.start), lines.position(t.end));
 				const ref: IndexedRef = { name: t.text, uri, range };
 				refs.push(ref);
 				const list = this.refsByName.get(t.text) ?? [];
