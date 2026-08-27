@@ -19,9 +19,9 @@ export interface KBItem {
 }
 
 // The mouse-over text for a .dict / .kbb file: the comment block its author
-// wrote at the top of it, which is where they say what the file holds. Without
-// it the tooltip is the file's path -- something the tree already makes obvious.
-// Same idea as the pass comment the Sequence view shows.
+// wrote at the top of it, which is where they say what the file holds, followed
+// by the path the file lives at. Same idea as the pass comment the Sequence view
+// shows, with the path VSCode tooltips carry by default kept underneath it.
 //
 // Only the head of the file is read. en-full.kbb is 10 MB and getTreeItem runs
 // once per row on every refresh, so the body is never touched, and the result is
@@ -157,11 +157,12 @@ export class FileSystemProvider implements vscode.TreeDataProvider<KBItem> {
 
 			if (name.endsWith('.kbb') || name.endsWith('.dict') || name.endsWith('.kbbb') || name.endsWith('.dictt')) {
 				treeItem.contextValue = 'toggle';
-				// What the file is for, taken from the comment at the top of it.
-				// With no such comment the default tooltip (the path) stands.
+				// What the file is for, taken from the comment at the top of it,
+				// over the path it lives at. With no such comment the tooltip is
+				// the path alone, which is what VSCode shows by default anyway.
 				const description = fileDescription(kbItem.uri.fsPath);
 				if (description.length)
-					treeItem.tooltip = description;
+					treeItem.tooltip = description + '\n\n' + kbItem.uri.fsPath;
 			}
 
 			if (name.endsWith('.kb'))

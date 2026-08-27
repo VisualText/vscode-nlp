@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.16
+KB view mouse-overs say what the file is for and where it lives.
+
+- **The tooltip on a `.dict` or `.kbb` file now carries the file's path underneath its header comment.** 3.12.14 put the comment written at the top of the file into the tooltip, which replaced the path VSCode had been showing there. The comment says what the file holds, and the path says which one of several similarly named lexicons you are actually pointing at, so the tooltip now shows the description first and the path below it.
+- A file with no header comment is unchanged: its tooltip is the path on its own, exactly as VSCode shows by default.
+
 ### 3.12.15
 Opening an analyzer that uses the full English lexicon no longer hangs the extension.
 
