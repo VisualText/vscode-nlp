@@ -51,6 +51,20 @@ export class PassItem {
 		return tooltip;
 	}
 
+	// The trailing comment from the analyzer.seq line, stripped of its comment
+	// markers, when it says something. Placeholder comments -- the '# comment' the
+	// extension itself writes on a new pass -- carry no information, so they are
+	// treated as absent and the caller falls back to the file path.
+	public commentTooltip(): string {
+		let text = this.comment.trim();
+		if (text.startsWith('/*') && text.endsWith('*/'))
+			text = text.substring(2, text.length - 2);
+		text = text.replace(/^[#/*\s]+/, '').trim();
+		if (text.toLowerCase() == 'comment')
+			return '';
+		return text;
+	}
+
 	public isRuleFile(): boolean {
 		return this.typeStr.localeCompare('nlp') == 0 || this.typeStr.localeCompare('rec') == 0;
 	}
