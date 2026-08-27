@@ -27,6 +27,14 @@ export interface SequenceItem extends vscode.TreeItem {
 	inFolder: boolean;
 }
 
+// A pass's mouse-over text: the comment the author wrote on that line of
+// analyzer.seq, when there is one worth showing, otherwise the given default
+// (normally the pass file path).
+function passTooltip(passItem: PassItem, fallback: string): string {
+	const comment = passItem.commentTooltip();
+	return comment.length ? comment : fallback;
+}
+
 export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 	private _onDidChangeTreeData: vscode.EventEmitter<SequenceItem | undefined | null | void> = new vscode.EventEmitter<SequenceItem | undefined | null | void>();
@@ -116,8 +124,9 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				}
 				if (!oneActive)
 					passItem.active = false;
+				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				seqItems.push({
-					uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal, inFolder: passItem.inFolder,
+					uri: passItem.uri, label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal, inFolder: passItem.inFolder,
 					type: passItem.typeStr, passNum: passItem.passNum, library: passItem.library, row: row,
 					collapsibleState: vscode.TreeItemCollapsibleState.Collapsed, active: passItem.active
 				});
@@ -129,10 +138,10 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				if (treeFile.hasFileType(passItem.uri, passItem.passNum, nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
 				if (debugConVal) label = row.toString() + ' ' + conVal;
-				tooltip = row.toString() + ' ' + tooltip;
+				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				if (passItem.fileExists())
 					seqItems.push({
-						uri: passItem.uri, label: label, name: passItem.name, tooltip: passItem.uri.fsPath, contextValue: conVal,
+						uri: passItem.uri, label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal,
 						inFolder: passItem.inFolder, type: passItem.typeStr, passNum: passItem.passNum, library: passItem.library, row: row,
 						collapsibleState: collapse, active: passItem.active
 					});
@@ -147,7 +156,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				conVal = conVal + 'pythonfile';
 				label = passItem.name;
 				if (debugConVal) label = row.toString() + ' ' + conVal;
-				tooltip = passItem.uri.fsPath;
+				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				if (passItem.fileExists())
 					seqItems.push({
 						uri: passItem.uri, label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal,
@@ -162,10 +171,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					});
 
 			} else {
-				tooltip = passItem.uri.fsPath;
+				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				if (passItem.tokenizer) {
 					label = '1 ' + passItem.typeStr;
-					tooltip = passItem.fetchTooltip();
+					// The tokenizer's canned description only stands in when the
+					// sequence line carries no comment of its own.
+					tooltip = passTooltip(passItem, passItem.fetchTooltip());
 					conVal = conVal + 'tokenize' + 'hasLog';
 					conVal = conVal.replace('mvdown', '');
 				} else {

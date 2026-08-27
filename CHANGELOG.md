@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.13
+The Sequence view shows the pass's comment on mouse-over.
+
+- **Hovering a pass in the Sequence view shows what the comment on that line of `analyzer.seq` says**, instead of the pass file's path on disk. The path told you where the file lives -- something the tree already makes obvious -- while the comment is where the author wrote down what the pass is for, and it was visible nowhere but the sequence file itself.
+- A pass with no comment, or one still carrying the placeholder `# comment` the extension writes on a new pass, falls back to the file path exactly as before. Tokenizers keep their built-in description unless the line has a comment of its own, and a pass whose file is missing still says `MISSING`.
+- Folders, Python passes, and rule passes all read their comment the same way, and both `#` line comments and `/* */` block comments are understood.
+
 ### 3.12.12
 Comments and blank lines in `analyzer.seq` survive the Sequence view.
 
