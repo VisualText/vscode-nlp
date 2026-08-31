@@ -1100,7 +1100,6 @@ export class VisualText {
     findExtensionIndex(engDir: string): number {
         let index = 0;
         for (const ext of this.extensionItems) {
-            visualText.stopAll
             if (engDir.startsWith(ext.uri.fsPath))
                 break;
             index++;

@@ -31,6 +31,18 @@ interface CommandResult {
     errorMessage?: string;
 }
 
+// One channel for the life of the extension host. Creating it per compile left a
+// fresh "NLP++ Compile" entry stacked in the Output dropdown after every build,
+// none of them disposed. Cleared on each run so the pane shows only this compile.
+let compileChannel: vscode.OutputChannel | undefined;
+
+function getCompileChannel(): vscode.OutputChannel {
+    if (!compileChannel)
+        compileChannel = vscode.window.createOutputChannel('NLP++ Compile');
+    compileChannel.clear();
+    return compileChannel;
+}
+
 export let nlpCompile: NLPCompile;
 export class NLPCompile {
 
@@ -784,7 +796,7 @@ export class NLPCompile {
         const cmakeContent = this.generateCompileCMakeLists(anapath, analyzerName, support, sourceDir, kbOnly);
         fs.writeFileSync(cmakeFile, cmakeContent, { encoding: 'utf8' });
 
-        const outputChannel = vscode.window.createOutputChannel('NLP++ Compile');
+        const outputChannel = getCompileChannel();
         outputChannel.show(true);
         outputChannel.appendLine('Configuring CMake build for analyzer/KB library...');
 

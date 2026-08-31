@@ -107,7 +107,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 			treeItem.contextValue = 'dir' + conVal + hasNonText + hasLogs + hasTest;
 			//treeItem.tooltip = treeItem.contextValue;
 			treeItem.iconPath = {
-				light: vscode.Uri.file(hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'folder-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg')),
+				light: vscode.Uri.file(hasTest ? path.join(__filename, '..', '..', 'resources', 'light', 'folder-test.svg') : path.join(__filename, '..', '..', 'resources', 'light', 'folder.svg')),
 				dark: vscode.Uri.file(hasTest ? path.join(__filename, '..', '..', 'resources', 'dark', 'folder-test.svg') : path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg')),
 			}
 		}

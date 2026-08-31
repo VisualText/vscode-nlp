@@ -73,6 +73,12 @@ module.exports = [
             '@typescript-eslint/no-duplicate-enum-values': 'error',
             '@typescript-eslint/prefer-as-const': 'error',
 
+            // A statement that is only a property access or a bare identifier does
+            // nothing. It is usually a call that lost its parens or a leftover from
+            // an edit -- `visualText.stopAll` in findExtensionIndex read like a guard
+            // but evaluated and discarded a boolean.
+            '@typescript-eslint/no-unused-expressions': 'error',
+
             // Dead code: an unused import, parameter or local. A name starting with
             // an underscore is exempt, which is how something that must exist but
             // is not read says so deliberately -- a parameter satisfying an

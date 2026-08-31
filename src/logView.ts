@@ -38,7 +38,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 				title: 'Open File with Error'
 			},
 			iconPath: {
-				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon)),
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', logItem.icon)),
 				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon))
 			}
 		};

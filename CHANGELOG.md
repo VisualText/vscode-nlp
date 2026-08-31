@@ -3,6 +3,16 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.17
+Light theme icons stop coming out dark.
+
+- **The LOG view no longer draws dark icons on a light background.** Every row in that view asked for its icon from `resources/dark/` under both themes, so on a light colour theme the whole pane rendered in the dark set. It now reads the light icons under a light theme, as the Analyzer, KB, Output, Find and Sequence views already did. All eight icons the view can show -- `dot`, `update`, `gear`, `dna`, `log`, `file`, `error` and `yield` -- exist in both sets, so nothing changed shape.
+- **Folders in the TEXT view had the same problem** and are fixed the same way: the light entry pointed into `resources/dark/`, which meant the dark folder and folder-with-tests icons on a light theme.
+- **A text file with tests next to it now has an icon under a light theme.** The view asked for `resources/light/file-test.svg`, which was never added, so the row drew with no icon at all. The file is now there, in the light file shape and a gold that reads against a light background rather than the near-white yellow the dark set uses. Together these three are the bulk of what made light mode look unfinished.
+- Pass file headers now write a zero-padded date and time -- `# MODIFIED: 2026-08-31 09:05:03` rather than `2026-8-31 9:5:3`. The ragged form was a different width every time and did not sort as text against a two-digit stamp. `# CREATED:` on a new pass is padded to match, so the two lines of the header line up. Nothing reads either stamp, so an existing file is simply rewritten in the padded form the next time it is saved.
+- The Output pane no longer collects an "NLP++ Compile" entry per build. Each compile created a channel and never disposed it, so the dropdown filled with identical names over a session. There is now one channel, cleared at the start of a run so the pane holds only the compile you are looking at.
+- Three statements that evaluated a value and threw it away are gone, one of which read like a stop check inside a loop but did nothing. `@typescript-eslint/no-unused-expressions` is switched on so a call that loses its parentheses is caught rather than shipped.
+
 ### 3.12.16
 KB view mouse-overs say what the file is for and where it lives.
 
