@@ -10,8 +10,6 @@ import { fileOperation, fileOpRefresh } from './fileOps';
 import { anaSubDir } from './analyzer';
 import { regressionRunner } from './regression';
 import * as fs from 'fs';
-import moment from 'moment';
-import 'moment-duration-format'
 
 export interface TextItem {
 	uri: vscode.Uri;
@@ -120,7 +118,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		const keepers = Array();
 		const entries = dirfuncs.getDirectoryTypes(dir);
 
-		const startTime = moment();
+		const startTime = Date.now();
 
 		for (const entry of entries) {
 			if (!entry.uri.fsPath.endsWith(visualText.TEST_SUFFIX) && !(entry.type == vscode.FileType.Directory && dirfuncs.directoryIsLog(entry.uri.fsPath))) {
@@ -145,8 +143,7 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 		}
 
 		if (visualText.getTextFastLoad()) {
-			const endTime = moment();
-			const timeDiff = moment.duration(endTime.diff(startTime), 'milliseconds').format('mm:ss:SS');
+			const timeDiff = formatElapsed(Date.now() - startTime);
 			visualText.debugMessage(`TextView loading: ${timeDiff} (m:s:ms)`);
 		}
 
@@ -288,6 +285,23 @@ export class FileSystemProvider implements vscode.TreeDataProvider<TextItem> {
 }
 
 export let textView: TextView;
+// Elapsed time as mm:ss:SS -- total minutes (which do not roll up into hours),
+// seconds, then hundredths of a second. Leading units that are zero are dropped,
+// so a sub-minute load reads "05:67" and a sub-second one just "67".
+//
+// This reproduces moment-duration-format's output exactly, down to the trimming.
+// Formatting this one line was the only thing moment and moment-duration-format
+// were used for, and moment is in maintenance mode.
+export function formatElapsed(ms: number): string {
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const minutes = Math.floor(ms / 60000);
+	const seconds = Math.floor(ms / 1000) % 60;
+	const hundredths = Math.floor((ms % 1000) / 10);
+	if (minutes > 0) return `${pad(minutes)}:${pad(seconds)}:${pad(hundredths)}`;
+	if (seconds > 0) return `${pad(seconds)}:${pad(hundredths)}`;
+	return pad(hundredths);
+}
+
 export class TextView {
 
 	private textView: vscode.TreeView<TextItem>;

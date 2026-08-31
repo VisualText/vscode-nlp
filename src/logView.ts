@@ -109,11 +109,13 @@ export class LogView {
 	private revealLast() {
 		if (!this.logView || this.logs.length === 0) return;
 		const last = this.logs[this.logs.length - 1];
-		try {
-			this.logView.reveal(last, { select: false, focus: false });
-		} catch {
-			// view not visible / not ready yet — nothing to scroll
-		}
+		// reveal() returns a Thenable, so its failure arrives as a rejected promise
+		// rather than a throw -- a try/catch here never fired, and VSCode logged
+		// "rejected promise not handled" every time the view was not ready or the
+		// element had already scrolled out of the refreshed tree. Handled on the
+		// promise instead; there is still nothing useful to do but ignore it.
+		void Promise.resolve(this.logView.reveal(last, { select: false, focus: false }))
+			.then(undefined, () => { /* view not visible / not ready yet -- nothing to scroll */ });
 	}
 
 	enginePath() {

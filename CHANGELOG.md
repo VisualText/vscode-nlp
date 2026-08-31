@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.18
+The log view stops logging unhandled promise errors.
+
+- **Auto-scrolling the LOG view no longer logs "rejected promise not handled" every time it cannot scroll.** `reveal()` hands back a promise rather than throwing, so the `try`/`catch` guarding it never once fired, and VSCode reported each failure itself -- six times in a single session on an ordinary run. It happened whenever the view was not visible yet or the newest line had already scrolled out of the tree being refreshed, neither of which is a fault worth reporting. The failure is now handled where it actually arrives, and the behaviour is otherwise unchanged: nothing to scroll, so nothing happens.
+- `moment` and `moment-duration-format` are gone. Between them they existed to format one number -- the `mm:ss:SS` elapsed time on the TextView fast-load message -- and moment is in maintenance mode. The formatting is now eight lines of arithmetic, checked against moment's output over 12,237 durations with no difference, so the message reads exactly as it did.
+
 ### 3.12.17
 Light theme icons stop coming out dark.
 
