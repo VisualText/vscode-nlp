@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.20
+Your global settings stop being rewritten every time a window opens.
+
+- **`analyzer.directory` is only written when it actually changes.** The setting was rewritten on every single activation, almost always to the path of the folder you had open. Two windows on two different analyzer folders would therefore take turns overwriting the same global setting with their own path, and every start touched `settings.json` whether anything had changed or not -- which Settings Sync then had something to sync. The value is only ever read as a fallback for when the open folder holds no analyzers, so none of that writing was buying anything.
+- Nothing else changes: the folder the extension uses is worked out exactly as before, and a genuinely new value is still saved.
+
 ### 3.12.19
 Startup stops walking folders that hold no analyzers.
 

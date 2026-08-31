@@ -1101,7 +1101,12 @@ export class VisualText {
         }
 
         this.analyzerDir = vscode.Uri.file(directory);
-        if (directory.length > 1)
+        // Only write when the value actually changes. This runs on every
+        // activation, and the path it writes is usually the workspace folder --
+        // so two windows open on two analyzer folders each rewrote the same
+        // global setting to their own path, over and over, for a value that is
+        // only ever read as a fallback when the open folder holds no analyzers.
+        if (directory.length > 1 && config.get<string>('directory') !== directory)
             config.update('directory', directory, vscode.ConfigurationTarget.Global);
     }
 
