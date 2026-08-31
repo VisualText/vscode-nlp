@@ -1427,6 +1427,21 @@ export class VisualText {
         return this.analyzers;
     }
 
+    // Build and engine output that never holds an analyzer, so the scan below
+    // does not descend into it. The same exclusions src/language/providers.ts
+    // already applies to the cross-pass index.
+    private static readonly SCAN_SKIP = /^(\.git|\.vscode-test|\.nlp-compile)$|_log$/;
+
+    // node_modules is handled separately rather than skipped outright, because
+    // the published nlpplus package ships analyzers inside it and they are meant
+    // to be found. Descend only when this node_modules actually contains it.
+    private static scanSkips(dirPath: string): boolean {
+        const name = path.basename(dirPath);
+        if (name === 'node_modules')
+            return !fs.existsSync(path.join(dirPath, 'nlpplus'));
+        return VisualText.SCAN_SKIP.test(name);
+    }
+
     getAnalyzersRecursive(testForLogs: boolean, dir: vscode.Uri) {
         if (dir.fsPath.length) {
             let anas: vscode.Uri[] = [];
@@ -1435,6 +1450,8 @@ export class VisualText {
             }
             anas = dirfuncs.getDirectories(dir);
             for (const ana of anas) {
+                if (VisualText.scanSkips(ana.fsPath))
+                    continue;
                 if (visualText.isAnalyzerDirectory(ana)) {
                     if (!testForLogs || dirfuncs.analyzerHasLogFiles(ana))
                         this.analyzers.push(ana);
