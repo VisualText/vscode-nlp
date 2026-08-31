@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.12.19
+Startup stops walking folders that hold no analyzers.
+
+- **The scan for analyzers no longer walks build and engine output.** Starting up points that scan at your workspace folder and walks the whole thing, synchronously, before the extension host can do anything else -- so the cost is paid on every start and nothing else happens meanwhile. It descended into `.git`, `.vscode-test`, `.nlp-compile` and per-input `_log` folders, none of which can hold an analyzer, and into `node_modules`, which almost never does. Measured on a folder of about 45,000 directories, the scan went from roughly 65 seconds to 36; on an ordinary analyzer folder, from 129ms to 48ms.
+- `node_modules` is skipped only when it does not contain the published `nlpplus` package, which does ship analyzers inside it and is meant to be found. Checked against a tree holding 797 analyzers: the same 797 are found, none lost and none gained -- the scan is only quicker about it.
+- This is a first cut rather than the whole story. The scan is still synchronous and still has no depth limit, so a deep enough tree can still take a while; those are the next things to look at.
+
 ### 3.12.18
 The log view stops logging unhandled promise errors.
 
