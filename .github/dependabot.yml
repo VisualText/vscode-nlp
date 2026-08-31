@@ -35,6 +35,16 @@ updates:
       # deliberate choice to follow VS Code's own runtime.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+
+      # TypeScript 7 is the Go rewrite (typescript-go), not a routine major. The
+      # whole lint toolchain peers against the old compiler -- typescript-eslint
+      # 8.68.0, the current latest, still declares typescript ">=4.8.4 <6.1.0" --
+      # so npm ci fails ERESOLVE on every job the moment typescript goes to 7.
+      # PR #1172 was closed for exactly this. Minor and patch bumps inside 6.x
+      # keep flowing; revisit the major once typescript-eslint ships TS 7
+      # support.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       # One PR for the routine dev-tooling churn instead of six. Majors stay
       # separate, since those are the ones that actually need reading.
