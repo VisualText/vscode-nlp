@@ -49,6 +49,16 @@
     "extensionDependencies": [
         "vscode.json"
     ],
+    "capabilities": {
+        "virtualWorkspaces": {
+            "supported": false,
+            "description": "NLP++ runs a native analyzer engine and reads and writes analyzer folders on disk, so it needs a real file system."
+        },
+        "untrustedWorkspaces": {
+            "supported": false,
+            "description": "Running an analyzer executes the NLP++ engine, and compiling one invokes the local C++ toolchain, against the files in the workspace."
+        }
+    },
     "contributes": {
         "views": {
             "visualText": [

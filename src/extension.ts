@@ -79,3 +79,15 @@ export function activate(ctx: vscode.ExtensionContext): void {
     else
         visualText.debugMessage("Auto update on reload is off");
 }
+
+// VS Code disposes everything in ctx.subscriptions for us; what is left are the
+// two bare intervals and the telemetry buffer, which would otherwise keep
+// running and drop the last interval's counts as the window closes.
+export function deactivate(): void {
+    try {
+        visualText.disposeTimers();
+    } catch {
+        // Nothing useful to do on the way out; never let shutdown throw.
+    }
+    telemetry.deactivate();
+}

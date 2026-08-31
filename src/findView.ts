@@ -53,13 +53,14 @@ export class FindView {
 	public findItems: FindItem[] = [];
 	private searchWord: string = '';
 
-	constructor(_context: vscode.ExtensionContext) {
+	constructor(ctx: vscode.ExtensionContext) {
 		const findViewProvider = new FindTreeDataProvider();
 		this.findView = vscode.window.createTreeView('findView', { treeDataProvider: findViewProvider });
-		vscode.commands.registerCommand('findView.refreshAll', () => findViewProvider.refresh());
-		vscode.commands.registerCommand('findView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('findView.updateTitle', () => this.updateTitle());
-		vscode.commands.registerCommand('findView.clearAll', () => this.clearAll());
+		ctx.subscriptions.push(this.findView);
+		ctx.subscriptions.push(vscode.commands.registerCommand('findView.refreshAll', () => findViewProvider.refresh()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('findView.openFile', (resource) => this.openFile(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('findView.updateTitle', () => this.updateTitle()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('findView.clearAll', () => this.clearAll()));
 	}
 
 	static attach(ctx: vscode.ExtensionContext) {

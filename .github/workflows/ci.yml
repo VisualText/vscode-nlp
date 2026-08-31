@@ -32,8 +32,16 @@ concurrency:
 
 jobs:
   checks:
-    name: Typecheck, lint and unit tests
-    runs-on: ubuntu-latest
+    name: Typecheck, lint and unit tests (${{ matrix.os }})
+    # Windows is not decoration here: the compile path shells out to VsDevCmd,
+    # vswhere, dumpbin and lib, and every path it builds is a Windows path. Those
+    # are the least exercised lines in the repo, and a Linux-only matrix cannot
+    # see a regression in any of them. Ubuntu stays the primary leg.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v7
         with:

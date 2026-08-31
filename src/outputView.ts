@@ -70,28 +70,29 @@ export class OutputView {
 	private testDirectory: vscode.Uri;
 	private type: outputFileType;
 
-	constructor(_context: vscode.ExtensionContext) {
+	constructor(ctx: vscode.ExtensionContext) {
 		const outputViewProvider = new OutputTreeDataProvider();
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
-		vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh());
+		ctx.subscriptions.push(this.outputView);
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh()));
 
-		vscode.commands.registerCommand('outputView.copytoKB', (resource) => this.copytoKB(resource));
-		vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource));
-		vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource));
-		vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('outputView.addTest', (resource) => this.addTest(resource));
-		vscode.commands.registerCommand('outputView.runTest', (resource) => this.runTest(resource));
-		vscode.commands.registerCommand('outputView.deleteTest', (resource) => this.deleteTest(resource));
-		vscode.commands.registerCommand('outputView.editTest', (resource) => this.editTest(resource));
-		vscode.commands.registerCommand('outputView.rename', (resource) => this.rename(resource));
-		vscode.commands.registerCommand('outputView.kb', () => this.loadKB());
-		vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt());
-		vscode.commands.registerCommand('outputView.trees', () => this.loadTrees());
-		vscode.commands.registerCommand('outputView.all', () => this.loadAll());
-		vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans());
-		vscode.commands.registerCommand('outputView.deleteOrphans', () => this.deleteOrphans());
-		vscode.commands.registerCommand('outputView.explore', () => this.explore());
-		vscode.commands.registerCommand('outputView.video', () => this.video());
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.copytoKB', (resource) => this.copytoKB(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.deleteOutput', (resource) => this.deleteOutput(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.openFile', (resource) => this.openFile(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.addTest', (resource) => this.addTest(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.runTest', (resource) => this.runTest(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.deleteTest', (resource) => this.deleteTest(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.editTest', (resource) => this.editTest(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.rename', (resource) => this.rename(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.kb', () => this.loadKB()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.trees', () => this.loadTrees()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.all', () => this.loadAll()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.orphanPasses', () => this.loadOrphans()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.deleteOrphans', () => this.deleteOrphans()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.explore', () => this.explore()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.video', () => this.video()));
 
 		this.outputFiles = [];
 		this.logDirectory = vscode.Uri.file('');

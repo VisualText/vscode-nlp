@@ -347,38 +347,39 @@ export class KBView {
 	private findFile = new FindFile();
 	private textFile = new TextFile();
 
-	constructor(_context: vscode.ExtensionContext) {
+	constructor(ctx: vscode.ExtensionContext) {
 		const treeDataProvider = new FileSystemProvider();
 		this.kbView = vscode.window.createTreeView('kbView', { treeDataProvider });
-		vscode.commands.registerCommand('kbView.refreshAll', () => treeDataProvider.refresh());
-		vscode.commands.registerCommand('kbView.existingFile', (KBItem) => treeDataProvider.existingFile(KBItem));
-		vscode.commands.registerCommand('kbView.existingFolder', (KBItem) => treeDataProvider.existingFolder(KBItem));
-		vscode.commands.registerCommand('kbView.rename', (KBItem) => treeDataProvider.rename(KBItem));
-		vscode.commands.registerCommand('kbView.renameDir', (KBItem) => treeDataProvider.renameDir(KBItem));
+		ctx.subscriptions.push(this.kbView);
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.refreshAll', () => treeDataProvider.refresh()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.existingFile', (KBItem) => treeDataProvider.existingFile(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.existingFolder', (KBItem) => treeDataProvider.existingFolder(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.rename', (KBItem) => treeDataProvider.rename(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.renameDir', (KBItem) => treeDataProvider.renameDir(KBItem)));
 
-		vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openKBFile(KBItem));
-		vscode.commands.registerCommand('kbView.openText', () => this.openText());
-		vscode.commands.registerCommand('kbView.search', () => this.search());
-		vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem, false));
-		vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem, false));
-		vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem));
-		vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem));;
-		vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem));
-		vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain());
-		vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts());
-		vscode.commands.registerCommand('kbView.byteSort', (KBItem) => this.byteSort(KBItem));
-		vscode.commands.registerCommand('kbView.explore', () => this.explore());
-		vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles());
-		vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem));
-		vscode.commands.registerCommand('kbView.copyToAnalyzer', (KBItem) => this.copyToAnalyzer(KBItem));
-		vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles());
-		vscode.commands.registerCommand('kbView.video', () => this.video());
-		vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem));
-		vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate());
-		vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem));
-		vscode.commands.registerCommand('kbView.langLibs', (_KBItem) => this.langLibs());
-		vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs());
-		vscode.commands.registerCommand('kbView.compileKB', (item?: any) => this.compileKB(item));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.openFile', (KBItem) => this.openKBFile(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.openText', () => this.openText()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.search', () => this.search()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.newKBBFile', (KBItem) => this.newKBBFile(KBItem, false)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.newDictFile', (KBItem) => this.newDictFile(KBItem, false)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.deleteFile', (KBItem) => this.deleteFile(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.deleteDir', (KBItem) => this.deleteFile(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.updateTitle', (KBItem) => this.updateTitle(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.generateMain', () => this.generateMain()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.mergeDicts', () => this.mergeDicts()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.byteSort', (KBItem) => this.byteSort(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.explore', () => this.explore()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.existingFiles', () => this.existingFiles()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.toggleActive', (KBItem) => this.toggleActive(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.copyToAnalyzer', (KBItem) => this.copyToAnalyzer(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.cleanFiles', () => this.cleanFiles()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.video', () => this.video()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.modAdd', (KBItem) => this.modAdd(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.modCreate', () => this.modCreate()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.modLoad', (KBItem) => this.modLoad(KBItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.langLibs', (_KBItem) => this.langLibs()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.miscLibs', () => this.miscLibs()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('kbView.compileKB', (item?: any) => this.compileKB(item)));
 	}
 
 	static attach(ctx: vscode.ExtensionContext) {

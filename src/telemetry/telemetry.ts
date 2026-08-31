@@ -204,6 +204,17 @@ export function instrumentCommands(): void {
 	patched = true;
 }
 
+// Stop the flush timer and send whatever the last interval buffered. Without
+// this the counters accumulated since the previous flush are lost every time the
+// window closes, which is exactly when a session's final commands land.
+export function deactivate(): void {
+	if (flushTimer) {
+		clearInterval(flushTimer);
+		flushTimer = undefined;
+	}
+	flushCounters();
+}
+
 // Error *class* name only. Messages are deliberately excluded: they routinely
 // contain absolute paths and analyzer names.
 function failureReason(command: string, err: any): string {
