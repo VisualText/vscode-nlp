@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.12.16",
+    "version": "3.12.17",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -49,6 +49,16 @@
     "extensionDependencies": [
         "vscode.json"
     ],
+    "capabilities": {
+        "virtualWorkspaces": {
+            "supported": false,
+            "description": "NLP++ runs a native analyzer engine and reads and writes analyzer folders on disk, so it needs a real file system."
+        },
+        "untrustedWorkspaces": {
+            "supported": false,
+            "description": "Running an analyzer executes the NLP++ engine, and compiling one invokes the local C++ toolchain, against the files in the workspace."
+        }
+    },
     "contributes": {
         "views": {
             "visualText": [

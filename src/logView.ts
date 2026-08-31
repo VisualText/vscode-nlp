@@ -38,7 +38,7 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<LogItem> 
 				title: 'Open File with Error'
 			},
 			iconPath: {
-				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon)),
+				light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', logItem.icon)),
 				dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', logItem.icon))
 			}
 		};
@@ -71,24 +71,25 @@ export class LogView {
 	constructor(context: vscode.ExtensionContext) {
 		const logViewProvider = new OutputTreeDataProvider();
 		this.logView = vscode.window.createTreeView('logView', { treeDataProvider: logViewProvider });
-		vscode.commands.registerCommand('logView.refreshAll', () => { logViewProvider.refresh(); this.revealLast(); });
-		vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource));
-		vscode.commands.registerCommand('logView.addMessage', (message, type, uri) => this.addMessage(message, type, uri));
-		vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog());
-		vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog());
-		vscode.commands.registerCommand('logView.makeAna', () => this.makeAna());
-		vscode.commands.registerCommand('logView.clear', () => this.clearLogs());
-		vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps());
-		vscode.commands.registerCommand('logView.stopUpdater', () => this.stopUpdater());
-		vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir());
-		vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp());
-		vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp());
-		vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates());
-		vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug());
-		vscode.commands.registerCommand('logView.toggleAutoUpdate', () => this.toggleAutoUpdate());
-		vscode.commands.registerCommand('logView.analyzerOuts', () => this.loadAnalyzerOuts());
-		vscode.commands.registerCommand('logView.analyzeSummary', () => this.loadAnalyzeSummary());
-		vscode.commands.registerCommand('logView.enginePath', () => this.enginePath());
+		context.subscriptions.push(this.logView);
+		context.subscriptions.push(vscode.commands.registerCommand('logView.refreshAll', () => { logViewProvider.refresh(); this.revealLast(); }));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.openFile', (resource) => this.openFile(resource)));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.addMessage', (message, type, uri) => this.addMessage(message, type, uri)));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.conceptualGrammar', () => this.loadCGLog()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.timing', () => this.loadTimingLog()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.makeAna', () => this.makeAna()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.clear', () => this.clearLogs()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.stopFileOps', () => this.stopFileOps()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.stopUpdater', () => this.stopUpdater()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.exploreEngineDir', () => this.exploreEngineDir()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.downloadHelp', () => this.downloadHelp()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.updaterHelp', () => this.updaterHelp()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.checkUpdates', () => this.checkUpdates()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.updateDebug', () => this.updateDebug()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.toggleAutoUpdate', () => this.toggleAutoUpdate()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.analyzerOuts', () => this.loadAnalyzerOuts()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.analyzeSummary', () => this.loadAnalyzeSummary()));
+		context.subscriptions.push(vscode.commands.registerCommand('logView.enginePath', () => this.enginePath()));
 
 		this.exists = false;
 		this.ctx = context;

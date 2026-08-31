@@ -284,6 +284,20 @@ export class VisualText {
         }
     }
 
+    // Shutdown counterpart to startTimer. stopUpdater is the user-facing STOP --
+    // it logs and drains the queue -- whereas this only stops the interval, which
+    // is all that is wanted when the host is going away.
+    disposeTimers() {
+        if (this.updaterID) {
+            clearInterval(this.updaterID);
+            this.updaterID = 0;
+        }
+        if (this.fileOps?.timerID) {
+            clearInterval(this.fileOps.timerID);
+            this.fileOps.timerID = 0;
+        }
+    }
+
     stopUpdater() {
         this.debugMessage('STOP requested by user', logLineType.UPDATER);
         for (const o of visualText.opsQueue) {
@@ -1100,7 +1114,6 @@ export class VisualText {
     findExtensionIndex(engDir: string): number {
         let index = 0;
         for (const ext of this.extensionItems) {
-            visualText.stopAll
             if (engDir.startsWith(ext.uri.fsPath))
                 break;
             index++;

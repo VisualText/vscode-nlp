@@ -118,26 +118,27 @@ export class HelpView {
     helpTree: vscode.TreeView<HelpItem>;
 
     constructor(private context: vscode.ExtensionContext) {
-        vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource));
-        vscode.commands.registerCommand('helpView.windowCHMHelp', (resource) => this.windowCHMHelp(resource));
-        vscode.commands.registerCommand('helpView.openHelpIndex', () => this.openHelpIndex());
-        vscode.commands.registerCommand('helpView.openFunctionHelp', () => this.openFunctionHelp());
-        vscode.commands.registerCommand('helpView.openFunctionPage', (name) => this.openFunctionPage(name));
-        vscode.commands.registerCommand('helpView.openVariableHelp', () => this.openVariableHelp());
-        vscode.commands.registerCommand('helpView.openHome', () => this.openHome());
-        vscode.commands.registerCommand('helpView.openVscodeHelp', (item) => this.openVscodeHelp(item));
-        vscode.commands.registerCommand('helpView.refreshHelp', () => this.helpTreeProvider.refresh());
-        vscode.commands.registerCommand('helpView.createClaudePrompt', () => this.createClaudePrompt());
-        vscode.commands.registerCommand('helpView.openPrompt', (item) => this.openPrompt(item));
-        vscode.commands.registerCommand('helpView.openLink', (item) => this.openLink(item));
-        vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement());
-        vscode.commands.registerCommand('helpView.copyPath', (item) => this.copyHelpPath(item));
-        vscode.commands.registerCommand('helpView.copyPrompt', (item) => this.copyPrompt(item));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.lookup', (resource) => this.lookup(resource)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.windowCHMHelp', (resource) => this.windowCHMHelp(resource)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openHelpIndex', () => this.openHelpIndex()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openFunctionHelp', () => this.openFunctionHelp()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openFunctionPage', (name) => this.openFunctionPage(name)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openVariableHelp', () => this.openVariableHelp()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openHome', () => this.openHome()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openVscodeHelp', (item) => this.openVscodeHelp(item)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.refreshHelp', () => this.helpTreeProvider.refresh()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.createClaudePrompt', () => this.createClaudePrompt()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openPrompt', (item) => this.openPrompt(item)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.openLink', (item) => this.openLink(item)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.showLatestAnnouncement', () => this.showLatestAnnouncement()));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.copyPath', (item) => this.copyHelpPath(item)));
+        this.context.subscriptions.push(vscode.commands.registerCommand('helpView.copyPrompt', (item) => this.copyPrompt(item)));
         this.exists = false;
         this.ctx = context;
         this.panel = undefined;
         this.helpTreeProvider = new HelpTreeDataProvider();
         this.helpTree = vscode.window.createTreeView('helpView', { treeDataProvider: this.helpTreeProvider });
+        this.context.subscriptions.push(this.helpTree);
     }
 
     static attach(ctx: vscode.ExtensionContext) {

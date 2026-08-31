@@ -36,62 +36,71 @@ export class NLPStatusBar {
         this.runMode = this.readRunModeConfig();
 
         nlpStatusBarRun = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
+        ctx.subscriptions.push(nlpStatusBarRun);
         nlpStatusBarRun.text = `$(run)`;
         nlpStatusBarRun.tooltip = 'Analyze the text';
         nlpStatusBarRun.command = 'status.clickedAnalyzerButton';
         nlpStatusBarRun.show();
 
         nlpStatusBarText = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 19);
+        ctx.subscriptions.push(nlpStatusBarText);
         nlpStatusBarText.tooltip = 'Current text to analyze';
         nlpStatusBarText.command = 'textView.openText';
         nlpStatusBarText.show();
 
         nlpStatusBarDev = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 18);
+        ctx.subscriptions.push(nlpStatusBarDev);
         nlpStatusBarDev.tooltip = 'Development settings';
         nlpStatusBarDev.command = 'status.chooseDev';
         nlpStatusBarDev.show();
         
         nlpStatusBarFired = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 17);
+        ctx.subscriptions.push(nlpStatusBarFired);
         nlpStatusBarFired.tooltip = 'Fired settings';
         nlpStatusBarFired.command = 'status.chooseFired';
         nlpStatusBarFired.show();
 
         nlpStatusBarRunMode = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 16);
+        ctx.subscriptions.push(nlpStatusBarRunMode);
         nlpStatusBarRunMode.tooltip = 'Toggle interpreted vs compiled analyzer run';
         nlpStatusBarRunMode.command = 'status.toggleRunMode';
         nlpStatusBarRunMode.show();
 
         nlpStatusBarEngineVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 1);
+        ctx.subscriptions.push(nlpStatusBarEngineVersion);
         nlpStatusBarEngineVersion.tooltip = 'NLP Engine Version';
         nlpStatusBarEngineVersion.command = 'status.openEngineVersionSettings';
         nlpStatusBarEngineVersion.show();
                                 
         nlpStatusBarVisualTextVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 2);
+        ctx.subscriptions.push(nlpStatusBarVisualTextVersion);
         nlpStatusBarVisualTextVersion.tooltip = 'VisualText Version';
         nlpStatusBarVisualTextVersion.command = 'status.openVisualTextVersionSettings';
         nlpStatusBarVisualTextVersion.show();
                                 
         nlpStatusBarAnalyzersVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 3);
+        ctx.subscriptions.push(nlpStatusBarAnalyzersVersion);
         nlpStatusBarAnalyzersVersion.tooltip = 'Analyzers Version';
         nlpStatusBarAnalyzersVersion.command = 'status.openAnalyzerVersionSettings';
         nlpStatusBarAnalyzersVersion.show();
                         
         nlpStatusBarFilesVersion = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, Number.MIN_VALUE - 4);
+        ctx.subscriptions.push(nlpStatusBarFilesVersion);
         nlpStatusBarFilesVersion.tooltip = 'VisualText Files Version';
         nlpStatusBarFilesVersion.command = 'status.openFilesVersionSettings';
         nlpStatusBarFilesVersion.show();
 
         this.update();
 
-        vscode.commands.registerCommand('status.update', () => this.update());
-        vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev());
-        vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired());
-        vscode.commands.registerCommand('status.toggleRunMode', () => this.toggleRunMode());
-        vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings());
-        vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings());
-        vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings());
-        vscode.commands.registerCommand('status.openAnalyzerVersionSettings', () => this.openAnalyzersVersionSettings());        
-        vscode.commands.registerCommand('status.clickedAnalyzerButton', () => this.clickedAnalyzerButton());
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.update', () => this.update()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.chooseDev', () => this.chooseDev()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.chooseFired', () => this.chooseFired()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.toggleRunMode', () => this.toggleRunMode()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.openEngineVersionSettings', () => this.openEngineVersionSettings()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.openVisualTextVersionSettings', () => this.openVisualTextVersionSettings()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.openFilesVersionSettings', () => this.openFilesVersionSettings()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.openAnalyzerVersionSettings', () => this.openAnalyzersVersionSettings()));
+        ctx.subscriptions.push(vscode.commands.registerCommand('status.clickedAnalyzerButton', () => this.clickedAnalyzerButton()));
     }
 
     static attach(ctx: vscode.ExtensionContext): NLPStatusBar {

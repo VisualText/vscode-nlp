@@ -57,8 +57,11 @@ export function activate(ctx: vscode.ExtensionContext): void {
         if (ext !== '.nlp' && ext !== '.rec' && ext !== '.pat')
             return;
         const now = new Date();
-        const stamp = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate() +
-            ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+        // Zero-padded throughout: an unpadded stamp ("2026-8-31 9:5:3") is ragged in
+        // the header and does not sort as text alongside a two-digit one.
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const stamp = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
         const newLine = '# MODIFIED: ' + stamp;
         const max = Math.min(e.document.lineCount, 15);
         for (let i = 0; i < max; i++) {
@@ -75,4 +78,16 @@ export function activate(ctx: vscode.ExtensionContext): void {
         visualText.startUpdater();
     else
         visualText.debugMessage("Auto update on reload is off");
+}
+
+// VS Code disposes everything in ctx.subscriptions for us; what is left are the
+// two bare intervals and the telemetry buffer, which would otherwise keep
+// running and drop the last interval's counts as the window closes.
+export function deactivate(): void {
+    try {
+        visualText.disposeTimers();
+    } catch {
+        // Nothing useful to do on the way out; never let shutdown throw.
+    }
+    telemetry.deactivate();
 }

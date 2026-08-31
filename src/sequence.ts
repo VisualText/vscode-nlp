@@ -657,8 +657,11 @@ export class SequenceFile extends TextFile {
 
 	todayDate(): string {
 		const today = new Date();
-		const date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-		const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+		// Same padded shape the "# MODIFIED:" stamp uses in extension.ts, so the two
+		// header lines line up and sort as text.
+		const pad = (n: number) => String(n).padStart(2, '0');
+		const date = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+		const time = pad(today.getHours()) + ":" + pad(today.getMinutes()) + ":" + pad(today.getSeconds());
 		return date + ' ' + time;
 	}
 
@@ -901,7 +904,6 @@ export class SequenceFile extends TextFile {
 				passNum++;
 			passItem.passNum = passNum;
 		}
-		this.passItems;
 	}
 
 	moveCount(passItem: PassItem, count: number) {
@@ -913,7 +915,6 @@ export class SequenceFile extends TextFile {
 			this.swapItems(pass,next);
 			pass = next;
 		}
-		this.passItems;
 	}
 	
 	prevNLP(passItem: PassItem): PassItem {
