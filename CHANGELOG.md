@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.13.1
+Parse-tree node flags are read by name.
+
+- **"Display Built Only" no longer hides nodes that were built.** The engine writes a node's flags only when they are set -- `b`, `un`, `sem`, `fired`, `blt`, in that order -- so which field holds `blt` depends on how many flags precede it. The reader took a fixed field, which is right for a node written `node,fired,blt` and wrong for one written `node,un,fired,blt`, where the flag has shifted along by one. Those nodes came back as not built and were dropped from the tree in BUILT mode. In the sample analyzers 63 nodes are written that way, `_sentence` and `_year` among them.
+- The same fixed-field reading in the other tree reader marked any unsealed node as fired: `node,un` has `un` where the reader expected `fired`. That field is not consulted by anything today, so nothing displayed wrongly, but it was wrong on 23,621 of the 37,863 node lines in the sample analyzers -- and it is exactly the field a future reader would reach for.
+- Both readers now share one flag parser with the `.tree` reader added in 3.13.0, so the vocabulary lives in one place and the two cannot drift apart again.
+
 ### 3.13.0
 NLP++ gets a language server and a replay debugger.
 

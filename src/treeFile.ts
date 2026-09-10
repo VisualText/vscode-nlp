@@ -9,6 +9,7 @@ import { SequenceFile } from './sequence';
 import { FindFile, FindItem } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
+import { parseNodeFlags } from './trace/treeParse';
 import * as os from 'os';
 
 export enum generateType { GENERAL, EXACT }
@@ -496,14 +497,13 @@ ${ruleStr}
 				treeLine.passNum = +toks[4];
 				treeLine.ruleLine = +toks[5];
 				treeLine.type = toks[6];
-				if (toks.length > 7) {
-					if (toks[7].length)
-						treeLine.fired = true;
-				}
-				if (toks.length > 8) {
-					if (toks[8].length > 0)
-						treeLine.built = true;
-				}
+				// Flags are read by NAME. The engine writes each one only when it
+				// is set (Pn::print, lite/pn.cpp), so the field after the type is
+				// whichever flag comes first -- taking field 7 as "fired" marked
+				// every unsealed node ("node,un") as fired.
+				const flags = parseNodeFlags(toks.slice(7));
+				treeLine.fired = flags.fired;
+				treeLine.built = flags.built;
 			}
 		}
 		return treeLine;
@@ -709,7 +709,12 @@ ${ruleStr}
 					tts[0] = firstChar;
 					tts.splice(1, 1);
 				}
-				fired.built = (tts.length >= 9 && tts[9] === 'blt') ? true : false;
+				// Same rule as parseTreeLine: flags are named, not positional. The
+				// type is field 7 here, so the flags start at 8. Fixing field 9 as
+				// "blt" missed "built" on every node that also carries b, un or
+				// sem -- 63 such nodes in the sample analyzers alone, all of them
+				// dropped from the tree in "Display Built Only" mode.
+				fired.built = parseNodeFlags(tts.slice(8)).built;
 				if (+tts[2] > lastTo) {
 					fired.str = tts[0].trim();
 					fired.from = +tts[1];

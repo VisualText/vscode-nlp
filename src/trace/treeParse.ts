@@ -92,7 +92,40 @@ function parseAttributes(text: string): TraceAttribute[] {
 	return out;
 }
 
+// The flags a node line can carry, in the order Pn::print emits them.
+export interface NodeFlags {
+	base: boolean;     // b
+	unsealed: boolean; // un
+	sem: boolean;      // sem
+	fired: boolean;    // fired -- a rule matched here
+	built: boolean;    // blt   -- a rule created this node
+}
+
 const FLAG_NAMES = new Set(["b", "un", "sem", "fired", "blt"]);
+
+// Read node flags out of the comma-separated fields that FOLLOW the type field.
+//
+// Shared with the older reader in treeFile.ts so the two cannot drift: both are
+// looking at the same engine output, and the vocabulary belongs in one place.
+//
+// Reading these by POSITION is the trap. Because a flag is written only when it
+// is set, the field after the type is whichever flag happens to be first --
+// "node,un" is unsealed, not fired, and a node written "node,un,fired,blt" has
+// "blt" two fields further along than one written "node,fired,blt". Any fixed
+// index is therefore wrong for some real subset of nodes.
+export function parseNodeFlags(fieldsAfterType: string[]): NodeFlags {
+	const flags: NodeFlags = { base: false, unsealed: false, sem: false, fired: false, built: false };
+	for (const raw of fieldsAfterType) {
+		const flag = raw.trim();
+		if (!FLAG_NAMES.has(flag)) continue;
+		if (flag === "b") flags.base = true;
+		else if (flag === "un") flags.unsealed = true;
+		else if (flag === "sem") flags.sem = true;
+		else if (flag === "fired") flags.fired = true;
+		else if (flag === "blt") flags.built = true;
+	}
+	return flags;
+}
 
 // Parse one "<name> [<fields>]" line into a node, or undefined if the line is
 // not a tree node (headers, blank lines, the "PAT OUTPUT TREE:" banner).
@@ -125,24 +158,11 @@ export function parseTreeLine(line: string): TraceNode | undefined {
 		passNum: num(parts[4]),
 		ruleLine: num(parts[5]),
 		type: parts[6],
-		base: false,
-		unsealed: false,
-		sem: false,
-		fired: false,
-		built: false,
+		...parseNodeFlags(parts.slice(7)),
 		attributes: parseAttributes(tail),
 		depth: Math.floor(indent.length / INDENT_WIDTH),
 		children: [],
 	};
-
-	for (const flag of parts.slice(7)) {
-		if (!FLAG_NAMES.has(flag)) continue;
-		if (flag === "b") node.base = true;
-		else if (flag === "un") node.unsealed = true;
-		else if (flag === "sem") node.sem = true;
-		else if (flag === "fired") node.fired = true;
-		else if (flag === "blt") node.built = true;
-	}
 	return node;
 }
 
