@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree } from "./treeParse";
+import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree, parseNodeFlags } from "./treeParse";
 import {
 	loadTrace, findLatestLogDir, parseSequence, sequencePassNames,
 	passesForSource, firedRuleLines, nodesBuiltBy,
@@ -81,6 +81,50 @@ function eq<T>(name: string, actual: T, expected: T): void {
 	check("line: header is not a node", parseTreeLine("    PASS 15 (moneyAttributes)") === undefined);
 	check("line: blank is not a node", parseTreeLine("") === undefined);
 	check("line: banner is not a node", parseTreeLine("PAT OUTPUT TREE:") === undefined);
+}
+
+// ---- flag vocabulary -------------------------------------------------------
+// parseNodeFlags is shared with the older reader in treeFile.ts. These cases are
+// the ones a positional reader gets wrong, and they are not hypothetical: the
+// sample analyzers contain 63 nodes written with a flag before "fired".
+{
+	const none = parseNodeFlags([]);
+	eq("flags: nothing set by default", [none.base, none.unsealed, none.sem, none.fired, none.built].join(","), "false,false,false,false,false");
+
+	// "node,un" -- field 7 is "un". Read positionally this reports fired.
+	const un = parseNodeFlags(["un"]);
+	eq("flags: un is unsealed", un.unsealed, true);
+	eq("flags: un is not fired", un.fired, false);
+
+	// "node,fired,blt" -- the shape a positional reader was tuned for.
+	const plain = parseNodeFlags(["fired", "blt"]);
+	eq("flags: fired,blt fired", plain.fired, true);
+	eq("flags: fired,blt built", plain.built, true);
+
+	// "node,un,fired,blt" -- blt has shifted one field along. This is the case
+	// that dropped built nodes from the tree in "Display Built Only" mode.
+	const shifted = parseNodeFlags(["un", "fired", "blt"]);
+	eq("flags: un,fired,blt still built", shifted.built, true);
+	eq("flags: un,fired,blt still fired", shifted.fired, true);
+	eq("flags: un,fired,blt unsealed", shifted.unsealed, true);
+
+	// "node,b,fired,blt" -- the other real shifted shape in the corpus.
+	const based = parseNodeFlags(["b", "fired", "blt"]);
+	eq("flags: b,fired,blt built", based.built, true);
+	eq("flags: b,fired,blt base", based.base, true);
+
+	// Every flag at once, shifting blt as far as it goes.
+	const all = parseNodeFlags(["b", "un", "sem", "fired", "blt"]);
+	eq("flags: all five set", [all.base, all.unsealed, all.sem, all.fired, all.built].join(","), "true,true,true,true,true");
+
+	// The attribute chunk trails the flags in the same field list and must not
+	// be mistaken for one.
+	const withAttrs = parseNodeFlags(["un", ' ("name" "sentence1")']);
+	eq("flags: attribute chunk is not a flag", withAttrs.fired, false);
+	eq("flags: attribute chunk leaves un set", withAttrs.unsealed, true);
+
+	// Whitespace around a flag (the field list is split on commas, not trimmed).
+	eq("flags: padded flag still reads", parseNodeFlags([" blt "]).built, true);
 }
 
 // ---- file parsing ----------------------------------------------------------
