@@ -16,7 +16,8 @@ import * as net from "net";
 // ---- protocol types ---------------------------------------------------------
 
 export type StopReason =
-	| "entry" | "step" | "breakpoint" | "matched" | "failed" | "passStart" | "pause";
+	| "entry" | "step" | "breakpoint" | "matched" | "failed" | "passStart"
+	| "statement" | "pause";
 
 // The engine's stopped event. Everything but `reason` is best-effort: a stop at
 // a pass boundary has no rule or node yet, and eltsMatched only accompanies a
@@ -31,6 +32,18 @@ export interface EngineStop {
 	nodeStart?: number;
 	nodeEnd?: number;
 	eltsMatched?: number; // failures only: how far the rule got
+
+	/**
+	 * True when the stop is on a STATEMENT in an @CODE, @POST or @DECL body
+	 * rather than on a rule. `line` then means the statement's line, and the
+	 * stop is reported BEFORE that statement runs.
+	 */
+	statement?: boolean;
+	/**
+	 * Call depth, 0 outside any function. Only meaningful for a statement stop,
+	 * and it is what makes step-over and step-out mean anything.
+	 */
+	depth?: number;
 }
 
 // One NLP++ variable. The engine renders values with the same call the .tree
@@ -67,6 +80,12 @@ export interface EngineNode {
 	children?: EngineNode[];
 	childCount?: number; // present instead of children when depth ran out
 	attributes?: EngineVar[]; // the node's own ("name" value) pairs
+	/**
+	 * The characters this node covers, sent by the engine from its own buffer.
+	 * Authoritative: slicing the input file with start/end drifts on any file
+	 * whose line endings the engine normalised, which is every CRLF file.
+	 */
+	text?: string;
 }
 
 export interface EngineRuleElement {
@@ -82,7 +101,11 @@ export interface EngineRule {
 	elements: EngineRuleElement[];
 }
 
-export type ResumeCommand = "continue" | "stepRule" | "stepMatch" | "stepPass";
+export type ResumeCommand =
+	| "continue" | "stepRule" | "stepMatch" | "stepPass"
+	// Statement stepping, for @CODE/@POST/@DECL bodies. INTO descends into a
+	// call, OVER runs one whole, OUT runs until the current function returns.
+	| "stepStatement" | "stepOverStatement" | "stepOutStatement";
 
 export interface EngineClientOptions {
 	/**
@@ -255,6 +278,20 @@ export class EngineClient {
 		return this.request("setBreakpoints", { pass, lines }).then(() => undefined);
 	}
 
+	/**
+	 * What this engine build can do, asked once after connecting.
+	 *
+	 * Statement support has to be known BEFORE it is used -- a breakpoint in an
+	 * @POST is set long before anything could be tried and found missing, and an
+	 * accepted breakpoint that never fires is worse than a refused one. An
+	 * engine older than 3.12 has no such command and answers with an error,
+	 * which reads here as an empty list.
+	 */
+	async capabilities(): Promise<string[]> {
+		const r = await this.request("capabilities");
+		return r?.ok && Array.isArray(r.capabilities) ? (r.capabilities as string[]) : [];
+	}
+
 	stopOnFailure(value: boolean): Promise<void> {
 		return this.request("stopOnFailure", { value }).then(() => undefined);
 	}
@@ -269,9 +306,21 @@ export class EngineClient {
 		return r?.ok ? (r.rule ?? undefined) : undefined;
 	}
 
-	async node(): Promise<EngineNode | undefined> {
-		const r = await this.request("node");
-		return r?.ok ? (r.node ?? undefined) : undefined;
+	/**
+	 * The current node, plus the next `after` siblings.
+	 *
+	 * `depth` matters because a handle handed to the client carries the subtree
+	 * it arrived with: fetched one level deep, every child expands to a dead end.
+	 * `after` matters because a rule matches a SEQUENCE, so the nodes following
+	 * the current one are the ones it is about to be tried against.
+	 */
+	async node(depth = 3, after = 0): Promise<{ node?: EngineNode; following: EngineNode[] }> {
+		const r = await this.request("node", { depth, after });
+		if (!r?.ok) return { following: [] };
+		return {
+			node: r.node ?? undefined,
+			following: Array.isArray(r.following) ? (r.following as EngineNode[]) : [],
+		};
 	}
 
 	async tree(depth: number): Promise<EngineNode | undefined> {
