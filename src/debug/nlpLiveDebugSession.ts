@@ -34,7 +34,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as net from "net";
 import {
-	EngineClient, EngineStop, EngineNode, EngineRule, ResumeCommand,
+	EngineClient, EngineStop, EngineNode, EngineRule, EngineVar,
+	EngineCollectElement, ResumeCommand,
 } from "./engineClient";
 import { parseSequence, sequencePassNames } from "../trace/traceModel";
 
@@ -49,6 +50,14 @@ export interface NlpLiveLaunchArguments extends DebugProtocol.LaunchRequestArgum
 	stopOnEntry?: boolean;
 	stopOnRuleFailure?: boolean; // also stop on every rule that fails
 	engineArgs?: string[];
+	/**
+	 * How many levels of parse tree to fetch at each stop. The engine walks the
+	 * tree in one request, and a handle handed to the client holds the subtree it
+	 * came with -- so this is also how deep the Variables pane can be expanded.
+	 * Deeper costs a bigger reply at every stop; 5 covers the usual
+	 * _ROOT / paragraph / sentence / phrase / token shape.
+	 */
+	treeDepth?: number;
 }
 
 // Attaching skips the spawn: the engine is already running under -DEBUG <port>,
@@ -66,7 +75,14 @@ type VariableRef =
 	| { kind: "rule" }
 	| { kind: "node" }
 	| { kind: "tree" }
-	| { kind: "engineNode"; node: EngineNode };
+	| { kind: "vars" }        // the L/S/X group
+	| { kind: "locals" }
+	| { kind: "suggested" }
+	| { kind: "context" }
+	| { kind: "globals" }
+	| { kind: "collect" }     // the N() matched elements
+	| { kind: "engineNode"; node: EngineNode }
+	| { kind: "attributes"; node: EngineNode };
 
 export class NlpLiveDebugSession extends LoggingDebugSession {
 	private client = new EngineClient();
@@ -85,6 +101,7 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	private pendingBreakpoints = new Map<number, number[]>();
 	private launched = false;
 	private attached = false;
+	private treeDepth = 5;
 	private breakpointSeq = 1;
 
 	public constructor() {
@@ -125,6 +142,7 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		}
 
 		this.analyzer = args.analyzer;
+		if (args.treeDepth && args.treeDepth > 0) this.treeDepth = args.treeDepth;
 		this.loadSequence(args.analyzer);
 		try {
 			this.inputText = fs.readFileSync(args.input, "utf8");
@@ -429,12 +447,17 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	// ---- variables ----------------------------------------------------------
 
 	protected scopesRequest(response: DebugProtocol.ScopesResponse): void {
+		// "expensive" tells the client not to fetch until the user expands it.
+		// Globals and the parse tree are the two that can be large, and both are
+		// a round trip to a stopped engine.
 		response.body = {
 			scopes: [
 				new Scope("Rule", this.variableHandles.create({ kind: "rule" }), false),
-				new Scope("Pass", this.variableHandles.create({ kind: "pass" }), false),
+				new Scope("Variables", this.variableHandles.create({ kind: "vars" }), false),
+				new Scope("Globals G()", this.variableHandles.create({ kind: "globals" }), true),
 				new Scope("Current node", this.variableHandles.create({ kind: "node" }), false),
 				new Scope("Parse tree", this.variableHandles.create({ kind: "tree" }), true),
+				new Scope("Pass", this.variableHandles.create({ kind: "pass" }), false),
 			],
 		};
 		this.sendResponse(response);
@@ -461,14 +484,48 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 					break;
 				}
 				case "tree": {
-					// One level at a time: the tree can be tens of thousands of
-					// nodes, and the client only expands what it displays.
-					const tree = await this.client.tree(1);
+					// Fetched several levels deep in one go, because a handle
+					// carries the subtree it arrived with: at depth 1 every child
+					// row expanded to "(N children)" and there was no way to go
+					// further, which also meant node attributes were never
+					// reachable. treeDepth bounds the cost.
+					const tree = await this.client.tree(this.treeDepth);
 					variables = tree ? [this.nodeVariable(tree)] : [];
 					break;
 				}
 				case "engineNode":
 					variables = this.nodeChildren(ref.node);
+					break;
+				case "attributes":
+					variables = (ref.node.attributes ?? []).map((a) => this.plain(a.name, a.value));
+					break;
+
+				// ---- variables ------------------------------------------------
+				case "vars":
+					// L/S/X grouped under one scope, plus the matched elements.
+					// Each row is a separate round trip only when expanded, so an
+					// analyzer with no locals costs nothing to display.
+					variables = [
+						this.group("L() locals", { kind: "locals" }),
+						this.group("S() suggested", { kind: "suggested" }),
+						this.group("X() context", { kind: "context" }),
+						this.group("N() matched elements", { kind: "collect" }),
+					];
+					break;
+				case "locals":
+					variables = this.varRows(await this.client.locals());
+					break;
+				case "suggested":
+					variables = this.varRows(await this.client.suggested());
+					break;
+				case "context":
+					variables = this.varRows(await this.client.context());
+					break;
+				case "globals":
+					variables = this.varRows(await this.client.globals());
+					break;
+				case "collect":
+					variables = this.collectRows(await this.client.collect());
 					break;
 			}
 		}
@@ -479,6 +536,40 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 	private plain(name: string, value: string): DebugProtocol.Variable {
 		return { name, value, variablesReference: 0 };
+	}
+
+	// An expandable row that fetches its contents only when opened.
+	private group(name: string, ref: VariableRef): DebugProtocol.Variable {
+		return { name, value: "", variablesReference: this.variableHandles.create(ref) };
+	}
+
+	private varRows(vars: EngineVar[]): DebugProtocol.Variable[] {
+		if (!vars.length) return [this.plain("(none)", "")];
+		return vars.map((v) => this.plain(v.name, v.value));
+	}
+
+	// The rule elements matched so far. Labelled by the ordinal N() uses, so the
+	// row name is the expression an author would write.
+	private collectRows(elements: EngineCollectElement[]): DebugProtocol.Variable[] {
+		if (!elements.length) return [this.plain("(nothing matched yet)", "")];
+		return elements.map((e) => {
+			const label = `N(${e.ord})`;
+			if (!e.single) {
+				// The engine's own N(n,"x") refuses a multi-node element, so say
+				// that rather than showing one node and implying it is addressable.
+				const span = e.spanEnd !== undefined ? ` through ${e.spanEnd}` : "";
+				return {
+					name: label,
+					value: `${e.node.name} … a range of nodes${span} — N() cannot address it`,
+					variablesReference: this.variableHandles.create({ kind: "engineNode", node: e.node }),
+				};
+			}
+			return {
+				name: label,
+				value: this.describeNode(e.node),
+				variablesReference: this.variableHandles.create({ kind: "engineNode", node: e.node }),
+			};
+		});
 	}
 
 	private passVariables(): DebugProtocol.Variable[] {
@@ -515,7 +606,9 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	}
 
 	private nodeVariable(node: EngineNode): DebugProtocol.Variable {
-		const expandable = (node.children && node.children.length > 0) || (node.childCount ?? 0) > 0;
+		const expandable = (node.children && node.children.length > 0)
+			|| (node.childCount ?? 0) > 0
+			|| (node.attributes?.length ?? 0) > 0;
 		return {
 			name: node.name,
 			value: this.describeNode(node),
@@ -533,7 +626,11 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		else if (node.fired) flags.push("fired");
 		const origin = node.passNum > 0 ? ` — pass ${node.passNum} line ${node.ruleLine}` : "";
 		const suffix = flags.length ? ` [${flags.join(", ")}]` : "";
-		return `${text} (${node.type})${origin}${suffix}`;
+		// Name the attributes on the row itself so a node carrying values is
+		// visible without expanding every node in the tree to find it.
+		const attrs = node.attributes && node.attributes.length
+			? `  {${node.attributes.map((a) => a.name).join(", ")}}` : "";
+		return `${text} (${node.type})${origin}${suffix}${attrs}`;
 	}
 
 	private spanText(node: EngineNode): string {
@@ -544,16 +641,25 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	}
 
 	private nodeChildren(node: EngineNode): DebugProtocol.Variable[] {
-		if (node.children && node.children.length) {
-			return node.children.map((c) => this.nodeVariable(c));
+		const out: DebugProtocol.Variable[] = [];
+		// A node's attributes come first: they are what N("x") and X("x") read,
+		// and usually the reason to open a node at all.
+		if (node.attributes && node.attributes.length) {
+			out.push({
+				name: "(attributes)",
+				value: node.attributes.map((a) => a.name).join(", "),
+				variablesReference: this.variableHandles.create({ kind: "attributes", node }),
+			});
 		}
-		if ((node.childCount ?? 0) > 0) {
+		if (node.children && node.children.length) {
+			for (const c of node.children) out.push(this.nodeVariable(c));
+		} else if ((node.childCount ?? 0) > 0) {
 			// The engine trimmed the walk at this depth. Rather than pretend the
 			// node is a leaf, say what is there and how to get it.
-			return [this.plain(`(${node.childCount} children)`,
-				"expand the Parse tree scope to walk deeper")];
+			out.push(this.plain(`(${node.childCount} children)`,
+				"expand the Parse tree scope to walk deeper"));
 		}
-		return [];
+		return out;
 	}
 
 	// ---- evaluate -----------------------------------------------------------
