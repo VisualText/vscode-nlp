@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.14.0
+Rules can be debugged as they run.
+
+- **A new "live" debug mode steps through rules as the engine tries them.** The replay debugger added in 3.13.0 steps over the parse trees a finished run left behind, which shows what each pass produced but nothing about how. Live mode runs the analyzer under the engine's own rule debugger and stops between individual rule attempts: which rule is being tried at which node, whether it matched, and -- when it did not -- how many of its elements matched before it gave up. That last number is usually the whole question when a rule does not fire, because it says which element stopped agreeing with the text.
+- The three step buttons map to the three things a rule debugger can do, since NLP++ has no call stack to step into: **Step Over** goes to the next rule tried, **Step Into** to the next rule that actually matches, and **Step Out** to the start of the next pass. Breakpoints work on rule lines in pass files, and the parse tree is browsable mid-pass, each node showing the text it covers and the pass and rule line that built it.
+- Turning on `stopOnRuleFailure` stops on every rule that fails, not just the ones that match. Most rules fail at most nodes, so this stops very often -- it is for tracking down one rule, not for browsing.
+- You can also **attach to an engine that is already running** under `nlp -ANA ... -DEBUG <port>`, rather than having the editor start it.
+- Live mode needs NLP++ engine 3.9.0 or later, and cannot step backward -- a running engine cannot un-run a rule. Replay mode is unchanged and still steps in both directions, so the two are offered side by side rather than one replacing the other. If the installed engine is too old the extension says so instead of failing to connect.
+
 ### 3.13.1
 Parse-tree node flags are read by name.
 

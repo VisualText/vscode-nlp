@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.13.1",
+    "version": "3.14.0",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -3505,19 +3505,95 @@
                             "analyzer"
                         ],
                         "properties": {
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "replay",
+                                    "live"
+                                ],
+                                "enumDescriptions": [
+                                    "Step through the per-pass parse trees of the last run. Works with any engine, and can step backward as well as forward, but stops only at pass boundaries.",
+                                    "Run the analyzer under the engine's rule debugger and stop between individual rule attempts, including on rules that fail. Needs NLP++ engine 3.9.0 or later and cannot step backward."
+                                ],
+                                "description": "Which debugger to use: replay the last run's tree dumps, or drive a live engine rule by rule.",
+                                "default": "replay"
+                            },
                             "analyzer": {
                                 "type": "string",
-                                "description": "The analyzer directory to replay (the folder containing spec/ and input/). Defaults to the analyzer currently open in the Analyzers view.",
+                                "description": "The analyzer directory (the folder containing spec/ and input/). Defaults to the analyzer currently open in the Analyzers view.",
                                 "default": "${command:nlp.currentAnalyzerDir}"
                             },
                             "logDir": {
                                 "type": "string",
-                                "description": "A specific <text>_log directory to replay. Defaults to the most recently written run under the analyzer's input/ tree."
+                                "description": "replay mode: a specific <text>_log directory to replay. Defaults to the most recently written run under the analyzer's input/ tree."
+                            },
+                            "input": {
+                                "type": "string",
+                                "description": "live mode: the text file to analyze. Defaults to the analyzer's current text file.",
+                                "default": "${command:nlp.currentTextFile}"
+                            },
+                            "enginePath": {
+                                "type": "string",
+                                "description": "live mode: path to nlp.exe. Defaults to the engine the extension installed."
+                            },
+                            "workDir": {
+                                "type": "string",
+                                "description": "live mode: the engine working directory passed as -WORK. Defaults to the installed engine directory."
+                            },
+                            "port": {
+                                "type": "number",
+                                "description": "live mode: TCP port for the engine's debug server on 127.0.0.1. A free port is chosen when this is not set."
+                            },
+                            "stopOnRuleFailure": {
+                                "type": "boolean",
+                                "description": "live mode: also stop every time a rule fails, reporting how many of its elements matched first. Most rules fail at most nodes, so this stops very often -- it is for tracking down one rule, not for browsing.",
+                                "default": false
+                            },
+                            "engineArgs": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "live mode: extra arguments appended to the nlp command line, e.g. [\"-DEV\"]."
                             },
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Stop at the first pass instead of running to the first breakpoint.",
                                 "default": true
+                            }
+                        }
+                    },
+                    "attach": {
+                        "required": [
+                            "analyzer",
+                            "port"
+                        ],
+                        "properties": {
+                            "mode": {
+                                "type": "string",
+                                "enum": [
+                                    "live"
+                                ],
+                                "description": "Attaching is only meaningful for the live rule debugger.",
+                                "default": "live"
+                            },
+                            "analyzer": {
+                                "type": "string",
+                                "description": "The analyzer directory the running engine was started on. Needed to map breakpoints in pass files to the pass numbers the engine uses.",
+                                "default": "${command:nlp.currentAnalyzerDir}"
+                            },
+                            "port": {
+                                "type": "number",
+                                "description": "The port the engine was started with, as in: nlp -ANA ... -IN ... -DEBUG 9777"
+                            },
+                            "input": {
+                                "type": "string",
+                                "description": "The text file the engine is analyzing. Optional: it is only used to show the text each tree node covers."
+                            },
+                            "stopOnRuleFailure": {
+                                "type": "boolean",
+                                "description": "Also stop every time a rule fails, reporting how many of its elements matched first.",
+                                "default": false
                             }
                         }
                     }
@@ -3527,20 +3603,56 @@
                         "type": "nlpxx",
                         "request": "launch",
                         "name": "NLP++: replay last analyzer run",
+                        "mode": "replay",
                         "analyzer": "${command:nlp.currentAnalyzerDir}",
+                        "stopOnEntry": true
+                    },
+                    {
+                        "type": "nlpxx",
+                        "request": "launch",
+                        "name": "NLP++: debug rules (live)",
+                        "mode": "live",
+                        "analyzer": "${command:nlp.currentAnalyzerDir}",
+                        "input": "${command:nlp.currentTextFile}",
                         "stopOnEntry": true
                     }
                 ],
                 "configurationSnippets": [
                     {
                         "label": "NLP++: replay last analyzer run",
-                        "description": "Step through the per-pass parse trees from the most recent run of an analyzer.",
+                        "description": "Step through the per-pass parse trees from the most recent run of an analyzer. Steps backward as well as forward.",
                         "body": {
                             "type": "nlpxx",
                             "request": "launch",
                             "name": "NLP++: replay last analyzer run",
+                            "mode": "replay",
                             "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
                             "stopOnEntry": true
+                        }
+                    },
+                    {
+                        "label": "NLP++: debug rules (live)",
+                        "description": "Run the analyzer under the engine's rule debugger. Step Over = next rule tried, Step Into = next rule that matches, Step Out = next pass. Needs engine 3.9.0+.",
+                        "body": {
+                            "type": "nlpxx",
+                            "request": "launch",
+                            "name": "NLP++: debug rules (live)",
+                            "mode": "live",
+                            "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
+                            "input": "^\"\\${command:nlp.currentTextFile}\"",
+                            "stopOnEntry": true
+                        }
+                    },
+                    {
+                        "label": "NLP++: attach to a running engine",
+                        "description": "Attach to an engine already started with -DEBUG <port>. Needs engine 3.9.0+.",
+                        "body": {
+                            "type": "nlpxx",
+                            "request": "attach",
+                            "name": "NLP++: attach to a running engine",
+                            "mode": "live",
+                            "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
+                            "port": 9777
                         }
                     }
                 ]
@@ -3574,11 +3686,12 @@
         "lint:fix": "npm run lint -- --fix",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "pretest": "npm run typecheck && npm run lint",
-        "test": "npm run check-grammars && npm run check-worker && npm run test:language && npm run test:treeview && npm run test:format && npm run test:trace",
+        "test": "npm run check-grammars && npm run check-worker && npm run test:language && npm run test:treeview && npm run test:format && npm run test:trace && npm run test:debug",
         "test:integration": "tsc -p tsconfig.test.json && node ./out-test/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
         "test:trace": "tsc -p tsconfig.trace.json && node ./out-trace/trace/traceTest.js",
+        "test:debug": "tsc -p tsconfig.debug.json && node ./out-debug/debug/debugTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },
