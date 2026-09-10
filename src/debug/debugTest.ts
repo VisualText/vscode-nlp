@@ -137,6 +137,11 @@ async function main(): Promise<void> {
 		const nodeSeq = JSON.parse(fake.received[1]).seq;
 		eq("correlation: first request is rule", JSON.parse(fake.received[0]).command, "rule");
 		eq("correlation: second request is node", JSON.parse(fake.received[1]).command, "node");
+		// depth so children expand, after so the nodes a rule will be tried
+		// against come with it. Both defaulted to nothing useful before.
+		check("node request carries a depth", JSON.parse(fake.received[1]).depth >= 1);
+		check("node request carries an after count",
+			typeof JSON.parse(fake.received[1]).after === "number");
 
 		fake.write(`{"seq":${nodeSeq},"ok":true,"node":{"name":"_money","type":"node","start":163,` +
 			`"end":166,"ustart":163,"uend":166,"passNum":14,"ruleLine":79,"fired":true,"built":true}}\n`);
@@ -148,8 +153,8 @@ async function main(): Promise<void> {
 		eq("correlation: rule reply reached the rule request", rule?.line, 17);
 		eq("correlation: rule builds", rule?.builds, "_money");
 		eq("correlation: rule element count", rule?.elements.length, 2);
-		eq("correlation: node reply reached the node request", node?.name, "_money");
-		eq("correlation: node provenance", node?.ruleLine, 79);
+		eq("correlation: node reply reached the node request", node.node?.name, "_money");
+		eq("correlation: node provenance", node.node?.ruleLine, 79);
 
 		client.kill();
 		await fake.close();
@@ -193,6 +198,47 @@ async function main(): Promise<void> {
 		eq("malformed: the next good message still arrives", stop.line, 17);
 		check("malformed: the bad line was reported", noise.some((n) => n.includes("unparsable")));
 		check("malformed: session is still live", !client.isTerminated);
+
+		client.kill();
+		await fake.close();
+	}
+
+	// ---- reading forward from the current node --------------------------------
+	// A rule matches a SEQUENCE, so the nodes after the current one are the ones
+	// it is about to be tried against. Before this they were reachable only by
+	// walking the whole document down from the root.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+
+		const p = client.node(4, 3);
+		await settle();
+		const sent = JSON.parse(fake.received[0]);
+		eq("following: depth is passed through", sent.depth, 4);
+		eq("following: after is passed through", sent.after, 3);
+
+		const mk = (name: string, start: number) =>
+			`{"name":"${name}","type":"alpha","start":${start},"end":${start + 2},` +
+			`"ustart":${start},"uend":${start + 2},"passNum":0,"ruleLine":0,` +
+			`"fired":false,"built":false,"attributes":[]}`;
+		fake.write(`{"seq":${sent.seq},"ok":true,"node":${mk("_det", 20)},` +
+			`"following":[${mk("total", 24)},${mk("of", 30)}]}
+`);
+
+		const r = await p;
+		eq("following: the current node comes back", r.node?.name, "_det");
+		eq("following: two nodes after it", r.following.length, 2);
+		eq("following: in order", r.following.map((n) => n.name).join(","), "total,of");
+
+		// An engine that sends no "following" must not break the caller.
+		const p2 = client.node(1, 0);
+		await settle();
+		const sent2 = JSON.parse(fake.received[1]);
+		fake.write(`{"seq":${sent2.seq},"ok":true,"node":${mk("_x", 1)}}
+`);
+		const r2 = await p2;
+		eq("following: absent list reads as empty", r2.following.length, 0);
+		eq("following: node still arrives", r2.node?.name, "_x");
 
 		client.kill();
 		await fake.close();

@@ -67,6 +67,12 @@ export interface EngineNode {
 	children?: EngineNode[];
 	childCount?: number; // present instead of children when depth ran out
 	attributes?: EngineVar[]; // the node's own ("name" value) pairs
+	/**
+	 * The characters this node covers, sent by the engine from its own buffer.
+	 * Authoritative: slicing the input file with start/end drifts on any file
+	 * whose line endings the engine normalised, which is every CRLF file.
+	 */
+	text?: string;
 }
 
 export interface EngineRuleElement {
@@ -269,9 +275,21 @@ export class EngineClient {
 		return r?.ok ? (r.rule ?? undefined) : undefined;
 	}
 
-	async node(): Promise<EngineNode | undefined> {
-		const r = await this.request("node");
-		return r?.ok ? (r.node ?? undefined) : undefined;
+	/**
+	 * The current node, plus the next `after` siblings.
+	 *
+	 * `depth` matters because a handle handed to the client carries the subtree
+	 * it arrived with: fetched one level deep, every child expands to a dead end.
+	 * `after` matters because a rule matches a SEQUENCE, so the nodes following
+	 * the current one are the ones it is about to be tried against.
+	 */
+	async node(depth = 3, after = 0): Promise<{ node?: EngineNode; following: EngineNode[] }> {
+		const r = await this.request("node", { depth, after });
+		if (!r?.ok) return { following: [] };
+		return {
+			node: r.node ?? undefined,
+			following: Array.isArray(r.following) ? (r.following as EngineNode[]) : [],
+		};
 	}
 
 	async tree(depth: number): Promise<EngineNode | undefined> {

@@ -3,6 +3,30 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.15.1
+A breakpoint anywhere in a rule now stops on that rule.
+
+- **Clicking on an element line did nothing.** The engine identifies a rule by its head line -- the `_name <-` -- and reports no other, so a breakpoint set on `_det [s]` inside `_money <- _det total _prep _money` was accepted and then never fired. The eye lands on whichever line names the thing you are looking for, which is rarely the head. Breakpoints now move to the head of the rule that contains them, and say so.
+- Rule extents come from the same parser the outline and go-to-definition use, so the debugger's idea of where a rule begins and ends cannot drift from the editor's.
+- A breakpoint outside every rule -- in `@CODE`, `@POST` or `@DECL` -- is reported unverified with the reason, instead of being accepted silently. Stopping there needs engine support that does not exist yet.
+
+### 3.15.0
+The debugger shows the nodes a rule is actually about.
+
+- **"Parse tree" is now "Nodes in play", and shows the rule's own nodes.** It used to start at `_ROOT`, so finding the handful of nodes a rule cared about meant walking down through thousands. At a match it now lists exactly the nodes the rule took, labelled `N(1)`, `N(2)`... -- the same names you would write in the rule. At an attempt, where nothing has matched yet, it shows the current node and the candidates after it, as many as the rule has elements. The whole document is still one row away at the bottom.
+- **You can read forward from the current node.** A rule matches a sequence, so the nodes after the current one are the ones it is about to be tried against -- and they were reachable only from the root. They now appear as `+1`, `+2`, `+3`..., each expandable.
+- **Nodes open properly.** "Current node" was fetched one level deep, so expanding any child hit "(N children)" and stopped. It now arrives deep enough to walk.
+- **Node text was wrong past the first line.** It was sliced out of the input file using the engine's offsets, and those index the engine's buffer, whose line endings are normalised -- so on a CRLF file every node after line 1 was shifted by one character per preceding line. A `(` showed as `"g"`, a `)` as `"R"`, `for` as `") f"`. The engine now sends each node's text from its own buffer. Needs NLP++ engine 3.11.0; against an older one the extension falls back to the old slicing.
+
+### 3.14.5
+The debugger shows the text a rule is being matched against.
+
+- **"Current node" never showed the node.** It listed the node's children and attributes, so the node itself -- crucially the TEXT it covers -- appeared nowhere. While a rule is being tried, that text is what the rule is being matched against, which is the most useful thing on the screen. The scope now opens with the node's name, its text, type, span and which pass and rule line built it, before its contents.
+- The Rule scope says which node the rule is being tried at, so the rule and the text it is being matched against are on the same screen.
+- **A pass with no source file says why, instead of "Unknown Source".** The tokenizers -- `tokenize`, `dicttokz`, `chartok` and the rest -- are built into the engine and have no `.nlp` file to open, so VSCode rendered the stack frame as "Unknown Source". That is the *first* pass of almost every analyzer, so it was the first thing anyone saw on pressing F5, and it reads like something went wrong when nothing did. The frame now says `Pass 1: dicttokz (built into the engine — no pass file)`.
+
+- **Stopping on a tokenizer looked like a failure.** The tokenizers -- `tokenize`, `dicttokz`, `chartok` and the rest -- are built into the engine and have no `.nlp` file to open, so VSCode rendered the stack frame as "Unknown Source". That is the *first* pass of almost every analyzer, so it was the first thing anyone saw on pressing F5, and it reads like something went wrong when nothing did. The frame now says `Pass 1: dicttokz (built into the engine — no pass file)`.
+
 ### 3.14.4
 Live debugging finds the text file you picked in the TEXT view.
 

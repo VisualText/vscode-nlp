@@ -38,6 +38,7 @@ import {
 	EngineCollectElement, ResumeCommand,
 } from "./engineClient";
 import { parseSequence, sequencePassNames } from "../trace/traceModel";
+import { declaredSymbols } from "../language/symbols";
 
 const THREAD_ID = 1;
 
@@ -87,7 +88,8 @@ type VariableRef =
 	| { kind: "globals" }
 	| { kind: "collect" }     // the N() matched elements
 	| { kind: "engineNode"; node: EngineNode }
-	| { kind: "attributes"; node: EngineNode };
+	| { kind: "attributes"; node: EngineNode }
+	| { kind: "wholeTree" };
 
 export class NlpLiveDebugSession extends LoggingDebugSession {
 	private client = new EngineClient();
@@ -102,6 +104,9 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	// on a case-sensitive filesystem.
 	private passOfSource = new Map<string, number>();
 	private sourceOfPass = new Map<number, string>();
+	// Pass file -> the head line of each rule, and the line range it covers.
+	// Built lazily per file, because breakpoints arrive one file at a time.
+	private ruleSpans = new Map<string, Array<{ head: number; from: number; to: number }>>();
 	// Breakpoints the client set before we were connected to the engine.
 	private pendingBreakpoints = new Map<number, number[]>();
 	private launched = false;
@@ -308,20 +313,95 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			return;
 		}
 
-		if (this.launched) await this.client.setBreakpoints(pass, lines);
-		else this.pendingBreakpoints.set(pass, lines);
-
-		// Verified means "the engine has been told about it". Unlike the replay
-		// session we cannot say in advance whether the rule will fire -- that is
-		// the whole point of running live.
-		response.body = {
-			breakpoints: lines.map((line) => {
-				const bp = new Breakpoint(true, line) as DebugProtocol.Breakpoint;
-				bp.id = this.breakpointSeq++;
+		// Move each breakpoint onto the head of the rule that contains it.
+		//
+		// A rule spans several lines and the eye lands on whichever one names the
+		// thing being looked for -- an element, usually, not the `_name <-`. But
+		// the engine identifies a rule by its head line and reports no other, so
+		// a breakpoint anywhere else used to be accepted and then never fire.
+		const effective: number[] = [];
+		const reported = lines.map((line) => {
+			const head = this.ruleHeadFor(sourcePath, line);
+			const bp = new Breakpoint(true, head ?? line) as DebugProtocol.Breakpoint;
+			bp.id = this.breakpointSeq++;
+			if (head === undefined) {
+				// Outside every rule: an @CODE, @POST or @DECL region. The engine
+				// stops at rule attempts and pass boundaries, so there is nothing
+				// there to stop on -- say so rather than accept it silently.
+				bp.verified = false;
+				bp.message = "Breakpoints outside a rule are not supported yet; " +
+					"the engine stops at rules and pass boundaries.";
 				return bp;
-			}),
-		};
+			}
+			effective.push(head);
+			if (head !== line) bp.message = `Moved to line ${head}, where the rule starts.`;
+			return bp;
+		});
+
+		// Deduped: several breakpoints inside one rule are one stop.
+		const unique = [...new Set(effective)];
+		if (this.launched) await this.client.setBreakpoints(pass, unique);
+		else this.pendingBreakpoints.set(pass, unique);
+
+		response.body = { breakpoints: reported };
 		this.sendResponse(response);
+	}
+
+	// Where each rule in a pass file begins and ends, in 1-based lines.
+	//
+	// Needed because the engine identifies a rule by its HEAD line -- the
+	// `_name <-` -- and that is the only line it ever reports. A breakpoint set
+	// anywhere else inside the rule, which is where the eye naturally goes when
+	// reading `_money <- _det total _prep _money`, was sent through verbatim and
+	// simply never fired.
+	//
+	// Parsed with the same declaredSymbols() the outline and go-to-definition
+	// use, so the debugger's idea of where a rule starts and ends cannot drift
+	// from the editor's.
+	private rulesIn(sourcePath: string): Array<{ head: number; from: number; to: number }> {
+		const key = path.resolve(sourcePath).toLowerCase();
+		const cached = this.ruleSpans.get(key);
+		if (cached) return cached;
+
+		const spans: Array<{ head: number; from: number; to: number }> = [];
+		try {
+			const text = fs.readFileSync(sourcePath, "utf8");
+			// One line table for the file, rather than counting newlines per symbol.
+			const starts: number[] = [0];
+			for (let i = 0; i < text.length; i++) {
+				if (text[i] === "\n") starts.push(i + 1);
+			}
+			const lineOf = (offset: number): number => {
+				let lo = 0, hi = starts.length - 1;
+				while (lo < hi) {
+					const mid = (lo + hi + 1) >> 1;
+					if (starts[mid] <= offset) lo = mid;
+					else hi = mid - 1;
+				}
+				return lo + 1; // the engine and the editor both count from 1
+			};
+			for (const sym of declaredSymbols(text)) {
+				if (sym.kind !== "rule") continue;
+				spans.push({
+					head: lineOf(sym.selStart),
+					from: lineOf(sym.start),
+					to: lineOf(sym.end),
+				});
+			}
+		} catch {
+			// Unreadable pass file: fall back to sending lines through unchanged.
+		}
+		this.ruleSpans.set(key, spans);
+		return spans;
+	}
+
+	// The head line of the rule containing `line`, or undefined if it falls
+	// outside every rule (an @CODE or @POST region, say).
+	private ruleHeadFor(sourcePath: string, line: number): number | undefined {
+		for (const r of this.rulesIn(sourcePath)) {
+			if (line >= r.from && line <= r.to) return r.head;
+		}
+		return undefined;
 	}
 
 	// ---- execution ----------------------------------------------------------
@@ -430,7 +510,17 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 		// Frame 1: the pass. Passes run in sequence rather than calling each
 		// other, so this is the bottom of a genuinely two-deep stack.
-		const passFrame = new StackFrame(2, `Pass ${stop.pass}: ${this.passLabel(stop)}`,
+		//
+		// A pass with no source file is normal, not an error: the tokenizers
+		// (tokenize, dicttokz, chartok ...) are built into the engine and have no
+		// .nlp file to open. Left to itself VSCode renders that as "Unknown
+		// Source", which reads like something failed -- and the very first pass of
+		// most analyzers is a tokenizer, so it is the first thing a user sees.
+		// Saying so in the frame name costs nothing and answers the question.
+		const passName = this.passLabel(stop);
+		const passFrame = new StackFrame(2,
+			source ? `Pass ${stop.pass}: ${passName}`
+				: `Pass ${stop.pass}: ${passName} (built into the engine — no pass file)`,
 			source, stop.line > 0 ? stop.line : 1);
 		if (!source) passFrame.presentationHint = "subtle";
 		frames.push(passFrame);
@@ -461,7 +551,7 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 				new Scope("Variables", this.variableHandles.create({ kind: "vars" }), false),
 				new Scope("Globals G()", this.variableHandles.create({ kind: "globals" }), true),
 				new Scope("Current node", this.variableHandles.create({ kind: "node" }), false),
-				new Scope("Parse tree", this.variableHandles.create({ kind: "tree" }), true),
+				new Scope("Nodes in play", this.variableHandles.create({ kind: "tree" }), false),
 				new Scope("Pass", this.variableHandles.create({ kind: "pass" }), false),
 			],
 		};
@@ -484,16 +574,21 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 					variables = this.ruleVariables(await this.client.rule());
 					break;
 				case "node": {
-					const node = await this.client.node();
-					variables = node ? this.nodeChildren(node) : [];
+					// Deep enough that children expand, and carrying the nodes
+					// that FOLLOW: a rule matches a sequence, so those are the
+					// ones it is about to be tried against.
+					const r = await this.client.node(this.treeDepth, await this.followCount());
+					variables = r.node ? this.currentNodeRows(r.node, r.following) : [];
 					break;
 				}
 				case "tree": {
-					// Fetched several levels deep in one go, because a handle
-					// carries the subtree it arrived with: at depth 1 every child
-					// row expanded to "(N children)" and there was no way to go
-					// further, which also meant node attributes were never
-					// reachable. treeDepth bounds the cost.
+					variables = await this.ruleRegionRows();
+					break;
+				}
+				case "wholeTree": {
+					// The document from _ROOT, kept reachable but no longer the
+					// default: at a rule stop it is thousands of nodes of which a
+					// handful are relevant.
 					const tree = await this.client.tree(this.treeDepth);
 					variables = tree ? [this.nodeVariable(tree)] : [];
 					break;
@@ -609,6 +704,11 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			this.plain("builds", rule.builds ?? "(nothing)"),
 			this.plain("elements", rule.elements.map((e) => e.name).join(" ") || "(none)"),
 		];
+		// Which node the rule is being tried at, and the text under it. The rule
+		// and the text it is being matched against belong on the same screen.
+		if (stop?.node) {
+			out.push(this.plain("matching at", stop.node));
+		}
 		// Pair the element list with how far the match got, so the two read
 		// together: "3 elements, failed after 2" points at element 3.
 		if (stop?.reason === "failed" && stop.eltsMatched !== undefined) {
@@ -649,10 +749,108 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	}
 
 	private spanText(node: EngineNode): string {
-		if (!this.inputText.length || node.ustart < 0 || node.uend < node.ustart) return "";
-		const raw = this.inputText.slice(node.ustart, node.uend + 1).replace(/\s+/g, " ").trim();
+		// The engine sends the text it actually spans. Slicing the input file with
+		// start/end is only a fallback for an older engine: those offsets index
+		// the engine's buffer, whose line endings are normalised, so on a CRLF
+		// file every node past the first line came out shifted -- a "(" rendered
+		// as "g", a ")" as "R".
+		let raw: string;
+		if (typeof node.text === "string") {
+			raw = node.text;
+		} else if (this.inputText.length && node.ustart >= 0 && node.uend >= node.ustart) {
+			raw = this.inputText.slice(node.ustart, node.uend + 1);
+		} else {
+			return "";
+		}
+		raw = raw.replace(/\s+/g, " ").trim();
 		if (!raw.length) return '""';
 		return JSON.stringify(raw.length > 60 ? raw.slice(0, 57) + "..." : raw);
+	}
+
+	// How many nodes beyond the current one are worth fetching: enough to cover
+	// the rule being tried, with a little slack so the sequence reads in context.
+	// Falls back to a handful at a pass boundary, where there is no rule.
+	private async followCount(): Promise<number> {
+		// One extra round trip to an engine that is already stopped, which costs
+		// nothing and avoids caching a value that goes stale at every step.
+		const rule = await this.client.rule();
+		const n = rule?.elements.length ?? 0;
+		return n > 0 ? n + 2 : 6;
+	}
+
+	// The nodes a rule is actually about, rather than the whole document.
+	//
+	// Rooting this at _ROOT meant thousands of nodes of which a handful mattered,
+	// and the ones the rule is being tried against were reachable only by walking
+	// down from the top. On a MATCH the answer is exact: the collect list is the
+	// nodes the rule took. On an attempt the rule has taken nothing yet, so the
+	// candidates are the current node and the ones after it.
+	private async ruleRegionRows(): Promise<DebugProtocol.Variable[]> {
+		const out: DebugProtocol.Variable[] = [];
+
+		const collected = await this.client.collect();
+		if (collected && collected.length) {
+			out.push(this.plain("(matched)", `${collected.length} element${collected.length === 1 ? "" : "s"}`));
+			for (const e of collected) {
+				out.push({
+					name: `N(${e.ord})`,
+					value: e.single ? this.describeNode(e.node) : `${e.node.name} … a range of nodes`,
+					variablesReference: this.variableHandles.create({ kind: "engineNode", node: e.node }),
+				});
+			}
+		} else {
+			const r = await this.client.node(this.treeDepth, await this.followCount());
+			if (r.node) {
+				out.push(this.plain("(being tried at)", ""));
+				out.push(this.nodeVariable(r.node));
+				if (r.following.length) {
+					out.push(this.plain("(nodes after it)", ""));
+					for (const n of r.following) out.push(this.nodeVariable(n));
+				}
+			}
+		}
+
+		// Never take the whole tree away -- sometimes the context above the rule
+		// is exactly what is wanted.
+		out.push({
+			name: "(whole document tree)",
+			value: "",
+			variablesReference: this.variableHandles.create({ kind: "wholeTree" }),
+		});
+		return out;
+	}
+
+	// The current node, described before its contents.
+	//
+	// This scope used to list only the node's children and attributes, so the
+	// node itself -- crucially the TEXT it covers -- never appeared anywhere.
+	// While a rule is being tried, that text is what the rule is being matched
+	// against, which is the single most useful thing on the screen.
+	private currentNodeRows(node: EngineNode, following: EngineNode[] = []): DebugProtocol.Variable[] {
+		const out: DebugProtocol.Variable[] = [
+			this.plain("node", node.name),
+			this.plain("text", this.spanText(node) || "(no text)"),
+			this.plain("type", node.type),
+			this.plain("span", `${node.start}-${node.end}`),
+		];
+		if (node.passNum > 0) {
+			out.push(this.plain("built by", `pass ${node.passNum} line ${node.ruleLine}`));
+		}
+		const rows = out.concat(this.nodeChildren(node));
+
+		// The nodes that come after this one, in order. A rule matches a
+		// sequence, so reading forward from the current node is the natural
+		// movement -- and there was no way to do it short of walking the whole
+		// tree down from the root.
+		if (following.length) {
+			rows.push(this.plain("(next nodes)", `${following.length} after this one`));
+			following.forEach((n, i) => {
+				const row = this.nodeVariable(n);
+				row.name = `+${i + 1} ${n.name}`;
+				rows.push(row);
+			});
+		}
+		return rows;
 	}
 
 	private nodeChildren(node: EngineNode): DebugProtocol.Variable[] {
