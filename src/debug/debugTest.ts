@@ -198,6 +198,80 @@ async function main(): Promise<void> {
 		await fake.close();
 	}
 
+	// ---- variables -----------------------------------------------------------
+	// Every NLP++ variable kind arrives as the same {name,value} shape, because
+	// the engine stores them all as one Dlist<Ipair>. What is worth pinning is
+	// that each command reads its OWN field out of the reply -- a copy-paste slip
+	// there returns an empty list rather than an error, and the pane just looks
+	// like the analyzer has no variables.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+
+		const gP = client.globals();
+		const lP = client.locals();
+		const sP = client.suggested();
+		const xP = client.context();
+		const cP = client.collect();
+		await settle();
+
+		const sent = fake.received.map((l) => JSON.parse(l));
+		eq("vars: five commands were sent", sent.length, 5);
+		eq("vars: command names", sent.map((m) => m.command).join(","),
+			"globals,locals,suggested,context,collect");
+
+		const reply = (i: number, body: string) =>
+			fake.write(`{"seq":${sent[i].seq},"ok":true,${body}}
+`);
+		reply(0, '"globals":[{"name":"corporate","value":"concept:\\"corporate\\""}]');
+		reply(1, '"locals":[{"name":"n","value":"3"}]');
+		reply(2, '"suggested":[{"name":"value","value":"130"}]');
+		reply(3, '"context":[]');
+		reply(4, '"collect":[' +
+			'{"ord":1,"single":true,"node":{"name":"No","type":"alpha","start":24,"end":25,' +
+			'"ustart":24,"uend":25,"passNum":0,"ruleLine":0,"fired":false,"built":false,"attributes":[]}},' +
+			'{"ord":2,"single":false,"spanEnd":40,"node":{"name":"_x","type":"node","start":27,"end":30,' +
+			'"ustart":27,"uend":30,"passNum":4,"ruleLine":9,"fired":true,"built":true,' +
+			'"attributes":[{"name":"number","value":"1"}]}}]');
+
+		const globals = await gP;
+		eq("vars: globals count", globals.length, 1);
+		eq("vars: global name", globals[0].name, "corporate");
+		eq("vars: global value keeps its quotes", globals[0].value, 'concept:"corporate"');
+		eq("vars: locals", (await lP)[0]?.value, "3");
+		eq("vars: suggested", (await sP)[0]?.name, "value");
+		eq("vars: context may be empty", (await xP).length, 0);
+
+		const coll = await cP;
+		eq("collect: element count", coll.length, 2);
+		eq("collect: first ordinal", coll[0].ord, 1);
+		check("collect: a single-node element is marked single", coll[0].single === true);
+		eq("collect: node name", coll[0].node.name, "No");
+		// A range element is what N(n,"x") cannot address; the flag is how the
+		// client knows to say so instead of showing one node.
+		check("collect: a range element is marked not single", coll[1].single === false);
+		eq("collect: range reports where it reached", coll[1].spanEnd, 40);
+		eq("collect: node attributes come through", coll[1].node.attributes?.[0]?.name, "number");
+
+		client.kill();
+		await fake.close();
+	}
+
+	// A reply that is missing its field, or malformed, yields an empty list
+	// rather than throwing -- a stopped engine is still usable.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+		const p = client.globals();
+		await settle();
+		const seqNo = JSON.parse(fake.received[0]).seq;
+		fake.write(`{"seq":${seqNo},"ok":true}
+`); // no "globals" field
+		eq("vars: a reply with no payload is an empty list", (await p).length, 0);
+		client.kill();
+		await fake.close();
+	}
+
 	// ---- termination ---------------------------------------------------------
 	{
 		const fake = await fakeEngine();

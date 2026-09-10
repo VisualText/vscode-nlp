@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.14.1
+The live debugger shows NLP++ variables.
+
+- **Variables are visible while stepping.** A new Variables pane group shows `L()` locals, `S()` suggested values, `X()` context values and `N()` matched elements, with `G()` globals in their own scope. The `N()` rows are labelled by the ordinal you would actually write -- `N(1)`, `N(2)` -- so the row name is the expression, not a description of it.
+- **Node attributes appear at last.** The `("name" value)` pairs that `.tree` dumps have always printed were missing from the live debugger entirely, so it showed less about a node than the post-mortem file did. Every node in the tree now carries them, named on the row itself so a node holding values is visible without opening each one to look.
+- **The parse tree can be walked.** It was fetched one level deep, so every child row expanded to "(N children)" and there was no way to go further -- which is also why node attributes were unreachable even once the engine sent them. Several levels now arrive at each stop; `treeDepth` in the launch configuration bounds the cost.
+- An element that matched a *range* of nodes says so rather than showing one node and implying `N()` can address it. That mirrors the engine, whose own `N(n,"x")` refuses those.
+- Needs NLP++ engine 3.10.0 or later for the variable commands; everything from 3.14.0 still works against 3.9.0.
+
 ### 3.14.0
 Rules can be debugged as they run.
 

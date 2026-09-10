@@ -33,6 +33,26 @@ export interface EngineStop {
 	eltsMatched?: number; // failures only: how far the rule got
 }
 
+// One NLP++ variable. The engine renders values with the same call the .tree
+// dumps use, so a value reads identically in the debugger and in a dump.
+export interface EngineVar {
+	name: string;
+	value: string;
+}
+
+// A rule element that matched, in rule order -- what N(n,"x") indexes.
+export interface EngineCollectElement {
+	ord: number;
+	/**
+	 * False when the element matched a RANGE of nodes (a wildcard, say). The
+	 * engine's own N(n,"x") lookup refuses those, so the debugger says so
+	 * rather than showing one node and implying it is addressable.
+	 */
+	single: boolean;
+	node: EngineNode;
+	spanEnd?: number; // ranges only: where the element reached
+}
+
 export interface EngineNode {
 	name: string;
 	type: string;
@@ -46,6 +66,7 @@ export interface EngineNode {
 	built: boolean;
 	children?: EngineNode[];
 	childCount?: number; // present instead of children when depth ran out
+	attributes?: EngineVar[]; // the node's own ("name" value) pairs
 }
 
 export interface EngineRuleElement {
@@ -256,6 +277,31 @@ export class EngineClient {
 	async tree(depth: number): Promise<EngineNode | undefined> {
 		const r = await this.request("tree", { depth });
 		return r?.ok ? (r.tree ?? undefined) : undefined;
+	}
+
+	// ---- variables ----------------------------------------------------------
+	//
+	// One command per kind rather than one bundle, so expanding a single scope
+	// does not pay for the rest -- globals in particular can be numerous.
+
+	private async vars(command: string, field: string): Promise<EngineVar[]> {
+		const r = await this.request(command);
+		return r?.ok && Array.isArray(r[field]) ? (r[field] as EngineVar[]) : [];
+	}
+
+	/** G("x") */
+	globals(): Promise<EngineVar[]> { return this.vars("globals", "globals"); }
+	/** L("x") */
+	locals(): Promise<EngineVar[]> { return this.vars("locals", "locals"); }
+	/** S("x"), on the node this rule suggests */
+	suggested(): Promise<EngineVar[]> { return this.vars("suggested", "suggested"); }
+	/** X("x"), on the pass's select node */
+	context(): Promise<EngineVar[]> { return this.vars("context", "context"); }
+
+	/** The rule elements matched so far, in order: what N(n,"x") indexes. */
+	async collect(): Promise<EngineCollectElement[]> {
+		const r = await this.request("collect");
+		return r?.ok && Array.isArray(r.collect) ? (r.collect as EngineCollectElement[]) : [];
 	}
 
 	/** Let the run finish without the debugger. */
