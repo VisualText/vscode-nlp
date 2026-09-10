@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.14.3
+The published extension actually contains the language server and the debugger.
+
+- **`.vscodeignore` was stripping two of the three bundles out of every release.** It excludes `dist/**` and re-includes files one at a time, and it was written when `extension.js` was the only bundle there was. When the language features moved into a language server in 3.13.0, and the debugger arrived in 3.14.0, `dist/server.js` and `dist/debugAdapter.js` were silently left out of the package. Installing from the Marketplace gave you an extension with **no outline, hover, completion, go-to-definition, diagnostics or formatting, and no debugger** -- and no error saying why, because each of those is a separate process that simply never started. Running from source was unaffected, which is why it went unnoticed. Fixed, and 3.13.0 through 3.14.2 should be considered broken installs.
+- **A packaging check now makes this impossible to repeat.** `npm run package` reads the entry points out of the webpack config and fails if any of their bundles is absent from the built `.vsix`. Adding a fourth process later without a matching `.vscodeignore` line will now stop the build rather than ship quietly.
+
 ### 3.14.2
 An older engine says so instead of showing an empty Variables pane.
 

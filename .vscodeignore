@@ -71,10 +71,21 @@ test/**
 *.test.ts
 *.test.js
 
-# Keep only what's needed for the extension
+# Keep only what's needed for the extension.
+#
+# One re-include per webpack entry point. These are separate PROCESSES, not
+# imports, so nothing here is reachable from extension.js and nothing warns when
+# they go missing -- the extension installs cleanly and then silently has no
+# language features and no debugger. scripts/check-bundles.js fails the package
+# step if a bundle webpack built is not in the vsix, so adding an entry point
+# without a line here cannot ship again.
 !dist/extension.js
 !dist/extension.js.map
 !dist/extension.js.LICENSE.txt
+!dist/server.js
+!dist/server.js.map
+!dist/debugAdapter.js
+!dist/debugAdapter.js.map
 !resources/**
 !snippets/**
 !grammars/syntaxes/**
