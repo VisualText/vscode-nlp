@@ -27,7 +27,7 @@
 import {
 	LoggingDebugSession, InitializedEvent, TerminatedEvent, StoppedEvent,
 	OutputEvent, Thread, StackFrame, Scope, Source, Handles,
-	Breakpoint,
+	Breakpoint, BreakpointEvent,
 } from "@vscode/debugadapter";
 import { DebugProtocol } from "@vscode/debugprotocol";
 import * as fs from "fs";
@@ -46,6 +46,13 @@ const THREAD_ID = 1;
 // serve them. Naming the version is the point: "(none)" would look like an
 // analyzer with no variables, which is a very different problem to chase.
 const OLD_ENGINE = "needs NLP++ engine 3.10.0 or later — run the updater";
+
+// Same idea for breakpoints outside a rule. Said in full rather than as
+// "unsupported", because the fix is a version away and the alternative reading
+// -- that NLP++ cannot be stepped through statement by statement -- is wrong.
+const OLD_ENGINE_MESSAGE =
+	"Breakpoints in @CODE, @POST and @DECL need NLP++ engine 3.12.0 or later — " +
+	"run the updater. This engine stops at rules and pass boundaries.";
 
 export interface NlpLiveLaunchArguments extends DebugProtocol.LaunchRequestArguments {
 	analyzer: string;      // analyzer directory (holds spec/ and input/)
@@ -114,6 +121,18 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	private treeDepth = 5;
 	private breakpointSeq = 1;
 
+	/**
+	 * Whether this engine stops on statements, from its capabilities reply.
+	 * Undefined until the connection is up -- breakpoints arrive during
+	 * configuration, before the engine is even started, so a statement
+	 * breakpoint is accepted optimistically and withdrawn afterwards if the
+	 * engine turns out to be older. Withdrawing one is a `breakpoint` event;
+	 * silently never firing is not.
+	 */
+	private statementsSupported: boolean | undefined;
+	/** Statement breakpoints reported as verified, in case they must be withdrawn. */
+	private statementBreakpoints: DebugProtocol.Breakpoint[] = [];
+
 	public constructor() {
 		super("nlp-live-debug.log");
 		this.setDebuggerLinesStartAt1(true);
@@ -181,8 +200,14 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 		this.emit_(`Debugging ${path.basename(args.analyzer)} on ${path.basename(args.input)} ` +
 			`(engine port ${port}).\n`);
-		this.emit_("Step Over = next rule tried, Step Into = next rule that matches, " +
-			"Step Out = next pass.\n\n");
+		this.emit_("At a rule: Step Over = next rule tried, Step Into = next rule that " +
+			"matches, Step Out = next pass.\n");
+		this.emit_("In an @CODE, @POST or @DECL body the same buttons step by statement, " +
+			"and Step Into enters a function.\n\n");
+
+		// What this engine can do, before anything depends on it.
+		this.statementsSupported = (await this.client.capabilities()).includes("statements");
+		if (!this.statementsSupported) this.withdrawStatementBreakpoints();
 
 		this.launched = true;
 		if (args.stopOnRuleFailure) await this.client.stopOnFailure(true);
@@ -245,6 +270,10 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 		this.emit_(`Attached to the engine on port ${args.port}.
 `);
+		// What this engine can do, before anything depends on it.
+		this.statementsSupported = (await this.client.capabilities()).includes("statements");
+		if (!this.statementsSupported) this.withdrawStatementBreakpoints();
+
 		this.launched = true;
 		if (args.stopOnRuleFailure) await this.client.stopOnFailure(true);
 		for (const [pass, lines] of this.pendingBreakpoints) {
@@ -325,12 +354,19 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			const bp = new Breakpoint(true, head ?? line) as DebugProtocol.Breakpoint;
 			bp.id = this.breakpointSeq++;
 			if (head === undefined) {
-				// Outside every rule: an @CODE, @POST or @DECL region. The engine
-				// stops at rule attempts and pass boundaries, so there is nothing
-				// there to stop on -- say so rather than accept it silently.
-				bp.verified = false;
-				bp.message = "Breakpoints outside a rule are not supported yet; " +
-					"the engine stops at rules and pass boundaries.";
+				// Outside every rule: an @CODE, @POST or @DECL region. Those are
+				// ordinary imperative code and the engine stops on each statement
+				// in them, so the line goes through exactly as written -- no
+				// snapping, because here the line the user clicked IS the unit
+				// that runs.
+				if (this.statementsSupported === false) {
+					bp.verified = false;
+					bp.message = OLD_ENGINE_MESSAGE;
+					return bp;
+				}
+				// The engine may not be up yet; see statementsSupported.
+				effective.push(line);
+				this.statementBreakpoints.push(bp);
 				return bp;
 			}
 			effective.push(head);
@@ -345,6 +381,25 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 		response.body = { breakpoints: reported };
 		this.sendResponse(response);
+	}
+
+	/**
+	 * Tell the client a statement breakpoint cannot be honoured after all.
+	 *
+	 * Only reachable against an engine older than 3.12: they were accepted while
+	 * the connection was still coming up. A breakpoint that quietly never fires
+	 * is the worst of the three outcomes, so it is withdrawn out loud.
+	 */
+	private withdrawStatementBreakpoints(): void {
+		for (const bp of this.statementBreakpoints) {
+			bp.verified = false;
+			bp.message = OLD_ENGINE_MESSAGE;
+			this.sendEvent(new BreakpointEvent("changed", bp));
+		}
+		if (this.statementBreakpoints.length) {
+			this.emit_(OLD_ENGINE_MESSAGE + "\n");
+			this.statementBreakpoints = [];
+		}
 	}
 
 	// Where each rule in a pass file begins and ends, in 1-based lines.
@@ -434,19 +489,34 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		void this.resume("continue");
 	}
 
+	// The three step buttons mean different things depending on where the engine
+	// is stopped, because an analyzer has two kinds of execution in it. Among
+	// rules the unit is a rule attempt; inside an @CODE, @POST or @DECL body it
+	// is a statement, and there the buttons should behave the way they do in
+	// every other debugger -- which is exactly what a user stepping through
+	// @POST code expects.
+	//
+	//                    at a rule            in a statement body
+	//   Step Over        next rule tried      next statement, calls run whole
+	//   Step Into        next rule matched    next statement, entering a call
+	//   Step Out         next pass            until this function returns
+	private inStatement(): boolean {
+		return this.currentStop?.statement === true;
+	}
+
 	protected nextRequest(response: DebugProtocol.NextResponse): void {
 		this.sendResponse(response);
-		void this.resume("stepRule");
+		void this.resume(this.inStatement() ? "stepOverStatement" : "stepRule");
 	}
 
 	protected stepInRequest(response: DebugProtocol.StepInResponse): void {
 		this.sendResponse(response);
-		void this.resume("stepMatch");
+		void this.resume(this.inStatement() ? "stepStatement" : "stepMatch");
 	}
 
 	protected stepOutRequest(response: DebugProtocol.StepOutResponse): void {
 		this.sendResponse(response);
-		void this.resume("stepPass");
+		void this.resume(this.inStatement() ? "stepOutStatement" : "stepPass");
 	}
 
 	protected disconnectRequest(
@@ -496,7 +566,14 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		// DAP's stop reason cannot: whether this rule matched or failed, and for a
 		// failure how many elements matched before it gave up -- which is the
 		// thing that says WHERE the rule stopped agreeing with the text.
-		if (stop.line > 0) {
+		if (stop.statement) {
+			// A statement in an @CODE, @POST or @DECL body. The stop is BEFORE
+			// the line runs, which is worth saying: the variables read alongside
+			// it are the ones that line is about to act on, not its result.
+			const where = stop.depth ? ` — ${stop.depth} call${stop.depth === 1 ? "" : "s"} deep` : "";
+			frames.push(new StackFrame(1, `statement at line ${stop.line}${where}`,
+				source, stop.line));
+		} else if (stop.line > 0) {
 			let label = `rule at line ${stop.line}`;
 			if (stop.reason === "matched") label += " — matched";
 			else if (stop.reason === "failed") {

@@ -354,6 +354,68 @@ async function main(): Promise<void> {
 		await fake.close();
 	}
 
+	// ---- capabilities ---------------------------------------------------------
+	// Statement support has to be known BEFORE it is used: a breakpoint in an
+	// @POST is set long before anything could be tried and found missing, and a
+	// breakpoint that is accepted and then never fires is the worst outcome of
+	// the three. So it is asked, not inferred from a version string.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+		const p = client.capabilities();
+		await settle();
+		const seqNo = JSON.parse(fake.received[0]).seq;
+		eq("capabilities: the command is what was sent",
+			JSON.parse(fake.received[0]).command, "capabilities");
+		fake.write(`{"seq":${seqNo},"ok":true,"capabilities":["statements","variables"]}\n`);
+		const caps = await p;
+		check("capabilities: the list comes through", caps.indexOf("statements") >= 0,
+			`got ${JSON.stringify(caps)}`);
+		client.kill();
+		await fake.close();
+	}
+	{
+		// An engine older than 3.12 has no such command. An empty list, not a
+		// throw -- the session carries on with rule breakpoints only.
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+		const p = client.capabilities();
+		await settle();
+		const seqNo = JSON.parse(fake.received[0]).seq;
+		fake.write(`{"seq":${seqNo},"ok":false,"error":"unknown command: capabilities"}\n`);
+		eq("capabilities: an old engine reports none", (await p).length, 0);
+		client.kill();
+		await fake.close();
+	}
+
+	// ---- statement stops and statement stepping -------------------------------
+	// The engine reports a statement stop with statement=true and a call depth,
+	// and those two fields are what make the step buttons context-sensitive.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+		const waiting = client.nextStop();
+		fake.write('{"event":"stopped","reason":"statement","pass":2,"passName":"numbers.nlp",'
+			+ '"line":23,"ruleOrd":0,"statement":true,"depth":1}\n');
+		const stop = await waiting;
+		eq("statement stop: reason", stop.reason, "statement");
+		eq("statement stop: flagged as a statement", stop.statement, true);
+		eq("statement stop: line is the statement's", stop.line, 23);
+		eq("statement stop: depth records the call", stop.depth, 1);
+
+		for (const cmd of ["stepStatement", "stepOverStatement", "stepOutStatement"] as const) {
+			const before = fake.received.length;
+			void client.resume(cmd);
+			await settle();
+			eq(`statement stepping: ${cmd} goes out verbatim`,
+				JSON.parse(fake.received[before]).command, cmd);
+			fake.write(`{"seq":${JSON.parse(fake.received[before]).seq},"ok":true}\n`);
+		}
+
+		client.kill();
+		await fake.close();
+	}
+
 	// ---- termination ---------------------------------------------------------
 	{
 		const fake = await fakeEngine();

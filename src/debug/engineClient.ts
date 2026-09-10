@@ -16,7 +16,8 @@ import * as net from "net";
 // ---- protocol types ---------------------------------------------------------
 
 export type StopReason =
-	| "entry" | "step" | "breakpoint" | "matched" | "failed" | "passStart" | "pause";
+	| "entry" | "step" | "breakpoint" | "matched" | "failed" | "passStart"
+	| "statement" | "pause";
 
 // The engine's stopped event. Everything but `reason` is best-effort: a stop at
 // a pass boundary has no rule or node yet, and eltsMatched only accompanies a
@@ -31,6 +32,18 @@ export interface EngineStop {
 	nodeStart?: number;
 	nodeEnd?: number;
 	eltsMatched?: number; // failures only: how far the rule got
+
+	/**
+	 * True when the stop is on a STATEMENT in an @CODE, @POST or @DECL body
+	 * rather than on a rule. `line` then means the statement's line, and the
+	 * stop is reported BEFORE that statement runs.
+	 */
+	statement?: boolean;
+	/**
+	 * Call depth, 0 outside any function. Only meaningful for a statement stop,
+	 * and it is what makes step-over and step-out mean anything.
+	 */
+	depth?: number;
 }
 
 // One NLP++ variable. The engine renders values with the same call the .tree
@@ -88,7 +101,11 @@ export interface EngineRule {
 	elements: EngineRuleElement[];
 }
 
-export type ResumeCommand = "continue" | "stepRule" | "stepMatch" | "stepPass";
+export type ResumeCommand =
+	| "continue" | "stepRule" | "stepMatch" | "stepPass"
+	// Statement stepping, for @CODE/@POST/@DECL bodies. INTO descends into a
+	// call, OVER runs one whole, OUT runs until the current function returns.
+	| "stepStatement" | "stepOverStatement" | "stepOutStatement";
 
 export interface EngineClientOptions {
 	/**
@@ -259,6 +276,20 @@ export class EngineClient {
 	/** Breakpoint lines for one pass. An empty list clears that pass. */
 	setBreakpoints(pass: number, lines: number[]): Promise<void> {
 		return this.request("setBreakpoints", { pass, lines }).then(() => undefined);
+	}
+
+	/**
+	 * What this engine build can do, asked once after connecting.
+	 *
+	 * Statement support has to be known BEFORE it is used -- a breakpoint in an
+	 * @POST is set long before anything could be tried and found missing, and an
+	 * accepted breakpoint that never fires is worse than a refused one. An
+	 * engine older than 3.12 has no such command and answers with an error,
+	 * which reads here as an empty list.
+	 */
+	async capabilities(): Promise<string[]> {
+		const r = await this.request("capabilities");
+		return r?.ok && Array.isArray(r.capabilities) ? (r.capabilities as string[]) : [];
 	}
 
 	stopOnFailure(value: boolean): Promise<void> {
