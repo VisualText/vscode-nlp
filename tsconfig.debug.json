@@ -1,0 +1,26 @@
+// Standalone build for the debug adapters + their test harness.
+// Mirrors tsconfig.trace.json: emits to out-debug/ (gitignored, not shipped) so
+// the DAP sessions and the engine client can be exercised with plain Node.
+// Run via: npm run test:debug
+//
+// src/debug is free of any 'vscode' import -- both sessions run as their own
+// process -- and building it here under a Node-only config is what proves that
+// stays true.
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-debug",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["node"],
+		"sourceMap": false
+	},
+	"include": ["src/debug/**/*.ts", "src/trace/**/*.ts"],
+	"exclude": ["src/debug/debugConfig.ts", "src/trace/traceTest.ts"]
+}
