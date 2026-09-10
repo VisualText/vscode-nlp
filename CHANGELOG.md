@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.14.2
+An older engine says so instead of showing an empty Variables pane.
+
+- **The Variables pane now explains itself when the engine is too old.** The variable commands arrived in NLP++ engine 3.10.0. Against 3.9.0 they are simply unknown, and every group came back empty -- which looks exactly like an analyzer that happens to have no variables set, and sends you looking for the wrong problem. The pane now says which engine version it needs.
+- The extension asks the engine rather than comparing version strings. A version check is a second thing to keep in step, and getting it wrong produces the very silence it was meant to prevent; a command the engine rejects cannot be misread.
+- An ordinary failure is still an empty list. "The engine does not know this question" and "nothing is set right now" are different answers and no longer look alike.
+
 ### 3.14.1
 The live debugger shows NLP++ variables.
 

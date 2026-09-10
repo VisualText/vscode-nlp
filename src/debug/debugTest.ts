@@ -234,15 +234,15 @@ async function main(): Promise<void> {
 			'"ustart":27,"uend":30,"passNum":4,"ruleLine":9,"fired":true,"built":true,' +
 			'"attributes":[{"name":"number","value":"1"}]}}]');
 
-		const globals = await gP;
+		const globals = (await gP) ?? [];
 		eq("vars: globals count", globals.length, 1);
 		eq("vars: global name", globals[0].name, "corporate");
 		eq("vars: global value keeps its quotes", globals[0].value, 'concept:"corporate"');
-		eq("vars: locals", (await lP)[0]?.value, "3");
-		eq("vars: suggested", (await sP)[0]?.name, "value");
-		eq("vars: context may be empty", (await xP).length, 0);
+		eq("vars: locals", ((await lP) ?? [])[0]?.value, "3");
+		eq("vars: suggested", ((await sP) ?? [])[0]?.name, "value");
+		eq("vars: context may be empty", ((await xP) ?? []).length, 0);
 
-		const coll = await cP;
+		const coll = (await cP) ?? [];
 		eq("collect: element count", coll.length, 2);
 		eq("collect: first ordinal", coll[0].ord, 1);
 		check("collect: a single-node element is marked single", coll[0].single === true);
@@ -267,7 +267,43 @@ async function main(): Promise<void> {
 		const seqNo = JSON.parse(fake.received[0]).seq;
 		fake.write(`{"seq":${seqNo},"ok":true}
 `); // no "globals" field
-		eq("vars: a reply with no payload is an empty list", (await p).length, 0);
+		eq("vars: a reply with no payload is an empty list", ((await p) ?? []).length, 0);
+		client.kill();
+		await fake.close();
+	}
+
+	// ---- an engine too old to know the variable commands ----------------------
+	// The commands arrived in engine 3.10.0. An older one answers "unknown
+	// command", and the difference between that and "no variables are set" is
+	// the difference between a stale install and a real property of the
+	// analyzer -- so undefined and [] must not be conflated.
+	{
+		const fake = await fakeEngine();
+		const client = await startClient(fake);
+		check("old engine: variables assumed supported until told otherwise",
+			client.supportsVariables);
+
+		const p = client.globals();
+		await settle();
+		const seqNo = JSON.parse(fake.received[0]).seq;
+		fake.write(`{"seq":${seqNo},"ok":false,"error":"unknown command: globals"}
+`);
+		const result = await p;
+		check("old engine: an unknown command reads as undefined, not empty",
+			result === undefined, `got ${JSON.stringify(result)}`);
+		check("old engine: the client remembers", !client.supportsVariables);
+
+		// A genuine failure that is NOT "unknown command" must not be mistaken
+		// for an old engine.
+		const c = client.collect();
+		await settle();
+		const seq2 = JSON.parse(fake.received[1]).seq;
+		fake.write(`{"seq":${seq2},"ok":false,"error":"no rule in progress"}
+`);
+		const coll = await c;
+		check("old engine: an ordinary failure is still an empty list",
+			Array.isArray(coll) && coll.length === 0, `got ${JSON.stringify(coll)}`);
+
 		client.kill();
 		await fake.close();
 	}
