@@ -284,23 +284,46 @@ export class EngineClient {
 	// One command per kind rather than one bundle, so expanding a single scope
 	// does not pay for the rest -- globals in particular can be numerous.
 
-	private async vars(command: string, field: string): Promise<EngineVar[]> {
+	/**
+	 * True until the engine rejects a variable command as unknown.
+	 *
+	 * Checked rather than inferred from the engine's version string: the version
+	 * is a second thing to keep in step, and getting it wrong shows an empty
+	 * Variables pane instead of an explanation. Asking the engine cannot drift.
+	 */
+	private varsSupported = true;
+	get supportsVariables(): boolean { return this.varsSupported; }
+
+	// undefined means "this engine has no such command"; [] means "none set".
+	// The difference matters -- one is a stale engine, the other is an analyzer
+	// that simply has no locals here, and they should not look alike.
+	private async vars(command: string, field: string): Promise<EngineVar[] | undefined> {
 		const r = await this.request(command);
+		if (r && r.ok === false && typeof r.error === "string"
+			 && r.error.indexOf("unknown command") >= 0) {
+			this.varsSupported = false;
+			return undefined;
+		}
 		return r?.ok && Array.isArray(r[field]) ? (r[field] as EngineVar[]) : [];
 	}
 
 	/** G("x") */
-	globals(): Promise<EngineVar[]> { return this.vars("globals", "globals"); }
+	globals(): Promise<EngineVar[] | undefined> { return this.vars("globals", "globals"); }
 	/** L("x") */
-	locals(): Promise<EngineVar[]> { return this.vars("locals", "locals"); }
+	locals(): Promise<EngineVar[] | undefined> { return this.vars("locals", "locals"); }
 	/** S("x"), on the node this rule suggests */
-	suggested(): Promise<EngineVar[]> { return this.vars("suggested", "suggested"); }
+	suggested(): Promise<EngineVar[] | undefined> { return this.vars("suggested", "suggested"); }
 	/** X("x"), on the pass's select node */
-	context(): Promise<EngineVar[]> { return this.vars("context", "context"); }
+	context(): Promise<EngineVar[] | undefined> { return this.vars("context", "context"); }
 
 	/** The rule elements matched so far, in order: what N(n,"x") indexes. */
-	async collect(): Promise<EngineCollectElement[]> {
+	async collect(): Promise<EngineCollectElement[] | undefined> {
 		const r = await this.request("collect");
+		if (r && r.ok === false && typeof r.error === "string"
+			 && r.error.indexOf("unknown command") >= 0) {
+			this.varsSupported = false;
+			return undefined;
+		}
 		return r?.ok && Array.isArray(r.collect) ? (r.collect as EngineCollectElement[]) : [];
 	}
 

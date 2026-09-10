@@ -41,6 +41,11 @@ import { parseSequence, sequencePassNames } from "../trace/traceModel";
 
 const THREAD_ID = 1;
 
+// Shown in place of a variable list when the engine predates the commands that
+// serve them. Naming the version is the point: "(none)" would look like an
+// analyzer with no variables, which is a very different problem to chase.
+const OLD_ENGINE = "needs NLP++ engine 3.10.0 or later — run the updater";
+
 export interface NlpLiveLaunchArguments extends DebugProtocol.LaunchRequestArguments {
 	analyzer: string;      // analyzer directory (holds spec/ and input/)
 	input: string;         // the text file to run
@@ -505,12 +510,17 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 					// L/S/X grouped under one scope, plus the matched elements.
 					// Each row is a separate round trip only when expanded, so an
 					// analyzer with no locals costs nothing to display.
-					variables = [
-						this.group("L() locals", { kind: "locals" }),
-						this.group("S() suggested", { kind: "suggested" }),
-						this.group("X() context", { kind: "context" }),
-						this.group("N() matched elements", { kind: "collect" }),
-					];
+					//
+					// Once the engine has told us it does not know these commands,
+					// say it once here rather than four times inside.
+					variables = this.client.supportsVariables
+						? [
+							this.group("L() locals", { kind: "locals" }),
+							this.group("S() suggested", { kind: "suggested" }),
+							this.group("X() context", { kind: "context" }),
+							this.group("N() matched elements", { kind: "collect" }),
+						]
+						: [this.plain("(unavailable)", OLD_ENGINE)];
 					break;
 				case "locals":
 					variables = this.varRows(await this.client.locals());
@@ -543,14 +553,19 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		return { name, value: "", variablesReference: this.variableHandles.create(ref) };
 	}
 
-	private varRows(vars: EngineVar[]): DebugProtocol.Variable[] {
+	// The engine returning nothing and the engine not knowing the question are
+	// different answers, and an author staring at an empty pane deserves to be
+	// told which one this is.
+	private varRows(vars: EngineVar[] | undefined): DebugProtocol.Variable[] {
+		if (vars === undefined) return [this.plain("(unavailable)", OLD_ENGINE)];
 		if (!vars.length) return [this.plain("(none)", "")];
 		return vars.map((v) => this.plain(v.name, v.value));
 	}
 
 	// The rule elements matched so far. Labelled by the ordinal N() uses, so the
 	// row name is the expression an author would write.
-	private collectRows(elements: EngineCollectElement[]): DebugProtocol.Variable[] {
+	private collectRows(elements: EngineCollectElement[] | undefined): DebugProtocol.Variable[] {
+		if (elements === undefined) return [this.plain("(unavailable)", OLD_ENGINE)];
 		if (!elements.length) return [this.plain("(nothing matched yet)", "")];
 		return elements.map((e) => {
 			const label = `N(${e.ord})`;
