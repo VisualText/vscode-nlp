@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.14.4
+Live debugging finds the text file you picked in the TEXT view.
+
+- **Choosing a text file and pressing F5 said "Live rule debugging needs a text file to run".** The only thing consulted was the file open in the editor -- and while you are setting a breakpoint, that is the pass file, not a text file. The analyzer's current text file, which is exactly what selecting one in the TEXT view sets, was never looked at. It is now the first thing checked.
+- An unset path is stored as a lone separator rather than an empty string, so it passed every "is this set?" test while naming no file, and failed later as a path that does not exist. Paths are now checked for being real files rather than merely non-empty.
+- The message when nothing is found says what was looked for, instead of suggesting the one thing you had just done.
+
 ### 3.14.3
 The published extension actually contains the language server and the debugger.
 

@@ -28,6 +28,20 @@ function compareVersions(a: string, b: string): number {
 	return 0;
 }
 
+// An unset Uri stringifies to a lone separator ("\\" on Windows), which is
+// truthy and therefore passed every plain `if (path)` check while naming no
+// file. Anything shorter than a drive-qualified path is treated as unset.
+function usableFile(p: string | undefined): boolean {
+	return typeof p === "string" && p.trim().length > 1 && fs.existsSync(p);
+}
+
+// Under the analyzer's input/ tree. Checked with both separators: a path can
+// reach here from a launch config or a Uri, and those do not agree on Windows.
+function isUnderInput(p: string): boolean {
+	const lower = p.toLowerCase().split("\\").join("/");
+	return lower.includes("/input/");
+}
+
 class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
 	// Offered when the user picks "create a launch.json" for NLP++.
 	provideDebugConfigurations(): vscode.DebugConfiguration[] {
@@ -121,18 +135,31 @@ class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
 			return undefined;
 		}
 
-		if (!config.input) {
-			const active = vscode.window.activeTextEditor?.document.uri.fsPath;
-			// A text file open in the editor is the obvious thing to run; anything
-			// under the analyzer's input/ tree qualifies.
-			if (active && active.toLowerCase().includes(`${path.sep}input${path.sep}`)) {
-				config.input = active;
-			}
+		// Which text file to run, in order of what the user most likely meant.
+		//
+		// The first source is the one that was missing: the analyzer's CURRENT
+		// text file, which is exactly what picking a file in the TEXT view sets.
+		// Without it, choosing a file there and pressing F5 failed -- the only
+		// thing consulted was the active editor, and while setting a breakpoint
+		// that is the .nlp pass file, not a text file.
+		if (!usableFile(config.input)) {
+			config.input = undefined;
+			const chosen = visualText.analyzer?.getTextPath()?.fsPath;
+			if (usableFile(chosen)) config.input = chosen;
 		}
-		if (!config.input || !fs.existsSync(config.input)) {
+		if (!config.input) {
+			// Then an editor tab, but only one under the analyzer's input/ tree --
+			// otherwise F5 from a pass file would try to analyze the pass file.
+			const active = vscode.window.activeTextEditor?.document.uri.fsPath;
+			if (usableFile(active) && isUnderInput(active as string)) config.input = active;
+		}
+		if (!config.input) {
+			// Say what was looked for. "Open one from the TEXT view" was unhelpful
+			// to someone who had just done exactly that.
 			void vscode.window.showErrorMessage(
-				"Live rule debugging needs a text file to run. Open one from the TEXT view, " +
-				"or set \"input\" in your launch configuration.");
+				"Live rule debugging needs a text file to run, and none was found. " +
+				"Select one in the TEXT view (that sets the analyzer's current text file), " +
+				"or set \"input\" to a path in your launch configuration.");
 			return undefined;
 		}
 		return config;
@@ -163,7 +190,12 @@ export function registerDebugger(ctx: vscode.ExtensionContext): void {
 		// readable rather than hard-coding absolute paths.
 		vscode.commands.registerCommand("nlp.currentAnalyzerDir", () =>
 			visualText.analyzer?.isLoaded() ? visualText.analyzer.getAnalyzerDirectory().fsPath : ""),
-		vscode.commands.registerCommand("nlp.currentTextFile", () =>
-			visualText.analyzer?.getTextPath()?.fsPath ?? ""),
+		// Empty rather than a lone separator when no text file is set, so a
+		// launch config substituting this gets a falsy value the resolver can
+		// recognise instead of a path that merely fails to exist.
+		vscode.commands.registerCommand("nlp.currentTextFile", () => {
+			const p = visualText.analyzer?.getTextPath()?.fsPath;
+			return usableFile(p) ? (p as string) : "";
+		}),
 	);
 }
