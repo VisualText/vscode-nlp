@@ -3,6 +3,17 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.13.0
+NLP++ gets a language server and a replay debugger.
+
+- **Every language feature now runs in a language server rather than inside the extension.** Outline, hover, go-to-definition, find references, rename, completion, signature help, folding, semantic highlighting, quick fixes, structural diagnostics and formatting all moved to a separate Node process that speaks LSP. Nothing about them changed for a VSCode user -- the same analysis code produces the same answers -- but they no longer compete with the tree views and analyzer commands for the extension host, and any LSP-speaking editor can now run them: point a client at `dist/server.js`. The analysis engines were already free of any VSCode dependency, so the move added no duplicate logic; the build enforces that by compiling the server under a Node-only config, where an accidental `vscode` import fails rather than shipping.
+- **NLP++ analyzers can be debugged.** A new "NLP++ Analyzer" debug configuration replays the per-pass parse trees the engine already writes, so F5 after a run steps you through the analysis one pass at a time. Set breakpoints in a pass file, look at the parse tree as a variable tree with each node showing the text it covers and the pass and rule line that built it, and hover a rule name to see how many nodes it produced at that point.
+- **Step Back works, and so does reverse-continue.** Because the whole run is already on disk rather than being generated as you go, moving backward through it costs nothing -- you can walk a node's history in either direction instead of re-running the analyzer to get back to where you were.
+- A breakpoint on a rule that never fired says so instead of silently never being hit, and a breakpoint clicked inside a rule body snaps up to the rule head the engine actually reports. Knowing that a rule did not fire is often the whole question.
+- Granularity is the pass, not the rule: between two snapshots the engine ran a whole pass, so there is no stopping midway through one, no inspecting a partial match, and no changing a value and continuing. Rule-level stepping needs a debug stub inside the engine itself; the breakpoint mapping, tree view and stack model here are the parts that would carry over to it.
+- The `.tree` reader that backs all of this reads the engine's node flags by name. They are written only when set (`b`, `un`, `sem`, `fired`, `blt`), so reading them by position -- as the older tree reader still does -- mistakes an unsealed node for a fired one on every line that has no `fired` flag.
+- Three bugs found while migrating, all of which would have been invisible in normal use: language features stopped answering for unsaved buffers when the server was scoped to saved files only; formatting could hang forever against an editor that does not implement `workspace/configuration`, because the request simply never gets answered; and asking for the text of one line returned everything from that line to the end of the file, since the offset is clamped to the document rather than the line.
+
 ### 3.12.20
 Your global settings stop being rewritten every time a window opens.
 

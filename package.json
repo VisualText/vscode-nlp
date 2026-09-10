@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.12.20",
+    "version": "3.13.0",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -3484,14 +3484,81 @@
                     "description": "Base URL of the nlp-compile-service dispatcher. Required when compile.mode is 'cloud'."
                 }
             }
-        }
+        },
+        "breakpoints": [
+            {
+                "language": "nlp"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "nlpxx",
+                "label": "NLP++ Analyzer",
+                "languages": [
+                    "nlp"
+                ],
+                "program": "./dist/debugAdapter.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "analyzer"
+                        ],
+                        "properties": {
+                            "analyzer": {
+                                "type": "string",
+                                "description": "The analyzer directory to replay (the folder containing spec/ and input/). Defaults to the analyzer currently open in the Analyzers view.",
+                                "default": "${command:nlp.currentAnalyzerDir}"
+                            },
+                            "logDir": {
+                                "type": "string",
+                                "description": "A specific <text>_log directory to replay. Defaults to the most recently written run under the analyzer's input/ tree."
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Stop at the first pass instead of running to the first breakpoint.",
+                                "default": true
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "nlpxx",
+                        "request": "launch",
+                        "name": "NLP++: replay last analyzer run",
+                        "analyzer": "${command:nlp.currentAnalyzerDir}",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "NLP++: replay last analyzer run",
+                        "description": "Step through the per-pass parse trees from the most recent run of an analyzer.",
+                        "body": {
+                            "type": "nlpxx",
+                            "request": "launch",
+                            "name": "NLP++: replay last analyzer run",
+                            "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
+                            "stopOnEntry": true
+                        }
+                    }
+                ]
+            }
+        ]
     },
     "dependencies": {
+        "@vscode/debugadapter": "^1.68.0",
+        "@vscode/debugprotocol": "^1.68.0",
         "copy-dir": "^1.3.0",
         "extract-zip": "^2.0.1",
         "n-readlines": "^3.4.1",
         "nodejs-file-downloader": "^4.13.0",
-        "tslib": "^2.8.1"
+        "tslib": "^2.8.1",
+        "vscode-languageclient": "^9.0.1",
+        "vscode-languageserver": "^9.0.1",
+        "vscode-languageserver-textdocument": "^1.0.14",
+        "vscode-uri": "^3.2.0"
     },
     "scripts": {
         "webpack": "webpack --mode development",
@@ -3507,10 +3574,11 @@
         "lint:fix": "npm run lint -- --fix",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "pretest": "npm run typecheck && npm run lint",
-        "test": "npm run check-grammars && npm run check-worker && npm run test:language && npm run test:treeview && npm run test:format",
+        "test": "npm run check-grammars && npm run check-worker && npm run test:language && npm run test:treeview && npm run test:format && npm run test:trace",
         "test:integration": "tsc -p tsconfig.test.json && node ./out-test/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
+        "test:trace": "tsc -p tsconfig.trace.json && node ./out-trace/trace/traceTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix"
     },

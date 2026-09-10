@@ -13,6 +13,22 @@ function extension(): vscode.Extension<unknown> | undefined {
 	return vscode.extensions.getExtension(EXTENSION_ID);
 }
 
+// Every standard language feature is served by the language server, which is a
+// separate process and therefore starts asynchronously -- activate() resolves
+// before it is listening. Each provider group waits here first.
+//
+// activate() returns { languageServerReady } for exactly this reason. Sleeping
+// instead would pass locally and flake on a loaded CI runner, and the failure
+// mode is indistinguishable from a provider that was never registered: an empty
+// array either way.
+async function awaitLanguageServer(): Promise<void> {
+	const ext = extension();
+	if (!ext) return;
+	if (!ext.isActive) await ext.activate();
+	const api = ext.exports as { languageServerReady?: Promise<void> } | undefined;
+	await api?.languageServerReady;
+}
+
 // ---- activation ------------------------------------------------------------
 // A throw during activate() disables the extension silently: no command works,
 // no view appears, and nothing in the pure-Node harnesses would notice.
@@ -129,6 +145,7 @@ _item <- _xWILD [one match=(_xALPHA)] @@
 `;
 
 export async function providerTests(): Promise<void> {
+	await awaitLanguageServer();
 	let doc: vscode.TextDocument;
 	try {
 		doc = await vscode.workspace.openTextDocument({ language: "nlp", content: SAMPLE_PASS });
@@ -155,11 +172,12 @@ export async function providerTests(): Promise<void> {
 }
 
 // ---- language features -----------------------------------------------------
-// registerLanguageFeatures() binds eleven providers to { language: "nlp" }, and
+// The language server binds twelve providers to { language: "nlp" }, and
 // langTest.ts already covers the engines behind them. What it cannot cover is
 // whether each one is reachable through VS Code for an .nlp document -- a
-// provider registered against the wrong selector, or not registered at all,
-// looks identical to a provider that simply had nothing to say.
+// provider registered against the wrong selector, not registered at all, or
+// sitting behind a server that failed to start, all look identical to a provider
+// that simply had nothing to say.
 //
 // So each check below uses input the engine is known to answer on, and requires
 // a non-empty result. Asserting merely "an array came back" would pass just as
@@ -174,6 +192,7 @@ async function openNlp(content: string): Promise<vscode.TextDocument> {
 }
 
 export async function languageFeatureTests(): Promise<void> {
+	await awaitLanguageServer();
 	// Hover: over the @NODES region marker, which the provider documents.
 	{
 		const doc = await openNlp(SAMPLE_PASS);
@@ -282,6 +301,7 @@ function fixtureUri(name: string): vscode.Uri | undefined {
 }
 
 export async function crossPassTests(): Promise<void> {
+	await awaitLanguageServer();
 	const refUri = fixtureUri(FIXTURE_REF_FILE);
 	const declUri = fixtureUri(FIXTURE_DECL_FILE);
 	if (!refUri || !declUri) {

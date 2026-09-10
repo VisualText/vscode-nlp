@@ -1,0 +1,25 @@
+// Standalone build for the pure-TS trace model + its test harness.
+// Mirrors tsconfig.language.json: emits to out-trace/ (gitignored, not shipped)
+// so the .tree parser and trace loader can be exercised with plain Node.
+// Run via: npm run test:trace
+//
+// src/debug is deliberately NOT included: the debug session imports the DAP
+// libraries, and keeping it out is what proves the trace model underneath it
+// stays free of them.
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-trace",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["node"],
+		"sourceMap": false
+	},
+	"include": ["src/trace/**/*.ts"]
+}
