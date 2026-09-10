@@ -9,6 +9,7 @@ out-format/
 out-language/
 out-treeview/
 out-test/
+out-trace/
 
 # VS Code builds downloaded by the integration harness
 .vscode-test/
