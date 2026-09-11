@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.0.0
+Version 4: NLP++ is debuggable.
+
+- **The name for what 3.13 through 3.17 built.** No new features in this release -- everything it names has shipped and is live. Version 3 was about how you *build, deploy and install* an analyzer: one-click compiled analyzers, cloud builds, npm and pip. Version 4 is about how you *develop and understand* one -- a debugger with breakpoints, stepping, variables and a call stack inside a running analyzer, and a language server that any LSP editor can use.
+- **Why it is a major.** Glass-box NLP has always meant you could read the rules and audit the result. What you could not do was watch the decision being made: the only window into a run was a `.tree` dump read afterwards, from which you inferred backwards. Stopping on the line and reading the variables is a different proposition. The glass box now has a door.
+- The version numbers of the extension and the engine are resynchronised at **4.0.0**. Nothing in this line breaks compatibility -- the engine's protocol additions are all additive behind a capability handshake -- so this is a marketing major, not a semver one.
+- Needs NLP++ engine 4.0.0, which ships with the extension.
+
 ### 3.17.0
 The Call Stack shows the calls that led here.
 
