@@ -3,6 +3,22 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.17.0
+The Call Stack shows the calls that led here.
+
+- **It said "4 calls deep" and listed nothing else.** Stepping down through several functions left no way back out by eye and no way to see the line any of the calls was made from. The pane now draws a frame per call -- each named for its function and opening at the line the call was *written* on -- with the `@CODE`, `@POST` or `@DECL` statement that began it at the bottom:
+
+  ```
+  inner2()               numbers.nlp:29     <- where execution is
+  outer2()               numbers.nlp:33     <- called inner2 from 33
+  blockShapes()          numbers.nlp:61     <- called outer2 from 61
+  statement at line 87   numbers.nlp:87     <- the @POST that started it
+  Pass 2: numbers        numbers.nlp:29
+  ```
+
+- Needs NLP++ engine **3.13.0**. Against an older one the frame still says how deep it is, since that is all there is to say, and the extension does not ask for a stack it knows the engine cannot give.
+- Every pane still reads the engine's current state, so selecting an outer frame does not rewind the variables to that call -- the engine keeps one set of locals, the live one.
+
 ### 3.16.3
 Tests for the debugger's DAP layer, and they now run in CI.
 

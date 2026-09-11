@@ -398,6 +398,58 @@ async function main(): Promise<void> {
 		await fake.close();
 	}
 
+	// ---- the calls that led here become frames ------------------------------
+	// A depth number said "you are four calls down" and nothing about the way
+	// back. Each frame names a function and opens at the line its call was
+	// WRITTEN on, so stepping down several levels can be climbed back by eye.
+	{
+		const fake = await fakeEngine({
+			capabilities: { capabilities: ["statements", "callStack"] },
+			stack: { calls: [
+				{ name: "outer", pass: PASS_OF_MONEY, line: 6 },
+				{ name: "middle", pass: PASS_OF_MONEY, line: 10 },
+				{ name: "deepest", pass: PASS_OF_MONEY, line: 11 },
+			] },
+		});
+		const dap = await attached(fake, analyzer);
+		await stopAt(dap, fake, { reason: "statement", line: 7, statement: true, depth: 3 });
+
+		const st = await dap.send("stackTrace", { threadId: 1 });
+		const shown = st.body.stackFrames.map((f: any) => `${f.name} @${f.line}`);
+		deep("three calls deep draws a frame for each, innermost first", shown, [
+			"deepest() @7",              // where execution actually is
+			"middle() @11",              // it called deepest from line 11
+			"outer() @10",               // it called middle from line 10
+			"statement at line 6 @6",    // the @POST statement that began it
+			`Pass ${PASS_OF_MONEY}: money @7`,
+		]);
+		check("the frames open in the pass file",
+			st.body.stackFrames.every((f: any) => f.source?.name === "money.nlp"),
+			JSON.stringify(st.body.stackFrames.map((f: any) => f.source?.name)));
+		check("frame ids are distinct, or the client cannot tell them apart",
+			new Set(st.body.stackFrames.map((f: any) => f.id)).size
+				=== st.body.stackFrames.length);
+
+		await dap.send("disconnect", { terminateDebuggee: true });
+		await fake.close();
+	}
+	{
+		// An engine that cannot say how it got here. The depth is still worth
+		// showing, because it is all there is -- and asking it for a stack it
+		// does not have must not empty the pane.
+		const fake = await fakeEngine(
+			{ capabilities: { capabilities: ["statements"] } }, ["stack"]);
+		const dap = await attached(fake, analyzer);
+		await stopAt(dap, fake, { reason: "statement", line: 7, statement: true, depth: 3 });
+		const st = await dap.send("stackTrace", { threadId: 1 });
+		check("an engine without a stack still says how deep it is",
+			/3 calls deep/.test(st.body.stackFrames[0].name), st.body.stackFrames[0].name);
+		check("and it does not ask for one",
+			fake.commands().indexOf("stack") < 0, fake.commands().join(","));
+		await dap.send("disconnect", { terminateDebuggee: true });
+		await fake.close();
+	}
+
 	// ---- the step buttons follow where the engine is stopped ----------------
 	// An analyzer has two kinds of execution in it and one set of buttons. At a
 	// rule the unit is a rule; in an @CODE, @POST or @DECL body it is a
