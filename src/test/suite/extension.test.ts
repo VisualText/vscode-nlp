@@ -433,6 +433,19 @@ export async function debugSetupTests(): Promise<void> {
 		JSON.stringify(fromCode) === JSON.stringify(seeded),
 		`code: ${JSON.stringify(fromCode.map((c) => c.name))} / json: ${JSON.stringify(seeded.map((c) => c.name))}`);
 
+	// "Add Configuration..." offers these, and they have to agree with what
+	// "create a launch.json file" already wrote -- same names, same order. When
+	// they disagreed, adding one by hand appended a second copy of a
+	// configuration the file already had, under a different position, and the
+	// dropdown showed the same debugger twice.
+	const snippets = (dbg.configurationSnippets ?? []) as any[];
+	check("the snippets are the same configurations, in the same order",
+		JSON.stringify(snippets.map((c) => c.label)) === JSON.stringify(seeded.map((c) => c.name)),
+		`snippets: ${JSON.stringify(snippets.map((c) => c.label))} / seeded: ${JSON.stringify(seeded.map((c) => c.name))}`);
+	for (const snip of snippets) {
+		eq(`snippet "${snip.label}" names its own configuration`, snip.body?.name, snip.label);
+	}
+
 	// The one-click route, for someone who never opens Run and Debug.
 	const commands = await vscode.commands.getCommands(true);
 	check("a Debug command exists outside the Run and Debug view",
