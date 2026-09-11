@@ -46,6 +46,16 @@ export interface EngineStop {
 	depth?: number;
 }
 
+/**
+ * One live call, from the engine's `stack`. `pass` and `line` are the CALLER's
+ * -- where the call was written -- which is what makes a frame clickable.
+ */
+export interface EngineCall {
+	name: string;
+	pass: number;
+	line: number;
+}
+
 // One NLP++ variable. The engine renders values with the same call the .tree
 // dumps use, so a value reads identically in the debugger and in a dump.
 export interface EngineVar {
@@ -290,6 +300,18 @@ export class EngineClient {
 	async capabilities(): Promise<string[]> {
 		const r = await this.request("capabilities");
 		return r?.ok && Array.isArray(r.capabilities) ? (r.capabilities as string[]) : [];
+	}
+
+	/**
+	 * The calls that led to where the engine is stopped, outermost first.
+	 *
+	 * Empty at the outermost level, and empty from an engine older than 3.13.0,
+	 * which answers "unknown command" -- in both cases there are no call frames
+	 * to draw, which is the same thing as far as a caller is concerned.
+	 */
+	async stack(): Promise<EngineCall[]> {
+		const r = await this.request("stack");
+		return r?.ok && Array.isArray(r.calls) ? (r.calls as EngineCall[]) : [];
 	}
 
 	stopOnFailure(value: boolean): Promise<void> {

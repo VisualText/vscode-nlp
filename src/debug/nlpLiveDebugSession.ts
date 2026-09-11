@@ -163,6 +163,8 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	 * silently never firing is not.
 	 */
 	private statementsSupported: boolean | undefined;
+	/** Whether this engine can say which calls led to where it is stopped. */
+	private callStackSupported = false;
 	/** Statement breakpoints reported as verified, in case they must be withdrawn. */
 	private statementBreakpoints: DebugProtocol.Breakpoint[] = [];
 	/**
@@ -245,7 +247,9 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			"and Step Into enters a function.\n\n");
 
 		// What this engine can do, before anything depends on it.
-		this.statementsSupported = (await this.client.capabilities()).includes("statements");
+		const caps = await this.client.capabilities();
+		this.statementsSupported = caps.includes("statements");
+		this.callStackSupported = caps.includes("callStack");
 		if (!this.statementsSupported) this.withdrawStatementBreakpoints();
 
 		this.launched = true;
@@ -314,7 +318,9 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		this.emit_(`Attached to the engine on port ${args.port}.
 `);
 		// What this engine can do, before anything depends on it.
-		this.statementsSupported = (await this.client.capabilities()).includes("statements");
+		const caps = await this.client.capabilities();
+		this.statementsSupported = caps.includes("statements");
+		this.callStackSupported = caps.includes("callStack");
 		if (!this.statementsSupported) this.withdrawStatementBreakpoints();
 
 		this.launched = true;
@@ -599,7 +605,9 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		this.sendResponse(response);
 	}
 
-	protected stackTraceRequest(response: DebugProtocol.StackTraceResponse): void {
+	protected async stackTraceRequest(
+		response: DebugProtocol.StackTraceResponse,
+	): Promise<void> {
 		const stop = this.currentStop;
 		if (!stop) {
 			response.body = { stackFrames: [], totalFrames: 0 };
@@ -611,6 +619,15 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		const source = sourceFile ? new Source(path.basename(sourceFile), sourceFile) : undefined;
 		const frames: DebugProtocol.StackFrame[] = [];
 
+		// Ids only have to be distinct; every scope reads the engine's CURRENT
+		// state, so which frame is selected does not change what a pane shows.
+		let frameId = 1;
+		const frameFor = (name: string, pass: number, line: number): DebugProtocol.StackFrame => {
+			const file = this.sourceForPass(pass);
+			return new StackFrame(frameId++, name,
+				file ? new Source(path.basename(file), file) : undefined, line);
+		};
+
 		// Frame 0: the rule attempt, when we are inside one. The name carries what
 		// DAP's stop reason cannot: whether this rule matched or failed, and for a
 		// failure how many elements matched before it gave up -- which is the
@@ -619,9 +636,36 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			// A statement in an @CODE, @POST or @DECL body. The stop is BEFORE
 			// the line runs, which is worth saying: the variables read alongside
 			// it are the ones that line is about to act on, not its result.
-			const where = stop.depth ? ` — ${stop.depth} call${stop.depth === 1 ? "" : "s"} deep` : "";
-			frames.push(new StackFrame(1, `statement at line ${stop.line}${where}`,
-				source, stop.line));
+			//
+			// Inside a call, the frames are the calls that led here. Each one
+			// names the function and opens at the line the call was written on,
+			// so a user who stepped down three levels can climb back by eye --
+			// "4 calls deep" told them how far down they were and nothing about
+			// the way back.
+			const calls = (stop.depth ?? 0) > 0 && this.callStackSupported
+				? await this.client.stack()
+				: [];
+
+			if (calls.length) {
+				// Innermost: the function being executed, at the line we stopped on.
+				frames.push(frameFor(`${calls[calls.length - 1].name}()`, stop.pass, stop.line));
+				// Each caller in turn, shown at the line it made its call from.
+				for (let i = calls.length - 1; i >= 1; i--) {
+					frames.push(frameFor(`${calls[i - 1].name}()`, calls[i].pass, calls[i].line));
+				}
+				// The statement in the @CODE, @POST or @DECL that started it all.
+				frames.push(frameFor(`statement at line ${calls[0].line}`,
+					calls[0].pass, calls[0].line));
+			} else {
+				// At the outermost level, or against an engine that cannot say
+				// how it got here -- in which case the depth is still worth
+				// showing, since it is all there is.
+				const where = stop.depth
+					? ` — ${stop.depth} call${stop.depth === 1 ? "" : "s"} deep`
+					: "";
+				frames.push(frameFor(`statement at line ${stop.line}${where}`,
+					stop.pass, stop.line));
+			}
 		} else if (stop.line > 0) {
 			let label = `rule at line ${stop.line}`;
 			if (stop.reason === "matched") label += " — matched";
@@ -631,7 +675,7 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 					: " — failed";
 			}
 			if (stop.node) label += `  [${stop.node}]`;
-			frames.push(new StackFrame(1, label, source, stop.line));
+			frames.push(frameFor(label, stop.pass, stop.line));
 		}
 
 		// Frame 1: the pass. Passes run in sequence rather than calling each
@@ -644,7 +688,7 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		// most analyzers is a tokenizer, so it is the first thing a user sees.
 		// Saying so in the frame name costs nothing and answers the question.
 		const passName = this.passLabel(stop);
-		const passFrame = new StackFrame(2,
+		const passFrame = new StackFrame(frameId++,
 			source ? `Pass ${stop.pass}: ${passName}`
 				: `Pass ${stop.pass}: ${passName} (built into the engine — no pass file)`,
 			source, stop.line > 0 ? stop.line : 1);
