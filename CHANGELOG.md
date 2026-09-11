@@ -3,6 +3,16 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.1.0
+Every route into the debugger works without editing anything.
+
+- **A Debug button on the Text view.** The extension contributed no debug command at all, so the only way into the debugger was VS Code's Run and Debug view -- which an NLP++ author has no particular reason to have ever opened. The button sits beside the file it will run on and needs no `launch.json`: it starts a live session and fills in the analyzer, the text file, the engine and the port from what you have selected.
+- **"Create a launch.json file" seeded the wrong thing.** It wrote replay first, and VS Code runs the first configuration when you press F5. Replay steps the `.tree` dumps of a *previous* run -- it needs one to have happened, its granularity is the pass, and it cannot stop on a breakpoint inside an `@POST`. So setting a breakpoint and pressing the button did nothing at all. Live is now first, in the seeded file and for F5 with no `launch.json`; replay is still there, second.
+- **Attach is seeded too.** Three routes exist and the file offered two.
+- **Nothing in the seed needs editing.** It uses only `${command:nlp.currentAnalyzerDir}` and `${command:nlp.currentTextFile}`, so it tracks whatever is selected and works unedited on every analyzer in the folder.
+- The seed was written twice -- in `package.json` for when the extension has not been activated, and in the provider for when it has. It is one list now, and a test compares the two copies.
+- The README documents all three configurations, with the point that matters first: you do not need one. Two snippet descriptions were stale -- both claimed "Needs engine 3.9.0+", a release that never existed, and the live one described stepping as though it always meant rules, which stopped being true in 3.16.0.
+
 ### 4.0.0
 Version 4: NLP++ is debuggable.
 

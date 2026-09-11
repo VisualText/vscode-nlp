@@ -3,6 +3,7 @@
 
 import * as vscode from "vscode";
 import { check, eq, unreachable } from "./harness";
+import { SEEDED_CONFIGURATIONS } from "../../debug/debugConfig";
 
 const EXTENSION_ID = "dehilster.nlp";
 
@@ -372,4 +373,77 @@ export async function crossPassTests(): Promise<void> {
 		touched.includes(declUri.fsPath) && touched.includes(refUri.fsPath),
 		`edits ${touched.length} file(s): ${touched.map((p) => p.split(/[\\/]/).pop()).join(", ") || "none"}`
 	);
+}
+// ---- the debugger a first-time user meets ---------------------------------
+//
+// Every route into the debugger has to work with no editing, because an NLP++
+// author has no reason to know what a launch.json is. There are three of them
+// and they are seeded from two different places, which is exactly how they
+// drift apart:
+//
+//   * "create a launch.json file" writes package.json's initialConfigurations
+//     when the extension has not been activated, and the provider's
+//     provideDebugConfigurations when it has. Those are two copies of one list.
+//   * F5 with no launch.json at all goes through resolveDebugConfiguration.
+//   * The Debug button in the Text view starts a session directly.
+export async function debugSetupTests(): Promise<void> {
+	const pkg = extension()?.packageJSON as any;
+	const dbg = pkg?.contributes?.debuggers?.[0];
+
+	check("an NLP++ debugger is contributed", !!dbg, JSON.stringify(Object.keys(pkg?.contributes ?? {})));
+	if (!dbg) return;
+
+	// Without this VS Code does not know the debugger has anything to do with
+	// the file in front of the user, so it is not offered at all.
+	check("it is associated with the nlp language",
+		Array.isArray(dbg.languages) && dbg.languages.includes("nlp"),
+		JSON.stringify(dbg.languages));
+
+	const seeded = dbg.initialConfigurations as any[];
+	check("creating a launch.json seeds configurations", Array.isArray(seeded) && seeded.length > 0);
+	if (!Array.isArray(seeded) || !seeded.length) return;
+
+	// VS Code runs the FIRST configuration when the user presses F5 after
+	// creating the file. Replay reads the .tree dumps of a previous run, so it
+	// needs one to have happened and cannot stop inside an @POST -- seeding it
+	// first hands a beginner the one mode that looks broken.
+	eq("the first one is the live debugger", seeded[0]?.mode, "live");
+	check("all three routes are seeded", seeded.length === 3,
+		seeded.map((c) => c.name).join(", "));
+	check("attach is among them",
+		seeded.some((c) => c.request === "attach"), seeded.map((c) => c.request).join(", "));
+
+	// The whole point: paste it and go. Anything a user must replace by hand --
+	// a machine-specific path, an empty required field -- fails here.
+	for (const cfg of seeded) {
+		const needsEditing = Object.entries(cfg).filter(([k, v]) =>
+			typeof v === "string" && v.length > 0
+			&& !v.startsWith("${command:")
+			&& (v.includes("<") || v.includes("path/to") || /^[A-Za-z]:[\/]/.test(v) || v.startsWith("/"))
+			&& k !== "name");
+		check(`"${cfg.name}" needs no editing`, needsEditing.length === 0,
+			JSON.stringify(needsEditing));
+		check(`"${cfg.name}" names an analyzer`, typeof cfg.analyzer === "string" && cfg.analyzer.length > 0);
+	}
+
+	// The two seeds are written independently, in TypeScript and in JSON, and
+	// nothing but this makes them agree.
+	const fromCode = SEEDED_CONFIGURATIONS as any[];
+	check("package.json and the provider seed the same configurations",
+		JSON.stringify(fromCode) === JSON.stringify(seeded),
+		`code: ${JSON.stringify(fromCode.map((c) => c.name))} / json: ${JSON.stringify(seeded.map((c) => c.name))}`);
+
+	// The one-click route, for someone who never opens Run and Debug.
+	const commands = await vscode.commands.getCommands(true);
+	check("a Debug command exists outside the Run and Debug view",
+		commands.includes("textView.debugAnalyzer"));
+	const inTitle = (pkg?.contributes?.menus?.["view/title"] ?? []).some(
+		(m: any) => m.command === "textView.debugAnalyzer");
+	check("and it is a button on the Text view", inTitle);
+
+	// The commands the seeded configurations substitute have to exist, or the
+	// file resolves to empty strings and the session dies with a poor message.
+	for (const cmd of ["nlp.currentAnalyzerDir", "nlp.currentTextFile"]) {
+		check(`\${command:${cmd}} resolves`, commands.includes(cmd));
+	}
 }

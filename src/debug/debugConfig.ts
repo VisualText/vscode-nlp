@@ -42,30 +42,61 @@ function isUnderInput(p: string): boolean {
 	return lower.includes("/input/");
 }
 
-class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
-	// Offered when the user picks "create a launch.json" for NLP++.
-	provideDebugConfigurations(): vscode.DebugConfiguration[] {
-		return [
-			{
-				type: DEBUG_TYPE,
-				request: "launch",
-				name: "NLP++: replay last analyzer run",
-				mode: "replay",
-				analyzer: "${command:nlp.currentAnalyzerDir}",
-				stopOnEntry: true,
-			},
-			{
-				type: DEBUG_TYPE,
-				request: "launch",
-				name: "NLP++: debug rules (live)",
-				mode: "live",
-				analyzer: "${command:nlp.currentAnalyzerDir}",
-				input: "${command:nlp.currentTextFile}",
-				stopOnEntry: true,
-			},
-		];
-	}
+/**
+ * What "create a launch.json file" writes.
+ *
+ * MUST match `contributes.debuggers[0].initialConfigurations` in
+ * package.json, which VS Code uses for the same purpose when the extension
+ * has not been activated yet. Two copies of one list is how they drift, so an
+ * integration test compares them.
+ */
+export const SEEDED_CONFIGURATIONS: vscode.DebugConfiguration[] = [
+		{
+			type: DEBUG_TYPE,
+			request: "launch",
+			name: "NLP++: debug rules (live)",
+			mode: "live",
+			analyzer: "${command:nlp.currentAnalyzerDir}",
+			input: "${command:nlp.currentTextFile}",
+			stopOnEntry: true,
+			stopOnRuleFailure: false,
+		},
+		{
+			type: DEBUG_TYPE,
+			request: "launch",
+			name: "NLP++: replay last analyzer run",
+			mode: "replay",
+			analyzer: "${command:nlp.currentAnalyzerDir}",
+			stopOnEntry: true,
+		},
+		{
+			type: DEBUG_TYPE,
+			request: "attach",
+			name: "NLP++: attach to a running engine",
+			mode: "live",
+			analyzer: "${command:nlp.currentAnalyzerDir}",
+			port: 9777,
+		},
+	];;
 
+class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
+	/**
+	 * What "create a launch.json file" writes. Kept in step with the
+	 * `initialConfigurations` in package.json, which VS Code uses for the same
+	 * purpose when the extension has not been activated yet.
+	 *
+	 * LIVE COMES FIRST, deliberately: VS Code runs the first configuration in
+	 * the file when the user presses F5, and "debug my analyzer" means the live
+	 * debugger. Seeding replay first handed people a session that reads the
+	 * .tree dumps of a PREVIOUS run -- so it needs one to have happened, steps
+	 * by pass rather than by rule, and cannot stop on a breakpoint in an @POST
+	 * at all. Setting a breakpoint, pressing the button and having nothing
+	 * happen is indistinguishable from the debugger being broken.
+	 */
+	provideDebugConfigurations(): vscode.DebugConfiguration[] {
+		// Copied so an editor writing into the returned objects cannot mutate ours.
+		return SEEDED_CONFIGURATIONS.map((c) => ({ ...c }));
+	}
 	// Called for every launch, including F5 with no launch.json (which arrives as
 	// an empty config). Fill in whatever the user left out from the current
 	// analyzer so the common case needs no configuration at all.
@@ -73,11 +104,15 @@ class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
 		_folder: vscode.WorkspaceFolder | undefined,
 		config: vscode.DebugConfiguration,
 	): vscode.DebugConfiguration | undefined {
+		// An empty config is F5 with no launch.json. Live, not replay: replay
+		// reads the .tree dumps of a PREVIOUS run, so it needs one to have
+		// happened, and it cannot honour a breakpoint inside an @POST. Someone
+		// who has set a breakpoint and pressed Start means the live debugger.
 		if (!config.type) {
 			config.type = DEBUG_TYPE;
 			config.request = "launch";
-			config.name = "NLP++: replay last analyzer run";
-			config.mode = "replay";
+			config.name = "NLP++: debug rules (live)";
+			config.mode = "live";
 			config.stopOnEntry = true;
 		}
 		// Attaching only makes sense for the live debugger -- there is no running
@@ -186,6 +221,28 @@ export function registerDebugger(ctx: vscode.ExtensionContext): void {
 	ctx.subscriptions.push(
 		vscode.debug.registerDebugConfigurationProvider(DEBUG_TYPE, new NlpConfigurationProvider()),
 		vscode.debug.registerDebugAdapterDescriptorFactory(DEBUG_TYPE, new NlpDebugAdapterFactory(ctx)),
+		// One click, no launch.json, no Run and Debug view. Everything this
+		// leaves out -- the analyzer, the text file, the engine, the port -- is
+		// filled in by resolveDebugConfiguration from what is currently
+		// selected, which is the same path F5 takes with no launch.json.
+		//
+		// Worth having even though VS Code offers its own way in: that way is
+		// the Run and Debug view, and an NLP++ author has no reason to have ever
+		// opened it. The Text view is where they already are.
+		vscode.commands.registerCommand("textView.debugAnalyzer", async () => {
+			const started = await vscode.debug.startDebugging(
+				vscode.workspace.workspaceFolders?.[0],
+				{
+					type: DEBUG_TYPE,
+					request: "launch",
+					name: "NLP++: debug rules (live)",
+					mode: "live",
+					stopOnEntry: true,
+				} as vscode.DebugConfiguration);
+			// startDebugging returns false when the resolver refused; it has
+			// already said why, so do not pile a second message on top.
+			return started;
+		}),
 		// Referenced by the generated launch.json above so the config stays
 		// readable rather than hard-coding absolute paths.
 		vscode.commands.registerCommand("nlp.currentAnalyzerDir", () =>

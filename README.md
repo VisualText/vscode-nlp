@@ -114,6 +114,67 @@ New to NLP++? The [hello-world video](https://visualtext.org/hello-world-tutoria
 
 Needs NLP++ engine 4.0.0, which ships with the extension. The extension asks the engine what it supports rather than guessing from a version, so against an older engine a breakpoint it cannot honour is withdrawn with the reason instead of silently never firing.
 
+#### Configuring it
+
+**You do not need a `launch.json`.** Press <kbd>F5</kbd> with an analyzer open and the extension fills in the analyzer directory, the text file selected in the **Text** view, the bundled engine and a free port. Most people never write one.
+
+Write one when you want to pin a particular analyzer or input, keep several setups side by side, or turn on something that is off by default. VS Code's *Add Configuration…* offers all three shapes as snippets; in full they are:
+
+```jsonc
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Step a finished run's parse trees. Steps BACKWARD as well as forward.
+      "type": "nlpxx",
+      "request": "launch",
+      "name": "NLP++: replay last analyzer run",
+      "mode": "replay",
+      "analyzer": "${command:nlp.currentAnalyzerDir}",
+      "stopOnEntry": true
+    },
+    {
+      // Run the analyzer under the engine's debugger: breakpoints, variables,
+      // call stack. Forward-only -- a live engine cannot un-run.
+      "type": "nlpxx",
+      "request": "launch",
+      "name": "NLP++: debug rules (live)",
+      "mode": "live",
+      "analyzer": "${command:nlp.currentAnalyzerDir}",
+      "input": "${command:nlp.currentTextFile}",
+      "stopOnEntry": true,
+      "stopOnRuleFailure": false
+    },
+    {
+      // Attach to an engine someone already started:
+      //   nlp -ANA <analyzer> -IN <text> -WORK <dir> -DEBUG 9777
+      "type": "nlpxx",
+      "request": "attach",
+      "name": "NLP++: attach to a running engine",
+      "mode": "live",
+      "analyzer": "${command:nlp.currentAnalyzerDir}",
+      "port": 9777
+    }
+  ]
+}
+```
+
+`analyzer` is the only required field for a launch (`analyzer` and `port` for an attach); everything else has a default.
+
+| field | | default |
+| --- | --- | --- |
+| `mode` | `"replay"` or `"live"` | `"replay"` |
+| `analyzer` | the analyzer folder, the one holding `spec/` | the current analyzer |
+| `input` | the text file to run | the file selected in the **Text** view |
+| `stopOnEntry` | stop once there is something to look at. With breakpoints set, the session runs to them instead | `true` |
+| `stopOnRuleFailure` | also stop on every rule that *fails*, not just the ones that match | `false` |
+| `treeDepth` | how many levels of parse tree to fetch at each stop, and so how deep the panes can be expanded | `5` |
+| `enginePath`, `workDir` | override the bundled engine and its working directory | the bundled engine |
+| `port` | the debug port; required when attaching | a free one |
+| `engineArgs` | extra arguments passed through to the engine | none |
+
+The two `${command:…}` values resolve as you'd expect: `nlp.currentAnalyzerDir` is the analyzer you have selected, `nlp.currentTextFile` the text file. Using them keeps one configuration working across every analyzer in the folder.
+
 ### Ship
 
 * **Compile Analyzer and KB** turns an analyzer and its knowledge base into a native shared library (`.dll` / `.so` / `.dylib`) in one command. Two things follow: **faster execution**, and **protection of your NLP++ source** — customers get a library, not your rules.
