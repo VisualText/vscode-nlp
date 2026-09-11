@@ -3628,7 +3628,7 @@
                     {
                         "type": "nlpxx",
                         "request": "launch",
-                        "name": "NLP++: replay last analyzer run",
+                        "name": "NLP++: debug (replay)",
                         "mode": "replay",
                         "analyzer": "${command:nlp.currentAnalyzerDir}",
                         "stopOnEntry": true
@@ -3636,7 +3636,7 @@
                     {
                         "type": "nlpxx",
                         "request": "attach",
-                        "name": "NLP++: attach to a running engine",
+                        "name": "NLP++: attach (live)",
                         "mode": "live",
                         "analyzer": "${command:nlp.currentAnalyzerDir}",
                         "port": 9777
@@ -3657,24 +3657,24 @@
                         }
                     },
                     {
-                        "label": "NLP++: replay last analyzer run",
+                        "label": "NLP++: debug (replay)",
                         "description": "Step through the per-pass parse trees from the most recent run of an analyzer. Steps backward as well as forward.",
                         "body": {
                             "type": "nlpxx",
                             "request": "launch",
-                            "name": "NLP++: replay last analyzer run",
+                            "name": "NLP++: debug (replay)",
                             "mode": "replay",
                             "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
                             "stopOnEntry": true
                         }
                     },
                     {
-                        "label": "NLP++: attach to a running engine",
+                        "label": "NLP++: attach (live)",
                         "description": "Attach to an engine already started with -DEBUG <port>. Needs engine 4.0.0.",
                         "body": {
                             "type": "nlpxx",
                             "request": "attach",
-                            "name": "NLP++: attach to a running engine",
+                            "name": "NLP++: attach (live)",
                             "mode": "live",
                             "analyzer": "^\"\\${command:nlp.currentAnalyzerDir}\"",
                             "port": 9777

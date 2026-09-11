@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### 4.1.1
 The debug configuration is named for what it does, and is not offered twice.
 
-- **The configuration is called "NLP++: debug (live)".** It was "debug rules (live)", which stopped being accurate when breakpoints reached `@CODE`, `@POST` and `@DECL` -- it debugs an analyzer, not only its rules.
+- **The three configurations are named alike, and for what they do.** They read `NLP++: debug (live)`, `NLP++: debug (replay)` and `NLP++: attach (live)` -- the same shape, differing in the part that actually differs. Before, one was "debug rules (live)" (inaccurate since 3.16.0, when breakpoints reached `@CODE`, `@POST` and `@DECL` -- it debugs an analyzer, not only its rules) and the other two were long sentences in a different style, so nothing about the list said these were three ways into one debugger.
 - **"Add Configuration..." offered them in a different order from the seeded file**, and adding one by hand therefore appended a second copy of a configuration the file already had. Both lists are now the same configurations in the same order, and a test compares them.
 
 ### 4.1.0
