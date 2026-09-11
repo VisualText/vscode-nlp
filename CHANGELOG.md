@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.16.1
+Starting the debugger lands somewhere worth looking at.
+
+- **The debugger opened on a blank editor and six empty panes.** The engine's first stop is the boundary of pass 1, which in almost every analyzer is a tokenizer built into the engine: no pass file to open, no rule, no node, and no variables set yet, because nothing you wrote has run. The only way to find that out was to press Step and watch it fill in. "Stop on entry" now means the first thing the ANALYZER does -- it runs on to the first rule tried, so the pass file opens and the rule, the node, the tree and the globals are all there. Breakpoints are still honoured on the way, including one in an `@CODE` that runs before any rule, which is what makes it safe to do unasked.
+
 ### 3.16.0
 Breakpoints in `@CODE`, `@POST` and `@DECL`, and stepping through them statement by statement.
 

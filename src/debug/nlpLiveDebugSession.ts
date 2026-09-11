@@ -227,8 +227,27 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
-		if (args.stopOnEntry) this.announceStop();
-		else await this.resume("continue");
+		if (!args.stopOnEntry) {
+			await this.resume("continue");
+			return;
+		}
+
+		// "Stop on entry" means the first thing the ANALYZER does, not the first
+		// thing the engine does.
+		//
+		// The engine's first stop is the boundary of pass 1, which in almost
+		// every analyzer is a tokenizer built into the engine: no pass file to
+		// open, no rule, no node, and no variables set yet, because nothing the
+		// user wrote has run. A debugger that opens on a blank editor and six
+		// empty panes reads as one that failed to start, and the only way to
+		// find that out is to press Step and watch it fill in.
+		//
+		// So run on to the first rule the analyzer tries. Breakpoints are still
+		// honoured on the way -- the engine checks those before it consults the
+		// step mode -- so a breakpoint in an @CODE that runs before any rule
+		// still wins, which is what makes this safe to do unasked.
+		if (this.currentStop?.reason === "passStart") await this.resume("stepRule");
+		else this.announceStop();
 	}
 
 	// Attach to an engine already listening on `port`. Everything after the
