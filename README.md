@@ -72,7 +72,7 @@ New to NLP++? The [hello-world video](https://visualtext.org/hello-world-tutoria
 
 ## What's in the Extension
 
-Version 3 has been the biggest chapter yet; [Everything New in Version 3](https://visualtext.org/nlp-in-vs-code-everything-new-in-version-3/) tells the long version. In brief:
+**Version 4 adds a debugger** — breakpoints, stepping, variables and a call stack inside a running analyzer. Version 3, the chapter before it, made analyzers compilable and cloud-buildable; [Everything New in Version 3](https://visualtext.org/nlp-in-vs-code-everything-new-in-version-3/) tells that story. In brief:
 
 ### Write
 
@@ -94,6 +94,25 @@ Version 3 has been the biggest chapter yet; [Everything New in Version 3](https:
 * **Knowledge-base display** at any point in the analyzer sequence
 * A **regression-test runner** with streaming pass/fail, and blessing of new expected output
 * Drag-and-drop editing of the **pass sequence** and the texts being analyzed
+
+### Debug
+
+**New in Version 4.** Press <kbd>F5</kbd> and your analyzer runs under a debugger — not a log, not a dump, a debugger.
+
+<!-- SCREENSHOT: the debugger stopped on a rule, panes populated (Rule, Variables,
+     Globals, Current node, Nodes in play, Call Stack). Suggested file:
+     resources/DebuggerStopped.png -->
+
+* **Breakpoints** on a rule — click any line inside it and it snaps to the rule the engine reports — or on a line of ordinary code inside an `@POST`, `@CODE` or `@DECL`. Start with a breakpoint set and the session runs straight to it.
+* **Stepping that follows where you are.** At a rule: Step Over is the next rule tried, Step Into the next rule that *matches*, Step Out the next pass. Inside a statement body the same three buttons step by statement, and Step Into enters a function call.
+* **Every NLP++ variable kind** at the moment you stopped — `G()` globals, `L()` locals, `S()` suggested, `X()` context, and `N()` matched elements. A stop happens *before* the line runs, so what you read is the state that line is about to act on.
+* **A call stack** through your `@DECL` functions: each frame names its function and opens at the line the call was written on. Stop inside a function and its parameters read back as locals, in the file the function was written in.
+* **Nodes in play** — at a match, exactly the nodes the rule took, labelled `N(1)`, `N(2)`… the same names you would write in the rule. At an attempt, the current node and the candidates after it. The whole document tree is still one row away.
+* **A failed rule says how far it got** before it stopped agreeing with the text, which is usually the entire question. A rule that never fired says that too, instead of leaving you staring at a breakpoint that silently never hits.
+* **Step backwards.** A second *replay* mode walks the per-pass parse trees a finished run already wrote to disk. Because the run is recorded rather than generated as you go, Step Back and reverse-continue cost nothing — walk a node's history in either direction instead of re-running to get back where you were. Its granularity is the pass; the live mode's is the individual rule attempt.
+* **Stop on rule failure** to watch every rule that did not match, and **attach** to an engine someone else started with `nlp ... -DEBUG <port>`.
+
+Needs NLP++ engine 4.0.0, which ships with the extension. The extension asks the engine what it supports rather than guessing from a version, so against an older engine a breakpoint it cannot honour is withdrawn with the reason instead of silently never firing.
 
 ### Ship
 
