@@ -132,6 +132,12 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 	private statementsSupported: boolean | undefined;
 	/** Statement breakpoints reported as verified, in case they must be withdrawn. */
 	private statementBreakpoints: DebugProtocol.Breakpoint[] = [];
+	/**
+	 * How many breakpoints stand in each source file. Kept because what should
+	 * happen when the session starts depends on whether the user set any: with
+	 * breakpoints, starting means run to them.
+	 */
+	private breakpointsPerSource = new Map<string, number>();
 
 	public constructor() {
 		super("nlp-live-debug.log");
@@ -242,10 +248,17 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 		// empty panes reads as one that failed to start, and the only way to
 		// find that out is to press Step and watch it fill in.
 		//
-		// So run on to the first rule the analyzer tries. Breakpoints are still
-		// honoured on the way -- the engine checks those before it consults the
-		// step mode -- so a breakpoint in an @CODE that runs before any rule
-		// still wins, which is what makes this safe to do unasked.
+		// A user who has set a breakpoint has already said where they want to
+		// stop, and pressing Start should take them there. Stopping somewhere
+		// else first is a step they did not ask for, in a file they were not
+		// looking at, and it reads as the breakpoint having been ignored.
+		if (this.anyBreakpoints()) {
+			await this.resume("continue");
+			return;
+		}
+
+		// With no breakpoints, run on to the first rule the analyzer tries, so
+		// the session opens on something rather than on nothing.
 		if (this.currentStop?.reason === "passStart") await this.resume("stepRule");
 		else this.announceStop();
 	}
@@ -395,11 +408,17 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 
 		// Deduped: several breakpoints inside one rule are one stop.
 		const unique = [...new Set(effective)];
+		this.breakpointsPerSource.set(path.resolve(sourcePath).toLowerCase(), unique.length);
 		if (this.launched) await this.client.setBreakpoints(pass, unique);
 		else this.pendingBreakpoints.set(pass, unique);
 
 		response.body = { breakpoints: reported };
 		this.sendResponse(response);
+	}
+
+	private anyBreakpoints(): boolean {
+		for (const n of this.breakpointsPerSource.values()) if (n > 0) return true;
+		return false;
 	}
 
 	/**

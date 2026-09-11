@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.16.2
+Starting with a breakpoint set takes you to the breakpoint.
+
+- **The session always stopped somewhere else first.** Every launch stopped on entry, so a user who had set one breakpoint and pressed Start landed on an unrelated rule in a file they were not looking at, and had to press Continue to get where they had said they wanted to be -- which reads as the breakpoint having been ignored. Starting now runs to your breakpoints when you have any. With none, it still stops at the first rule, so the session opens on something rather than on nothing.
+
 ### 3.16.1
 Starting the debugger lands somewhere worth looking at.
 
