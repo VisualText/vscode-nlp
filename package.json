@@ -3637,7 +3637,7 @@
                     },
                     {
                         "label": "NLP++: debug rules (live)",
-                        "description": "Run the analyzer under the engine's rule debugger. Step Over = next rule tried, Step Into = next rule that matches, Step Out = next pass. Needs engine 3.9.0+.",
+                        "description": "Run the analyzer under the engine's rule debugger. At a rule, Step Over is the next rule tried, Step Into the next rule that matches, Step Out the next pass; inside an @CODE, @POST or @DECL body the same buttons step by statement and Step Into enters a function. Needs engine 4.0.0.",
                         "body": {
                             "type": "nlpxx",
                             "request": "launch",
@@ -3650,7 +3650,7 @@
                     },
                     {
                         "label": "NLP++: attach to a running engine",
-                        "description": "Attach to an engine already started with -DEBUG <port>. Needs engine 3.9.0+.",
+                        "description": "Attach to an engine already started with -DEBUG <port>. Needs engine 4.0.0.",
                         "body": {
                             "type": "nlpxx",
                             "request": "attach",
