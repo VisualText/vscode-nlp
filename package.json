@@ -1848,6 +1848,11 @@
                 "icon": "$(beaker)"
             },
             {
+                "command": "textView.debugAnalyzer",
+                "title": "Debug Analyzer on Current File",
+                "icon": "$(debug-alt)"
+            },
+            {
                 "command": "analyzerView.blessRegression",
                 "title": "Bless Regression Goldens (All Files)",
                 "icon": "$(save-all)"
@@ -2222,6 +2227,11 @@
                     "command": "textView.refreshAll",
                     "when": "view == textView",
                     "group": "navigation@4"
+                },
+                {
+                    "command": "textView.debugAnalyzer",
+                    "when": "view == textView",
+                    "group": "navigation@5"
                 },
                 {
                     "command": "helpView.openHome",
@@ -3347,7 +3357,8 @@
                     "when": "view == kbView",
                     "group": "compile"
                 }
-            ]
+            ],
+            "commandPalette": []
         },
         "configuration": {
             "type": "object",
@@ -3607,6 +3618,16 @@
                     {
                         "type": "nlpxx",
                         "request": "launch",
+                        "name": "NLP++: debug rules (live)",
+                        "mode": "live",
+                        "analyzer": "${command:nlp.currentAnalyzerDir}",
+                        "input": "${command:nlp.currentTextFile}",
+                        "stopOnEntry": true,
+                        "stopOnRuleFailure": false
+                    },
+                    {
+                        "type": "nlpxx",
+                        "request": "launch",
                         "name": "NLP++: replay last analyzer run",
                         "mode": "replay",
                         "analyzer": "${command:nlp.currentAnalyzerDir}",
@@ -3614,12 +3635,11 @@
                     },
                     {
                         "type": "nlpxx",
-                        "request": "launch",
-                        "name": "NLP++: debug rules (live)",
+                        "request": "attach",
+                        "name": "NLP++: attach to a running engine",
                         "mode": "live",
                         "analyzer": "${command:nlp.currentAnalyzerDir}",
-                        "input": "${command:nlp.currentTextFile}",
-                        "stopOnEntry": true
+                        "port": 9777
                     }
                 ],
                 "configurationSnippets": [
