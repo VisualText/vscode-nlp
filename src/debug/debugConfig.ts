@@ -54,7 +54,7 @@ export const SEEDED_CONFIGURATIONS: vscode.DebugConfiguration[] = [
 		{
 			type: DEBUG_TYPE,
 			request: "launch",
-			name: "NLP++: debug rules (live)",
+			name: "NLP++: debug (live)",
 			mode: "live",
 			analyzer: "${command:nlp.currentAnalyzerDir}",
 			input: "${command:nlp.currentTextFile}",
@@ -64,7 +64,7 @@ export const SEEDED_CONFIGURATIONS: vscode.DebugConfiguration[] = [
 		{
 			type: DEBUG_TYPE,
 			request: "launch",
-			name: "NLP++: replay last analyzer run",
+			name: "NLP++: debug (replay)",
 			mode: "replay",
 			analyzer: "${command:nlp.currentAnalyzerDir}",
 			stopOnEntry: true,
@@ -72,7 +72,7 @@ export const SEEDED_CONFIGURATIONS: vscode.DebugConfiguration[] = [
 		{
 			type: DEBUG_TYPE,
 			request: "attach",
-			name: "NLP++: attach to a running engine",
+			name: "NLP++: attach (live)",
 			mode: "live",
 			analyzer: "${command:nlp.currentAnalyzerDir}",
 			port: 9777,
@@ -111,7 +111,7 @@ class NlpConfigurationProvider implements vscode.DebugConfigurationProvider {
 		if (!config.type) {
 			config.type = DEBUG_TYPE;
 			config.request = "launch";
-			config.name = "NLP++: debug rules (live)";
+			config.name = "NLP++: debug (live)";
 			config.mode = "live";
 			config.stopOnEntry = true;
 		}
@@ -235,7 +235,7 @@ export function registerDebugger(ctx: vscode.ExtensionContext): void {
 				{
 					type: DEBUG_TYPE,
 					request: "launch",
-					name: "NLP++: debug rules (live)",
+					name: "NLP++: debug (live)",
 					mode: "live",
 					stopOnEntry: true,
 				} as vscode.DebugConfiguration);

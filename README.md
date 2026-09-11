@@ -128,7 +128,7 @@ Write one when you want to pin a particular analyzer or input, keep several setu
       // Step a finished run's parse trees. Steps BACKWARD as well as forward.
       "type": "nlpxx",
       "request": "launch",
-      "name": "NLP++: replay last analyzer run",
+      "name": "NLP++: debug (replay)",
       "mode": "replay",
       "analyzer": "${command:nlp.currentAnalyzerDir}",
       "stopOnEntry": true
@@ -138,7 +138,7 @@ Write one when you want to pin a particular analyzer or input, keep several setu
       // call stack. Forward-only -- a live engine cannot un-run.
       "type": "nlpxx",
       "request": "launch",
-      "name": "NLP++: debug rules (live)",
+      "name": "NLP++: debug (live)",
       "mode": "live",
       "analyzer": "${command:nlp.currentAnalyzerDir}",
       "input": "${command:nlp.currentTextFile}",
@@ -150,7 +150,7 @@ Write one when you want to pin a particular analyzer or input, keep several setu
       //   nlp -ANA <analyzer> -IN <text> -WORK <dir> -DEBUG 9777
       "type": "nlpxx",
       "request": "attach",
-      "name": "NLP++: attach to a running engine",
+      "name": "NLP++: attach (live)",
       "mode": "live",
       "analyzer": "${command:nlp.currentAnalyzerDir}",
       "port": 9777
