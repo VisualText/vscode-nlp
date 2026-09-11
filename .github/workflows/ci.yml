@@ -78,6 +78,16 @@ jobs:
       - name: Tree view tests
         run: npm run test:treeview
 
+      # The engine client and the debug session. Both run under plain Node
+      # against a fake engine, so no nlp binary is needed here. They were
+      # written and then never wired in, which is how three debugger bugs
+      # reached a release with a green tick on them.
+      - name: Debugger tests
+        run: npm run test:debug
+
+      - name: Trace tests
+        run: npm run test:trace
+
   format:
     name: Formatter corpus
     runs-on: ubuntu-latest

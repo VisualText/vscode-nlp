@@ -35,7 +35,7 @@ import * as path from "path";
 import * as net from "net";
 import {
 	EngineClient, EngineStop, EngineNode, EngineRule, EngineVar,
-	EngineCollectElement, ResumeCommand,
+	EngineCollectElement, ResumeCommand, StopReason,
 } from "./engineClient";
 import { parseSequence, sequencePassNames } from "../trace/traceModel";
 import { declaredSymbols } from "../language/symbols";
@@ -97,6 +97,39 @@ type VariableRef =
 	| { kind: "engineNode"; node: EngineNode }
 	| { kind: "attributes"; node: EngineNode }
 	| { kind: "wholeTree" };
+
+/**
+ * What a session should do at its very first stop: show it, run to the user's
+ * breakpoints, or step on to something worth looking at.
+ *
+ * A plain function, and exported, because this one decision has been got wrong
+ * twice in a row and neither time did anything fail -- the debugger simply
+ * opened somewhere unhelpful. It is the whole of the reasoning, with none of
+ * the socket and process handling that makes launchRequest awkward to drive
+ * from a test.
+ *
+ *   - Not stopping on entry at all: run.
+ *   - Breakpoints set: run to them. The user has already said where they want
+ *     to stop; stopping anywhere else first reads as the breakpoint being
+ *     ignored, and in a long analyzer it is several passes and a whole file
+ *     away from where they were looking.
+ *   - Stopped at a pass boundary: step on. Pass 1 is a tokenizer built into the
+ *     engine in almost every analyzer -- no file to open, no rule, no node, no
+ *     variables, because nothing the user wrote has run. Every pane is empty
+ *     and it reads as a debugger that failed to start.
+ *   - Anything else: show it. It already has something in it.
+ */
+export type EntryAction = "announce" | "continue" | "stepRule";
+
+export function entryAction(
+	stopOnEntry: boolean,
+	hasBreakpoints: boolean,
+	reason: StopReason | undefined,
+): EntryAction {
+	if (!stopOnEntry) return "continue";
+	if (hasBreakpoints) return "continue";
+	return reason === "passStart" ? "stepRule" : "announce";
+}
 
 export class NlpLiveDebugSession extends LoggingDebugSession {
 	private client = new EngineClient();
@@ -233,34 +266,12 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 			this.sendEvent(new TerminatedEvent());
 			return;
 		}
-		if (!args.stopOnEntry) {
-			await this.resume("continue");
-			return;
-		}
-
-		// "Stop on entry" means the first thing the ANALYZER does, not the first
-		// thing the engine does.
-		//
-		// The engine's first stop is the boundary of pass 1, which in almost
-		// every analyzer is a tokenizer built into the engine: no pass file to
-		// open, no rule, no node, and no variables set yet, because nothing the
-		// user wrote has run. A debugger that opens on a blank editor and six
-		// empty panes reads as one that failed to start, and the only way to
-		// find that out is to press Step and watch it fill in.
-		//
-		// A user who has set a breakpoint has already said where they want to
-		// stop, and pressing Start should take them there. Stopping somewhere
-		// else first is a step they did not ask for, in a file they were not
-		// looking at, and it reads as the breakpoint having been ignored.
-		if (this.anyBreakpoints()) {
-			await this.resume("continue");
-			return;
-		}
-
-		// With no breakpoints, run on to the first rule the analyzer tries, so
-		// the session opens on something rather than on nothing.
-		if (this.currentStop?.reason === "passStart") await this.resume("stepRule");
-		else this.announceStop();
+		// See entryAction: the whole of the reasoning lives there, so that it can
+		// be read and tested without a socket and a child process in the way.
+		const action = entryAction(
+			args.stopOnEntry === true, this.anyBreakpoints(), this.currentStop?.reason);
+		if (action === "announce") this.announceStop();
+		else await this.resume(action);
 	}
 
 	// Attach to an engine already listening on `port`. Everything after the

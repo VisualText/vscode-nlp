@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "3.16.2",
+    "version": "3.16.3",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -3697,7 +3697,7 @@
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
         "test:trace": "tsc -p tsconfig.trace.json && node ./out-trace/trace/traceTest.js",
-        "test:debug": "tsc -p tsconfig.debug.json && node ./out-debug/debug/debugTest.js",
+        "test:debug": "tsc -p tsconfig.debug.json && node ./out-debug/debug/debugTest.js && node ./out-debug/debug/sessionTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix && npm run check-bundles ./vscode.nlp.vsix"
     },

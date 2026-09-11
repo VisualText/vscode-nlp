@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 3.16.3
+Tests for the debugger's DAP layer, and they now run in CI.
+
+- **The layer where three bugs in a row landed had no test.** `debugTest.ts` covered the engine client, the wire; everything above it -- what a breakpoint on an element line turns into, what the panes are handed at a stop, which engine command a step button sends -- was covered by nothing. None of those three bugs threw; each looked like a debugger that quietly did not work, and each was found by hand. The session is now driven in process over a pair of streams against a fake engine: 39 assertions covering breakpoint snapping and deduping, statement breakpoints and their withdrawal against an older engine, what each frame is called, the six panes, and which of the six engine step commands each button maps to at a rule and inside a statement body.
+- Where a session first stops is the one decision the attach path cannot reach, so it is now a plain exported function and tested directly against all eight combinations.
+- Checked by reintroducing each of the three shipped bugs and confirming the suite catches it -- 2, 1 and 5 assertions respectively.
+- **CI never ran the debugger or trace tests at all.** 68 + 39 + 141 assertions existed and no workflow invoked them, which is how those bugs reached a release with a green tick. Wired in.
+
 ### 3.16.2
 Starting with a breakpoint set takes you to the breakpoint.
 
