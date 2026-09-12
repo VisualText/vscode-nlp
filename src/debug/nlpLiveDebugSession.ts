@@ -969,13 +969,31 @@ export class NlpLiveDebugSession extends LoggingDebugSession {
 				});
 			}
 		} else {
-			const r = await this.client.node(this.treeDepth, await this.followCount());
+			// The rule is fetched here rather than only inside followCount so the
+			// element count can be compared against what is actually there.
+			const rule = await this.client.rule();
+			const needed = rule?.elements.length ?? 0;
+			const r = await this.client.node(this.treeDepth, needed > 0 ? needed + 2 : 6);
 			if (r.node) {
 				out.push(this.plain("(being tried at)", ""));
 				out.push(this.nodeVariable(r.node));
 				if (r.following.length) {
 					out.push(this.plain("(nodes after it)", ""));
 					for (const n of r.following) out.push(this.nodeVariable(n));
+				}
+
+				// Why the list is as short as it is. A rule matches a SEQUENCE, so
+				// when fewer nodes remain than the rule has elements it cannot
+				// match here whatever they are -- it has run off the end of its
+				// @NODES parent. Without saying so, a list holding one node reads
+				// as a truncated display rather than as the reason the rule is
+				// about to fail, and the obvious conclusion is that the debugger
+				// is hiding something.
+				const available = 1 + r.following.length;
+				if (needed > 0 && available < needed) {
+					out.push(this.plain("(end of the run)",
+						`${available} node${available === 1 ? "" : "s"} here, and the rule needs ` +
+						`${needed} — it cannot match at this one`));
 				}
 			}
 		}

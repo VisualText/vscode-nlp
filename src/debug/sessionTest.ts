@@ -546,6 +546,62 @@ async function main(): Promise<void> {
 		await fake.close();
 	}
 
+	// ---- why the run of nodes is as short as it is --------------------------
+	// A rule matches a SEQUENCE, so when fewer nodes remain than the rule has
+	// elements it cannot match here whatever they are -- it has reached the end
+	// of its @NODES parent. Reported as a bug ("the nodes in play are wrong,
+	// there should be a _date and a _time"): the pane was right, the line
+	// really did end, but a list holding one node reads as a truncated display
+	// rather than as the reason the rule is about to fail.
+	{
+		const fake = await fakeEngine({
+			rule: { rule: { line: RULE_HEAD, num: 1, builds: "_dateTime",
+				elements: [{ name: "_date" }, { name: "_xWILD" }, { name: "_time" }] } },
+			node: { node: { name: "_date", text: "Sept 04, 2014", type: "alpha" },
+				following: [{ name: ".", text: ".", type: "punct" }] },
+			collect: { collect: [] },
+		});
+		const dap = await attached(fake, analyzer);
+		await stopAt(dap, fake, { reason: "step", line: RULE_HEAD });
+		const st = await dap.send("stackTrace", { threadId: 1 });
+		const scopes = await dap.send("scopes", { frameId: st.body.stackFrames[0].id });
+		const ref = scopes.body.scopes.find((s: any) => s.name === "Nodes in play").variablesReference;
+		const rows = (await dap.send("variables", { variablesReference: ref })).body.variables;
+		const note = rows.find((r: any) => r.name === "(end of the run)");
+		check("a run too short for the rule says so", !!note,
+			rows.map((r: any) => r.name).join(", "));
+		check("and says how short", /2 node.*needs 3/.test(String(note?.value)), String(note?.value));
+		await dap.send("disconnect", { terminateDebuggee: true });
+		await fake.close();
+	}
+	{
+		// Enough nodes for the rule: no note, because there is nothing to explain.
+		const fake = await fakeEngine({
+			rule: { rule: { line: RULE_HEAD, num: 1, builds: "_dateTime",
+				elements: [{ name: "_date" }, { name: "_xWILD" }, { name: "_time" }] } },
+			node: { node: { name: "_date", text: "11. 12. 2014", type: "alpha" },
+				following: [
+					{ name: ",", text: ",", type: "punct" },
+					{ name: "_time", text: "08:45:39", type: "alpha" },
+				] },
+			collect: { collect: [] },
+		});
+		const dap = await attached(fake, analyzer);
+		await stopAt(dap, fake, { reason: "step", line: RULE_HEAD });
+		const st = await dap.send("stackTrace", { threadId: 1 });
+		const scopes = await dap.send("scopes", { frameId: st.body.stackFrames[0].id });
+		const ref = scopes.body.scopes.find((s: any) => s.name === "Nodes in play").variablesReference;
+		const rows = (await dap.send("variables", { variablesReference: ref })).body.variables;
+		check("a run long enough is left to speak for itself",
+			!rows.some((r: any) => r.name === "(end of the run)"),
+			rows.map((r: any) => r.name).join(", "));
+		check("and the nodes the rule will be tried against are all listed",
+			rows.some((r: any) => String(r.name).indexOf("_time") >= 0),
+			rows.map((r: any) => r.name).join(", "));
+		await dap.send("disconnect", { terminateDebuggee: true });
+		await fake.close();
+	}
+
 	// ---- a file that is not a pass is refused, with the reason --------------
 	{
 		const fake = await fakeEngine();
