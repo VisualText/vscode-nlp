@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.1.2
+"Nodes in play" says when the rule has run out of nodes.
+
+- **A short list looked like a broken one.** Stopped on a rule being tried at the last node of its `@NODES` parent, the pane showed the current node and one node after it and stopped -- which reads as a truncated display, not as the reason the rule is about to fail. It now says so: *"2 nodes here, and the rule needs 3 -- it cannot match at this one."* A rule matches a sequence, so when fewer nodes remain than the rule has elements it cannot match whatever they are.
+- Nothing was wrong with what the pane showed; it was right and unexplained. Reported as "the nodes in play are wrong, there should be a `_date` and a `_time`" on a line that read `Sept 04, 2014.` -- a date and a full stop, with the time on other lines entirely.
+
 ### 4.1.1
 The debug configuration is named for what it does, and is not offered twice.
 
