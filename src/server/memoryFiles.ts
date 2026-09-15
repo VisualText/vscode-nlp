@@ -9,7 +9,7 @@
 //
 // PURE MODULE: no Node, no DOM, no 'vscode'.
 
-import type { Connection } from "vscode-languageserver/lib/common/api";
+import type { Connection } from "vscode-languageserver";
 import { WorkspaceFiles, isIndexedName, isSkippedDir, MAX_FILES } from "./workspaceFiles";
 import type { StartedServer } from "./serverCore";
 
