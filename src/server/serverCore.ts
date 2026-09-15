@@ -32,7 +32,7 @@ import {
 	FoldingRange, FoldingRangeKind, SemanticTokensBuilder, CodeAction,
 	CodeActionKind, Diagnostic, DiagnosticSeverity, TextEdit, WorkspaceEdit,
 	DocumentHighlight, ResponseError, ErrorCodes, Range as LspRange, Position as LspPosition,
-} from "vscode-languageserver/lib/common/api";
+} from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { analyzeSymbols, declaredSymbols, NlpSymbol } from "../language/symbols";
@@ -660,7 +660,9 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 		for (const diag of params.context.diagnostics) {
 			if (diag.code !== UNKNOWN_FN_CODE) continue;
 			// Suggestion is encoded in the message: "... did you mean 'X'?"
-			const m = /did you mean '([^']+)'/.exec(diag.message);
+			// LSP 3.18 lets a message be MarkupContent; ours are always plain strings.
+			const message = typeof diag.message === "string" ? diag.message : diag.message.value;
+			const m = /did you mean '([^']+)'/.exec(message);
 			if (!m) continue;
 			actions.push({
 				title: `Replace with '${m[1]}'`,
