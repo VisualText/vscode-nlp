@@ -1,0 +1,23 @@
+// Typecheck the browser build of the language server with NO Node types.
+//
+// dist/browserServer.js runs in a Web Worker, where fs, path, process and
+// setImmediate do not exist. tsconfig.language.json compiles src/server with Node
+// types, so it cannot catch one creeping into serverCore.ts, the workspace index
+// or the pure modules; this can, because nothing here declares them. Run by
+// `npm run test:server`. Emits nothing -- webpack builds the bundle.
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"noEmit": true,
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2019",
+		"lib": ["es2019", "webworker"],
+		"strict": true,
+		"noImplicitAny": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": []
+	},
+	"files": ["src/server/browserServer.ts"]
+}

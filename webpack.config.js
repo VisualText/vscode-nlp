@@ -64,6 +64,22 @@ module.exports = [
         entry: './src/server/server.ts',
         output: outputTo('server.js'),
     },
+    // The language server for a browser: the same handlers as server.js, in a Web
+    // Worker, with the workspace's files sent by the page (src/server/memoryFiles.ts)
+    // instead of read from disk. target 'webworker' resolves the browser builds of
+    // vscode-languageserver and its protocol, and webpack 5 has no Node polyfills,
+    // so a Node built-in anywhere in its import graph fails this build rather than
+    // someone's browser tab. A worker loads it as a plain script: no library wrapper.
+    {
+        ...common,
+        name: 'browserServer',
+        target: 'webworker',
+        entry: './src/server/browserServer.ts',
+        output: {
+            path: path.resolve(__dirname, 'dist'),
+            filename: 'browserServer.js',
+        },
+    },
     // The debug adapter. Also its own process (DebugAdapterExecutable), and also
     // free of any 'vscode' dependency.
     {

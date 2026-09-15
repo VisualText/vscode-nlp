@@ -6,7 +6,9 @@
 //
 // src/server is included: the language server imports no 'vscode', so building
 // it here is what proves that stays true -- a stray import fails this build
-// rather than shipping a server that cannot start.
+// rather than shipping a server that cannot start. The one exception is the
+// browser entry, which reaches for the worker's `self` and is typechecked by
+// tsconfig.browser.json instead, without Node types.
 {
 	"compilerOptions": {
 		"rootDir": "src",
@@ -25,6 +27,7 @@
 	"include": ["src/language/**/*.ts", "src/format/**/*.ts", "src/server/**/*.ts"],
 	"exclude": [
 		"src/language/engineDiagnostics.ts",
-		"src/format/corpusTest.ts"
+		"src/format/corpusTest.ts",
+		"src/server/browserServer.ts"
 	]
 }
