@@ -75,6 +75,11 @@ jobs:
       - name: Language intelligence tests
         run: npm run test:language
 
+      # The language server over a real LSP connection, with files from disk and
+      # files sent by a page -- and the browser entry typechecked with no Node types.
+      - name: Language server tests
+        run: npm run test:server
+
       - name: Tree view tests
         run: npm run test:treeview
 

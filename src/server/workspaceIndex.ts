@@ -7,12 +7,12 @@
 // handling and the caching live here.
 //
 // Differences from the VSCode version: URIs are plain strings, ranges are plain
-// objects (see lineIndex.ts), and the workspace scan is a filesystem walk rather
-// than vscode.workspace.findFiles -- the server has no VSCode API.
+// objects (see lineIndex.ts), and the files come from a WorkspaceFiles source
+// rather than vscode.workspace.findFiles -- the server has no VSCode API. Under
+// Node that source walks the disk (nodeFiles.ts); in a browser the page hands the
+// files over (memoryFiles.ts). This module touches neither, so it runs in both.
 
-import * as fs from "fs";
-import * as path from "path";
-import { URI } from "vscode-uri";
+import { WorkspaceFiles } from "./workspaceFiles";
 import { declaredSymbols, NlpSymbolKind } from "../language/symbols";
 import { parseKbConcepts } from "../language/kbConcepts";
 import { tokenize } from "../format/tokenizer";
@@ -41,40 +41,6 @@ export interface IndexedRef {
 // names (optionally leading underscore), never pure numbers.
 const IDENT = /^_?[A-Za-z][\w]*$/;
 
-const INDEXED_EXT = new Set([".nlp", ".pat", ".kbb"]);
-
-// Directories never worth walking. node_modules is obvious; <text>_log/ holds
-// engine output (a -DEV run writes one .kbb per pass into it) and output/ is
-// where the engine drops trees and logs. Mirrors the excludes the VSCode glob
-// used, plus the same pruning the startup analyzer scan needed: an analyzer run
-// writes thousands of files, and re-walking them stalls the server.
-function isSkippedDir(name: string): boolean {
-	return name === "node_modules" || name === ".git" || name === "output" || name.endsWith("_log");
-}
-
-// Cap the walk the way the old findFiles(..., 5000) call did, so a stray huge
-// tree cannot wedge startup.
-const MAX_FILES = 5000;
-
-function walk(dir: string, out: string[]): void {
-	if (out.length >= MAX_FILES) return;
-	let entries: fs.Dirent[];
-	try {
-		entries = fs.readdirSync(dir, { withFileTypes: true });
-	} catch {
-		return; // unreadable directory -- a partial index still helps
-	}
-	for (const entry of entries) {
-		if (out.length >= MAX_FILES) return;
-		const full = path.join(dir, entry.name);
-		if (entry.isDirectory()) {
-			if (!isSkippedDir(entry.name)) walk(full, out);
-		} else if (INDEXED_EXT.has(path.extname(entry.name).toLowerCase())) {
-			out.push(full);
-		}
-	}
-}
-
 export class NlpWorkspaceIndex {
 	private byName = new Map<string, IndexedSymbol[]>();
 	private byFile = new Map<string, IndexedSymbol[]>();
@@ -84,9 +50,11 @@ export class NlpWorkspaceIndex {
 	private built = false;
 	private building: Promise<void> | undefined;
 
-	// Workspace folders come from the initialize request; set before first use.
-	setRoots(folders: string[]): void {
-		this.roots = folders;
+	constructor(private readonly files: WorkspaceFiles) {}
+
+	// Workspace folders come from the initialize request, as URIs; set before first use.
+	setRoots(folderUris: string[]): void {
+		this.roots = folderUris;
 		this.built = false;
 		this.building = undefined;
 	}
@@ -104,18 +72,24 @@ export class NlpWorkspaceIndex {
 		this.refsByName.clear();
 		this.refsByFile.clear();
 
-		const files: string[] = [];
-		for (const root of this.roots) walk(root, files);
+		let uris: string[] = [];
+		try {
+			uris = await this.files.list(this.roots);
+		} catch {
+			// No listing -- open documents are still indexed as they arrive.
+		}
 
-		for (let i = 0; i < files.length; i++) {
+		for (let i = 0; i < uris.length; i++) {
 			try {
-				this.indexText(URI.file(files[i]).toString(), fs.readFileSync(files[i], "utf8"));
+				const text = await this.files.read(uris[i]);
+				if (text !== undefined) this.indexText(uris[i], text);
 			} catch {
 				// Skip unreadable files; a partial index still helps.
 			}
 			// Yield to the event loop periodically so a large workspace does not
-			// block incoming requests for the whole scan.
-			if (i % 200 === 199) await new Promise((r) => setImmediate(r));
+			// block incoming requests for the whole scan. setTimeout, not
+			// setImmediate, which a browser does not have.
+			if (i % 200 === 199) await new Promise((r) => setTimeout(r, 0));
 		}
 		this.built = true;
 		this.building = undefined;
@@ -130,13 +104,19 @@ export class NlpWorkspaceIndex {
 	// the index hasn't been built yet, this is a no-op -- the lazy ensureBuilt()
 	// will pick the file up, so background file churn (e.g. an analyzer run
 	// writing KB files) costs nothing.
-	indexUri(uri: string): void {
+	async indexUri(uri: string): Promise<void> {
 		if (!this.built) return;
 		try {
-			this.indexText(uri, fs.readFileSync(URI.parse(uri).fsPath, "utf8"));
+			const text = await this.files.read(uri);
+			if (text !== undefined) this.indexText(uri, text);
 		} catch {
 			// unreadable / deleted between events -- ignore
 		}
+	}
+
+	// The workspace folders the index covers, as URIs.
+	get rootUris(): string[] {
+		return [...this.roots];
 	}
 
 	// (Re)index a single file from in-memory text (used on open / change / save).
@@ -240,5 +220,3 @@ export class NlpWorkspaceIndex {
 		return out;
 	}
 }
-
-export const nlpWorkspaceIndex = new NlpWorkspaceIndex();

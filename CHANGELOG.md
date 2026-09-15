@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.2.0
+The language server runs in a browser.
+
+- **`dist/browserServer.js` is the NLP++ language server built for a Web Worker.** It has the same handlers as `dist/server.js` -- hover, definition, references, rename, completion, signature help, folding, semantic tokens, quick fixes, structural diagnostics and formatting -- for a web page that hosts an NLP++ editor, with no server process behind it.
+- **A worker has no disk, so the page sends the analyzer's files.** The `nlp/workspaceFiles` notification carries `files`, `removed` and `replace`, and cross-pass features work over exactly those. Files outside the workspace folders, and under `output/`, `*_log/`, `node_modules/` and `.git/`, are left out, just as the disk walk leaves them out.
+- **Nothing changes for VS Code or `--stdio` editors.** The handlers moved into `src/server/serverCore.ts`, which both entries run. `server.ts` is now the Node entry and still reads the workspace from disk.
+- **Tested over a real LSP connection** (`npm run test:server`), against files on disk and files sent by a page. The tests cover definition across passes, references, hover, workspace symbols, semantic tokens and the unknown-function warning, plus files added, removed and replaced. `tsconfig.browser.json` typechecks the browser entry with no Node types, so a Node API reaching the shared code fails the test run.
+
 ### 4.1.2
 "Nodes in play" says when the rule has run out of nodes.
 

@@ -84,6 +84,8 @@ test/**
 !dist/extension.js.LICENSE.txt
 !dist/server.js
 !dist/server.js.map
+!dist/browserServer.js
+!dist/browserServer.js.map
 !dist/debugAdapter.js
 !dist/debugAdapter.js.map
 !resources/**
