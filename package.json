@@ -3723,7 +3723,7 @@
         "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix && npm run check-bundles ./vscode.nlp.vsix"
     },
     "devDependencies": {
-        "@types/node": "^22.20.2",
+        "@types/node": "^22.20.3",
         "@types/vscode": "^1.95.0",
         "@typescript-eslint/eslint-plugin": "^8.70.0",
         "@typescript-eslint/parser": "^8.58.1",
@@ -3732,7 +3732,7 @@
         "eslint": "^10.10.0",
         "ts-loader": "^9.6.2",
         "typescript": "^6.0.3",
-        "webpack": "^5.110.3",
+        "webpack": "^5.111.0",
         "webpack-cli": "^7.2.3"
     }
 }
