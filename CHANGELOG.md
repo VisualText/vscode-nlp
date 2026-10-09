@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.1
+Completion offers the `base` rule modifier.
+
+- **`base` was missing from the rule-element modifiers.** It marks a rule's suggested node as the bottom of a singlet chain (`_np [base] <- _noun @@`), and it is documented on the Suggested Element Modifiers help page, but completion inside `[...]` in a rules region never offered it. It is now in the list with the other modifiers.
+- The grammar's scoping for `base`, and for the nine `_x` node constants it did not know, is fixed separately in nlpplus-tmbundle (#2) and arrives here with the next `grammars` submodule bump.
+
 ### 4.3.0
 The NLP++ language server now works in editors other than VS Code: Neovim, Helix, Emacs, Sublime.
 
