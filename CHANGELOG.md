@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.2
+Syntax highlighting knows `base` and every `_x` node constant.
+
+- **Nine of the seventeen special rule elements were colored as ordinary node names.** The grammar knew `_xWILD`, `_xALPHA` and six others, but not `_xANY`, `_xBLANK`, `_xCAP`, `_xCAPLET`, `_xEMOJI`, `_xEOF`, `_xLET`, `_xPUNCT` or `_xVAR`. All seventeen are now highlighted as constants.
+- **The `base` modifier is highlighted** with the other rule-element modifiers, matching the completion fix in 4.3.1.
+- The `)` that closes a `match=( ... )` list was scoped as an opening parenthesis.
+- From the `grammars` submodule (VisualText/nlpplus-tmbundle#2).
+
 ### 4.3.1
 Completion offers the `base` rule modifier.
 
