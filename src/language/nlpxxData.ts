@@ -29,11 +29,11 @@ export const KEYWORDS = [
 
 // Rule-element modifiers inside @RULES (grammar: keyword.attribute.nlp).
 export const RULE_KEYWORDS = [
-	"attr", "attrs", "da", "deacc", "deaccent", "except", "excepts", "fail",
-	"fails", "gp", "group", "layer", "layers", "look", "lookahead", "match",
-	"matches", "max", "min", "nest", "o", "one", "opt", "option", "optional",
-	"pass", "passes", "plus", "recurse", "ren", "rename", "s", "singlet",
-	"star", "t", "tree", "trig", "trigger", "unsealed",
+	"attr", "attrs", "base", "da", "deacc", "deaccent", "except", "excepts",
+	"fail", "fails", "gp", "group", "layer", "layers", "look", "lookahead",
+	"match", "matches", "max", "min", "nest", "o", "one", "opt", "option",
+	"optional", "pass", "passes", "plus", "recurse", "ren", "rename", "s",
+	"singlet", "star", "t", "tree", "trig", "trigger", "unsealed",
 ];
 
 // Node-accessor letter functions (grammar: entity.name.function.letter.nlp).

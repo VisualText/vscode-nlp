@@ -15,7 +15,7 @@ import { findEnclosingCall } from "./signature";
 import { foldingRanges } from "./folding";
 import { classifyTokens } from "./semanticTokens";
 import { findUnknownCalls, levenshtein } from "./quickfix";
-import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
+import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS, RULE_KEYWORDS } from "./nlpxxData";
 import {
 	blankBlockCommentLines, blankBlockComments, hasMultiLineBlockComment, isCommentOnly,
 } from "./blockComment";
@@ -301,6 +301,7 @@ attr=value
 	check("data: builtin set matches list size", BUILTIN_SET.size <= BUILTIN_FUNCTIONS.length && BUILTIN_SET.size > 100);
 	check("data: strlength is a builtin", BUILTIN_SET.has("strlength"));
 	check("data: 'if' is a keyword", KEYWORD_SET.has("if"));
+	check("data: 'base' is a rule modifier", RULE_KEYWORDS.includes("base"));
 }
 
 // ---- server index: one file, two URI spellings ------------------------------
