@@ -12,6 +12,7 @@
 // Node that source walks the disk (nodeFiles.ts); in a browser the page hands the
 // files over (memoryFiles.ts). This module touches neither, so it runs in both.
 
+import { URI } from "vscode-uri";
 import { WorkspaceFiles } from "./workspaceFiles";
 import { declaredSymbols, NlpSymbolKind } from "../language/symbols";
 import { parseKbConcepts } from "../language/kbConcepts";
@@ -41,11 +42,33 @@ export interface IndexedRef {
 // names (optionally leading underscore), never pure numbers.
 const IDENT = /^_?[A-Za-z][\w]*$/;
 
+// One file can arrive under more than one URI spelling. The Node scan builds
+// URIs with URI.file(), which lowercases the drive letter and escapes the colon
+// (file:///c%3A/...), while a client on Windows may open the same file as
+// file:///C:/... . VSCode happens to use the first form, so the two never met
+// there; Neovim and Helix use the second. Keyed by the raw string, the open file
+// was indexed twice, every reference came back twice, and rename produced two
+// overlapping edits per occurrence. All per-file bookkeeping goes through this
+// key instead; the entries keep whichever spelling indexed them last.
+export function fileKey(uri: string): string {
+	try {
+		return URI.parse(uri).toString();
+	} catch {
+		return uri;
+	}
+}
+
+export function sameFile(a: string, b: string): boolean {
+	return a === b || fileKey(a) === fileKey(b);
+}
+
 export class NlpWorkspaceIndex {
 	private byName = new Map<string, IndexedSymbol[]>();
 	private byFile = new Map<string, IndexedSymbol[]>();
 	private refsByName = new Map<string, IndexedRef[]>();
 	private refsByFile = new Map<string, IndexedRef[]>();
+	// fileKey -> the URI spelling the file's current entries carry.
+	private spelling = new Map<string, string>();
 	private roots: string[] = [];
 	private built = false;
 	private building: Promise<void> | undefined;
@@ -71,6 +94,7 @@ export class NlpWorkspaceIndex {
 		this.byFile.clear();
 		this.refsByName.clear();
 		this.refsByFile.clear();
+		this.spelling.clear();
 
 		let uris: string[] = [];
 		try {
@@ -122,6 +146,7 @@ export class NlpWorkspaceIndex {
 	// (Re)index a single file from in-memory text (used on open / change / save).
 	indexText(uri: string, text: string): void {
 		this.removeFile(uri);
+		this.spelling.set(fileKey(uri), uri);
 		// One line table per file, shared by every offset conversion below.
 		const lines = new LineIndex(text);
 		if (this.isKb(uri)) this.indexKb(uri, text, lines);
@@ -143,7 +168,7 @@ export class NlpWorkspaceIndex {
 				this.addDecl(uri, d.name, d.kind, lines.range(d.selStart, d.selEnd), syms, d.signature);
 			}
 		} catch { /* keep whatever parsed; still index usages below */ }
-		this.byFile.set(uri, syms);
+		this.byFile.set(fileKey(uri), syms);
 		this.indexUsages(uri, text, lines);
 	}
 
@@ -154,7 +179,7 @@ export class NlpWorkspaceIndex {
 				this.addDecl(uri, c.name, "concept", lines.range(c.start, c.end), syms);
 			}
 		} catch { /* tolerate */ }
-		this.byFile.set(uri, syms);
+		this.byFile.set(fileKey(uri), syms);
 	}
 
 	// Record every identifier-like Word token as a reference occurrence. Uses the
@@ -171,32 +196,37 @@ export class NlpWorkspaceIndex {
 				this.refsByName.set(t.text, list);
 			}
 		} catch { /* tolerate */ }
-		this.refsByFile.set(uri, refs);
+		this.refsByFile.set(fileKey(uri), refs);
 	}
 
 	removeFile(uri: string): void {
-		const decls = this.byFile.get(uri);
+		const key = fileKey(uri);
+		// Entries carry the spelling they were indexed under, which need not be
+		// the one this call was given.
+		const indexed = this.spelling.get(key) ?? uri;
+		const decls = this.byFile.get(key);
 		if (decls) {
 			for (const e of decls) {
 				const list = this.byName.get(e.name);
 				if (!list) continue;
-				const kept = list.filter((x) => x.uri !== uri);
+				const kept = list.filter((x) => x.uri !== indexed);
 				if (kept.length) this.byName.set(e.name, kept);
 				else this.byName.delete(e.name);
 			}
-			this.byFile.delete(uri);
+			this.byFile.delete(key);
 		}
-		const refs = this.refsByFile.get(uri);
+		const refs = this.refsByFile.get(key);
 		if (refs) {
 			for (const e of refs) {
 				const list = this.refsByName.get(e.name);
 				if (!list) continue;
-				const kept = list.filter((x) => x.uri !== uri);
+				const kept = list.filter((x) => x.uri !== indexed);
 				if (kept.length) this.refsByName.set(e.name, kept);
 				else this.refsByName.delete(e.name);
 			}
-			this.refsByFile.delete(uri);
+			this.refsByFile.delete(key);
 		}
+		this.spelling.delete(key);
 	}
 
 	lookup(name: string): IndexedSymbol[] {

@@ -18,3 +18,9 @@ out-debug/
 
 # Per-workspace VisualText state written at run time, not project configuration
 .vscode/state.json
+
+# Standalone language-server package: the bundle and LICENSE are copied in by
+# scripts/pack-language-server.js, and npm pack writes the tarball here.
+language-server/dist/
+language-server/LICENSE
+language-server/*.tgz

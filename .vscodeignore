@@ -13,6 +13,9 @@ tsconfig.treeview.json
 tsconfig.test.json
 
 
+# Standalone npm package for other editors (published separately, never shipped)
+language-server/**
+
 # Build/CI helpers - never shipped
 scripts/**
 
