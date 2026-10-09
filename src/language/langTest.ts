@@ -19,6 +19,7 @@ import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS } from "./nlpxxData";
 import {
 	blankBlockCommentLines, blankBlockComments, hasMultiLineBlockComment, isCommentOnly,
 } from "./blockComment";
+import { NlpWorkspaceIndex, sameFile } from "../server/workspaceIndex";
 
 let passed = 0;
 let failed = 0;
@@ -300,6 +301,29 @@ attr=value
 	check("data: builtin set matches list size", BUILTIN_SET.size <= BUILTIN_FUNCTIONS.length && BUILTIN_SET.size > 100);
 	check("data: strlength is a builtin", BUILTIN_SET.has("strlength"));
 	check("data: 'if' is a keyword", KEYWORD_SET.has("if"));
+}
+
+// ---- server index: one file, two URI spellings ------------------------------
+{
+	// VSCode sends file:///c%3A/..., Neovim on Windows sends file:///C:/... for
+	// the same file. The index must treat them as one file, or every reference
+	// doubles and rename emits overlapping edits.
+	const index = new NlpWorkspaceIndex({ list: async () => [], read: async () => undefined });
+	const vscodeUri = "file:///c%3A/ana/spec/pass.nlp";
+	const nvimUri = "file:///C:/ana/spec/pass.nlp";
+	const src = "@DECL\nmyFn(L(\"x\")) {\n}\n@@DECL\n@CODE\nmyFn(1);\n@@CODE\n";
+	check("uri: spellings are the same file", sameFile(vscodeUri, nvimUri));
+	check("uri: different files differ", !sameFile(nvimUri, "file:///C:/ana/spec/other.nlp"));
+
+	index.indexText(vscodeUri, src); // workspace scan
+	index.indexText(nvimUri, src);   // client opens the same file
+	eq("uri: one declaration after reindex", index.lookup("myFn").length, 1);
+	eq("uri: references not doubled", index.references("myFn").length, 2);
+	eq("uri: entries carry the latest spelling", index.lookup("myFn")[0].uri, nvimUri);
+
+	index.removeFile(vscodeUri); // delete event in the other spelling
+	eq("uri: removal by other spelling", index.lookup("myFn").length, 0);
+	eq("uri: references removed too", index.references("myFn").length, 0);
 }
 
 console.log(`\nlanguage tests: ${passed} passed, ${failed} failed`);

@@ -1,0 +1,37 @@
+{
+    "name": "nlpplus-language-server",
+    "version": "0.0.0",
+    "description": "Language server for NLP++, the programming language for natural language processing",
+    "license": "MIT",
+    "author": "David de Hilster",
+    "homepage": "https://visualtext.org",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/visualtext/vscode-nlp.git",
+        "directory": "language-server"
+    },
+    "bugs": {
+        "url": "https://github.com/visualtext/vscode-nlp/issues"
+    },
+    "keywords": [
+        "nlp++",
+        "nlpplus",
+        "visualtext",
+        "lsp",
+        "language-server",
+        "nlp"
+    ],
+    "bin": {
+        "nlpplus-language-server": "bin/nlpplus-language-server.js"
+    },
+    "main": "dist/server.js",
+    "files": [
+        "bin/",
+        "dist/server.js",
+        "LICENSE",
+        "README.md"
+    ],
+    "engines": {
+        "node": ">=18"
+    }
+}

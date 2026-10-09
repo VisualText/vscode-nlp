@@ -48,9 +48,12 @@ import {
 } from "../language/nlpxxData";
 import { formatDocument, formatRegionsInRange } from "../format/formatter";
 import { FormatOptions } from "../format/types";
-import { NlpWorkspaceIndex, IndexedSymbol } from "./workspaceIndex";
+import { NlpWorkspaceIndex, IndexedSymbol, sameFile } from "./workspaceIndex";
 import { WorkspaceFiles } from "./workspaceFiles";
 import { LineIndex } from "./lineIndex";
+
+// Where built-in help pages live for clients that cannot open them locally.
+const HELP_WEB = "https://github.com/VisualText/visualtext-files/blob/main/Help/markdown";
 
 // What a started server hands back to the entry that started it.
 export interface StartedServer {
@@ -71,14 +74,34 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 
 	// ---- Telemetry relay --------------------------------------------------------
 
+	// Set from initializationOptions.vscodeExtension, which only the VisualText
+	// extension's client sends. Every other client -- Neovim, Helix, Emacs, Zed, a
+	// browser page -- gets no telemetry notifications, and hover links it can follow.
+	let inVisualText = false;
+
 	function count(id: string): void {
-		connection.sendNotification("nlp/telemetry", { kind: "count", id });
+		if (inVisualText) connection.sendNotification("nlp/telemetry", { kind: "count", id });
 	}
 	function sendEvent(id: string, metrics: Record<string, number>): void {
-		connection.sendNotification("nlp/telemetry", { kind: "event", id, metrics });
+		if (inVisualText) connection.sendNotification("nlp/telemetry", { kind: "event", id, metrics });
 	}
 	function sendError(id: string, reason: string, metrics: Record<string, number>): void {
-		connection.sendNotification("nlp/telemetry", { kind: "error", id, reason, metrics });
+		if (inVisualText) connection.sendNotification("nlp/telemetry", { kind: "error", id, reason, metrics });
+	}
+
+	// Deep-link to a built-in's help page (Help/markdown/<name>.md in
+	// visualtext-files). Inside VisualText that is a command the extension serves
+	// from the local Help folder; the command URI only renders as a link if the
+	// client marks the markdown trusted -- the client middleware does that (see
+	// src/client). No other client can run that command, so it gets the same page
+	// on GitHub, plus the overview for the few built-ins without a page.
+	function helpLinks(word: string): string {
+		if (inVisualText) {
+			const arg = encodeURIComponent(JSON.stringify([word]));
+			return `[Open help for \`${word}\`](command:helpView.openFunctionPage?${arg})`;
+		}
+		return `[Help for \`${word}\`](${HELP_WEB}/${encodeURIComponent(word.toLowerCase())}.md)` +
+			` · [All functions](${HELP_WEB}/NLP_PP_Stuff/Functions.md)`;
 	}
 
 	// ---- Word extraction --------------------------------------------------------
@@ -219,6 +242,7 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 			roots.push(params.rootUri);
 		}
 		workspaceIndex.setRoots(roots);
+		inVisualText = params.initializationOptions?.vscodeExtension === true;
 		hasConfigurationCapability = params.capabilities.workspace?.configuration === true;
 
 		return {
@@ -332,17 +356,9 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 			};
 		}
 		if (BUILTIN_SET.has(lower)) {
-			// Deep-link to the function's own help page (Help/markdown/<name>.md).
-			// The command URI only renders as a link if the client marks the markdown
-			// trusted -- the client middleware does that (see src/client).
-			const arg = encodeURIComponent(JSON.stringify([word]));
 			count("hover");
 			return {
-				contents: {
-					kind: MarkupKind.Markdown,
-					value: `**${word}** — NLP++ built-in function\n\n` +
-						`[Open help for \`${word}\`](command:helpView.openFunctionPage?${arg})`,
-				},
+				contents: { kind: MarkupKind.Markdown, value: `**${word}** — NLP++ built-in function\n\n${helpLinks(word)}` },
 				range,
 			};
 		}
@@ -376,7 +392,7 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 		// Cross-pass declarations from the workspace index (other .nlp/.pat files).
 		await workspaceIndex.ensureBuilt();
 		for (const s of workspaceIndex.lookup(hit.word)) {
-			if (s.uri === doc.uri) continue; // same-file handled above
+			if (sameFile(s.uri, doc.uri)) continue; // same-file handled above
 			locations.push({ uri: s.uri, range: s.range });
 		}
 		if (locations.length) count("definition");
@@ -429,7 +445,7 @@ export function startServer(connection: Connection, files: WorkspaceFiles): Star
 		if (!hit) return [];
 		const out: DocumentHighlight[] = [];
 		for (const r of workspaceIndex.references(hit.word)) {
-			if (r.uri === doc.uri) out.push({ range: r.range });
+			if (sameFile(r.uri, doc.uri)) out.push({ range: r.range });
 		}
 		return out;
 	});

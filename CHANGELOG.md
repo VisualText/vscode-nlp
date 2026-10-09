@@ -3,6 +3,14 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.0
+The NLP++ language server now works in editors other than VS Code: Neovim, Helix, Emacs, Sublime.
+
+- **It could already run anywhere, but nothing outside the .vsix could reach it.** `npm run package:server` now builds **`nlpplus-language-server`**, an npm package with no runtime dependencies and a `nlpplus-language-server` command that defaults to stdio. `language-server/README.md` gives the setup for Neovim, Helix, Emacs (Eglot) and Sublime. The Neovim setup was checked end to end in Neovim 0.11.4: it attaches and returns hover, symbols, workspace symbols and diagnostics. Publishing to npm is a separate step and has not been done.
+- **One file opened from Neovim on Windows was indexed twice.** The disk walk writes URIs as `file:///c%3A/...`, which happens to be what VS Code sends, and Neovim sends `file:///C:/...`. The index keyed files by the raw string, so a file the editor had open was indexed twice. Every reference came back twice, go-to-definition listed the same declaration twice, and rename produced two overlapping edits for each occurrence. Files are now keyed by their canonical URI. VS Code was never affected. Six new assertions fail against the old keying.
+- **Hover help links only worked in VS Code.** A built-in's hover linked to the `helpView.openFunctionPage` command, which other editors and the browser build cannot run. They now get the function's help page on GitHub, plus a link to the full function list for the few built-ins that have no page.
+- The server now sends its anonymous `nlp/telemetry` feature counts only when the VisualText extension is the client (it says so through `initializationOptions`). Other editors and browser pages get no telemetry notifications at all.
+
 ### 4.2.0
 The language server runs in a browser.
 

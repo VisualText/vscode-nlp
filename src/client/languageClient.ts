@@ -52,6 +52,10 @@ export async function startLanguageServer(ctx: vscode.ExtensionContext): Promise
 		// opens. Adding a scheme here silently drops those: the features simply
 		// return nothing, which is indistinguishable from having nothing to say.
 		documentSelector: [{ language: "nlp" }],
+		// Tells the server it is talking to VisualText: hover help links use the
+		// extension's helpView command, and telemetry counts are relayed back over
+		// nlp/telemetry. Other editors leave this unset and get neither.
+		initializationOptions: { vscodeExtension: true },
 		synchronize: {
 			// Files the index cares about but that may change outside the editor:
 			// an analyzer run writes .kbb files, and passes can be added on disk.
