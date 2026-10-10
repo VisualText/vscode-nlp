@@ -7,11 +7,11 @@
     "homepage": "https://visualtext.org",
     "repository": {
         "type": "git",
-        "url": "https://github.com/visualtext/vscode-nlp.git",
+        "url": "https://github.com/VisualText/vscode-nlp.git",
         "directory": "language-server"
     },
     "bugs": {
-        "url": "https://github.com/visualtext/vscode-nlp/issues"
+        "url": "https://github.com/VisualText/vscode-nlp/issues"
     },
     "keywords": [
         "nlp++",
