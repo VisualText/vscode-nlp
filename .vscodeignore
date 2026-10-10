@@ -36,6 +36,7 @@ telemetry-worker/**
 out-format/**
 out-language/**
 out-treeview/**
+out-output/**
 out-test/**
 
 # VS Code builds downloaded by the integration harness - large and never shipped

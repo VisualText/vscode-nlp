@@ -23,6 +23,7 @@ module.exports = [
             'out-format/**',
             'out-language/**',
             'out-treeview/**',
+            'out-output/**',
             'node_modules/**',
             'grammars/**',
             'telemetry-worker/**',
