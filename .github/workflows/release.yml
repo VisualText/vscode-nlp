@@ -1,5 +1,6 @@
-# Publishes a release: a GitHub release with the .vsix attached, and the VS Code
-# Marketplace.
+# Publishes a release: a GitHub release with the .vsix attached, the VS Code
+# Marketplace, and the standalone language server on npm
+# (nlpplus-language-server, for editors other than VS Code).
 #
 # Fires on either of the two things that mean "a new version exists":
 #
@@ -22,6 +23,9 @@ on:
 
 permissions:
   contents: write
+  # npm trusted publishing: the npm step authenticates with this workflow's
+  # OIDC identity instead of a stored token.
+  id-token: write
 
 # Never let two releases interleave. Not cancel-in-progress: a half-finished
 # publish is worse than a queued one.
@@ -140,6 +144,44 @@ jobs:
           else
             gh release create "${TAG}" "${VSIX}" --title "${TITLE}" --notes-file /tmp/notes.md
             echo "Created release ${TITLE}."
+          fi
+
+      - name: Publish the language server to npm
+        if: steps.decide.outputs.publish == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+
+          # An npm version cannot be replaced either; a re-run skips it.
+          if [[ "$(npm view "nlpplus-language-server@${VERSION}" version 2>/dev/null || true)" == "${VERSION}" ]]; then
+            echo "nlpplus-language-server ${VERSION} is already on npm; nothing to publish."
+            exit 0
+          fi
+
+          # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 20 ships npm 10.
+          # Pin to npm 11: npm 12 requires Node >= 22.
+          npm install -g npm@11
+
+          # Same bundle as the vsix's server, stamped with this version.
+          npm run package:server
+          TGZ="language-server/nlpplus-language-server-${VERSION}.tgz"
+
+          # No token: npm trusts this repository's Release workflow (npmjs.com ->
+          # nlpplus-language-server -> Settings -> Trusted Publisher).
+          # Provenance comes from the OIDC claims.
+          if npm publish "${TGZ}" --provenance --access public > /tmp/npm-publish.log 2>&1; then
+            cat /tmp/npm-publish.log
+            echo "Published nlpplus-language-server ${VERSION} to npm."
+          else
+            cat /tmp/npm-publish.log
+            # Like a missing VSCE_PAT below: until npm trusts this workflow, the
+            # rest of the release is still complete, so warn rather than fail.
+            if grep -qiE "ENEEDAUTH|E401|E403|E404|unable to authenticate|not authorized|forbidden" /tmp/npm-publish.log; then
+              echo "::warning::npm refused to publish nlpplus-language-server ${VERSION}: this workflow is not set up as its trusted publisher. On npmjs.com, open nlpplus-language-server -> Settings -> Trusted Publisher, add GitHub Actions with VisualText/vscode-nlp and workflow release.yml, then re-run this workflow. The GitHub release is complete."
+              exit 0
+            fi
+            echo "::error::Publishing nlpplus-language-server ${VERSION} to npm failed for a reason other than authorization; fix the cause and re-run this workflow."
+            exit 1
           fi
 
       - name: Publish to the VS Code Marketplace
