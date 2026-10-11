@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.4
+Releases 4.3.3, which did not reach the Marketplace.
+
+- **The 4.3.3 release stopped before the Marketplace.** Publishing the language server to npm failed: `npm publish language-server/<file>.tgz` reads that path as the GitHub shorthand `user/repo` and tries to clone it. The path now starts with `./`.
+- **The language server is now published last**, after the Marketplace, so a problem with it can no longer hold back the extension.
+- Everything in 4.3.3 (the NLP++ Analyzer Output panel) ships in this version.
+
 ### 4.3.3
 What an analyzer prints with `cout()` appears in an **NLP++ Analyzer Output** panel.
 
