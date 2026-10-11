@@ -146,44 +146,6 @@ jobs:
             echo "Created release ${TITLE}."
           fi
 
-      - name: Publish the language server to npm
-        if: steps.decide.outputs.publish == 'true'
-        run: |
-          set -euo pipefail
-          VERSION="${{ steps.decide.outputs.version }}"
-
-          # An npm version cannot be replaced either; a re-run skips it.
-          if [[ "$(npm view "nlpplus-language-server@${VERSION}" version 2>/dev/null || true)" == "${VERSION}" ]]; then
-            echo "nlpplus-language-server ${VERSION} is already on npm; nothing to publish."
-            exit 0
-          fi
-
-          # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 20 ships npm 10.
-          # Pin to npm 11: npm 12 requires Node >= 22.
-          npm install -g npm@11
-
-          # Same bundle as the vsix's server, stamped with this version.
-          npm run package:server
-          TGZ="language-server/nlpplus-language-server-${VERSION}.tgz"
-
-          # No token: npm trusts this repository's Release workflow (npmjs.com ->
-          # nlpplus-language-server -> Settings -> Trusted Publisher).
-          # Provenance comes from the OIDC claims.
-          if npm publish "${TGZ}" --provenance --access public > /tmp/npm-publish.log 2>&1; then
-            cat /tmp/npm-publish.log
-            echo "Published nlpplus-language-server ${VERSION} to npm."
-          else
-            cat /tmp/npm-publish.log
-            # Like a missing VSCE_PAT below: until npm trusts this workflow, the
-            # rest of the release is still complete, so warn rather than fail.
-            if grep -qiE "ENEEDAUTH|E401|E403|E404|unable to authenticate|not authorized|forbidden" /tmp/npm-publish.log; then
-              echo "::warning::npm refused to publish nlpplus-language-server ${VERSION}: this workflow is not set up as its trusted publisher. On npmjs.com, open nlpplus-language-server -> Settings -> Trusted Publisher, add GitHub Actions with VisualText/vscode-nlp and workflow release.yml, then re-run this workflow. The GitHub release is complete."
-              exit 0
-            fi
-            echo "::error::Publishing nlpplus-language-server ${VERSION} to npm failed for a reason other than authorization; fix the cause and re-run this workflow."
-            exit 1
-          fi
-
       - name: Publish to the VS Code Marketplace
         if: steps.decide.outputs.publish == 'true'
         env:
@@ -233,5 +195,47 @@ jobs:
               exit 0
             fi
             echo "::error::Publishing ${VERSION} to the Marketplace failed for a reason other than the version already existing. The GitHub release is complete; fix the cause and re-run this workflow."
+            exit 1
+          fi
+
+      # The language server goes last, so a problem publishing it can never
+      # stop the extension from reaching the Marketplace.
+      - name: Publish the language server to npm
+        if: steps.decide.outputs.publish == 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+
+          # An npm version cannot be replaced either; a re-run skips it.
+          if [[ "$(npm view "nlpplus-language-server@${VERSION}" version 2>/dev/null || true)" == "${VERSION}" ]]; then
+            echo "nlpplus-language-server ${VERSION} is already on npm; nothing to publish."
+            exit 0
+          fi
+
+          # Trusted publishing (OIDC) needs npm >= 11.5.1; Node 20 ships npm 10.
+          # Pin to npm 11: npm 12 requires Node >= 22.
+          npm install -g npm@11
+
+          # Same bundle as the vsix's server, stamped with this version.
+          npm run package:server
+          # The ./ matters: npm reads "language-server/<file>.tgz" as the GitHub
+          # shorthand "user/repo" and tries to clone it (this broke 4.3.3).
+          TGZ="./language-server/nlpplus-language-server-${VERSION}.tgz"
+
+          # No token: npm trusts this repository's Release workflow (npmjs.com ->
+          # nlpplus-language-server -> Settings -> Trusted Publisher).
+          # Provenance comes from the OIDC claims.
+          if npm publish "${TGZ}" --provenance --access public > /tmp/npm-publish.log 2>&1; then
+            cat /tmp/npm-publish.log
+            echo "Published nlpplus-language-server ${VERSION} to npm."
+          else
+            cat /tmp/npm-publish.log
+            # Like a missing VSCE_PAT below: until npm trusts this workflow, the
+            # rest of the release is still complete, so warn rather than fail.
+            if grep -qiE "ENEEDAUTH|E401|E403|E404|unable to authenticate|not authorized|forbidden" /tmp/npm-publish.log; then
+              echo "::warning::npm refused to publish nlpplus-language-server ${VERSION}: this workflow is not set up as its trusted publisher. On npmjs.com, open nlpplus-language-server -> Settings -> Trusted Publisher, add GitHub Actions with VisualText/vscode-nlp and workflow release.yml, then re-run this workflow. The GitHub release is complete."
+              exit 0
+            fi
+            echo "::error::Publishing nlpplus-language-server ${VERSION} to npm failed for a reason other than authorization; fix the cause and re-run this workflow."
             exit 1
           fi
