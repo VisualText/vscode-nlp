@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.3
+What an analyzer prints with `cout()` appears in an **NLP++ Analyzer Output** panel.
+
+- **`cout()` output used to go nowhere.** The extension saved the engine's standard output to `output/stdout.log` but never showed it. After each run, the lines the analyzer printed now appear in the panel under the input file's name, and the panel opens without taking focus. Runs that print nothing leave it closed.
+- Needs engine 4.2.2 or later: before that the command-line engine sent `cout()` output to a leftover test file (VisualText/nlp-engine#750). Engines before 4.2.4 also printed their status lines on standard output (VisualText/nlp-engine#754); those lines are left out of the panel.
+
 ### 4.3.2
 Syntax highlighting knows `base` and every `_x` node constant.
 

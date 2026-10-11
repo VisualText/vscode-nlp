@@ -1,0 +1,19 @@
+// Standalone build for the analyzer-output filter and its test.
+// Emits to out-output/ (gitignored, not shipped) so it runs with plain Node.
+// Run via: npm run test:output
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-output",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["node"],
+		"sourceMap": false
+	},
+	"include": ["src/output/**/*.ts"]
+}

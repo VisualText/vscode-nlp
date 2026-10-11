@@ -14,6 +14,22 @@ import { ReformatType as reformatType } from './format/types';
 import { formatRuleText } from './format/rulesRegion';
 import { refreshEngineDiagnostics } from './language/engineDiagnostics';
 import * as telemetry from './telemetry/telemetry';
+import { analyzerOutputLines } from './output/analyzerOutput';
+
+let analyzerOutputChannel: vscode.OutputChannel | undefined;
+
+/** Show what the analyzer printed with cout() in the "NLP++ Analyzer Output" panel. */
+function showAnalyzerOutput(filename: string, stdout: string) {
+	const lines = analyzerOutputLines(stdout);
+	if (!lines.length)
+		return;
+	if (!analyzerOutputChannel)
+		analyzerOutputChannel = vscode.window.createOutputChannel('NLP++ Analyzer Output');
+	analyzerOutputChannel.appendLine('--- ' + filename + ' ---');
+	for (const line of lines)
+		analyzerOutputChannel.appendLine(line);
+	analyzerOutputChannel.show(true);
+}
 
 export enum anaQueueStatus { UNKNOWN, RUNNING, DONE, FAILED }
 export enum analyzerStatus { UNKNOWN, ANALYZING, DONE, FAILED }
@@ -152,6 +168,7 @@ export class NLPFile extends TextFile {
 					const errFile = vscode.Uri.file(path.join(outputDir, 'stderr.log'));
 					dirfuncs.writeFile(outFile.fsPath, stdout);
 					dirfuncs.writeFile(errFile.fsPath, stderr);
+					showAnalyzerOutput(filename, stdout || '');
 					console.log('stdout: ' + stdout);
 					console.log('stderr: ' + stderr);
 					let syntaxError = logView.syntaxErrorsOutput('err.log');
