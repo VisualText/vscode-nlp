@@ -39,6 +39,17 @@ so each snippet below also registers the file type.
 
 ### Neovim (0.11+)
 
+With [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig), which includes an `nlpplus_ls`
+config, install the server with [Mason](https://github.com/mason-org/mason.nvim)
+(`:MasonInstall nlpplus-language-server`) or npm, then:
+
+```lua
+vim.filetype.add({ extension = { nlp = "nlp", pat = "nlp" } })
+vim.lsp.enable("nlpplus_ls")
+```
+
+Without nvim-lspconfig, configure it yourself:
+
 ```lua
 vim.filetype.add({ extension = { nlp = "nlp", pat = "nlp" } })
 
@@ -119,7 +130,7 @@ If the client doesn't provide it, the defaults below apply.
 | `nlp.format.tabSize` | number | `4` |
 | `nlp.format.braceStyle` | `"allman"`, `"keep"` | `"allman"` |
 
-For example, in Neovim:
+For example, in Neovim (with nvim-lspconfig, the config is named `nlpplus_ls`):
 
 ```lua
 vim.lsp.config("nlpplus", {
