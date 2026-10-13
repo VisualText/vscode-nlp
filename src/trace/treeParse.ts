@@ -127,6 +127,19 @@ export function parseNodeFlags(fieldsAfterType: string[]): NodeFlags {
 	return flags;
 }
 
+// The part of a fired node's span [from,to] (inclusive) still to be highlighted,
+// given that everything through `lastTo` already has been; undefined if nothing
+// is left. Fired nodes are read in tree order, parent first, so a fired child
+// inside a fired parent ends at or before the parent and is dropped. A span that
+// starts before `lastTo` but runs past it is clipped to what is new: the fired
+// text is drawn by slicing the input from `from`, so an unclipped overlap prints
+// the overlapping text a second time (#810). Start `lastTo` at -1 so a node
+// ending at offset 0 still counts.
+export function newFiredSpan(from: number, to: number, lastTo: number): { from: number; to: number } | undefined {
+	if (!(to > lastTo)) return undefined;
+	return { from: Math.max(from, lastTo + 1), to };
+}
+
 // Parse one "<name> [<fields>]" line into a node, or undefined if the line is
 // not a tree node (headers, blank lines, the "PAT OUTPUT TREE:" banner).
 export function parseTreeLine(line: string): TraceNode | undefined {

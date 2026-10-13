@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree, parseNodeFlags } from "./treeParse";
+import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree, parseNodeFlags, newFiredSpan } from "./treeParse";
 import {
 	loadTrace, findLatestLogDir, parseSequence, sequencePassNames,
 	passesForSource, firedRuleLines, nodesBuiltBy,
@@ -81,6 +81,34 @@ function eq<T>(name: string, actual: T, expected: T): void {
 	check("line: header is not a node", parseTreeLine("    PASS 15 (moneyAttributes)") === undefined);
 	check("line: blank is not a node", parseTreeLine("") === undefined);
 	check("line: banner is not a node", parseTreeLine("PAT OUTPUT TREE:") === undefined);
+}
+
+// ---- fired spans (#810) ----------------------------------------------------
+// treeFile.writeFiredText slices the input at each fired span. The fired spans
+// below are read back from the display reported in #810, where an older engine
+// wrote each "\," node with from=0: "((##,))((##,desc,))..." repeated the line.
+{
+	const input = "##,desc,svc\n1,104/70 RD-RECKLESS DRIVING BY,31180";
+	const reported = [[0, 0], [1, 1], [0, 2], [3, 6], [0, 7], [8, 10], [12, 12], [0, 13], [14, 42], [0, 43], [44, 48]];
+	const render = (spans: number[][]) => {
+		let out = "", lastTo = -1;
+		for (const [from, to] of spans) {
+			const span = newFiredSpan(from, to, lastTo);
+			if (!span) continue;
+			out += input.slice(lastTo + 1, span.from) + "(((" + input.slice(span.from, span.to + 1) + ")))";
+			lastTo = span.to;
+		}
+		return out + input.slice(lastTo + 1);
+	};
+	const shown = render(reported);
+	eq("fired: no text repeated or lost", shown.replace(/\(\(\(|\)\)\)/g, ""), input);
+	eq("fired: commas highlighted once", shown,
+		"(((#)))(((#)))(((,)))(((desc)))(((,)))(((svc)))\n(((1)))(((,)))(((104/70 RD-RECKLESS DRIVING BY)))(((,)))(((31180)))");
+	// A fired child inside a fired parent is drawn as part of the parent.
+	eq("fired: nested child dropped", render([[12, 48], [12, 12], [14, 42]]), "##,desc,svc\n(((1,104/70 RD-RECKLESS DRIVING BY,31180)))");
+	// lastTo starts at -1: a one-character node at offset 0 is not skipped.
+	check("fired: span at offset 0 kept", newFiredSpan(0, 0, -1) !== undefined);
+	eq("fired: span already shown", newFiredSpan(3, 6, 6), undefined);
 }
 
 // ---- flag vocabulary -------------------------------------------------------
