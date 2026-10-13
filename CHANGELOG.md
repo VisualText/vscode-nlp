@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.5
+Rules the engine refuses to run because of where a wildcard sits are now flagged in the editor, before you run the analyzer.
+
+- **A bare `_xWILD` as the trigger, the first element or the last element of a rule is marked as an error** (#835). The engine cannot fill a wildcard with nothing on the far side of it, so it skips the rule and writes `[Unimplemented: wildcard trigger, start, or end.]` to `err.log`, but only during a run, and only once. A rule like `_xNIL <- PLACE OF BIRTH _xWILD [one] @@` therefore never matches. To match exactly one node, use `_xANY`, or give the wildcard a `match=` list.
+- **A wildcard followed (or preceded) only by optional elements is marked as a warning.** The engine fails the rule whenever those optional elements are absent, which is the case the issue reported: `_xWILD` then `_xWILD [opt match=(_numDash _date)]` at the end of a rule.
+- The check follows the engine's own definition of a wildcard: `_xWILD` with a `match`/`fail` list, or with an `@PRE` condition on that element, is an ordinary element and is not flagged. `_xWILD` defaults to optional, and `one`, `plus` or `min=` greater than 0 make it required.
+
 ### 4.3.4
 Releases 4.3.3, which did not reach the Marketplace.
 
