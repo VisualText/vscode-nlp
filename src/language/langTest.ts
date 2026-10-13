@@ -102,6 +102,40 @@ _verb <- verb @@
 	eq("diagnostics: mismatched pair flagged", computeProblems("@CODE\nx = (1];\n@@CODE\n").length > 0, true);
 }
 
+// ---- wildcard placement (#835) ---------------------------------------------
+{
+	const wild = (rules: string, pre = "") =>
+		computeProblems(`${pre}@RULES\n${rules}\n`).filter((p) => p.code === "nlp.wildcard-placement");
+
+	// The rule from #835: trailing wildcard followed only by an optional element.
+	const issue = wild([
+		"_unregMv <-",
+		"\t_xWILD [one match=(_unregistered unreg _unlicensed)]",
+		"\t_xWILD",
+		"\t_xWILD [one match=(_mv _motorvehicle _vehicle)]",
+		"\t_xWILD",
+		"\t_xWILD [opt match=(_numDash _date)]",
+		"\t@@",
+	].join("\n"));
+	eq("wildcard: #835 rule flagged once", issue.length, 1);
+	check("wildcard: #835 flags the 4th element (a warning)",
+		issue.length === 1 && issue[0].severity === "warning" && issue[0].start > 0, JSON.stringify(issue));
+
+	eq("wildcard: wildcard between required elts clean", wild("_x <- a _xWILD b @@").length, 0);
+	eq("wildcard: match-list wildcards are not wild", wild("_x <- _xWILD [one match=(a b)] _xWILD [match=(c)] @@").length, 0);
+	eq("wildcard: match list after except list counts", wild("_x <- _xWILD [s one\r\n\texcept=(a b)\r\n\tmatch=(\r\nc\r\n)] @@").length, 0);
+	eq("wildcard: fail-list wildcard not wild", wild("_x <- a _xWILD [fail=(c)] @@").length, 0);
+	check("wildcard: wildcard ends rule is error", wild("_x <- a _xWILD @@").some((p) => p.severity === "error"));
+	check("wildcard: wildcard starts rule is error", wild("_x <- _xWILD a @@").some((p) => p.severity === "error"));
+	check("wildcard: wildcard trigger flagged", wild("_x <- a _xWILD [trig] b @@").length > 0);
+	check("wildcard: wildcard left of trigger flagged", wild("_x <- _xWILD [min=1] a [t] @@").length > 0);
+	eq("wildcard: required elt after wildcard (plus) clean", wild("_x <- a _xWILD _xWILD [+ match=(b)] @@").length, 0);
+	eq("wildcard: min=1 elt after wildcard clean", wild("_x <- a _xWILD _xWILD [min = 1 match=(b)] @@").length, 0);
+	eq("wildcard: @PRE makes _xWILD a non-wildcard", wild("_x <- a _xWILD @@", "@PRE\n<2,2> cap();\n").length, 0);
+	eq("wildcard: @PRE of an earlier group does not leak", wild("_x <- a _xWILD @@", "@PRE\n<2,2> cap();\n@RULES\n_y <- a b @@\n@POST\nsingle();\n").length, 1);
+	eq("wildcard: _xWILD in @CODE ignored", computeProblems("@CODE\nG(\"_xWILD\") = 1;\n@@CODE\n").length, 0);
+}
+
 // ---- engine errors ---------------------------------------------------------
 {
 	const log = [
