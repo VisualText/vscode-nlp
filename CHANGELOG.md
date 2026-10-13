@@ -3,11 +3,18 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.11
+Publishes everything since 4.3.4 to the VS Code Marketplace.
+
+- **4.3.5 through 4.3.10 never reached the Marketplace.** Each one was released on GitHub, and the Marketplace then turned it down because the extension's icon was 2066 x 2066 pixels, over its new limit of 1024 x 1024. The icon is now 1024 x 1024, and this release carries all of the changes listed below for those six versions.
+- **An oversized icon now fails the build.** `npm test` and both packaging scripts check the icon's size, so a pull request shows the problem rather than a release.
+
 ### 4.3.10
 NLP++ files are colored by any VS Code theme, not only through the colors this extension writes into your settings.
 
 - **The grammars use standard TextMate scope names** (#107). They used to name things after the color they should get rather than what they are. Constants like `_xWILD` were marked as keywords, a dictionary headword as a comment, and a few scopes, such as `literal.nlp`, had names no theme recognizes. Themes, and tools such as GitHub and Shiki that read these grammars, now color `@RULES`, constants, rule modifiers, node names and dictionary keys and values like the equivalent parts of other languages. The full list of renames is in the [grammar README](https://github.com/VisualText/nlpplus-tmbundle#scope-names).
-- **Your analyzer colors are unchanged.** The extension's color rules in each analyzer workspace's `.vscode/settings.json` are rewritten to the new names the first time the workspace opens, so everything you saw before keeps its color. A settings file the extension cannot read, for example one with comments in it, is left alone.
+- **The extension's own colors are kept.** The color rules the extension wrote into each analyzer workspace's `.vscode/settings.json` (parse-tree node names, `fired`, KB concept levels, NLP++ constants and functions) are rewritten to the new names the first time the workspace opens, so those keep their colors. A settings file the extension cannot read, for example one with comments in it, is left alone.
+- **Everything else takes your theme's colors**, which is a visible change. In `.nlp` files, region markers such as `@RULES` and `@CODE` take the control-keyword color, the concept a rule builds (left of `<-`) takes the type color, and `=` in rule modifiers is no longer colored as a keyword. In `.dict` files, the headword is no longer colored as a comment, and attribute names and values take the property and string colors, as in JSON.
 
 ### 4.3.9
 Each analyzer keeps its own open files, and the analyzers you used last are a click away.

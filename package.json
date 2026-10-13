@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "4.3.10",
+    "version": "4.3.11",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -3721,7 +3721,8 @@
         "check-grammars": "node ./scripts/check-grammars.js",
         "check-worker": "node ./scripts/check-worker-deps.js",
         "check-bundles": "node ./scripts/check-bundles.js",
-        "package": "npm run check-grammars && npm run webpack-prod && vsce package && npm run check-bundles",
+        "check-icon": "node ./scripts/check-icon.js",
+        "package": "npm run check-grammars && npm run check-icon && npm run webpack-prod && vsce package && npm run check-bundles",
         "publish": "npm run check-grammars && npm run webpack-prod && vsce package && npm run check-bundles && vsce publish --packagePath $(ls -t *.vsix | head -1)",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
@@ -3729,7 +3730,7 @@
         "lint:fix": "npm run lint -- --fix",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "pretest": "npm run typecheck && npm run lint",
-        "test": "npm run check-grammars && npm run check-worker && npm run test:language && npm run test:server && npm run test:treeview && npm run test:format && npm run test:trace && npm run test:output && npm run test:session && npm run test:debug",
+        "test": "npm run check-grammars && npm run check-icon && npm run check-worker && npm run test:language && npm run test:server && npm run test:treeview && npm run test:format && npm run test:trace && npm run test:output && npm run test:session && npm run test:debug",
         "test:integration": "tsc -p tsconfig.test.json && node ./out-test/test/runTest.js",
         "test:format": "tsc -p tsconfig.format.json && node ./out-format/corpusTest.js",
         "test:language": "tsc -p tsconfig.language.json && node ./out-language/language/langTest.js",
@@ -3740,7 +3741,7 @@
         "test:debug": "tsc -p tsconfig.debug.json && node ./out-debug/debug/debugTest.js && node ./out-debug/debug/sessionTest.js",
         "test:treeview": "tsc -p tsconfig.treeview.json && node ./out-treeview/treeTest.js",
         "package:server": "node ./scripts/pack-language-server.js",
-        "vsce-package": "npm run check-grammars && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix && npm run check-bundles ./vscode.nlp.vsix"
+        "vsce-package": "npm run check-grammars && npm run check-icon && npm run webpack-prod && vsce package -o ./vscode.nlp.vsix && npm run check-bundles ./vscode.nlp.vsix"
     },
     "devDependencies": {
         "@types/node": "^22.20.5",
