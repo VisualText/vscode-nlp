@@ -151,6 +151,12 @@ export class VisualText {
 
             visualText.readConfig();
             visualText.readState();
+            // #481: the engine lives in the folder of the extension that is
+            // RUNNING. It used to be the newest version found on disk unless the
+            // auto-updater happened to run and correct it, so with auto-update off,
+            // after a downgrade, or with an old copy still on disk, a new version
+            // could load (or download into) another version's engine.
+            visualText.version = vscode.extensions.getExtension(visualText.EXTENSION_NAME)?.packageJSON.version ?? '';
             visualText.getExtensionDirs();
             visualText.initSettings();
         }
@@ -268,9 +274,8 @@ export class VisualText {
             this.platform = os.platform();
             const plat = this.platform == 'darwin' ? 'mac' : this.platform;
             this.homeDir = os.homedir();
-            const rootPath = this.getLatestExtPath(this.extensionParentDirectory());
-            if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
-            this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
+            this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version ?? this.version;
+            this.extensionDir = this.extensionDirectory();
 
             if (preInfoFlag) {
                 this.debugMessage('Platform: ' + plat, logLineType.UPDATER);
@@ -480,18 +485,6 @@ export class VisualText {
         op.remote = visualText.GITHUB_ENGINE_LATEST_RELEASE + libRelease;
         const engDir = visualText.engineDirectory().fsPath;
         op.local = path.join(engDir, lib);
-    }
-
-    getLatestExtPath(dir: vscode.Uri): string {
-        const files = dirfuncs.getFiles(dir);
-        for (const file of files.reverse()) {
-            const filename = path.basename(file.fsPath);
-            if (filename.startsWith(this.EXTENSION_NAME)) {
-                this.version = this.versionFromPath(file);
-                return file.fsPath;
-            }
-        }
-        return '';
     }
 
     updaterTimer() {
@@ -1248,6 +1241,9 @@ export class VisualText {
     }
 
     getExtensionPath(): vscode.Uri {
+        // The running version's folder first (#481), then the newest installed.
+        const running = this.extensionDirectory();
+        if (this.version.length && fs.existsSync(running.fsPath)) return running;
         const latest = this.extensionItems[this.latestExtIndex];
         if (latest) return latest.uri;
 
