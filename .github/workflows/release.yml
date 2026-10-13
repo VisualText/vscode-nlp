@@ -47,7 +47,8 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          # vsce 4 (package + publish) needs Node 22.
+          node-version: '22'
           cache: npm
 
       - name: Decide whether this is a release, and of what
