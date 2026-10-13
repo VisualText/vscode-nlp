@@ -3,6 +3,7 @@ import * as path from 'path';
 import { TextFile } from './textFile';
 import { dirfuncs } from './dirfuncs';
 import { visualText } from './visualText';
+import { RuleLocator, visualColumn } from './language/ruleLocator';
 
 export interface FindItem {
 	uri: vscode.Uri;
@@ -102,15 +103,34 @@ export class FindFile {
 		const passItem = seqFile.getPasses().find(p => p.passNum > 0 && p.name == passName);
 		let passTag = '';
 		if (passItem)
-			passTag = (passItem.active ? '' : 'I ') + `${passItem.passNum}  `;
+			passTag = (passItem.active ? '' : 'I ') + `${passItem.passNum}`;
 		else if (path.dirname(uri.fsPath) == seqFile.getSpecDirectory().fsPath && /\.(nlp|rec|pat)$/i.test(filename))
-			passTag = 'O  ';
+			passTag = 'O -';
 
-		if (this.textFile.getText().search(rx) >= 0) {
+		const text = this.textFile.getText();
+		if (text.search(rx) >= 0) {
+			// Pass files read "X PASS RULE ELT | LINE,COL name text": rule numbers as
+			// G("$rulenum") counts them, elements as N(n) does, and the column the
+			// editor's status bar shows (tabs expanded). See ruleLocator.ts.
+			const lines = this.textFile.getLines();
+			const locator = passTag ? new RuleLocator(text) : undefined;
+			const tabSize = vscode.workspace.getConfiguration('editor', { languageId: 'nlp' }).get<number>('tabSize', 4);
+			const lineChars = lines.reduce((n, l) => n + l.length, 0);
+			const sepLen = lines.length > 1 ? (text.length - lineChars) / (lines.length - 1) : 0;
+			let offset = 0;
 			let num = 0;
-			for (let line of this.textFile.getLines()) {
+			for (let line of lines) {
 				const pos = line.search(rx);
+				const lineStart = offset;
+				offset += line.length + sepLen;
 				if (pos >= 0) {
+					let where = '';
+					if (locator) {
+						const spot = locator.at(lineStart + pos);
+						const rule = spot ? `${spot.rule}` : '-';
+						const elt = spot && spot.elt >= 0 ? `${spot.elt}` : '-';
+						where = `${passTag} ${rule} ${elt} | ${num + 1},${visualColumn(line, pos, tabSize)}  `;
+					}
 					if (line.length + termLen > context) {
 						const half = context / 2;
 						if (line.length - pos < half) {
@@ -121,11 +141,12 @@ export class FindFile {
 							line = line.substring(0,context);
 						}
 					}
-					let text = line;
+					let shown = line;
 					if (bracketsFlag)
-						text = line.replace(rx, m => ` <<${m}>> `);
-					const label = `${passTag}${filename} [${num} ${pos}] ${line}`;
-					const newText = `${passTag}${path.basename(uri.fsPath)} ${text}`;
+						shown = line.replace(rx, m => ` <<${m}>> `);
+					// Every pass file is .nlp/.pat, so the extension adds nothing there.
+					const label = where ? `${where}${passName} ${line}` : `${filename} [${num} ${pos}] ${line}`;
+					const newText = where ? `${where}${passName} ${shown}` : `${filename} ${shown}`;
 					this.finds.push({uri: uri, label: label, line: line, lineNum: num, pos: Number.parseInt(pos), highlighted: newText});
 				}
 				num++;

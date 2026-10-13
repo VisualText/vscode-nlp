@@ -3,6 +3,15 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.6
+Find results in pass files say which rule and which element each match is in, and where on the line.
+
+- **Each match in a pass file now reads `X PASS RULE ELT | LINE,COL name text`** (#787). For example, `12 3 4 | 56,7 tokens _noun` is pass 12, rule 3, element 4, at line 56, column 7 of `tokens.nlp`. An inactive pass is marked `I` (`I 12 3 4 | ...`), and a pass file the sequence does not use is marked `O` in place of a pass number (`O - 3 4 | ...`).
+- **Rule numbers are the analyzer's own.** They count from 1 through every `@RULES` region of the file in order, which is what `G("$rulenum")` returns while the rule runs, so a number seen in Find matches the one an analyzer prints. Rules inside a `@RECURSE` mini-pass are not counted, because the engine numbers them separately.
+- **Element numbers are the ones `N(n)` and `@PRE <n,n>` use.** The suggested element, left of `<-`, is 0. A modifier or match list counts as part of its element. A match in a comment, or in `@POST`/`@CHECK`/`@CODE`, shows `-` for the rule or element.
+- **Line and column are shown, and the column counts tabs the way the editor does.** Both are the numbers in the status bar's "Ln, Col", with tabs expanded to `editor.tabSize` (4 by default). Results used to show no position at all.
+- The `.nlp` extension is no longer repeated after every pass name. Results in other files (dictionaries, function libraries, text) look the same as before.
+
 ### 4.3.5
 Rules the engine refuses to run because of where a wildcard sits are now flagged in the editor, before you run the analyzer.
 
