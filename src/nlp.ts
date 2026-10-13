@@ -91,9 +91,12 @@ export class NLPFile extends TextFile {
 			visualText.readState();
 			vscode.commands.executeCommand('workbench.action.files.saveAll');
 
-			// Delete files in output directory
-			progress.report({ increment: 10, message: "Running..." });
+			// No increment: the engine reports no progress, so a bar that jumps to 10% and
+			// sits there says nothing. Without one VSCode shows its indeterminate bar, and
+			// the elapsed time ticks in the message below (#370).
+			progress.report({ message: "Running..." });
 
+			// Delete files in output directory
 			dirfuncs.emptyDir(visualText.analyzer.getOutputDirectory().fsPath);
 			dirfuncs.emptyDir(visualText.analyzer.getLogDirectory().fsPath);
 
@@ -158,7 +161,14 @@ export class NLPFile extends TextFile {
 
 			const cp = require('child_process');
 
-			return new Promise(resolve => {
+			return new Promise(resolveRun => {
+				const tick = setInterval(() => {
+					progress.report({ message: `Running ${filename}... ${Math.round((Date.now() - analyzeStart) / 1000)}s` });
+				}, 1000);
+				const resolve = (result: string) => {
+					clearInterval(tick);
+					resolveRun(result);
+				};
 				nlpStatusBar.analyzerButton(false);
 				const execStart = Date.now();
 				visualText.processID = cp.execFile(exe, args, (err, stdout, stderr) => {

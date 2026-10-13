@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.8
+The analyzer's progress notification shows how long the run has taken.
+
+- **The progress bar no longer stops at 10%** (#370). The engine reports no progress while it runs, so the bar jumped to 10% at the start and stayed there until the run ended. The notification now shows VSCode's moving "working" bar, and its message counts the seconds: `Running text.txt... 12s`. Cancel works as before.
+
 ### 4.3.7
 The matched/fired text view shows each piece of the input once.
 
