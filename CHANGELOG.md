@@ -4,7 +4,7 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
 ### 4.3.12
-Clears the issue backlog: twelve requests and bugs, some from 2020.
+Clears the issue backlog: thirteen requests and bugs, some from 2020.
 
 - **Generate a rule from a parse tree** (#475). Select lines in a pass's `.tree` file and run Generate Rule General or Exact from the editor menu. The selected top-level nodes become the rule's elements, and the rule goes into the pass the tree belongs to.
 - **Add a generated pass to the sequence** (#794). An `.nlp` or `.pat` file in the Output view now has "Add to Analyzer Sequence". You pick the pass to insert it after. If a pass of that name is already in the sequence, you can replace it, and it keeps its place, or add the new one under the next free name.
@@ -17,6 +17,7 @@ Clears the issue backlog: twelve requests and bugs, some from 2020.
 - **The run mode is remembered** (#328). The status-bar run mode (interpreted or compiled) was lost on every reload, because its setting was never declared. Several settings now say what they do.
 - **Partial trees keep `[` tokens** (#295). "View selected tree" dropped a literal `[` from the tree. A partial tree now colors exactly like the full one.
 - **Mod files work on macOS and Linux** (#98). `.nlm` files, which bundle passes and KB files into one file, found none of their sections outside Windows, and created files with backslashes in their names.
+- **Passes that build a knowledge base can feed the run** (#272). Right-click a pass in the sequence and choose "Toggle KB Generator" to mark it; the sequence shows "KB generator" beside it. With the new setting `nlp.analyzer.regenerateKB` on (it is off by default), after a run in which a marked pass has changed, the `.kbb` and `.dict` files it writes (the file names in its own text, such as `SaveKB("mykb.kbb", ...)`) are copied from the run's log folder into `kb/user`, and the text runs once more, so the result uses the knowledge base the pass just built. The second run copies nothing, so it does not repeat.
 - **writekb help** (#626) was already in the help pages, under Knowledge Base Functions.
 
 ### 4.3.11

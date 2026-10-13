@@ -3,6 +3,7 @@
 import * as path from "path";
 import { analyzerFiles, isInside, pushRecent, samePath } from "./session";
 import { modHeaderPath, modParts, modSection } from "./modPaths";
+import { generatorChanged, kbOutputsOf } from "./kbGen";
 
 let passed = 0;
 let failed = 0;
@@ -59,6 +60,15 @@ eq("mod: spec section from a POSIX absolute path", modSection("/home/me/ana/spec
 eq("mod: input section from a Windows absolute path", modSection("C:\\ana\\input\\numbers.txt"), "input");
 eq("mod: kb only under kb/user", modSection("/ana/kb/numbers.kb"), undefined);
 eq("mod: header written with backslashes", modHeaderPath("kb/user", "x.dict"), "kb\\user\\x.dict");
+
+// ---- KB generator passes (#272) --------------------------------------------------
+eq("kbgen: SaveKB target", kbOutputsOf('@CODE\nSaveKB("mykb.kbb",G("kb"),2);\n@@CODE'), ["mykb.kbb"]);
+eq("kbgen: dict written with <<, once", kbOutputsOf('L("f") = "words.dict"; "words.dict" << x; "out.txt" << y;'), ["words.dict"]);
+eq("kbgen: paths are not plain names", kbOutputsOf('SaveKB("kb/user/x.kbb", G("kb"), 2);'), []);
+eq("kbgen: nothing written", kbOutputsOf("@RULES\n_x <- a @@"), []);
+eq("kbgen: never copied counts as changed", generatorChanged(5, undefined), true);
+eq("kbgen: unchanged since the copy", generatorChanged(5, 5), false);
+eq("kbgen: edited after the copy", generatorChanged(6, 5), true);
 
 console.log(`\nsession tests: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

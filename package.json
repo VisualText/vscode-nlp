@@ -1636,6 +1636,10 @@
                 "icon": "$(add)"
             },
             {
+                "command": "sequenceView.toggleKbGenerator",
+                "title": "Toggle KB Generator"
+            },
+            {
                 "command": "outputView.explore",
                 "title": "Explore Output Folder",
                 "icon": {
@@ -2623,6 +2627,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "sequenceView.toggleKbGenerator",
+                    "when": "view == sequenceView && viewItem =~ /filenotok/",
+                    "group": "kb"
+                },
+                {
                     "command": "helpView.copyPath",
                     "when": "view == helpView && viewItem == helpFile",
                     "group": "inline"
@@ -3419,6 +3428,12 @@
                     "scope": "application",
                     "default": true,
                     "markdownDescription": "Send anonymous usage counts (feature usage, run mode, errors) to help improve the extension. Never includes file contents, analyzer/KB source, file names, or paths. This is layered on top of VS Code's global `#telemetry.telemetryLevel#` setting — if that is off, nothing is sent regardless of this setting."
+                },
+                "nlp.analyzer.regenerateKB": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": false,
+                    "markdownDescription": "After a run in which a pass marked as a **KB generator** (right-click a pass in the sequence) has changed, copy the `.kbb` and `.dict` files that pass writes into the analyzer's `kb/user` folder and run the text again, so the run uses the knowledge base it just built."
                 },
                 "nlp.analyzer.rememberOpenFiles": {
                     "type": "boolean",
