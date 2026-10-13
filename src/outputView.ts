@@ -29,7 +29,8 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 
 		const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
 		const testFile = path.join(testFolder.fsPath, path.basename(outputItem.uri.fsPath));
-		const value = fs.existsSync(testFile) ? 'test' : '';
+		// 'nlp' marks pass files, which can be added to the sequence (#794).
+		const value = (fs.existsSync(testFile) ? 'test' : '') + (/\.(nlp|pat)$/i.test(outputItem.uri.fsPath) ? 'nlp' : '');
 
 		return {
 			resourceUri: outputItem.uri,
@@ -85,6 +86,8 @@ export class OutputView {
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.deleteTest', (resource) => this.deleteTest(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.editTest', (resource) => this.editTest(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.rename', (resource) => this.rename(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.copyOrMoveTo', (resource) => this.copyOrMoveTo(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.addToSequence', (resource) => this.addToSequence(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.kb', () => this.loadKB()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.matches', () => this.loadTxxt()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.trees', () => this.loadTrees()));
@@ -362,6 +365,79 @@ export class OutputView {
 				visualText.fileOps.startFileOps();
 			});
 		}
+	}
+
+	// #658: put an output file anywhere, as a copy or by moving it.
+	async copyOrMoveTo(outputItem: OutputItem) {
+		const from = outputItem.uri;
+		const target = await vscode.window.showSaveDialog({
+			title: 'Copy or move output file to',
+			defaultUri: vscode.Uri.file(path.join(visualText.analyzer.getInputDirectory().fsPath, path.basename(from.fsPath))),
+		});
+		if (!target || target.fsPath === from.fsPath)
+			return;
+		const how = await vscode.window.showQuickPick(['Copy', 'Move'], { title: path.basename(target.fsPath), placeHolder: 'Copy the file, or move it?' });
+		if (!how)
+			return;
+		try {
+			fs.mkdirSync(path.dirname(target.fsPath), { recursive: true });
+			fs.copyFileSync(from.fsPath, target.fsPath);
+			if (how === 'Move')
+				fs.unlinkSync(from.fsPath);
+		} catch (err) {
+			vscode.window.showErrorMessage(`Could not ${how.toLowerCase()} ${path.basename(from.fsPath)}: ${err instanceof Error ? err.message : err}`);
+			return;
+		}
+		vscode.commands.executeCommand('outputView.refreshAll');
+		vscode.commands.executeCommand('textView.refreshAll');
+		vscode.commands.executeCommand('kbView.refreshAll');
+	}
+
+	// #794: a pass file produced by a run (rule generation, a RUG pass) goes into
+	// the sequence after the pass the user picks. If a pass of that name is
+	// already in the sequence, they choose to replace it or add this one under a
+	// free name.
+	async addToSequence(outputItem: OutputItem) {
+		const seqFile = visualText.analyzer.seqFile;
+		const passes = seqFile.getPasses();
+		if (!passes.length) {
+			vscode.window.showWarningMessage('Open an analyzer first');
+			return;
+		}
+		const items = passes.map((pass, index) => ({
+			label: pass.passNum ? `${pass.passNum}  ${pass.name}` : pass.name,
+			description: pass.isFolder() ? 'folder' : pass.typeStr,
+			index,
+		}));
+		const after = await vscode.window.showQuickPick(items, { title: `Add ${path.basename(outputItem.uri.fsPath)} to the sequence`, placeHolder: 'Insert after which pass?' });
+		if (!after)
+			return;
+
+		const specDir = visualText.analyzer.getSpecDirectory().fsPath;
+		const name = path.basename(outputItem.uri.fsPath);
+		const existing = seqFile.findPassByFilename(name);
+		if (existing) {
+			const replace = `Replace pass ${existing} (${path.parse(name).name})`;
+			const choice = await vscode.window.showQuickPick([replace, 'Add it as a new pass under another name'], { title: `A pass named ${path.parse(name).name} is already in the sequence` });
+			if (!choice)
+				return;
+			if (choice === replace) {
+				// The pass keeps its place in the sequence; only its file changes.
+				fs.copyFileSync(outputItem.uri.fsPath, path.join(specDir, name));
+				vscode.commands.executeCommand('sequenceView.refreshAll');
+				return;
+			}
+			const { name: base, ext } = path.parse(name);
+			let n = 2;
+			while (fs.existsSync(path.join(specDir, `${base}${n}${ext}`)) || seqFile.findPassByFilename(`${base}${n}${ext}`))
+				n++;
+			const renamed = path.join(specDir, `${base}${n}${ext}`);
+			fs.copyFileSync(outputItem.uri.fsPath, renamed);
+			seqFile.insertPass(after.index, vscode.Uri.file(renamed));
+		} else {
+			seqFile.insertPass(after.index, outputItem.uri);
+		}
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
 	copytoKB(outputItem: OutputItem) {
