@@ -15,20 +15,23 @@
                     }
                 },
                 {
-                    "scope": "variable.parameter.nlp",
+                    "scope": [
+                        "variable.parameter.nlp",
+                        "keyword.control.kb"
+                    ],
                     "settings": {
                         "foreground": "#696969",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.attribute.nlp",
+                    "scope": "entity.other.attribute-name.nlp",
                     "settings": {
                         "foreground": "#e655f3"
                     }
                 },
                 {
-                    "scope": "keyword.constants.nlp",
+                    "scope": "constant.language.nlp",
                     "settings": {
                         "foreground": "#0a7b83",
                         "fontStyle": "bold"
@@ -44,27 +47,30 @@
                     }
                 },
                 {
-                    "scope": "constant.numeric.tree",
+                    "scope": [
+                        "constant.numeric.tree",
+                        "constant.numeric.kbb"
+                    ],
                     "settings": {
                         "foreground": "#5596f0"
                     }
                 },
                 {
-                    "scope": "keyword.fired.tree",
+                    "scope": "keyword.other.fired.tree",
                     "settings": {
                         "foreground": "#dc1b1b",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.rewrite.tree",
+                    "scope": "entity.name.type.tree",
                     "settings": {
                         "foreground": "#000000",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.node.tree",
+                    "scope": "string.unquoted.token.tree",
                     "settings": {
                         "foreground": "#4e8e3c",
                         "fontStyle": "bold"
@@ -98,28 +104,28 @@
                     }
                 },
                 {
-                    "scope": "keyword.other.kbb",
+                    "scope": "entity.name.type.level0.kbb",
                     "settings": {
                         "foreground": "#5d00d6",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb",
+                    "scope": "entity.name.type.level1.kbb",
                     "settings": {
                         "foreground": "#7e7e7e",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb1",
+                    "scope": "entity.name.type.level2.kbb",
                     "settings": {
                         "foreground": "#2eb657",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb2",
+                    "scope": "entity.name.type.level3.kbb",
                     "settings": {
                         "foreground": "#e049d9",
                         "fontStyle": "bold"
@@ -143,20 +149,23 @@
                     }
                 },
                 {
-                    "scope": "variable.parameter.nlp",
+                    "scope": [
+                        "variable.parameter.nlp",
+                        "keyword.control.kb"
+                    ],
                     "settings": {
                         "foreground": "#f8fa87",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.attribute.nlp",
+                    "scope": "entity.other.attribute-name.nlp",
                     "settings": {
                         "foreground": "#f293fb"
                     }
                 },
                 {
-                    "scope": "keyword.constants.nlp",
+                    "scope": "constant.language.nlp",
                     "settings": {
                         "foreground": "#4ec9b0",
                         "fontStyle": "bold"
@@ -172,27 +181,30 @@
                     }
                 },
                 {
-                    "scope": "constant.numeric.tree",
+                    "scope": [
+                        "constant.numeric.tree",
+                        "constant.numeric.kbb"
+                    ],
                     "settings": {
                         "foreground": "#93bffb"
                     }
                 },
                 {
-                    "scope": "keyword.fired.tree",
+                    "scope": "keyword.other.fired.tree",
                     "settings": {
                         "foreground": "#dc1b1b",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.rewrite.tree",
+                    "scope": "entity.name.type.tree",
                     "settings": {
                         "foreground": "#f8fa87",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.node.tree",
+                    "scope": "string.unquoted.token.tree",
                     "settings": {
                         "foreground": "#4e8e3c",
                         "fontStyle": "bold"
@@ -211,28 +223,28 @@
                     }
                 },
                 {
-                    "scope": "keyword.other.kbb",
+                    "scope": "entity.name.type.level0.kbb",
                     "settings": {
                         "foreground": "#896eff",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb",
+                    "scope": "entity.name.type.level1.kbb",
                     "settings": {
                         "foreground": "#e3ee50",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb1",
+                    "scope": "entity.name.type.level2.kbb",
                     "settings": {
                         "foreground": "#2eb657",
                         "fontStyle": "bold"
                     }
                 },
                 {
-                    "scope": "keyword.concept.kbb2",
+                    "scope": "entity.name.type.level3.kbb",
                     "settings": {
                         "foreground": "#e049d9",
                         "fontStyle": "bold"

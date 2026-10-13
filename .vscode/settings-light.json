@@ -8,37 +8,43 @@
                 }
             },
             {
-                "scope": "variable.parameter.nlp",
+                "scope": [
+                    "variable.parameter.nlp",
+                    "keyword.control.kb"
+                ],
                 "settings": {
                     "foreground": "#696969"
                 }
             },
             {
-                "scope": "keyword.attribute.nlp",
+                "scope": "entity.other.attribute-name.nlp",
                 "settings": {
                     "foreground": "#e655f3"
                 }
             },
             {
-                "scope": "constant.numeric.tree",
+                "scope": [
+                    "constant.numeric.tree",
+                    "constant.numeric.kbb"
+                ],
                 "settings": {
                     "foreground": "#5596f0"
                 }
             },
             {
-                "scope": "keyword.fired.tree",
+                "scope": "keyword.other.fired.tree",
                 "settings": {
                     "foreground": "#dc1b1b"
                 }
             },
             {
-                "scope": "keyword.rewrite.tree",
+                "scope": "entity.name.type.tree",
                 "settings": {
                     "foreground": "#000000"
                 }
             },
             {
-                "scope": "keyword.node.tree",
+                "scope": "string.unquoted.token.tree",
                 "settings": {
                     "foreground": "#4e8e3c"
                 }
@@ -50,25 +56,25 @@
                 }
             },
             {
-                "scope": "keyword.concept.kbb1",
+                "scope": "entity.name.type.level2.kbb",
                 "settings": {
                     "foreground": "#909228"
                 }
             },
             {
-                "scope": "keyword.concept.kbb",
+                "scope": "entity.name.type.level1.kbb",
                 "settings": {
                     "foreground": "#7e7e7e"
                 }
             },
             {
-                "scope": "keyword.concept.kbb1",
+                "scope": "entity.name.type.level2.kbb",
                 "settings": {
                     "foreground": "#2eb657"
                 }
             },
             {
-                "scope": "keyword.concept.kbb2",
+                "scope": "entity.name.type.level3.kbb",
                 "settings": {
                     "foreground": "#e049d9"
                 }
