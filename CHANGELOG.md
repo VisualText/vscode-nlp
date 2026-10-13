@@ -3,6 +3,13 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.7
+The matched/fired text view shows each piece of the input once.
+
+- **Fired text is no longer repeated** (#810). The view draws the input with each fired node marked, taking the node's start and end from the pass's `.tree` file. When a fired node started before the end of the one already drawn, its text was drawn again from its start. With an engine that wrote the wrong start for a node, that produced an ever-growing prefix like `((##,))((##,desc,))((##,desc,svc 1,))` in place of single commas. A fired node is now drawn only from where the previous one ended, so no character can appear twice.
+- **A fired node at the very start of the file is shown.** A one-character node at offset 0 used to be skipped.
+- Output from the current engine is unchanged. The analyzer and input from the issue render the same before and after, on every pass.
+
 ### 4.3.6
 Find results in pass files say which rule and which element each match is in, and where on the line.
 

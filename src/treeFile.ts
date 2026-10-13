@@ -9,7 +9,7 @@ import { SequenceFile } from './sequence';
 import { FindFile, FindItem } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { parseNodeFlags } from './trace/treeParse';
+import { parseNodeFlags, newFiredSpan } from './trace/treeParse';
 import * as os from 'os';
 
 export enum generateType { GENERAL, EXACT }
@@ -695,7 +695,7 @@ ${ruleStr}
 		this.fireds = [];
 
 		const file = new TextFile(treeFile);
-		let lastTo = 0;
+		let lastTo = -1;
 
 		for (let i = 0; i < file.getLines().length; i++) {
 			const line = file.getLine(i);
@@ -715,10 +715,11 @@ ${ruleStr}
 				// sem -- 63 such nodes in the sample analyzers alone, all of them
 				// dropped from the tree in "Display Built Only" mode.
 				fired.built = parseNodeFlags(tts.slice(8)).built;
-				if (+tts[2] > lastTo) {
+				const span = newFiredSpan(+tts[1], +tts[2], lastTo);
+				if (span) {
 					fired.str = tts[0].trim();
-					fired.from = +tts[1];
-					fired.to = lastTo = +tts[2];
+					fired.from = span.from;
+					fired.to = lastTo = span.to;
 					fired.ufrom = +tts[3];
 					fired.uto = +tts[4];
 					fired.rulenum = +tts[5];
