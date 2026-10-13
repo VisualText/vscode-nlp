@@ -9,7 +9,7 @@ import { SequenceFile } from './sequence';
 import { FindFile, FindItem } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { parseNodeFlags, newFiredSpan } from './trace/treeParse';
+import { parseNodeFlags, newFiredSpan, treeLinesInRange } from './trace/treeParse';
 import * as os from 'os';
 
 export enum generateType { GENERAL, EXACT }
@@ -605,27 +605,13 @@ ${ruleStr}
 	findTreeFileLines() {
 		const file = new TextFile(this.treeFile);
 		const sep = file.getSeparatorNormalized();
-		let from = 0;
-		let to = 0;
 		this.selectedLines = [];
 		this.selectedTreeStr = '';
 
-		for (const line of file.getLines()) {
-			from = 0;
-			to = 0;
-
-			const tokens = line.split('[');
-			if (tokens.length > 1) {
-				const toks = tokens[1].split(/[,\]]/);
-				if (toks.length > 4) {
-					from = +toks[2];
-					to = +toks[3];
-					if (from >= this.selStart && to <= this.selEnd) {
-						this.selectedLines.push(this.parseTreeLine(line));
-						this.selectedTreeStr = this.selectedTreeStr.concat(line, sep);
-					}
-				}
-			}
+		const lines = file.getLines();
+		for (const i of treeLinesInRange(lines, this.selStart, this.selEnd)) {
+			this.selectedLines.push(this.parseTreeLine(lines[i]));
+			this.selectedTreeStr = this.selectedTreeStr.concat(lines[i], sep);
 		}
 	}
 
