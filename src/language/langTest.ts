@@ -13,6 +13,7 @@ import { parseKbConcepts } from "./kbConcepts";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
 import { foldingRanges } from "./folding";
+import { RuleLocator, visualColumn } from "./ruleLocator";
 import { classifyTokens } from "./semanticTokens";
 import { findUnknownCalls, levenshtein } from "./quickfix";
 import { BUILTIN_SET, KEYWORD_SET, BUILTIN_FUNCTIONS, RULE_KEYWORDS } from "./nlpxxData";
@@ -134,6 +135,54 @@ _verb <- verb @@
 	eq("wildcard: @PRE makes _xWILD a non-wildcard", wild("_x <- a _xWILD @@", "@PRE\n<2,2> cap();\n").length, 0);
 	eq("wildcard: @PRE of an earlier group does not leak", wild("_x <- a _xWILD @@", "@PRE\n<2,2> cap();\n@RULES\n_y <- a b @@\n@POST\nsingle();\n").length, 1);
 	eq("wildcard: _xWILD in @CODE ignored", computeProblems("@CODE\nG(\"_xWILD\") = 1;\n@@CODE\n").length, 0);
+}
+
+// ---- rule locator (#787) ---------------------------------------------------
+{
+	// Numbering verified against the engine's G("$rulenum"): 1-based across every
+	// @RULES region in the file; @RECURSE mini-pass rules are not counted.
+	const src = [
+		"@POST",
+		"  single();",
+		"@RULES",
+		"_np [base] <- _det [opt] _noun @@",
+		"_vp <-",
+		"\t_verb\t### (1)",
+		"\t_xWILD [one match=(_np _pro)]\t### (2)",
+		"\t@@",
+		"@RECURSE inner",
+		"@RULES",
+		"_x <- inner @@",
+		"@@RULES",
+		"@@RECURSE inner",
+		"@POST",
+		"  single();",
+		"@RULES",
+		"_s <- \\( _np \\) @@",
+		"",
+	].join("\n");
+	const loc = new RuleLocator(src);
+	const at = (needle: string, nth = 0) => {
+		let i = -1;
+		for (let k = 0; k <= nth; k++) i = src.indexOf(needle, i + 1);
+		return loc.at(i);
+	};
+	eq("locator: three top-level rules", loc.ruleCount, 3);
+	eq("locator: suggested elt is rule 1 elt 0", JSON.stringify(at("_np [base]")), JSON.stringify({ rule: 1, elt: 0 }));
+	eq("locator: modifier belongs to its element", JSON.stringify(at("opt")), JSON.stringify({ rule: 1, elt: 1 }));
+	eq("locator: second element", JSON.stringify(at("_noun")), JSON.stringify({ rule: 1, elt: 2 }));
+	eq("locator: multi-line rule elt 1", JSON.stringify(at("_verb")), JSON.stringify({ rule: 2, elt: 1 }));
+	eq("locator: match list inside elt 2", JSON.stringify(at("_pro")), JSON.stringify({ rule: 2, elt: 2 }));
+	eq("locator: comment between elts", at("### (1)")?.elt, -1);
+	eq("locator: @RECURSE rules not numbered", at("inner @@"), undefined);
+	eq("locator: rule after recurse is 3", JSON.stringify(at("_np", 2)), JSON.stringify({ rule: 3, elt: 2 }));
+	eq("locator: escaped paren is an element", at("\\)")?.elt, 3);
+	eq("locator: code region is no rule", at("single"), undefined);
+
+	eq("column: no tabs", visualColumn("abc", 2, 4), 3);
+	eq("column: leading tab", visualColumn("\tx", 1, 4), 5);
+	eq("column: tab to next stop", visualColumn("ab\tx", 3, 4), 5);
+	eq("column: two tabs", visualColumn("\t\tx", 2, 4), 9);
 }
 
 // ---- engine errors ---------------------------------------------------------
