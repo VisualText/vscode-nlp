@@ -11,6 +11,7 @@ export enum outputFileType { ALL, TXXT, TREE, KB, NLP }
 
 interface OutputItem {
 	uri: vscode.Uri;
+	input?: boolean; // an input file whose outputs are its children (#688)
 }
 
 export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputItem> {
@@ -25,6 +26,21 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 	constructor() { }
 
 	public getTreeItem(outputItem: OutputItem): vscode.TreeItem {
+		if (outputItem.input) {
+			const folder = outputView.folder?.fsPath ?? '';
+			const rel = path.relative(folder, path.dirname(outputItem.uri.fsPath));
+			return {
+				label: path.basename(outputItem.uri.fsPath),
+				description: rel && !rel.startsWith('..') ? rel : undefined,
+				resourceUri: outputItem.uri,
+				collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+				contextValue: 'input',
+				iconPath: {
+					light: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'light', 'file.svg')),
+					dark: vscode.Uri.file(path.join(__filename, '..', '..', 'resources', 'dark', 'file.svg'))
+				},
+			};
+		}
 		const icon = visualText.fileIconFromExt(outputItem.uri.fsPath);
 
 		const testFolder = visualText.analyzer.testFolder(outputItem.uri, true);
@@ -49,7 +65,11 @@ export class OutputTreeDataProvider implements vscode.TreeDataProvider<OutputIte
 		};
 	}
 
-	public getChildren(_outputItem?: OutputItem): OutputItem[] {
+	public getChildren(outputItem?: OutputItem): OutputItem[] {
+		if (outputItem?.input)
+			return outputView.filesForLog(vscode.Uri.file(outputItem.uri.fsPath + visualText.LOG_SUFFIX)).map(uri => ({ uri }));
+		if (visualText.hasWorkspaceFolder() && outputView.browsingFolder())
+			return outputView.inputsWithOutput().map(uri => ({ uri, input: true }));
 		if (visualText.hasWorkspaceFolder()) {
 			const children: OutputItem[] = new Array();
 			for (const folder of outputView.getOutputFiles()) {
@@ -76,6 +96,7 @@ export class OutputView {
 		this.outputView = vscode.window.createTreeView('outputView', { treeDataProvider: outputViewProvider });
 		ctx.subscriptions.push(this.outputView);
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.refreshAll', () => outputViewProvider.refresh()));
+		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.showFolder', (folder?: vscode.Uri) => this.showFolder(folder)));
 
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.copytoKB', (resource) => this.copytoKB(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('outputView.copytoText', (resource) => this.copytoText(resource)));
@@ -284,7 +305,7 @@ export class OutputView {
 		this.testDirectory = vscode.Uri.file('');
 		if (filepath.length == 0)
 			return false;
-		this.logDirectory = vscode.Uri.file(filepath + visualText.TEST_SUFFIX);
+		this.testDirectory = vscode.Uri.file(filepath + visualText.TEST_SUFFIX);
 		if (!fs.existsSync(this.testDirectory.fsPath))
 			return false;
 		const stats = fs.lstatSync(this.testDirectory.fsPath);
@@ -311,36 +332,66 @@ export class OutputView {
 					}
 				}
 			}
-			else if (this.type == outputFileType.TXXT) {
-				const matchFiles = dirfuncs.getFiles(this.logDirectory, ['.txxt']);
-				this.outputFiles = this.outputFiles.concat(matchFiles);
-			}
-			else if (this.type == outputFileType.TREE) {
-				const finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath, 'final.tree'));
-				if (fs.existsSync(finalTree.fsPath)) {
-					this.outputFiles.push(finalTree);
-				}
-				const matchFiles = dirfuncs.getFiles(this.logDirectory, ['.tree']);
-				this.outputFiles = this.outputFiles.concat(matchFiles);
-			}
 			else {
+				// ALL, TXXT and TREE list one input file's _log folder. Each mode
+				// finds that folder itself: TXXT and TREE used to reuse the one ALL
+				// had last set, and listed nothing if ALL had not run first.
 				const textPath = visualText.analyzer.getTextPath().fsPath;
-				this.outputFiles = [];
-				if (textPath.length && this.fileHasLog(textPath)) {
-					const finalTree = vscode.Uri.file(path.join(this.logDirectory.fsPath, 'final.tree'));
-					if (fs.existsSync(finalTree.fsPath)) {
-						this.outputFiles.push(finalTree);
-					}
-					const candidates = dirfuncs.getFiles(this.logDirectory);
-					for (const cand of candidates) {
-						const ext = path.parse(cand.fsPath).ext;
-						if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.txxt') != 0)
-							this.outputFiles.push(cand);
-					}
-				}
+				if (textPath.length && this.fileHasLog(textPath))
+					this.outputFiles = this.filesForLog(this.logDirectory);
 			}
 		}
 		return this.outputFiles;
+	}
+
+	// The outputs in one input file's _log folder that the current mode shows.
+	filesForLog(logDir: vscode.Uri): vscode.Uri[] {
+		const files: vscode.Uri[] = [];
+		const finalTree = vscode.Uri.file(path.join(logDir.fsPath, 'final.tree'));
+		if (this.type == outputFileType.TXXT)
+			return dirfuncs.getFiles(logDir, ['.txxt']);
+		if (fs.existsSync(finalTree.fsPath))
+			files.push(finalTree);
+		if (this.type == outputFileType.TREE)
+			return files.concat(dirfuncs.getFiles(logDir, ['.tree']).filter(f => f.fsPath !== finalTree.fsPath));
+		for (const cand of dirfuncs.getFiles(logDir)) {
+			const ext = path.parse(cand.fsPath).ext;
+			if (ext.localeCompare('.tree') != 0 && ext.localeCompare('.txxt') != 0)
+				files.push(cand);
+		}
+		return files;
+	}
+
+	// #688: with a folder selected in the Text view, the view lists every input
+	// file under it that has outputs, each expanding to its own outputs.
+	public folder: vscode.Uri | undefined;
+
+	public showFolder(folder: vscode.Uri | undefined) {
+		this.folder = folder;
+		vscode.commands.executeCommand('outputView.refreshAll');
+	}
+
+	public browsingFolder(): boolean {
+		return !!this.folder && this.type != outputFileType.KB && this.type != outputFileType.NLP;
+	}
+
+	// Input files under the selected folder that have a _log folder, depth first.
+	inputsWithOutput(): vscode.Uri[] {
+		const found: vscode.Uri[] = [];
+		const walk = (dir: string) => {
+			let entries: fs.Dirent[];
+			try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+			for (const entry of entries) {
+				const full = path.join(dir, entry.name);
+				if (entry.isDirectory()) {
+					if (!dirfuncs.directoryIsLog(full)) walk(full);
+				} else if (entry.isFile() && dirfuncs.isDir(full + visualText.LOG_SUFFIX)) {
+					found.push(vscode.Uri.file(full));
+				}
+			}
+		};
+		if (this.folder) walk(this.folder.fsPath);
+		return found;
 	}
 
 	private openFile(resource: vscode.Uri): void {

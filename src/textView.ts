@@ -683,10 +683,12 @@ export class TextView {
 			this.folderUri = undefined;
 			vscode.window.showTextDocument(textItem.uri);
 			visualText.analyzer.saveCurrentFile(textItem.uri);
-			vscode.commands.executeCommand('outputView.refreshAll');
+			vscode.commands.executeCommand('outputView.showFolder', undefined);
 			vscode.commands.executeCommand('status.update');
 		} else {
+			// #688: the output view lists the outputs of every file in the folder.
 			this.folderUri = textItem.uri;
+			vscode.commands.executeCommand('outputView.showFolder', textItem.uri);
 		}
 	}
 

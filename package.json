@@ -2634,12 +2634,12 @@
                 },
                 {
                     "command": "outputView.rename",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "navigation"
                 },
                 {
                     "command": "outputView.copyOrMoveTo",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "move"
                 },
                 {
@@ -3349,17 +3349,17 @@
                 },
                 {
                     "command": "outputView.copytoText",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@0"
                 },
                 {
                     "command": "outputView.copytoKB",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@1"
                 },
                 {
                     "command": "outputView.addTest",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@2"
                 },
                 {
@@ -3369,7 +3369,7 @@
                 },
                 {
                     "command": "outputView.deleteOutput",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@4"
                 },
                 {
