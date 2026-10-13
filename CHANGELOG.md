@@ -3,6 +3,22 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.12
+Clears the issue backlog: twelve requests and bugs, some from 2020.
+
+- **Generate a rule from a parse tree** (#475). Select lines in a pass's `.tree` file and run Generate Rule General or Exact from the editor menu. The selected top-level nodes become the rule's elements, and the rule goes into the pass the tree belongs to.
+- **Add a generated pass to the sequence** (#794). An `.nlp` or `.pat` file in the Output view now has "Add to Analyzer Sequence". You pick the pass to insert it after. If a pass of that name is already in the sequence, you can replace it, and it keeps its place, or add the new one under the next free name.
+- **Copy or move an output file anywhere** (#658). "Copy or Move File To..." on an output file opens a save dialog, starting in the analyzer's input folder.
+- **Browse the outputs of a whole folder** (#688). Select a folder in the Text view, and the Output view lists every file under it that has outputs, each expanding to its own. The matches and trees buttons also work now even when "all" was not clicked first.
+- **Sort & Count for corpus study** (#613). "Sort & Count text lines" counts each distinct line, and "Count Words in Folder" in the Text view counts words across every file in the folder. Both open the counts, most frequent first, in a new editor and leave the text alone.
+- **The parse trees of a failed run are reachable** (#785). The passes that ran before an error still offer their trees in the sequence, and the Output view lists them.
+- **Startup shows what the updater is doing** (#230). While it checks, downloads or unpacks the engine and its files, the status bar shows which step it is on.
+- **The engine of the running version is used** (#481). With several versions of the extension on disk, a new version could use an older version's engine. That was the reason for the advice to delete old versions, which is no longer needed.
+- **The run mode is remembered** (#328). The status-bar run mode (interpreted or compiled) was lost on every reload, because its setting was never declared. Several settings now say what they do.
+- **Partial trees keep `[` tokens** (#295). "View selected tree" dropped a literal `[` from the tree. A partial tree now colors exactly like the full one.
+- **Mod files work on macOS and Linux** (#98). `.nlm` files, which bundle passes and KB files into one file, found none of their sections outside Windows, and created files with backslashes in their names.
+- **writekb help** (#626) was already in the help pages, under Knowledge Base Functions.
+
 ### 4.3.11
 Publishes everything since 4.3.4 to the VS Code Marketplace.
 
