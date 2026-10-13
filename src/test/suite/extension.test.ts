@@ -124,6 +124,7 @@ const WRITTEN_SETTINGS: Array<[string, string]> = [
 	["analyzer", "directory"],
 	["analyzer", "current"],
 	["textView", "fast"],
+	["analyzer", "runMode"],
 ];
 
 export async function configurationTests(): Promise<void> {

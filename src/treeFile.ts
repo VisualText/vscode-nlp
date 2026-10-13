@@ -533,10 +533,7 @@ ${ruleStr}
 	}
 
 	openTemporaryFile(filepath: string, content: string) {
-		const tempDir = path.resolve(
-			vscode.workspace
-				.getConfiguration('createtmpfile')
-				.get('tmpDir') || os.tmpdir());
+		const tempDir = os.tmpdir();
 		const filePath = vscode.Uri.file(path.join(tempDir, filepath));
 		fs.writeFileSync(filePath.fsPath, content);
 		vscode.workspace.openTextDocument(filePath).then(document => {

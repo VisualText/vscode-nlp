@@ -347,11 +347,13 @@ export class NLPStatusBar {
             if (folder.fsPath.length) {
                 vscode.workspace
                     .getConfiguration('analyzer', folder)
-                    .update('runMode', value, vscode.ConfigurationTarget.WorkspaceFolder);
+                    .update('runMode', value, vscode.ConfigurationTarget.WorkspaceFolder)
+                    .then(undefined, () => { /* not saved; the mode still applies this session */ });
             } else {
                 vscode.workspace
                     .getConfiguration('analyzer')
-                    .update('runMode', value, vscode.ConfigurationTarget.Global);
+                    .update('runMode', value, vscode.ConfigurationTarget.Global)
+                    .then(undefined, () => { /* not saved; the mode still applies this session */ });
             }
         } catch {
             // ignore persistence failures; state still lives in memory
