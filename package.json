@@ -2018,12 +2018,12 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat || resourceExtname == .tree",
                     "command": "nlp.generateRule",
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat || resourceExtname == .tree",
                     "command": "nlp.generateExactRule",
                     "group": "nlp"
                 },

@@ -321,6 +321,11 @@ export class TreeFile extends TextFile {
 				this.absoluteRangeFromSelection(this.HighlightFile, editor.selection);
 			}
 			this.findTreeFileLines();
+		} else if (this.getFileType() == nlpFileType.TREE) {
+			// #475: in a parse tree the selected lines ARE the tree.
+			this.setFile(editor.document.uri);
+			this.parseTreeLines(editor);
+			this.selectedTreeStr = this.selectedLines.map(l => l.node).join(' ');
 		}
 		return this.selectedTreeStr.length ? true : false;
 	}
@@ -339,10 +344,18 @@ export class TreeFile extends TextFile {
 				editor.insertSnippet(snippet, range);
 
 			} else {
-				const passFilePath = visualText.analyzer.getPassPath();
-				const passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
-				const passItem = visualText.analyzer.seqFile.findPass('nlp', passName);
-				this.treeFile = this.anaFile(passItem.passNum).fsPath;
+				let passFilePath = visualText.analyzer.getPassPath();
+				if (type == nlpFileType.TREE) {
+					// A pass's tree (anaNNN.tree) adds the rule to that pass, as
+					// "Generate Path" does; final.tree to the current pass.
+					const treePass = this.getPassFromPath(editor);
+					if (treePass.fsPath.length > 2)
+						passFilePath = treePass;
+				} else {
+					const passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
+					const passItem = visualText.analyzer.seqFile.findPass('nlp', passName);
+					this.treeFile = this.anaFile(passItem.passNum).fsPath;
+				}
 
 				if (this.findSelectedTreeStr(editor)) {
 					let ruleStr = this.ruleFromLines(genType);
