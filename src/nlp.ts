@@ -14,7 +14,7 @@ import { ReformatType as reformatType } from './format/types';
 import { formatRuleText } from './format/rulesRegion';
 import { refreshEngineDiagnostics } from './language/engineDiagnostics';
 import * as telemetry from './telemetry/telemetry';
-import { analyzerOutputLines } from './output/analyzerOutput';
+import { analyzerOutputLines, lastTreePass } from './output/analyzerOutput';
 
 let analyzerOutputChannel: vscode.OutputChannel | undefined;
 
@@ -201,6 +201,18 @@ export class NLPFile extends TextFile {
 						else if (!logView.makeAna(false))
 							logView.loadAnalyzerOuts(false);
 
+						// #785: the passes that ran before the error left their parse
+						// trees, which are the best clue to what went wrong. Refresh the
+						// sequence so each of those passes offers its tree, and list the
+						// trees in the output view.
+						const logDir = filestr + visualText.LOG_SUFFIX;
+						const lastTree = fs.existsSync(logDir) && dirfuncs.isDir(logDir) ? lastTreePass(fs.readdirSync(logDir)) : 0;
+						if (lastTree > 0) {
+							outputView.setType(outputFileType.TREE);
+							logView.addMessage(`Parse trees for passes up to ${lastTree} are in the output view, and on each of those passes in the sequence`, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						}
+						vscode.commands.executeCommand('sequenceView.refreshAll');
+						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');

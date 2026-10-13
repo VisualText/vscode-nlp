@@ -1,6 +1,6 @@
 // Tests for analyzerOutputLines. Runs with plain Node via `npm run test:output`.
 
-import { analyzerOutputLines } from "./analyzerOutput";
+import { analyzerOutputLines, lastTreePass } from "./analyzerOutput";
 
 let passed = 0;
 let failed = 0;
@@ -49,6 +49,10 @@ check("analyzer brackets kept",
 // Nothing printed: nothing to show.
 check("no output", analyzerOutputLines(oldEngine.replace("21\r\n34\r\n", "")), []);
 check("empty", analyzerOutputLines(""), []);
+
+// #785: the last pass that wrote a tree before a run stopped.
+check("last tree pass", [String(lastTreePass(["ana001.tree", "ana012.tree", "ana003.tree", "ana014.kbb", "final.tree", "err.log"]))], ["12"]);
+check("no trees", [String(lastTreePass(["err.log", "dbg.log"]))], ["0"]);
 
 console.log(`analyzer output: ${passed} passed, ${failed} failed`);
 if (failed)

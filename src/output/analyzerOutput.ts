@@ -26,3 +26,17 @@ export function analyzerOutputLines(stdout: string): string[] {
 		lines.shift();
 	return lines;
 }
+
+/**
+ * The highest pass that left a parse tree (`anaNNN.tree`) among a log directory's
+ * file names, or 0 if none did. After a failed run these are the passes that
+ * completed before the error (#785).
+ */
+export function lastTreePass(fileNames: string[]): number {
+	let last = 0;
+	for (const name of fileNames) {
+		const m = /^ana(\d+)\.tree$/i.exec(name);
+		if (m) last = Math.max(last, Number(m[1]));
+	}
+	return last;
+}
