@@ -13,6 +13,9 @@ import { parseKbConcepts } from "./kbConcepts";
 import { regionKindAt, RegionKind } from "./completion";
 import { findEnclosingCall } from "./signature";
 import { foldingRanges } from "./folding";
+import { RENAMED_SCOPES, migrateScope, migrateTokenColors } from "./scopeMigration";
+import * as fs from "fs";
+import * as path from "path";
 import { RuleLocator, visualColumn } from "./ruleLocator";
 import { classifyTokens } from "./semanticTokens";
 import { findUnknownCalls, levenshtein } from "./quickfix";
@@ -183,6 +186,51 @@ _verb <- verb @@
 	eq("column: leading tab", visualColumn("\tx", 1, 4), 5);
 	eq("column: tab to next stop", visualColumn("ab\tx", 3, 4), 5);
 	eq("column: two tabs", visualColumn("\t\tx", 2, 4), 9);
+}
+
+// ---- scope migration (#107) ------------------------------------------------
+{
+	// The map must match the grammars it describes: no old name may survive in
+	// them unless it maps to itself, and every new name must exist in one.
+	const dir = path.join(__dirname, "..", "..", "grammars", "syntaxes");
+	const names = new Set<string>();
+	const walk = (o: unknown): void => {
+		if (Array.isArray(o)) o.forEach(walk);
+		else if (o && typeof o === "object") {
+			for (const [k, v] of Object.entries(o)) {
+				if ((k === "name" || k === "contentName") && typeof v === "string") names.add(v);
+				else walk(v);
+			}
+		}
+	};
+	for (const f of fs.readdirSync(dir).filter((f) => f.endsWith(".json"))) walk(JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")));
+	for (const [oldName, renamed] of Object.entries(RENAMED_SCOPES)) {
+		check(`scopes: ${oldName} gone from grammars`, renamed.includes(oldName) || !names.has(oldName));
+		for (const n of renamed) check(`scopes: ${n} exists in a grammar`, names.has(n));
+	}
+
+	eq("scopes: one-to-one", JSON.stringify(migrateScope("keyword.region.nlp")), JSON.stringify({ scope: "keyword.control.directive.region.nlp", changed: true }));
+	eq("scopes: one-to-many keeps all", JSON.stringify(migrateScope("comment.line.dict").scope),
+		JSON.stringify(["entity.name.tag.dict", "comment.line.dict", "comment.line.kb", "comment.line.kbb", "comment.line.tree"]));
+	eq("scopes: list, deduplicated", JSON.stringify(migrateScope(["keyword.operator.nlp", "keyword.equals.nlp", "keyword.operator.assignment.nlp"]).scope),
+		JSON.stringify(["keyword.operator.nlp", "keyword.operator.assignment.nlp"]));
+	eq("scopes: comma string", JSON.stringify(migrateScope("keyword.fired.tree, keyword.rewrite.tree").scope),
+		JSON.stringify(["keyword.other.fired.tree", "entity.name.type.tree"]));
+	eq("scopes: unknown untouched", migrateScope("source.js keyword").changed, false);
+
+	const settings: Record<string, unknown> = {
+		"files.eol": "lf",
+		"editor.tokenColorCustomizations": {
+			"textMateRules": [{ scope: "keyword.constants.nlp", settings: { foreground: "#0a7b83" } }],
+			"[*Dark*]": { textMateRules: [{ scope: "keyword.fired.tree", settings: { foreground: "#ff0000" } }, { name: "no scope" }] },
+		},
+	};
+	check("scopes: settings migrated", migrateTokenColors(settings));
+	const block = settings["editor.tokenColorCustomizations"] as { textMateRules: { scope: string }[]; "[*Dark*]": { textMateRules: { scope?: string }[] } };
+	eq("scopes: top-level rule", block.textMateRules[0].scope, "constant.language.nlp");
+	eq("scopes: per-theme rule", block["[*Dark*]"].textMateRules[0].scope, "keyword.other.fired.tree");
+	eq("scopes: second run is a no-op", migrateTokenColors(settings), false);
+	eq("scopes: no block", migrateTokenColors({ "files.eol": "lf" }), false);
 }
 
 // ---- engine errors ---------------------------------------------------------

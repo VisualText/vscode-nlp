@@ -27,7 +27,7 @@ export const KEYWORDS = [
 	"cap", "cout", "else", "gp", "group", "if", "inc", "return", "while",
 ];
 
-// Rule-element modifiers inside @RULES (grammar: keyword.attribute.nlp).
+// Rule-element modifiers inside @RULES (grammar: entity.other.attribute-name.nlp).
 export const RULE_KEYWORDS = [
 	"attr", "attrs", "base", "da", "deacc", "deaccent", "except", "excepts",
 	"fail", "fails", "gp", "group", "layer", "layers", "look", "lookahead",

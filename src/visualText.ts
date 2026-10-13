@@ -13,6 +13,7 @@ import { ModFile } from './modFile';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 import * as telemetry from './telemetry/telemetry';
+import { migrateTokenColors } from './language/scopeMigration';
 import { analyzerFiles, isInside, pushRecent, samePath } from './session/session';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
@@ -1663,6 +1664,11 @@ export class VisualText {
                             ...settingsObj2
                         };
                         this.jsonState.saveFile(toDir.fsPath, "settings", mergedObj);
+                    } else if (migrateTokenColors(this.jsonState.json)) {
+                        // Rules copied here before the grammars took standard scope
+                        // names (#107) would silently stop applying; rename them.
+                        this.jsonState.saveFile(toDir.fsPath, "settings", this.jsonState.json);
+                        this.debugMessage('Updated colorization scope names in ' + toFile, logLineType.UPDATER);
                     }
                 }
             } else
