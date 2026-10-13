@@ -24,6 +24,7 @@ module.exports = [
             'out-language/**',
             'out-treeview/**',
             'out-output/**',
+            'out-session/**',
             'node_modules/**',
             'grammars/**',
             'telemetry-worker/**',

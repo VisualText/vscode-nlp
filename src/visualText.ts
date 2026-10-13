@@ -13,6 +13,7 @@ import { ModFile } from './modFile';
 import { SequenceFile } from './sequence';
 import { TextFile } from './textFile';
 import * as telemetry from './telemetry/telemetry';
+import { analyzerFiles, isInside, pushRecent, samePath } from './session/session';
 
 export enum upStat { UNKNOWN, START, RUNNING, CANCEL, FAILED, DONE }
 export enum upOp { UNKNOWN, CHECK_EXISTS, VERSION, DOWNLOAD, UNZIP, DELETE, FAILED, DONE }
@@ -1357,12 +1358,65 @@ export class VisualText {
     }
 
     loadAnalyzer(analyzerDirectory: vscode.Uri) {
+        // #131: switching analyzers puts away the old one's files and brings back
+        // the new one's. Only on a real switch -- at startup VSCode restores the
+        // editors itself, and re-opening the current analyzer changes nothing.
+        const previous = this.analyzer.isLoaded() ? this.analyzer.getAnalyzerDirectory().fsPath : '';
+        const switching = !!previous && !samePath(previous, analyzerDirectory.fsPath);
+        const remember = switching && vscode.workspace.getConfiguration('nlp').get<boolean>('analyzer.rememberOpenFiles', true);
+        if (remember)
+            this.putAwayOpenFiles(previous);
+
         this.saveCurrentAnalyzer(analyzerDirectory);
         this.analyzer.load(analyzerDirectory);
+        this.addRecentAnalyzer(analyzerDirectory);
         vscode.commands.executeCommand('textView.refreshAll');
         vscode.commands.executeCommand('sequenceView.refreshAll');
         vscode.commands.executeCommand('kbView.refreshAll');
         vscode.commands.executeCommand('outputView.refreshAll');
+
+        if (remember)
+            this.reopenFiles(analyzerDirectory.fsPath, this.analyzer.getOpenFiles());
+    }
+
+    // Record which of the current analyzer's files are open, then close the ones
+    // with no unsaved changes. A dirty editor is left open rather than risk the
+    // user's edits; it is remembered all the same.
+    private putAwayOpenFiles(analyzerDir: string) {
+        const fileTabs = vscode.window.tabGroups.all
+            .flatMap(group => group.tabs)
+            .filter(tab => tab.input instanceof vscode.TabInputText && tab.input.uri.scheme === 'file');
+        const uriOf = (tab: vscode.Tab) => (tab.input as vscode.TabInputText).uri.fsPath;
+        this.analyzer.saveOpenFiles(analyzerFiles(analyzerDir, fileTabs.map(uriOf)));
+        const closable = fileTabs.filter(tab => !tab.isDirty && isInside(analyzerDir, uriOf(tab)));
+        if (closable.length)
+            vscode.window.tabGroups.close(closable, true);
+    }
+
+    private async reopenFiles(analyzerDir: string, files: string[]) {
+        for (const rel of files) {
+            const file = path.join(analyzerDir, rel);
+            if (!fs.existsSync(file))
+                continue;
+            try {
+                await vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false, preserveFocus: true });
+            } catch {
+                // A file VSCode will not open as text (binary, too large) is skipped.
+            }
+        }
+    }
+
+    // #126: the analyzers most recently opened, newest first.
+    static readonly RECENT_ANALYZERS_KEY = 'nlp.recentAnalyzers';
+
+    getRecentAnalyzers(): vscode.Uri[] {
+        const list = this._ctx.globalState.get<string[]>(VisualText.RECENT_ANALYZERS_KEY, []);
+        return list.filter(p => fs.existsSync(p)).map(p => vscode.Uri.file(p));
+    }
+
+    private addRecentAnalyzer(analyzerDirectory: vscode.Uri) {
+        const list = this._ctx.globalState.get<string[]>(VisualText.RECENT_ANALYZERS_KEY, []);
+        this._ctx.globalState.update(VisualText.RECENT_ANALYZERS_KEY, pushRecent(list, analyzerDirectory.fsPath));
     }
 
     setCurrentAnalyzer(currentAnalyzer: vscode.Uri) {

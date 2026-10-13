@@ -1,0 +1,19 @@
+// Standalone build for the session helpers (remembered files, recent analyzers) and its test.
+// Emits to out-session/ (gitignored, not shipped) so it runs with plain Node.
+// Run via: npm run test:session
+{
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "out-session",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"target": "es2019",
+		"lib": ["es2019"],
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"types": ["node"],
+		"sourceMap": false
+	},
+	"include": ["src/session/**/*.ts"]
+}

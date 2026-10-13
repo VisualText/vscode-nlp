@@ -1,6 +1,9 @@
 // The assertions themselves. Everything here runs inside the extension host,
 // so `vscode` is live and the extension is loaded from source.
 
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import * as vscode from "vscode";
 import { check, eq, unreachable } from "./harness";
 import { SEEDED_CONFIGURATIONS } from "../../debug/debugConfig";
@@ -459,4 +462,68 @@ export async function debugSetupTests(): Promise<void> {
 	for (const cmd of ["nlp.currentAnalyzerDir", "nlp.currentTextFile"]) {
 		check(`\${command:${cmd}} resolves`, commands.includes(cmd));
 	}
+}
+
+// ---- analyzer switching (#131) ---------------------------------------------
+// Switching analyzers puts away the old analyzer's files and brings back the
+// new one's. This needs real editor tabs, so it can only be checked here. Runs
+// last: loading an analyzer changes what the extension considers current.
+
+function makeAnalyzer(root: string, name: string, passFile: string): vscode.Uri {
+	const dir = path.join(root, name);
+	fs.mkdirSync(path.join(dir, "spec"), { recursive: true });
+	fs.mkdirSync(path.join(dir, "input"), { recursive: true });
+	fs.writeFileSync(path.join(dir, "spec", "analyzer.seq"), "tokenize\tnil\t# tokens\n", "utf8");
+	fs.writeFileSync(path.join(dir, "spec", passFile), "@NODES _ROOT\n", "utf8");
+	return vscode.Uri.file(dir);
+}
+
+function isOpen(file: vscode.Uri): boolean {
+	return vscode.window.tabGroups.all.some((g) => g.tabs.some((t) =>
+		t.input instanceof vscode.TabInputText && t.input.uri.fsPath.toLowerCase() === file.fsPath.toLowerCase()));
+}
+
+// Closing and reopening tabs is asynchronous and the command does not wait for
+// it, so poll rather than sleep a fixed time.
+async function until(cond: () => boolean, ms = 5000): Promise<boolean> {
+	const end = Date.now() + ms;
+	while (Date.now() < end) {
+		if (cond()) return true;
+		await new Promise((r) => setTimeout(r, 50));
+	}
+	return cond();
+}
+
+export async function analyzerSwitchTests(): Promise<void> {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), "nlp-switch-"));
+	const a = makeAnalyzer(root, "alpha", "a.nlp");
+	const b = makeAnalyzer(root, "beta", "b.nlp");
+	const aFile = vscode.Uri.joinPath(a, "spec", "a.nlp");
+	const bFile = vscode.Uri.joinPath(b, "spec", "b.nlp");
+	const open = (uri: vscode.Uri) => vscode.commands.executeCommand("analyzerView.openAnalyzer", { uri, type: 0 });
+
+	await open(a);
+	await vscode.window.showTextDocument(aFile, { preview: false });
+	check("switch: alpha's file is open", isOpen(aFile));
+
+	await open(b);
+	check("switch: leaving alpha closes its file", await until(() => !isOpen(aFile)));
+
+	// Close it here too, so the reopen check below cannot pass on a tab that was
+	// simply never closed.
+	const stale = vscode.window.tabGroups.all.flatMap((g) => g.tabs).filter((t) =>
+		t.input instanceof vscode.TabInputText && t.input.uri.fsPath.toLowerCase() === aFile.fsPath.toLowerCase());
+	if (stale.length) await vscode.window.tabGroups.close(stale, true);
+
+	await vscode.window.showTextDocument(bFile, { preview: false });
+	await open(a);
+	check("switch: returning to alpha reopens its file", await until(() => isOpen(aFile)));
+	check("switch: leaving beta closes its file", await until(() => !isOpen(bFile)));
+
+	// An editor with unsaved changes is never closed.
+	const editor = await vscode.window.showTextDocument(aFile, { preview: false });
+	await editor.edit((e) => e.insert(new vscode.Position(0, 0), "# unsaved\n"));
+	await open(b);
+	check("switch: dirty file stays open", await until(() => isOpen(bFile)) && isOpen(aFile));
+	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 }

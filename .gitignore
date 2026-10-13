@@ -11,6 +11,7 @@ out-treeview/
 out-test/
 out-trace/
 out-output/
+out-session/
 out-debug/
 
 # VS Code builds downloaded by the integration harness
