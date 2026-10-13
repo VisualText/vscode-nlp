@@ -590,6 +590,16 @@
                 "description": "Sort and unique text lines"
             },
             {
+                "command": "nlp.sortCount",
+                "title": "Sort & Count text lines",
+                "description": "How often each line occurs, most frequent first, in a new editor"
+            },
+            {
+                "command": "textView.countWords",
+                "title": "Count Words in Folder",
+                "description": "Word frequencies over every text file in the folder, in a new editor"
+            },
+            {
                 "command": "nlp.lowerCase",
                 "title": "Change to Lowercase",
                 "description": "Change the selected text to lower case"
@@ -1993,6 +2003,11 @@
                     "group": "nlp"
                 },
                 {
+                    "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict",
+                    "command": "nlp.sortCount",
+                    "group": "nlp"
+                },
+                {
                     "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict || resourceExtname == .kbb",
                     "command": "nlp.lowerCase",
                     "group": "nlp"
@@ -3257,6 +3272,11 @@
                     "command": "textView.analyzeDir",
                     "when": "view == textView && viewItem =~ /.*dir.*/",
                     "group": "inline@01"
+                },
+                {
+                    "command": "textView.countWords",
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "count"
                 },
                 {
                     "command": "textView.runRegressionItem",

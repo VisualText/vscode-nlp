@@ -12,7 +12,7 @@ import {
 	configurationTests,
 	providerTests,
 	languageFeatureTests,
-	crossPassTests, debugSetupTests, analyzerSwitchTests,
+	crossPassTests, debugSetupTests, analyzerSwitchTests, sortCountTests,
 } from "./extension.test";
 
 export async function run(): Promise<void> {
@@ -25,6 +25,7 @@ export async function run(): Promise<void> {
 		["language features", languageFeatureTests],
 		["cross-pass resolution", crossPassTests],
 		["debugger setup", debugSetupTests],
+		["sort and count", sortCountTests],
 		["analyzer switching", analyzerSwitchTests],
 	];
 

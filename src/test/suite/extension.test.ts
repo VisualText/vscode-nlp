@@ -528,3 +528,16 @@ export async function analyzerSwitchTests(): Promise<void> {
 	check("switch: dirty file stays open", await until(() => isOpen(bFile)) && isOpen(aFile));
 	await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 }
+
+// ---- sort & count (#613) -----------------------------------------------------
+
+export async function sortCountTests(): Promise<void> {
+	const doc = await vscode.workspace.openTextDocument({ content: "cat\ndog\ncat\n\nbird\ncat\ndog\n", language: "plaintext" });
+	await vscode.window.showTextDocument(doc);
+	await vscode.commands.executeCommand("nlp.sortCount");
+	const result = vscode.window.activeTextEditor?.document;
+	check("sort & count: opens a new editor", !!result && result !== doc);
+	eq("sort & count: counts, most frequent first", result?.getText(), "3\tcat\n2\tdog\n1\tbird\n");
+	eq("sort & count: leaves the text alone", doc.getText(), "cat\ndog\ncat\n\nbird\ncat\ndog\n");
+	await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+}
