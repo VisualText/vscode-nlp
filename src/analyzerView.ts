@@ -195,6 +195,7 @@ export class AnalyzerView {
 		ctx.subscriptions.push(this.analyzerView);
 		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.refreshAll', () => analyzerViewProvider.refresh()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.newAnalyzer', (resource) => this.newAnalyzer(resource)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.openRecentAnalyzer', () => this.openRecentAnalyzer()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.deleteAnalyzer', resource => this.deleteAnalyzer(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.deleteFile', resource => this.deleteFile(resource)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('analyzerView.deleteFolder', resource => this.deleteFolder(resource)));
@@ -691,6 +692,27 @@ export class AnalyzerView {
 			this.folderUri = undefined;
 		} else {
 			this.folderUri = analyzerItem.uri;
+		}
+	}
+
+	// #126: pick from the analyzers opened most recently, newest first.
+	private async openRecentAnalyzer(): Promise<void> {
+		const current = visualText.analyzer.isLoaded() ? visualText.analyzer.getAnalyzerDirectory().fsPath : '';
+		const items = visualText.getRecentAnalyzers().map(uri => ({
+			label: path.basename(uri.fsPath),
+			description: path.dirname(uri.fsPath),
+			detail: uri.fsPath === current ? 'current analyzer' : undefined,
+			uri,
+		}));
+		if (!items.length) {
+			vscode.window.showInformationMessage('No recent analyzers yet');
+			return;
+		}
+		const picked = await vscode.window.showQuickPick(items, { title: 'Open Recent Analyzer', matchOnDescription: true });
+		if (picked) {
+			visualText.colorizeAnalyzer();
+			visualText.loadAnalyzer(picked.uri);
+			vscode.commands.executeCommand('analyzerView.refreshAll');
 		}
 	}
 

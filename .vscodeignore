@@ -37,6 +37,7 @@ out-format/**
 out-language/**
 out-treeview/**
 out-output/**
+out-session/**
 out-test/**
 
 # VS Code builds downloaded by the integration harness - large and never shipped

@@ -27,6 +27,9 @@ export class Analyzer {
     private logDir: vscode.Uri = vscode.Uri.file("");
     private currentTextFile: vscode.Uri = vscode.Uri.file("");
     private currentPassFile: vscode.Uri = vscode.Uri.file("");
+    // Files open in the editor when the user last switched away from this
+    // analyzer, relative to its directory (#131).
+    private openFiles: string[] = [];
     private passNum: number = 0;;
     private loaded: boolean = false;
 
@@ -40,8 +43,11 @@ export class Analyzer {
     }
 
     readState() {
+        this.openFiles = [];
         if (this.jsonState.jsonParse(this.analyzerDir, "state")) {
             const parse = this.jsonState.json.visualText[0];
+            if (Array.isArray(parse.openFiles))
+                this.openFiles = parse.openFiles.filter((f: unknown) => typeof f === "string");
             if (parse.currentTextFile) {
                 let currentFile = parse.currentTextFile;
                 if (fs.existsSync(currentFile))
@@ -285,11 +291,21 @@ export class Analyzer {
                     "name": "Analyzer",
                     "type": "state",
                     "currentTextFile": this.currentTextFile.fsPath,
-                    "currentPassFile": this.currentPassFile.fsPath
+                    "currentPassFile": this.currentPassFile.fsPath,
+                    "openFiles": this.openFiles
                 }
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.fsPath, "state", stateJsonDefault);
+    }
+
+    getOpenFiles(): string[] {
+        return this.openFiles;
+    }
+
+    saveOpenFiles(files: string[]) {
+        this.openFiles = files;
+        this.saveAnalyzerState();
     }
 
     getCurrentFile(): vscode.Uri {

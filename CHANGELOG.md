@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.9
+Each analyzer keeps its own open files, and the analyzers you used last are a click away.
+
+- **Switching analyzers swaps the open files** (#131). When you open another analyzer, the files of the one you are leaving are closed, and the files you had open the last time you worked in the new one come back. The list is kept in each analyzer's `state.json`, as paths relative to the analyzer, so it survives moving or copying the analyzer. A file with unsaved changes is never closed. Files from outside the analyzer are left alone. Turn it off with `nlp.analyzer.rememberOpenFiles`.
+- **Open Recent Analyzer** (#126). A clock button on the Analyzers view, also available in the Command Palette as "NLP: Open Recent Analyzer", lists the last ten analyzers you opened, newest first, and opens the one you pick.
+
 ### 4.3.8
 The analyzer's progress notification shows how long the run has taken.
 
