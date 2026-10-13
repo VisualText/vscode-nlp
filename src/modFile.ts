@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { modHeaderPath, modParts, modSection } from './session/modPaths';
 import * as fs from 'fs';
 import { visualText } from './visualText';
 import { TextFile } from './textFile';
@@ -22,9 +23,6 @@ export let modFile: ModFile;
 export class ModFile extends TextFile {
 
     public readonly MODFILE_HEADER = '<modfile';
-    public readonly MODFILE_KB = '\\kb\\user\\';
-    public readonly MODFILE_SPEC = '\\spec\\';
-    public readonly MODFILE_INPUT = '\\input\\';
     private seqInsertPoint: string | undefined = '';
     private files: ModItem[] = new Array();
 
@@ -168,31 +166,23 @@ export class ModFile extends TextFile {
     }
 
     getModItem(relFilePath: string): ModItem {
-        const filepath = path.join(visualText.analyzer.getAnalyzerDirectory().fsPath,relFilePath);
-        let type: modType = modType.UNKNOWN;
+        // Header paths use backslashes; split on either so this works everywhere.
+        const parts = modParts(relFilePath);
+        const filepath = path.join(visualText.analyzer.getAnalyzerDirectory().fsPath, ...parts);
         const filename = path.basename(filepath);
-        const parentDir = path.dirname(relFilePath);
-        if (filepath.includes(this.MODFILE_KB)) {
-            type = modType.KB;
-        }
-        else if (filepath.includes(this.MODFILE_SPEC)) {
-            type = modType.SPEC;
-        }
-        else if (filepath.includes(this.MODFILE_INPUT)) {
-            type = modType.INPUT;
-        }
+        const parentDir = path.dirname(path.join(...parts));
+        const section = modSection(relFilePath);
+        const type: modType = section == 'kb' ? modType.KB : section == 'spec' ? modType.SPEC : section == 'input' ? modType.INPUT : modType.UNKNOWN;
         return {uri: vscode.Uri.file(filepath), parentDir: parentDir, filename: filename, type: type, content: '', exists: fs.existsSync(filepath)};
     }
 
     async selectInsertPoint(filePath: vscode.Uri): Promise<string> {
         this.setFile(filePath);
-        let filepath = '';
         for (const line of this.getLines()) {
             if (line.indexOf(this.MODFILE_HEADER) == 0) {
                 const tokens = line.split(/[\<\t\s\>]/);
                 const relFilePath = tokens[2];
-                filepath = path.join(visualText.getAnalyzerDir().fsPath,relFilePath);
-                if (filepath.includes(this.MODFILE_SPEC)) {
+                if (modSection(relFilePath) == 'spec') {
                     const seq = new SequenceFile;
                     const items: vscode.QuickPickItem[] = [];
                     seq.choicePasses(visualText.analyzer.getSpecDirectory().fsPath,items,'');
@@ -220,17 +210,18 @@ export class ModFile extends TextFile {
         let header = '';
         const filepath = filePath.fsPath;
         let dir = '';
-        if (filepath.includes(this.MODFILE_KB)) {
+        const section = modSection(filepath);
+        if (section == 'kb') {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.KB);
         }
-        else if (filepath.includes(this.MODFILE_SPEC)) {
+        else if (section == 'spec') {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.SPEC);
         }
-        else if (filepath.includes(this.MODFILE_INPUT)) {
+        else if (section == 'input') {
             dir = visualText.analyzer.anaSubDirPath(anaSubDir.INPUT);
         }
         const name = path.basename(filePath.fsPath);
-        const finalPath = path.join(dir,name);
+        const finalPath = modHeaderPath(dir, name);
         header = '\n' + this.MODFILE_HEADER + ' ' + finalPath + '>\n';
         return header;
     }
