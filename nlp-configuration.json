@@ -16,6 +16,7 @@
         ["'", "'"],
         ["@CODE", "\n@@CODE"],
         ["@DECL", "\n@@DECL"],
+        ["@POSTCODE", "\n@@POSTCODE"],
         ["@RULES", "@@"]
     ],
     "surroundingPairs": [
@@ -27,7 +28,7 @@
     ],
     "wordPattern": "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
     "indentationRules": {
-        "increaseIndentPattern": "(^\\s*(@CODE|@DECL|@PRE|@POST|@CHECK)\\b.*)|(\\{[^}\"']*$)|(\\([^)\"']*$)",
+        "increaseIndentPattern": "(^\\s*(@CODE|@POSTCODE|@DECL|@PRE|@POST|@CHECK)\\b.*)|(\\{[^}\"']*$)|(\\([^)\"']*$)",
         "decreaseIndentPattern": "^\\s*(\\}|\\)|@@)"
     },
     "onEnterRules": [
