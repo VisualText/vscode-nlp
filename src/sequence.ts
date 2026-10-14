@@ -680,6 +680,13 @@ export class SequenceFile extends TextFile {
 
 		switch (type) {
 			case newPassType.RULES:
+				// Setting nlp.newPass.codeRegion: a @CODE region runs before the rules, for
+				// pass setup or exitpass() (nlp-engine#391).
+				if (vscode.workspace.getConfiguration('nlp').get<boolean>('newPass.codeRegion', false)) {
+					newpass = newpass.concat('@CODE\n');
+					newpass = newpass.concat('L("hello") = 0;\n');
+					newpass = newpass.concat('@@CODE\n\n');
+				}
 				newpass = newpass.concat('@NODES _ROOT\n\n');
 
 				newpass = newpass.concat('@RULES\n');

@@ -3441,6 +3441,12 @@
                     "default": true,
                     "markdownDescription": "When you switch to another analyzer, close the open files of the one you are leaving and reopen the files you had open in the one you are switching to. Files with unsaved changes are never closed."
                 },
+                "nlp.newPass.codeRegion": {
+                    "type": "boolean",
+                    "scope": "application",
+                    "default": false,
+                    "markdownDescription": "Start every new rules pass with a `@CODE` region, which runs before the rules. Use it to set up globals for the pass, or to skip the pass with `exitpass()` (for example, to run only some passes)."
+                },
                 "nlp.format.enable": {
                     "type": "boolean",
                     "scope": "resource",
