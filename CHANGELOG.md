@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.13
+Support for the `@POSTCODE` region in NLP++ engine 4.2.19, and an option to start new passes with a `@CODE` region.
+
+- **`@POSTCODE` is highlighted** (nlp-engine#392). Engine 4.2.19 added the `@POSTCODE` region, which runs after a pass's rules. The editor now colors `@POSTCODE` and `@@POSTCODE` as region markers, closes `@POSTCODE` with `@@POSTCODE` as you type, and indents the line after it.
+- **New passes can start with a `@CODE` region** (nlp-engine#391). With the new setting `nlp.newPass.codeRegion` on (it is off by default), a new rules pass starts with a `@CODE` region, which runs before the rules: a place to set up globals for the pass or to skip it with `exitpass()`.
+
 ### 4.3.12
 Clears the issue backlog: thirteen requests and bugs, some from 2020.
 
