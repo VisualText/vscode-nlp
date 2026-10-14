@@ -128,6 +128,10 @@ export class VisualText {
     private latestExtIndex: number = 0;
     private lastestEngineIndex: number = 0;
     private updaterID: number = 0;
+    // #230: the status-bar progress shown while the updater runs at startup.
+    private updaterProgress: { report: (message: string) => void; done: () => void } | undefined;
+    private static readonly OP_WORDS = ['', 'Checking the', 'Checking the version of the', 'Downloading the', 'Unpacking the', 'Removing the old', '', ''];
+    private static readonly COMP_WORDS = ['', 'ICU libraries', 'ICU libraries', 'ICU libraries', 'NLP++ engine', 'engine files', 'compiler files', 'example analyzers', 'VisualText files'];
 
     private testItem: TestItem = { fileCount: 0, matchFiles: 0, matchLines: 0, misFiles: 0, misLines: 0 };
 
@@ -147,6 +151,12 @@ export class VisualText {
 
             visualText.readConfig();
             visualText.readState();
+            // #481: the engine lives in the folder of the extension that is
+            // RUNNING. It used to be the newest version found on disk unless the
+            // auto-updater happened to run and correct it, so with auto-update off,
+            // after a downgrade, or with an old copy still on disk, a new version
+            // could load (or download into) another version's engine.
+            visualText.version = vscode.extensions.getExtension(visualText.EXTENSION_NAME)?.packageJSON.version ?? '';
             visualText.getExtensionDirs();
             visualText.initSettings();
         }
@@ -264,9 +274,8 @@ export class VisualText {
             this.platform = os.platform();
             const plat = this.platform == 'darwin' ? 'mac' : this.platform;
             this.homeDir = os.homedir();
-            const rootPath = this.getLatestExtPath(this.extensionParentDirectory());
-            if (rootPath) this.extensionDir = vscode.Uri.file(rootPath);
-            this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version;
+            this.version = vscode.extensions.getExtension(this.EXTENSION_NAME)?.packageJSON.version ?? this.version;
+            this.extensionDir = this.extensionDirectory();
 
             if (preInfoFlag) {
                 this.debugMessage('Platform: ' + plat, logLineType.UPDATER);
@@ -277,6 +286,14 @@ export class VisualText {
             this.debugMessage('Checking for updates or repairs...', logLineType.UPDATER);
             this.pushCheckVersions();
             this.startTimer();
+            vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'NLP++' }, progress =>
+                new Promise<void>(resolve => {
+                    progress.report({ message: 'checking for updates' });
+                    this.updaterProgress = {
+                        report: (message: string) => progress.report({ message }),
+                        done: () => { this.updaterProgress = undefined; resolve(); },
+                    };
+                }));
         }
     }
 
@@ -470,18 +487,6 @@ export class VisualText {
         op.local = path.join(engDir, lib);
     }
 
-    getLatestExtPath(dir: vscode.Uri): string {
-        const files = dirfuncs.getFiles(dir);
-        for (const file of files.reverse()) {
-            const filename = path.basename(file.fsPath);
-            if (filename.startsWith(this.EXTENSION_NAME)) {
-                this.version = this.versionFromPath(file);
-                return file.fsPath;
-            }
-        }
-        return '';
-    }
-
     updaterTimer() {
         let op = visualText.opsQueue[0];
         let allDone = true;
@@ -518,6 +523,7 @@ export class VisualText {
             else
                 visualText.debugMessage('UPDATE CHECK COMPLETE', logLineType.UPDATER);
             visualText.stopAll = false;
+            visualText.updaterProgress?.done();
             vscode.commands.executeCommand('status.update');
             return;
         } else {
@@ -525,6 +531,10 @@ export class VisualText {
         }
         if (visualText.stopAll)
             return;
+
+        const opWords = VisualText.OP_WORDS[op.operation], compWords = VisualText.COMP_WORDS[op.component];
+        if (opWords && compWords)
+            visualText.updaterProgress?.report(`${opWords} ${compWords}`);
 
         if (visualText.debug)
             visualText.debugMessage(visualText.statusStrs[op.status] + ' ' + visualText.opStrs[op.operation] + ' ' + visualText.compStrs[op.component], logLineType.UPDATER);
@@ -1231,6 +1241,9 @@ export class VisualText {
     }
 
     getExtensionPath(): vscode.Uri {
+        // The running version's folder first (#481), then the newest installed.
+        const running = this.extensionDirectory();
+        if (this.version.length && fs.existsSync(running.fsPath)) return running;
         const latest = this.extensionItems[this.latestExtIndex];
         if (latest) return latest.uri;
 

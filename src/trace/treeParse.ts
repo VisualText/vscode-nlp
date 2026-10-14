@@ -241,3 +241,17 @@ export function nodeAtOffset(root: TraceNode, offset: number): TraceNode | undef
 	});
 	return best;
 }
+
+// Indices of the node lines whose text span (UTF-16, the ustart/uend pair) lies
+// within [from, to] -- the lines of a "partial tree" for a selection. Read through
+// parseTreeLine so a literal "[" token is a node like any other: splitting each
+// line on its first "[" mistook that token for the start of the fields and
+// silently left it out of every partial tree that should hold it (#295).
+export function treeLinesInRange(lines: string[], from: number, to: number): number[] {
+	const out: number[] = [];
+	lines.forEach((line, i) => {
+		const node = parseTreeLine(line);
+		if (node && node.ustart >= from && node.uend <= to) out.push(i);
+	});
+	return out;
+}

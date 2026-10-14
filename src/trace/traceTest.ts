@@ -11,7 +11,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree, parseNodeFlags, newFiredSpan } from "./treeParse";
+import { parseTreeLine, parseTreeFile, nodeAtOffset, walkTree, parseNodeFlags, newFiredSpan, treeLinesInRange } from "./treeParse";
 import {
 	loadTrace, findLatestLogDir, parseSequence, sequencePassNames,
 	passesForSource, firedRuleLines, nodesBuiltBy,
@@ -81,6 +81,17 @@ function eq<T>(name: string, actual: T, expected: T): void {
 	check("line: header is not a node", parseTreeLine("    PASS 15 (moneyAttributes)") === undefined);
 	check("line: blank is not a node", parseTreeLine("") === undefined);
 	check("line: banner is not a node", parseTreeLine("PAT OUTPUT TREE:") === undefined);
+}
+
+// ---- partial tree (#295) -----------------------------------------------------
+// The engine's own output for the text "x [y] z": the bracket tokens are nodes.
+{
+	const tree = ["", "FINAL OUTPUT TREE:", "", "_ROOT [0,6,0,6,0,0,node,un]", "   x [0,0,0,0,0,0,alpha]",
+		"   \_ [1,1,1,1,0,0,white]", "   [ [2,2,2,2,0,0,punct]", "   y [3,3,3,3,0,0,alpha]",
+		"   ] [4,4,4,4,0,0,punct]", "   \_ [5,5,5,5,0,0,white]", "   z [6,6,6,6,0,0,alpha]"];
+	eq("partial: '[y]' keeps both brackets", JSON.stringify(treeLinesInRange(tree, 2, 4)), JSON.stringify([6, 7, 8]));
+	eq("partial: whole text includes the root", treeLinesInRange(tree, 0, 6).length, 8);
+	eq("partial: banner lines never included", treeLinesInRange(tree, 0, 6).includes(1), false);
 }
 
 // ---- fired spans (#810) ----------------------------------------------------

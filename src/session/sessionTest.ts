@@ -2,6 +2,8 @@
 
 import * as path from "path";
 import { analyzerFiles, isInside, pushRecent, samePath } from "./session";
+import { modHeaderPath, modParts, modSection } from "./modPaths";
+import { generatorChanged, kbOutputsOf } from "./kbGen";
 
 let passed = 0;
 let failed = 0;
@@ -49,6 +51,24 @@ eq("recent: trailing separator is the same analyzer", pushRecent([ana + path.sep
 eq("same: trailing separator", samePath(ana + path.sep, ana), true);
 eq("same: prefix sibling differs", samePath(ana, other), false);
 eq("same: empty never matches", samePath("", ""), false);
+
+// ---- mod file paths ------------------------------------------------------------
+eq("mod: header with backslashes", modParts("kb\\user\\en-numbers.dict"), ["kb", "user", "en-numbers.dict"]);
+eq("mod: header with slashes", modParts("spec/numbers.nlp"), ["spec", "numbers.nlp"]);
+eq("mod: kb section from a Windows header", modSection("kb\\user\\en-numbers.dict"), "kb");
+eq("mod: spec section from a POSIX absolute path", modSection("/home/me/ana/spec/numbers.nlp"), "spec");
+eq("mod: input section from a Windows absolute path", modSection("C:\\ana\\input\\numbers.txt"), "input");
+eq("mod: kb only under kb/user", modSection("/ana/kb/numbers.kb"), undefined);
+eq("mod: header written with backslashes", modHeaderPath("kb/user", "x.dict"), "kb\\user\\x.dict");
+
+// ---- KB generator passes (#272) --------------------------------------------------
+eq("kbgen: SaveKB target", kbOutputsOf('@CODE\nSaveKB("mykb.kbb",G("kb"),2);\n@@CODE'), ["mykb.kbb"]);
+eq("kbgen: dict written with <<, once", kbOutputsOf('L("f") = "words.dict"; "words.dict" << x; "out.txt" << y;'), ["words.dict"]);
+eq("kbgen: paths are not plain names", kbOutputsOf('SaveKB("kb/user/x.kbb", G("kb"), 2);'), []);
+eq("kbgen: nothing written", kbOutputsOf("@RULES\n_x <- a @@"), []);
+eq("kbgen: never copied counts as changed", generatorChanged(5, undefined), true);
+eq("kbgen: unchanged since the copy", generatorChanged(5, 5), false);
+eq("kbgen: edited after the copy", generatorChanged(6, 5), true);
 
 console.log(`\nsession tests: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

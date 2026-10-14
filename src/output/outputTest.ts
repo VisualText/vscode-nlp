@@ -1,6 +1,7 @@
 // Tests for analyzerOutputLines. Runs with plain Node via `npm run test:output`.
 
-import { analyzerOutputLines } from "./analyzerOutput";
+import { analyzerOutputLines, lastTreePass } from "./analyzerOutput";
+import { countLines, countWords, formatCounts } from "./counts";
 
 let passed = 0;
 let failed = 0;
@@ -49,6 +50,17 @@ check("analyzer brackets kept",
 // Nothing printed: nothing to show.
 check("no output", analyzerOutputLines(oldEngine.replace("21\r\n34\r\n", "")), []);
 check("empty", analyzerOutputLines(""), []);
+
+// #785: the last pass that wrote a tree before a run stopped.
+check("last tree pass", [String(lastTreePass(["ana001.tree", "ana012.tree", "ana003.tree", "ana014.kbb", "final.tree", "err.log"]))], ["12"]);
+check("no trees", [String(lastTreePass(["err.log", "dbg.log"]))], ["0"]);
+
+// #613: sort and count for corpus study.
+check("count lines", formatCounts(countLines(["b", "a", "b", "", "c ", "c", "B"])).split("\n"), ["2\tb", "2\tc", "1\ta", "1\tB", ""]);
+check("count words", formatCounts(countWords(["The cat, the hat.", "THE x-ray didn't 42 42"])).split("\n"),
+	["3\tthe", "2\t42", "1\tcat", "1\tdidn't", "1\that", "1\tx-ray", ""]);
+check("count words: accents and other scripts", countWords(["café Café 東京"]).map((c) => `${c.count}:${c.key}`), ["2:café", "1:東京"]);
+check("count nothing", [formatCounts(countLines(["", "  "]))], [""]);
 
 console.log(`analyzer output: ${passed} passed, ${failed} failed`);
 if (failed)

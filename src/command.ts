@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TreeFile, generateType } from './treeFile';
 import { NLPFile, reformatType } from './nlp';
 import { TextFile } from './textFile';
+import { countLines, formatCounts } from './output/counts';
 
 export let nlpCommands: NLPCommands;
 export class NLPCommands {
@@ -29,6 +30,7 @@ export class NLPCommands {
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.passTree', this.passTree));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.displayMatchedRules', this.displayMatchedRulesNLP));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortText', this.sortText));
+        ctx.subscriptions.push(vscode.commands.registerCommand('nlp.sortCount', this.sortCount));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.lowerCase', this.lowerCase));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.removeAccents', this.removeAccents));
         ctx.subscriptions.push(vscode.commands.registerCommand('nlp.runPython', this.runPython));
@@ -82,6 +84,20 @@ export class NLPCommands {
                 }
             }
         }
+    }
+
+    // #613: how often each line occurs, most frequent first, in a new editor
+    // beside the text so the corpus itself is left as it is.
+    async sortCount() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+        const doc = editor.document;
+        const range = editor.selection.isEmpty
+            ? new vscode.Range(0, 0, doc.lineCount, 0)
+            : new vscode.Range(editor.selection.start.line, 0, editor.selection.end.line + 1, 0);
+        const counts = countLines(doc.getText(range).split(/\r?\n/));
+        const result = await vscode.workspace.openTextDocument({ content: formatCounts(counts), language: 'plaintext' });
+        await vscode.window.showTextDocument(result, { viewColumn: vscode.ViewColumn.Beside });
     }
 
     lowerCase() {

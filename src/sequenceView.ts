@@ -137,6 +137,8 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 					conVal = conVal + 'hasLog';
 				if (treeFile.hasFileType(passItem.uri, passItem.passNum, nlpFileType.KBB))
 					conVal = conVal + 'hasKB';
+				if (visualText.analyzer.isKbGenerator(passItem.name))
+					conVal = conVal + 'kbgen';
 				if (debugConVal) label = row.toString() + ' ' + conVal;
 				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				if (passItem.fileExists())
@@ -232,6 +234,7 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 			resourceUri: seqItem.uri,
 			tooltip: seqItem.tooltip,
 			label: seqItem.label,
+			description: seqItem.contextValue?.includes('kbgen') ? 'KB generator' : undefined,
 			contextValue: seqItem.contextValue,
 			collapsibleState: collapse,
 			iconPath: {
@@ -244,6 +247,18 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				title: 'Open Pass'
 			}
 		}
+	}
+
+	// #272: mark or unmark a pass whose output (.kbb/.dict) should be copied
+	// into kb/user, and the text run again, when the pass changes.
+	toggleKbGenerator(seqItem: SequenceItem): void {
+		visualText.analyzer.toggleKbGenerator(seqItem.name);
+		if (visualText.analyzer.isKbGenerator(seqItem.name) && !vscode.workspace.getConfiguration('nlp').get<boolean>('analyzer.regenerateKB', false)) {
+			vscode.window.showInformationMessage(`${seqItem.name} is marked as a KB generator. Turn on "NLP: Analyzer Regenerate KB" in Settings to have runs use what it writes.`, 'Open Setting').then(choice => {
+				if (choice) vscode.commands.executeCommand('workbench.action.openSettings', 'nlp.analyzer.regenerateKB');
+			});
+		}
+		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
 	moveUp(seqItem: SequenceItem): void {
@@ -682,6 +697,7 @@ export class SequenceView {
 
 		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
 		ctx.subscriptions.push(this.sequenceView);
+		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.toggleKbGenerator', (seqItem: SequenceItem) => treeDataProvider.toggleKbGenerator(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.openPass', (seqItem) => this.openPass(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.openTree', (seqItem) => this.openTree(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.displayMatchedRules', (seqItem) => this.displayMatchedRules(seqItem)));

@@ -30,6 +30,10 @@ export class Analyzer {
     // Files open in the editor when the user last switched away from this
     // analyzer, relative to its directory (#131).
     private openFiles: string[] = [];
+    // #272: passes marked as KB generators, and when each one's output was
+    // last copied into kb/user (the pass file's mtime at the time).
+    private kbGenerators: string[] = [];
+    private kbGenCopied: Record<string, number> = {};
     private passNum: number = 0;;
     private loaded: boolean = false;
 
@@ -44,8 +48,14 @@ export class Analyzer {
 
     readState() {
         this.openFiles = [];
+        this.kbGenerators = [];
+        this.kbGenCopied = {};
         if (this.jsonState.jsonParse(this.analyzerDir, "state")) {
             const parse = this.jsonState.json.visualText[0];
+            if (Array.isArray(parse.kbGenerators))
+                this.kbGenerators = parse.kbGenerators.filter((f: unknown) => typeof f === "string");
+            if (parse.kbGenCopied && typeof parse.kbGenCopied === "object")
+                this.kbGenCopied = parse.kbGenCopied;
             if (Array.isArray(parse.openFiles))
                 this.openFiles = parse.openFiles.filter((f: unknown) => typeof f === "string");
             if (parse.currentTextFile) {
@@ -292,11 +302,38 @@ export class Analyzer {
                     "type": "state",
                     "currentTextFile": this.currentTextFile.fsPath,
                     "currentPassFile": this.currentPassFile.fsPath,
-                    "openFiles": this.openFiles
+                    "openFiles": this.openFiles,
+                    "kbGenerators": this.kbGenerators,
+                    "kbGenCopied": this.kbGenCopied
                 }
             ]
         }
         this.jsonState.saveFile(this.analyzerDir.fsPath, "state", stateJsonDefault);
+    }
+
+    isKbGenerator(passName: string): boolean {
+        return this.kbGenerators.includes(passName);
+    }
+
+    getKbGenerators(): string[] {
+        return this.kbGenerators;
+    }
+
+    toggleKbGenerator(passName: string) {
+        if (this.isKbGenerator(passName))
+            this.kbGenerators = this.kbGenerators.filter(n => n !== passName);
+        else
+            this.kbGenerators.push(passName);
+        this.saveAnalyzerState();
+    }
+
+    kbGeneratorCopied(passName: string): number | undefined {
+        return this.kbGenCopied[passName];
+    }
+
+    setKbGeneratorCopied(passName: string, modifiedMs: number) {
+        this.kbGenCopied[passName] = modifiedMs;
+        this.saveAnalyzerState();
     }
 
     getOpenFiles(): string[] {

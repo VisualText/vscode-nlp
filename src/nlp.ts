@@ -14,7 +14,8 @@ import { ReformatType as reformatType } from './format/types';
 import { formatRuleText } from './format/rulesRegion';
 import { refreshEngineDiagnostics } from './language/engineDiagnostics';
 import * as telemetry from './telemetry/telemetry';
-import { analyzerOutputLines } from './output/analyzerOutput';
+import { analyzerOutputLines, lastTreePass } from './output/analyzerOutput';
+import { generatorChanged, kbOutputsOf } from './session/kbGen';
 
 let analyzerOutputChannel: vscode.OutputChannel | undefined;
 
@@ -51,6 +52,9 @@ export class NLPFile extends TextFile {
 	public timerStatus: anaQueueStatus = anaQueueStatus.UNKNOWN;
 	private timerID = 0;
 	private stopAllFlag: boolean = false;
+	// #272: a text to run again once the current queue is done, because a KB
+	// generator pass just rebuilt part of kb/user.
+	private kbRerun: vscode.Uri | undefined;
 
 	constructor(filepath: string = '', separateLines: boolean = true, text: string = '') {
 		super();
@@ -201,6 +205,18 @@ export class NLPFile extends TextFile {
 						else if (!logView.makeAna(false))
 							logView.loadAnalyzerOuts(false);
 
+						// #785: the passes that ran before the error left their parse
+						// trees, which are the best clue to what went wrong. Refresh the
+						// sequence so each of those passes offers its tree, and list the
+						// trees in the output view.
+						const logDir = filestr + visualText.LOG_SUFFIX;
+						const lastTree = fs.existsSync(logDir) && dirfuncs.isDir(logDir) ? lastTreePass(fs.readdirSync(logDir)) : 0;
+						if (lastTree > 0) {
+							outputView.setType(outputFileType.TREE);
+							logView.addMessage(`Parse trees for passes up to ${lastTree} are in the output view, and on each of those passes in the sequence`, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						}
+						vscode.commands.executeCommand('sequenceView.refreshAll');
+						vscode.commands.executeCommand('textView.refreshAll');
 						vscode.commands.executeCommand('outputView.refreshAll');
 						vscode.commands.executeCommand('logView.refreshAll');
 						resolve('Failed');
@@ -303,6 +319,13 @@ export class NLPFile extends TextFile {
 						vscode.commands.executeCommand('logView.refreshAll');
 						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.DONE);
 						nlpStatusBar.resetAnalyzerButton();
+						if (visualText.nlp.copyKbGeneratorOutput(filepath)) {
+							// Queue the second run for when this queue finishes; running
+							// it now would share the queue entry of this one.
+							visualText.nlp.kbRerun = filepath;
+							if (visualText.nlp.timerID == 0)
+								visualText.nlp.startKbRerun();
+						}
 						resolve('Processed');
 					}
 				}).pid;
@@ -487,11 +510,63 @@ export class NLPFile extends TextFile {
 	}
 
 	shutDown() {
+		const stopped = visualText.nlp.stopAllFlag;
 		clearInterval(visualText.nlp.timerID);
 		visualText.debugMessage('Analyzing done', logLineType.ANALYER_OUTPUT);
 		visualText.nlp.stopAllFlag = false;
 		visualText.nlp.timerID = 0;
 		visualText.nlp.anaQueue = [];
+		if (stopped)
+			visualText.nlp.kbRerun = undefined;
+		else if (visualText.nlp.kbRerun)
+			visualText.nlp.startKbRerun();
+	}
+
+	private startKbRerun() {
+		const uri = visualText.nlp.kbRerun;
+		visualText.nlp.kbRerun = undefined;
+		if (!uri) return;
+		visualText.nlp.addAnalyzer(uri, analyzerType.FILE);
+		visualText.nlp.startAnalyzer();
+	}
+
+	// #272: after a successful run of one text, copy into kb/user the .kbb/.dict
+	// files that each changed KB generator pass wrote to the run's log folder.
+	// Returns true when something was copied, i.e. the text should run again.
+	// A generator counts as changed until its output has been copied once since
+	// its last edit, so the second run copies nothing and does not repeat.
+	copyKbGeneratorOutput(textFile: vscode.Uri): boolean {
+		if (!vscode.workspace.getConfiguration('nlp').get<boolean>('analyzer.regenerateKB', false))
+			return false;
+		const analyzer = visualText.analyzer;
+		const logDir = textFile.fsPath + visualText.LOG_SUFFIX;
+		if (dirfuncs.isDir(textFile.fsPath) || !dirfuncs.isDir(logDir))
+			return false;
+		const kbUser = analyzer.getAnalyzerDirectory(path.join('kb', 'user')).fsPath;
+		const copied: string[] = [];
+		for (const name of analyzer.getKbGenerators()) {
+			const pass = analyzer.seqFile.getPasses().find(p => p.name == name);
+			if (!pass || !fs.existsSync(pass.uri.fsPath))
+				continue;
+			const modified = fs.statSync(pass.uri.fsPath).mtimeMs;
+			if (!generatorChanged(modified, analyzer.kbGeneratorCopied(name)))
+				continue;
+			const outputs = kbOutputsOf(fs.readFileSync(pass.uri.fsPath, 'utf8')).filter(f => fs.existsSync(path.join(logDir, f)));
+			if (!outputs.length)
+				continue;
+			fs.mkdirSync(kbUser, { recursive: true });
+			for (const f of outputs) {
+				fs.copyFileSync(path.join(logDir, f), path.join(kbUser, f));
+				copied.push(f);
+			}
+			analyzer.setKbGeneratorCopied(name, modified);
+		}
+		if (!copied.length)
+			return false;
+		logView.addMessage(`KB generator output copied to kb/user: ${copied.join(', ')}. Running ${path.basename(textFile.fsPath)} again with it.`, logLineType.ANALYER_OUTPUT, textFile);
+		vscode.commands.executeCommand('kbView.refreshAll');
+		vscode.commands.executeCommand('logView.refreshAll');
+		return true;
 	}
 
 	insertRule(ruleStr: string) {

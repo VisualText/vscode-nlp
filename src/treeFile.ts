@@ -9,7 +9,7 @@ import { SequenceFile } from './sequence';
 import { FindFile, FindItem } from './findFile';
 import { findView } from './findView';
 import { dirfuncs } from './dirfuncs';
-import { parseNodeFlags, newFiredSpan } from './trace/treeParse';
+import { parseNodeFlags, newFiredSpan, treeLinesInRange } from './trace/treeParse';
 import * as os from 'os';
 
 export enum generateType { GENERAL, EXACT }
@@ -321,6 +321,11 @@ export class TreeFile extends TextFile {
 				this.absoluteRangeFromSelection(this.HighlightFile, editor.selection);
 			}
 			this.findTreeFileLines();
+		} else if (this.getFileType() == nlpFileType.TREE) {
+			// #475: in a parse tree the selected lines ARE the tree.
+			this.setFile(editor.document.uri);
+			this.parseTreeLines(editor);
+			this.selectedTreeStr = this.selectedLines.map(l => l.node).join(' ');
 		}
 		return this.selectedTreeStr.length ? true : false;
 	}
@@ -339,10 +344,18 @@ export class TreeFile extends TextFile {
 				editor.insertSnippet(snippet, range);
 
 			} else {
-				const passFilePath = visualText.analyzer.getPassPath();
-				const passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
-				const passItem = visualText.analyzer.seqFile.findPass('nlp', passName);
-				this.treeFile = this.anaFile(passItem.passNum).fsPath;
+				let passFilePath = visualText.analyzer.getPassPath();
+				if (type == nlpFileType.TREE) {
+					// A pass's tree (anaNNN.tree) adds the rule to that pass, as
+					// "Generate Path" does; final.tree to the current pass.
+					const treePass = this.getPassFromPath(editor);
+					if (treePass.fsPath.length > 2)
+						passFilePath = treePass;
+				} else {
+					const passName = visualText.analyzer.seqFile.base(passFilePath.fsPath);
+					const passItem = visualText.analyzer.seqFile.findPass('nlp', passName);
+					this.treeFile = this.anaFile(passItem.passNum).fsPath;
+				}
 
 				if (this.findSelectedTreeStr(editor)) {
 					let ruleStr = this.ruleFromLines(genType);
@@ -520,10 +533,7 @@ ${ruleStr}
 	}
 
 	openTemporaryFile(filepath: string, content: string) {
-		const tempDir = path.resolve(
-			vscode.workspace
-				.getConfiguration('createtmpfile')
-				.get('tmpDir') || os.tmpdir());
+		const tempDir = os.tmpdir();
 		const filePath = vscode.Uri.file(path.join(tempDir, filepath));
 		fs.writeFileSync(filePath.fsPath, content);
 		vscode.workspace.openTextDocument(filePath).then(document => {
@@ -595,27 +605,13 @@ ${ruleStr}
 	findTreeFileLines() {
 		const file = new TextFile(this.treeFile);
 		const sep = file.getSeparatorNormalized();
-		let from = 0;
-		let to = 0;
 		this.selectedLines = [];
 		this.selectedTreeStr = '';
 
-		for (const line of file.getLines()) {
-			from = 0;
-			to = 0;
-
-			const tokens = line.split('[');
-			if (tokens.length > 1) {
-				const toks = tokens[1].split(/[,\]]/);
-				if (toks.length > 4) {
-					from = +toks[2];
-					to = +toks[3];
-					if (from >= this.selStart && to <= this.selEnd) {
-						this.selectedLines.push(this.parseTreeLine(line));
-						this.selectedTreeStr = this.selectedTreeStr.concat(line, sep);
-					}
-				}
-			}
+		const lines = file.getLines();
+		for (const i of treeLinesInRange(lines, this.selStart, this.selEnd)) {
+			this.selectedLines.push(this.parseTreeLine(lines[i]));
+			this.selectedTreeStr = this.selectedTreeStr.concat(lines[i], sep);
 		}
 	}
 

@@ -10,6 +10,7 @@ import { fileOperation, fileOpRefresh } from './fileOps';
 import { anaSubDir } from './analyzer';
 import { regressionRunner } from './regression';
 import * as fs from 'fs';
+import { countWords, formatCounts } from './output/counts';
 
 export interface TextItem {
 	uri: vscode.Uri;
@@ -323,6 +324,7 @@ export class TextView {
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.analyzerCurrent', () => this.analyzerCurrent()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.analyze', (textItem) => this.analyze(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.analyzeDir', (textItem) => this.analyzeDir(textItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('textView.countWords', (textItem) => this.countWords(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.runRegressionItem', (textItem) => this.runRegressionItem(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.blessRegressionItem', (textItem) => this.blessRegressionItem(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.openText', () => this.openText()));
@@ -572,6 +574,29 @@ export class TextView {
 		return bytes.toFixed(dp) + ' ' + units[u];
 	}
 
+	// #613: word frequencies over every text file in a folder, most frequent
+	// first. The engine's per-file _log folders are skipped.
+	async countWords(textItem: TextItem) {
+		const files: string[] = [];
+		const walk = (dir: string) => {
+			for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+				const full = path.join(dir, entry.name);
+				if (entry.isDirectory()) {
+					if (!dirfuncs.directoryIsLog(full)) walk(full);
+				} else if (entry.isFile()) {
+					files.push(full);
+				}
+			}
+		};
+		walk(textItem.uri.fsPath);
+		const texts = files.map(f => fs.readFileSync(f, 'utf8'));
+		const counts = countWords(texts);
+		const total = counts.reduce((n, c) => n + c.count, 0);
+		const header = `# ${path.basename(textItem.uri.fsPath)}: ${total} words, ${counts.length} distinct, in ${files.length} files\n`;
+		const doc = await vscode.workspace.openTextDocument({ content: header + formatCounts(counts), language: 'plaintext' });
+		await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Beside });
+	}
+
 	analyzeDir(textItem: TextItem) {
 		if (textItem.uri.fsPath.length) {
 
@@ -658,10 +683,12 @@ export class TextView {
 			this.folderUri = undefined;
 			vscode.window.showTextDocument(textItem.uri);
 			visualText.analyzer.saveCurrentFile(textItem.uri);
-			vscode.commands.executeCommand('outputView.refreshAll');
+			vscode.commands.executeCommand('outputView.showFolder', undefined);
 			vscode.commands.executeCommand('status.update');
 		} else {
+			// #688: the output view lists the outputs of every file in the folder.
 			this.folderUri = textItem.uri;
+			vscode.commands.executeCommand('outputView.showFolder', textItem.uri);
 		}
 	}
 

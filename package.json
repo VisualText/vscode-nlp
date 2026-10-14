@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "4.3.11",
+    "version": "4.3.12",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -588,6 +588,16 @@
                 "command": "nlp.sortText",
                 "title": "Sort & Unique text lines",
                 "description": "Sort and unique text lines"
+            },
+            {
+                "command": "nlp.sortCount",
+                "title": "Sort & Count text lines",
+                "description": "How often each line occurs, most frequent first, in a new editor"
+            },
+            {
+                "command": "textView.countWords",
+                "title": "Count Words in Folder",
+                "description": "Word frequencies over every text file in the folder, in a new editor"
             },
             {
                 "command": "nlp.lowerCase",
@@ -1617,6 +1627,19 @@
                 }
             },
             {
+                "command": "outputView.copyOrMoveTo",
+                "title": "Copy or Move File To..."
+            },
+            {
+                "command": "outputView.addToSequence",
+                "title": "Add to Analyzer Sequence",
+                "icon": "$(add)"
+            },
+            {
+                "command": "sequenceView.toggleKbGenerator",
+                "title": "Toggle KB Generator"
+            },
+            {
                 "command": "outputView.explore",
                 "title": "Explore Output Folder",
                 "icon": {
@@ -1993,6 +2016,11 @@
                     "group": "nlp"
                 },
                 {
+                    "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict",
+                    "command": "nlp.sortCount",
+                    "group": "nlp"
+                },
+                {
                     "when": "resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .dict || resourceExtname == .kbb",
                     "command": "nlp.lowerCase",
                     "group": "nlp"
@@ -2018,12 +2046,12 @@
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat || resourceExtname == .tree",
                     "command": "nlp.generateRule",
                     "group": "nlp"
                 },
                 {
-                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat",
+                    "when": "resourceExtname == .txxt || resourceExtname == .txt || resourceExtname == .nlp || resourceExtname == .pat || resourceExtname == .tree",
                     "command": "nlp.generateExactRule",
                     "group": "nlp"
                 },
@@ -2599,6 +2627,11 @@
             ],
             "view/item/context": [
                 {
+                    "command": "sequenceView.toggleKbGenerator",
+                    "when": "view == sequenceView && viewItem =~ /filenotok/",
+                    "group": "kb"
+                },
+                {
                     "command": "helpView.copyPath",
                     "when": "view == helpView && viewItem == helpFile",
                     "group": "inline"
@@ -2610,8 +2643,18 @@
                 },
                 {
                     "command": "outputView.rename",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "navigation"
+                },
+                {
+                    "command": "outputView.copyOrMoveTo",
+                    "when": "view == outputView && viewItem != input",
+                    "group": "move"
+                },
+                {
+                    "command": "outputView.addToSequence",
+                    "when": "view == outputView && viewItem =~ /nlp/",
+                    "group": "move"
                 },
                 {
                     "command": "outputView.editTest",
@@ -3259,6 +3302,11 @@
                     "group": "inline@01"
                 },
                 {
+                    "command": "textView.countWords",
+                    "when": "view == textView && viewItem =~ /.*dir.*/",
+                    "group": "count"
+                },
+                {
                     "command": "textView.runRegressionItem",
                     "when": "view == textView && viewItem =~ /file|dir/",
                     "group": "inline@05"
@@ -3310,17 +3358,17 @@
                 },
                 {
                     "command": "outputView.copytoText",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@0"
                 },
                 {
                     "command": "outputView.copytoKB",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@1"
                 },
                 {
                     "command": "outputView.addTest",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@2"
                 },
                 {
@@ -3330,7 +3378,7 @@
                 },
                 {
                     "command": "outputView.deleteOutput",
-                    "when": "view == outputView",
+                    "when": "view == outputView && viewItem != input",
                     "group": "inline@4"
                 },
                 {
@@ -3380,6 +3428,12 @@
                     "scope": "application",
                     "default": true,
                     "markdownDescription": "Send anonymous usage counts (feature usage, run mode, errors) to help improve the extension. Never includes file contents, analyzer/KB source, file names, or paths. This is layered on top of VS Code's global `#telemetry.telemetryLevel#` setting — if that is off, nothing is sent regardless of this setting."
+                },
+                "nlp.analyzer.regenerateKB": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": false,
+                    "markdownDescription": "After a run in which a pass marked as a **KB generator** (right-click a pass in the sequence) has changed, copy the `.kbb` and `.dict` files that pass writes into the analyzer's `kb/user` folder and run the text again, so the run uses the knowledge base it just built."
                 },
                 "nlp.analyzer.rememberOpenFiles": {
                     "type": "boolean",
@@ -3433,13 +3487,21 @@
                     "type": "boolean",
                     "scope": "application",
                     "default": true,
-                    "description": "Auto update on load or reload"
+                    "markdownDescription": "Check for and install updates to the NLP++ engine, VisualText files and example analyzers each time the extension starts. Turn off to update only by command."
                 },
                 "textView.fast": {
                     "type": "boolean",
                     "scope": "application",
                     "default": false,
-                    "description": "Load textview fast. Attributes for text files are lost such as has logs, etc."
+                    "markdownDescription": "Fill the Text view without checking each file for logs and outputs. Faster for large input folders, but files no longer show whether they have been run."
+                },
+                "analyzer.runMode": {
+                    "type": "string",
+                    "scope": "resource",
+                    "enum": ["interpreted", "compiled", "compiled-analyzer", "compiled-kb"],
+                    "enumDescriptions": ["Run the analyzer and its KB as source (the default).", "Run the compiled analyzer and compiled KB.", "Run the compiled analyzer with the KB as source.", "Run the analyzer as source with the compiled KB."],
+                    "default": "interpreted",
+                    "markdownDescription": "How the analyzer runs. Set from the run-mode button in the status bar and remembered per workspace folder."
                 },
                 "analyzer.regressionTerminal": {
                     "type": "boolean",
@@ -3463,7 +3525,7 @@
                     "type": "string",
                     "scope": "application",
                     "default": "",
-                    "description": "User name for top pass file comments"
+                    "markdownDescription": "Your name, written in the `AUTH:` line of the header comment of new pass files."
                 },
                 "analyzer.directory": {
                     "type": "string",
@@ -3475,25 +3537,25 @@
                     "type": "string",
                     "scope": "resource",
                     "default": "",
-                    "description": "Current Analyzer"
+                    "markdownDescription": "The analyzer that was open last. Set by the extension when you open an analyzer; you do not normally need to change it."
                 },
                 "engine.visualtext": {
                     "type": "string",
                     "scope": "application",
                     "default": "",
-                    "description": "VisualText files version"
+                    "markdownDescription": "Version of the downloaded VisualText files (help, libraries, templates). Set by the updater."
                 },
                 "engine.analyzers": {
                     "type": "string",
                     "scope": "application",
                     "default": "",
-                    "description": "Analyzers version"
+                    "markdownDescription": "Version of the downloaded example analyzers. Set by the updater."
                 },
                 "logs.clear": {
                     "type": "boolean",
                     "scope": "application",
                     "default": true,
-                    "description": "Clear logs before new operations"
+                    "markdownDescription": "Clear the NLP++ log view before each run or other operation."
                 },
                 "compile.mode": {
                     "type": "string",
