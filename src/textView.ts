@@ -345,8 +345,8 @@ export class TextView {
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.propertiesFolder', (textItem) => this.propertiesFolder(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.explore', (textItem) => this.explore(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.exploreAll', (textItem) => this.exploreAll(textItem)));
-		ctx.subscriptions.push(vscode.commands.registerCommand('textView.moveToFolder', (textItem) => this.moveToFolder(textItem)));
-		ctx.subscriptions.push(vscode.commands.registerCommand('textView.moveUp', (textItem) => this.moveUp(textItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('textView.moveToFolder', (textItem, allItems) => this.moveToFolder(textItem, allItems)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('textView.moveUp', (textItem, allItems) => this.moveUp(textItem, allItems)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.copyToAnalyzer', (textItem) => this.copyToAnalyzer(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.modAdd', (textItem) => this.modAdd(textItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('textView.runTest', (textItem) => this.runTest(textItem)));
@@ -453,27 +453,52 @@ export class TextView {
 		}
 	}
 
-	moveToFolder(textItem: TextItem) {
+	// Multi-select: VSCode passes the clicked item plus, as the second argument,
+	// the whole selection when the clicked item is part of it.
+	private selectedTargets(textItem: TextItem, allItems?: TextItem[]): TextItem[] {
+		let targets = (allItems && allItems.length) ? allItems : (textItem ? [textItem] : []);
+		if (textItem && !targets.some(t => t.uri.fsPath == textItem.uri.fsPath))
+			targets = [textItem, ...targets];
+		// Drop items whose parent folder is also selected; they move with it.
+		return targets.filter(t => !targets.some(o => o !== t && t.uri.fsPath.startsWith(o.uri.fsPath + path.sep)));
+	}
+
+	moveToFolder(textItem: TextItem, allItems?: TextItem[]) {
 		if (this.folderUri) {
-			const to = path.join(this.folderUri.fsPath, path.basename(textItem.uri.fsPath));
-			this.moveFileWithFolders(textItem.uri.fsPath, to);
-			vscode.commands.executeCommand('textView.refreshAll');
+			const folder = this.folderUri.fsPath;
+			let moved = 0;
+			for (const target of this.selectedTargets(textItem, allItems)) {
+				const from = target.uri.fsPath;
+				// Skip the destination folder itself, anything inside it already,
+				// and folders that would move into themselves.
+				if (from == folder || path.dirname(from) == folder || folder.startsWith(from + path.sep))
+					continue;
+				this.moveFileWithFolders(from, path.join(folder, path.basename(from)));
+				moved++;
+			}
+			if (moved)
+				vscode.commands.executeCommand('textView.refreshAll');
 		} else {
 			vscode.window.showInformationMessage('No folder selected');
 		}
 	}
 
-	moveUp(textItem: TextItem) {
-		let parent = path.dirname(textItem.uri.fsPath);
+	moveUp(textItem: TextItem, allItems?: TextItem[]) {
 		const analyzersFolder = visualText.analyzer.getInputDirectory();
-		if (parent != analyzersFolder.fsPath) {
-			parent = path.dirname(parent);
-			const to = path.join(parent, path.basename(textItem.uri.fsPath));
-			this.moveFileWithFolders(textItem.uri.fsPath, to);
-			vscode.commands.executeCommand('textView.refreshAll');
-		} else {
-			vscode.window.showInformationMessage('Already at the top');
+		let moved = 0;
+		for (const target of this.selectedTargets(textItem, allItems)) {
+			let parent = path.dirname(target.uri.fsPath);
+			if (parent != analyzersFolder.fsPath) {
+				parent = path.dirname(parent);
+				const to = path.join(parent, path.basename(target.uri.fsPath));
+				this.moveFileWithFolders(target.uri.fsPath, to);
+				moved++;
+			}
 		}
+		if (moved)
+			vscode.commands.executeCommand('textView.refreshAll');
+		else
+			vscode.window.showInformationMessage('Already at the top');
 	}
 
 	moveFileWithFolders(from: string, to: string) {
@@ -694,11 +719,8 @@ export class TextView {
 
 	private deleteFile(textItem: TextItem, allItems?: TextItem[]): void {
 		if (visualText.hasWorkspaceFolder()) {
-			// Multi-select: when several tree items are selected, VSCode passes the
-			// whole selection as the second argument; delete them all (#755).
-			let targets = (allItems && allItems.length) ? allItems : (textItem ? [textItem] : []);
-			if (textItem && !targets.some(t => t.uri.fsPath == textItem.uri.fsPath))
-				targets = [textItem, ...targets];
+			// Multi-select: delete the whole selection (#755).
+			const targets = this.selectedTargets(textItem, allItems);
 			if (targets.length == 0)
 				return;
 

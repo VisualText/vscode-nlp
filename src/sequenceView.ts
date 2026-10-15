@@ -261,44 +261,83 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		vscode.commands.executeCommand('sequenceView.refreshAll');
 	}
 
-	moveUp(seqItem: SequenceItem): void {
-		this.moveSequence(seqItem, moveDirection.UP);
-	}
-
-	moveDown(seqItem: SequenceItem): void {
-		this.moveSequence(seqItem, moveDirection.DOWN);
-	}
-
-	moveSequence(seqItem: SequenceItem, direction: moveDirection) {
-		if (visualText.hasWorkspaceFolder()) {
-			const seqFile = visualText.analyzer.seqFile;
-			const passItem = seqFile.findPass(seqItem.type, seqItem.name);
-			const row = passItem.row;
-
-			if (seqItem.type.localeCompare('tokenize') == 0 || seqItem.type.localeCompare('dicttokz') == 0 || seqItem.type.localeCompare('chartok') == 0) {
-				vscode.window.showWarningMessage('Cannot move the tokenizer');
-
-			} else if (row == 1 && direction == moveDirection.UP) {
-				vscode.window.showWarningMessage('Tokenizer must be first');
-
-			} else if (row == 0 && direction == moveDirection.UP) {
-				vscode.window.showWarningMessage('Item cannot move up');
-
-			} else if (seqItem.type.localeCompare('folder') == 0 && direction == moveDirection.DOWN && seqFile.atBottom(passItem)) {
-				vscode.window.showWarningMessage('Item cannot move down');
-
-			} else if (row + 1 == seqFile.passCount() && direction == moveDirection.DOWN) {
-				vscode.window.showWarningMessage('Item cannot move down');
-
-			} else {
-				seqFile.movePass(seqItem, direction);
-				seqFile.saveFile();
-				vscode.commands.executeCommand('sequenceView.refreshAll');
+	// Multi-select: VSCode passes the clicked item plus, as the second argument,
+	// the whole selection when the clicked item is part of it. Passes inside a
+	// selected folder are dropped since they move / delete with the folder.
+	private selectedTargets(seqItem: SequenceItem, allItems?: SequenceItem[]): SequenceItem[] {
+		let targets = (allItems && allItems.length) ? allItems : (seqItem ? [seqItem] : []);
+		if (seqItem && !targets.some(t => t.type == seqItem.type && t.name == seqItem.name))
+			targets = [seqItem, ...targets];
+		const seqFile = visualText.analyzer.seqFile;
+		const folders = targets.filter(t => t.type == 'folder');
+		if (folders.length) {
+			const inside = new Set<string>();
+			for (const folder of folders) {
+				for (const pass of seqFile.getFolderPasses(folder.type, folder.name, true))
+					if (pass.typeStr != 'folder' || pass.name != folder.name)
+						inside.add(pass.typeStr + '/' + pass.name);
 			}
+			targets = targets.filter(t => !inside.has(t.type + '/' + t.name));
 		}
+		return targets;
 	}
 
-	deleteFolder(seqItem: SequenceItem): void {
+	moveUp(seqItem: SequenceItem, allItems?: SequenceItem[]): void {
+		this.moveSequence(this.selectedTargets(seqItem, allItems), moveDirection.UP);
+	}
+
+	moveDown(seqItem: SequenceItem, allItems?: SequenceItem[]): void {
+		this.moveSequence(this.selectedTargets(seqItem, allItems), moveDirection.DOWN);
+	}
+
+	moveSequence(seqItems: SequenceItem[], direction: moveDirection) {
+		if (!visualText.hasWorkspaceFolder() || seqItems.length == 0)
+			return;
+		const seqFile = visualText.analyzer.seqFile;
+
+		// Move the item nearest the destination first so the selection keeps its
+		// order. If the leading item is blocked nothing moves; other blocked items stay put.
+		const rowOf = (item: SequenceItem) => seqFile.findPass(item.type, item.name).row;
+		const ordered = [...seqItems].sort((a, b) => direction == moveDirection.UP ? rowOf(a) - rowOf(b) : rowOf(b) - rowOf(a));
+		const blocked = this.moveBlocked(ordered[0], direction);
+		if (blocked) {
+			vscode.window.showWarningMessage(blocked);
+			return;
+		}
+		for (const item of ordered) {
+			if (this.moveBlocked(item, direction))
+				continue;
+			seqFile.movePass(item, direction);
+		}
+		seqFile.saveFile();
+		vscode.commands.executeCommand('sequenceView.refreshAll');
+	}
+
+	// Why the item cannot move in that direction, or '' when it can.
+	private moveBlocked(seqItem: SequenceItem, direction: moveDirection): string {
+		const seqFile = visualText.analyzer.seqFile;
+		const passItem = seqFile.findPass(seqItem.type, seqItem.name);
+		const row = passItem.row;
+
+		if (seqItem.type.localeCompare('tokenize') == 0 || seqItem.type.localeCompare('dicttokz') == 0 || seqItem.type.localeCompare('chartok') == 0)
+			return 'Cannot move the tokenizer';
+		if (row == 1 && direction == moveDirection.UP)
+			return 'Tokenizer must be first';
+		if (row == 0 && direction == moveDirection.UP)
+			return 'Item cannot move up';
+		if (seqItem.type.localeCompare('folder') == 0 && direction == moveDirection.DOWN && seqFile.atBottom(passItem))
+			return 'Item cannot move down';
+		if (row + 1 == seqFile.passCount() && direction == moveDirection.DOWN)
+			return 'Item cannot move down';
+		return '';
+	}
+
+	deleteFolder(seqItem: SequenceItem, allItems?: SequenceItem[]): void {
+		const targets = this.selectedTargets(seqItem, allItems);
+		if (targets.length > 1) {
+			this.deleteMany(targets);
+			return;
+		}
 		if (visualText.hasWorkspaceFolder()) {
 			const seqFile = visualText.analyzer.seqFile;
 			const items: vscode.QuickPickItem[] = [];
@@ -324,7 +363,12 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 		}
 	}
 
-	deletePass(seqItem: SequenceItem): void {
+	deletePass(seqItem: SequenceItem, allItems?: SequenceItem[]): void {
+		const targets = this.selectedTargets(seqItem, allItems);
+		if (targets.length > 1) {
+			this.deleteMany(targets);
+			return;
+		}
 		if (visualText.hasWorkspaceFolder()) {
 			const seqFile = visualText.analyzer.seqFile;
 			const items: vscode.QuickPickItem[] = [];
@@ -345,6 +389,34 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 				vscode.commands.executeCommand('sequenceView.refreshAll');
 			});
 		}
+	}
+
+	// Delete several selected passes and folders (folders with all their passes)
+	// after a single confirmation.
+	private deleteMany(seqItems: SequenceItem[]): void {
+		if (!visualText.hasWorkspaceFolder())
+			return;
+		const seqFile = visualText.analyzer.seqFile;
+		const folderCount = seqItems.filter(t => t.type == 'folder').length;
+		let descr = 'Delete ' + seqItems.length + ' selected items';
+		if (folderCount)
+			descr += ' (folders with ALL THEIR PASSES)';
+		const items: vscode.QuickPickItem[] = [
+			{ label: 'Yes', description: descr },
+			{ label: 'No', description: 'Do not delete the selected items' }
+		];
+		vscode.window.showQuickPick(items, { title: 'Delete Items', canPickMany: false, placeHolder: 'Choose Yes or No' }).then(selection => {
+			if (!selection || selection.label == 'No')
+				return;
+			for (const item of seqItems) {
+				if (item.type.localeCompare('missing') == 0)
+					seqFile.deletePassInSeqFile(item.type, item.name);
+				else
+					seqFile.deletePass(item);
+			}
+			seqFile.saveFile();
+			vscode.commands.executeCommand('sequenceView.refreshAll');
+		});
 	}
 
 	libraryUtilFuncs(seqItem: SequenceItem): void {
@@ -695,7 +767,7 @@ export class SequenceView {
 	constructor(ctx: vscode.ExtensionContext) {
 		const treeDataProvider = new PassTree();
 
-		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider });
+		this.sequenceView = vscode.window.createTreeView('sequenceView', { treeDataProvider, canSelectMany: true });
 		ctx.subscriptions.push(this.sequenceView);
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.toggleKbGenerator', (seqItem: SequenceItem) => treeDataProvider.toggleKbGenerator(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.openPass', (seqItem) => this.openPass(seqItem)));
@@ -707,8 +779,8 @@ export class SequenceView {
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.finalTree', () => this.finalTree()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.convert', () => this.convertPatToNLP()));
 
-		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.moveUp', (seqItem) => treeDataProvider.moveUp(seqItem)));
-		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.moveDown', (seqItem) => treeDataProvider.moveDown(seqItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.moveUp', (seqItem, allItems) => treeDataProvider.moveUp(seqItem, allItems)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.moveDown', (seqItem, allItems) => treeDataProvider.moveDown(seqItem, allItems)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.refreshAll', () => treeDataProvider.refresh()));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.insert', (seqItem) => treeDataProvider.insertPass(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.insertSister', (seqItem) => treeDataProvider.insertSisterPass(seqItem)));
@@ -726,8 +798,8 @@ export class SequenceView {
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.libraryLines', (seqItem) => treeDataProvider.libraryLines(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.libraryLinesDictTokZ', (seqItem) => treeDataProvider.libraryLinesDictTokZ(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.libraryWhiteSpaces', (seqItem) => treeDataProvider.libraryWhiteSpaces(seqItem)));
-		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.delete', (seqItem) => treeDataProvider.deletePass(seqItem)));
-		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.deleteFolder', (seqItem) => treeDataProvider.deleteFolder(seqItem)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.delete', (seqItem, allItems) => treeDataProvider.deletePass(seqItem, allItems)));
+		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.deleteFolder', (seqItem, allItems) => treeDataProvider.deleteFolder(seqItem, allItems)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.duplicate', (seqItem) => treeDataProvider.duplicatePass(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.rename', (seqItem) => treeDataProvider.renamePass(seqItem)));
 		ctx.subscriptions.push(vscode.commands.registerCommand('sequenceView.renameFolder', (seqItem) => treeDataProvider.renameFolder(seqItem)));
