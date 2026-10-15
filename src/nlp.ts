@@ -17,6 +17,9 @@ import * as telemetry from './telemetry/telemetry';
 import { analyzerOutputLines, lastTreePass } from './output/analyzerOutput';
 import { generatorChanged, kbOutputsOf } from './session/kbGen';
 
+// First engine with -DICTSOURCE (nlp-engine#432).
+const DICT_SOURCE_ENGINE = '4.2.33';
+
 let analyzerOutputChannel: vscode.OutputChannel | undefined;
 
 /** Show what the analyzer printed with cout() in the "NLP++ Analyzer Output" panel. */
@@ -160,6 +163,15 @@ export class NLPFile extends TextFile {
 				args.push('-COMPILED');
 			}
 			args.push('"' + filestr + '"', devFlagStr);
+			// Nodes built from .dict entries then name the entry's file and line,
+			// so Rule Fired on the tree opens it (#475). Engines before 4.2.33
+			// reject the switch and exit, so it goes only to newer ones.
+			if (mode == DevMode.DEV
+				&& vscode.workspace.getConfiguration('analyzer').get<boolean>('dictSource', true)
+				&& visualText.engineVersion
+				&& visualText.versionCompare(visualText.engineVersion, DICT_SOURCE_ENGINE) >= 0) {
+				args.push('-DICTSOURCE');
+			}
 
 			visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.ANALYZING);
 

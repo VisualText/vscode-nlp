@@ -3509,6 +3509,12 @@
                     "default": "interpreted",
                     "markdownDescription": "How the analyzer runs. Set from the run-mode button in the status bar and remembered per workspace folder."
                 },
+                "analyzer.dictSource": {
+                    "type": "boolean",
+                    "scope": "resource",
+                    "default": true,
+                    "description": "On DEV runs, have the engine (4.2.33 or later) record which dictionary file and line built each node, so Rule Fired on a parse tree node opens that dictionary entry."
+                },
                 "analyzer.regressionTerminal": {
                     "type": "boolean",
                     "scope": "resource",

@@ -86,10 +86,32 @@ export class TreeFile extends TextFile {
 
 					// If 0,0, then search inside dictionary files
 				} else if (tline.ruleLine == 0) {
-					this.searchInDictionaries(tline.node);
+					if (!this.openDictSource())
+						this.searchInDictionaries(tline.node);
 				}
 			}
 		}
+	}
+
+	// A run with -DICTSOURCE (engine 4.2.33+) puts the entry that built a
+	// dictionary node on it: ("dictfile" "words.dict") ("dictline" 14).
+	// Open that line rather than searching every dictionary (#475).
+	openDictSource(): boolean {
+		const line = this.getLines()[this.selStartLine] ?? '';
+		const file = /\("dictfile" "([^"]+)"\)/.exec(line);
+		if (!file) return false;
+		const dictPath = path.join(visualText.analyzer.getKBDirectory().fsPath, file[1]);
+		if (!fs.existsSync(dictPath)) return false;
+		const num = /\("dictline" (\d+)\)/.exec(line);
+		const lineNum = num ? parseInt(num[1], 10) : 0;
+		vscode.window.showTextDocument(vscode.Uri.file(dictPath), { viewColumn: vscode.ViewColumn.Beside }).then(edit => {
+			if (lineNum > 0 && lineNum <= edit.document.lineCount) {
+				const entry = edit.document.lineAt(lineNum - 1).range;
+				edit.selections = [new vscode.Selection(entry.start, entry.end)];
+				edit.revealRange(entry, vscode.TextEditorRevealType.InCenter);
+			}
+		});
+		return true;
 	}
 
 	searchInDictionaries(word: string) {
