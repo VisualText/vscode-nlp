@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.14
+Go straight from a parse tree node to the dictionary entry that built it.
+
+- **Rule Fired opens the dictionary entry** (nlp-engine#475). For a node built from a `.dict` entry, Rule Fired used to search every dictionary for words that might match. It now opens the dictionary file at the entry's line. This works on DEV runs with NLP++ engine 4.2.33 or later, which records each entry's file and line on the nodes it builds. With an older engine, Rule Fired searches the dictionaries as before. To turn the feature off, set `analyzer.dictSource` to false.
+
 ### 4.3.13
 Support for the `@POSTCODE` region in NLP++ engine 4.2.19, and an option to start new passes with a `@CODE` region.
 
