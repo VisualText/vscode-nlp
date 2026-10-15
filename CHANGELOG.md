@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.15
+Select several items at once to move or delete them in the text and sequence views.
+
+- **Text view:** Move to Folder and Move Up now act on every selected item, as Delete already did. Items inside a selected folder move with the folder.
+- **Sequence view:** passes can now be multi-selected. Move Up and Move Down move the whole selection one step and keep its order. Delete removes all the selected passes and folders after one confirmation; folders go with all their passes.
+
 ### 4.3.14
 Go straight from a parse tree node to the dictionary entry that built it.
 
