@@ -24,7 +24,7 @@
             },
             "args": [
                 "-ANA",
-                "corporate",
+                "parse-en-us",
                 "${relativeFile}"
             ],
             "options": {
@@ -61,7 +61,7 @@
             },
             "args": [
                 "-ANA",
-                "corporate",
+                "parse-en-us",
                 "${relativeFile}",
                 "-DEV"
             ],
