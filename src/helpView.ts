@@ -22,6 +22,52 @@ export interface HelpItem {
     tooltip?: string;    // hover text (markdown) — e.g. an LLM prompt's description
 }
 
+// One entry in Help/markdown/vscode/help-tree.json, the Help view's index. It
+// lives in the VisualText files (visualtext-files repo) so help pages can be
+// added or reordered without an extension update. An entry has a page, a url,
+// children, or a source (a folder filled from files on disk).
+interface HelpTreeEntry {
+    label: string;
+    icon?: string;
+    page?: string;
+    url?: string;
+    tooltip?: string;
+    expanded?: boolean;
+    source?: 'prompts' | 'links' | 'announcements' | 'versions';
+    children?: HelpTreeEntry[];
+}
+
+// Used when help-tree.json is missing or unreadable (VisualText files older
+// than the index). Keep it in step with help-tree.json.
+const DEFAULT_HELP_TREE: HelpTreeEntry[] = [
+    { label: 'Home', page: 'vscode/home', icon: 'home' },
+    { label: 'NLP++ Textbook', page: 'NLP++_Textbook', icon: 'book' },
+    { label: 'Quick Start', page: 'vscode/quickstart', icon: 'rocket' },
+    { label: 'LLM Prompts', icon: 'comment-discussion', source: 'prompts' },
+    { label: 'Regression Testing', page: 'vscode/testing', icon: 'beaker' },
+    { label: 'Compiling Analyzers', page: 'vscode/compiling', icon: 'gear' },
+    { label: 'Lazy Loading', page: 'vscode/lazyload', icon: 'symbol-array' },
+    { label: 'Large Files', page: 'vscode/largefiles', icon: 'file-binary' },
+    {
+        label: 'NLP++', icon: 'symbol-namespace',
+        children: [
+            { label: 'About NLP++', page: 'NLP_PP_Stuff/About_NLP++', icon: 'book' },
+            { label: 'Variables', page: 'NLP_PP_Stuff/About_NLP++_Variables', icon: 'symbol-variable' },
+            { label: 'Tokens', page: 'NLP_PP_Stuff/Tokens', icon: 'symbol-key' },
+            { label: 'String Functions', page: 'Table_of_String_Functions', icon: 'symbol-string' },
+            { label: 'Node / Parse Tree Functions', page: 'Table_of_Parse_Tree_Functions', icon: 'list-tree' },
+            { label: 'Knowledge Base Functions', page: 'Table_of_Knowledge_Base_Functions', icon: 'database' },
+            { label: 'Math Functions', page: 'Table_of_Math_Functions', icon: 'symbol-operator' },
+            { label: 'Array Functions', page: 'Table_of_Array_Functions', icon: 'symbol-array' },
+            { label: 'Formatting & I/O Functions', page: 'Table_of_Formatting_and_I_O_Functions', icon: 'output' },
+            { label: 'Special Functions', page: 'Table_of_Special_Functions', icon: 'symbol-misc' },
+        ],
+    },
+    { label: 'Helpful Links', icon: 'link', source: 'links' },
+    { label: 'Announcements', icon: 'megaphone', source: 'announcements', expanded: true },
+    { label: 'Version Notes', icon: 'history', source: 'versions', expanded: true },
+];
+
 export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<HelpItem | undefined | null | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -57,34 +103,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
 
     getChildren(item?: HelpItem): HelpItem[] {
         if (!item) {
-            return [
-                { label: 'Home', page: 'vscode/home', icon: 'home' },
-                { label: 'NLP++ Textbook', page: 'NLP++_Textbook', icon: 'book' },
-                { label: 'Quick Start', page: 'vscode/quickstart', icon: 'rocket' },
-                { label: 'LLM Prompts', page: '', icon: 'comment-discussion', isPromptRoot: true, collapsible: true },
-                { label: 'Regression Testing', page: 'vscode/testing', icon: 'beaker' },
-                { label: 'Compiling Analyzers', page: 'vscode/compiling', icon: 'gear' },
-                { label: 'Lazy Loading', page: 'vscode/lazyload', icon: 'symbol-array' },
-                { label: 'Large Files', page: 'vscode/largefiles', icon: 'file-binary' },
-                {
-                    label: 'NLP++', page: '', icon: 'symbol-namespace', collapsible: true,
-                    children: [
-                        { label: 'About NLP++', page: 'NLP_PP_Stuff/About_NLP++', icon: 'book' },
-                        { label: 'Variables', page: 'NLP_PP_Stuff/About_NLP++_Variables', icon: 'symbol-variable' },
-                        { label: 'Tokens', page: 'NLP_PP_Stuff/Tokens', icon: 'symbol-key' },
-                        { label: 'String Functions', page: 'Table_of_String_Functions', icon: 'symbol-string' },
-                        { label: 'Node / Parse Tree Functions', page: 'Table_of_Parse_Tree_Functions', icon: 'list-tree' },
-                        { label: 'Knowledge Base Functions', page: 'Table_of_Knowledge_Base_Functions', icon: 'database' },
-                        { label: 'Math Functions', page: 'Table_of_Math_Functions', icon: 'symbol-operator' },
-                        { label: 'Array Functions', page: 'Table_of_Array_Functions', icon: 'symbol-array' },
-                        { label: 'Formatting & I/O Functions', page: 'Table_of_Formatting_and_I_O_Functions', icon: 'output' },
-                        { label: 'Special Functions', page: 'Table_of_Special_Functions', icon: 'symbol-misc' },
-                    ],
-                },
-                { label: 'Helpful Links', page: '', icon: 'link', isLinksRoot: true, collapsible: true },
-                { label: 'Announcements', page: '', icon: 'megaphone', isAnnounceRoot: true, collapsible: true, expanded: true },
-                { label: 'Version Notes', page: '', icon: 'history', isVersionRoot: true, collapsible: true, expanded: true },
-            ];
+            return helpView.helpTreeRoots();
         }
         if (item.isVersionRoot) {
             return helpView.listVersionNotes().map(v => (
@@ -279,6 +298,57 @@ export class HelpView {
                 links.push({ title: parts[0] || parts[1], url: parts[1], description: parts[2] || undefined });
         }
         return links;
+    }
+
+    // ----- Help tree index ----------------------------------------------------
+
+    private helpTreeFile(): string {
+        return path.join(visualText.getVisualTextDirectory('Help'), 'markdown', 'vscode', 'help-tree.json');
+    }
+
+    // The top-level Help items, from help-tree.json when it is there and valid,
+    // otherwise from the built-in default. Read on every refresh, so an edited
+    // index shows up with the view's Refresh button.
+    helpTreeRoots(): HelpItem[] {
+        let entries = DEFAULT_HELP_TREE;
+        const file = this.helpTreeFile();
+        try {
+            if (fs.existsSync(file)) {
+                const items = JSON.parse(fs.readFileSync(file, 'utf8')).items;
+                if (Array.isArray(items) && items.length)
+                    entries = items;
+            }
+        } catch (e) {
+            console.error(`Could not read ${file}: ${e}`);
+        }
+        return this.toHelpItems(entries);
+    }
+
+    // Entries without a label, and sources this version doesn't know, are
+    // dropped rather than shown broken.
+    private toHelpItems(entries: HelpTreeEntry[]): HelpItem[] {
+        const items: HelpItem[] = [];
+        for (const e of entries) {
+            if (!e || typeof e.label !== 'string' || !e.label) continue;
+            const item: HelpItem = { label: e.label, page: e.page || '', icon: e.icon || 'book', tooltip: e.tooltip, url: e.url };
+            if (e.source) {
+                switch (e.source) {
+                    case 'prompts': item.isPromptRoot = true; break;
+                    case 'links': item.isLinksRoot = true; break;
+                    case 'announcements': item.isAnnounceRoot = true; break;
+                    case 'versions': item.isVersionRoot = true; break;
+                    default: continue;
+                }
+                item.page = '';
+                item.collapsible = true;
+            } else if (Array.isArray(e.children)) {
+                item.children = this.toHelpItems(e.children);
+                item.collapsible = true;
+            }
+            item.expanded = item.collapsible && !!e.expanded;
+            items.push(item);
+        }
+        return items;
     }
 
     openLink(item: HelpItem) {
