@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.17
+The Help view's list of pages now comes from the VisualText files.
+
+- **Help pages without an extension update.** The Help view reads its tree from `Help/markdown/vscode/help-tree.json` in the VisualText files, so a new help page needs only a visualtext-files release. With VisualText files that don't have the index yet, the view shows the same built-in tree as before.
+
 ### 4.3.16
 A Help view entry for the new Large Files page.
 
