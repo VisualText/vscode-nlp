@@ -3,6 +3,11 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.16
+A Help view entry for the new Large Files page.
+
+- **Large Files** is listed in the Help view under Lazy Loading. The page covers large inputs (zone mode, engine 4.2.47) and large dictionaries and knowledge bases (lazy loading), and needs the Help files from visualtext-files 3.13.31 or later.
+
 ### 4.3.15
 Select several items at once to move or delete them in the text and sequence views.
 
