@@ -65,6 +65,7 @@ export class HelpTreeDataProvider implements vscode.TreeDataProvider<HelpItem> {
                 { label: 'Regression Testing', page: 'vscode/testing', icon: 'beaker' },
                 { label: 'Compiling Analyzers', page: 'vscode/compiling', icon: 'gear' },
                 { label: 'Lazy Loading', page: 'vscode/lazyload', icon: 'symbol-array' },
+                { label: 'Large Files', page: 'vscode/largefiles', icon: 'file-binary' },
                 {
                     label: 'NLP++', page: '', icon: 'symbol-namespace', collapsible: true,
                     children: [
