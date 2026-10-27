@@ -81,6 +81,14 @@ export class PassItem {
 	public isStub(): boolean {
 		return this.typeStr.localeCompare('stub') == 0;
 	}
+
+	// "zone _type" and "endzone" lines (engine 4.2.47+) mark where zone mode
+	// starts and ends. Like a folder line they are not passes: from engine
+	// 4.2.48 they take no pass number, so they must not advance passNum here.
+	public isZoneMarker(): boolean {
+		const t = this.typeStr.toLowerCase();
+		return t == 'zone' || t == 'endzone';
+	}
 	
 	public isEnd(name: string) {
 		return this.typeStr.localeCompare('end') == 0 && this.name.localeCompare(name) == 0;
@@ -182,6 +190,10 @@ export class SequenceFile extends TextFile {
 				continue;
 			}
 			const passItem = this.setPass(passStr,blankLines[i],passNum);
+			// A zone marker takes no number, so a lookup by pass number never finds it.
+			const marker = passItem.isZoneMarker();
+			if (marker)
+				passItem.passNum = 0;
 			if (passItem.typeStr == 'folder' || passItem.typeStr == 'stub') {
 				folder = passItem.name;
 			} else if (folder.length) {
@@ -189,9 +201,10 @@ export class SequenceFile extends TextFile {
 					folder = '';
 				} else {
 					passItem.inFolder = true;
-					passNum++;
+					if (!marker)
+						passNum++;
 				}
-			} else if (passItem.exists())
+			} else if (passItem.exists() && !marker)
 				passNum++;
 
 			if (passItem.text.length) {
