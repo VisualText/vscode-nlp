@@ -465,6 +465,14 @@ export class TextFile {
             else if (pass < 100)
                 filename = filename + '0';
             filename = filename + pass.toString() + '.' + this.getExtension(type);
+            // A pass after a zone line (engine 4.2.47+) runs once per zone, and
+            // -DEV writes its files per zone as z001-ana040.tree and so on: show
+            // the first zone's when the pass has no file of its own.
+            const own = visualText.analyzer.getOutputDirectory(filename);
+            const zone1 = visualText.analyzer.getOutputDirectory('z001-' + filename);
+            if (!fs.existsSync(own.fsPath) && fs.existsSync(zone1.fsPath))
+                return zone1;
+            return own;
         } else {
             filename = 'final.tree';
         }

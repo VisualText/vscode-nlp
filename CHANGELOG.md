@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.18
+The sequence view understands zone mode (NLP++ engine 4.2.48).
+
+- **`zone` and `endzone` lines are markers, not passes.** They show as `zone _form` and `endzone` with a layers icon and a tooltip saying what they do, and clicking one no longer tries to open a missing `_form.nlp`. Like a folder line they take no pass number, so the view's pass numbers match the engine's from 4.2.48 on.
+- **Trees of zone passes open.** A pass after a `zone` line writes its `-DEV` trees per zone (`z001-ana040.tree` and so on). Opening such a pass's tree now shows the first zone's.
+
 ### 4.3.17
 The Help view's list of pages now comes from the VisualText files.
 

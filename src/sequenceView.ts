@@ -172,6 +172,22 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 						collapsibleState: collapse, active: passItem.active
 					});
 
+			} else if (passItem.isZoneMarker()) {
+				// Not a pass: the line that starts or ends zone mode. Moves and deletes
+				// like other non-rule lines ('stub'), but opens nothing.
+				const zone = passItem.typeStr.toLowerCase() == 'zone';
+				label = zone ? 'zone ' + passItem.name : 'endzone';
+				conVal = conVal + 'stub';
+				if (debugConVal) label = row.toString() + ' ' + conVal;
+				tooltip = zone
+					? 'Zone mode: the passes below run once per ' + passItem.name + ' node'
+					: 'The passes below run once, after the last zone';
+				seqItems.push({
+					uri: passItem.uri, label: label, name: passItem.name, tooltip: tooltip, contextValue: conVal, inFolder: passItem.inFolder,
+					type: passItem.typeStr, passNum: passItem.passNum, library: passItem.library, row: row,
+					collapsibleState: collapse, active: passItem.active
+				});
+
 			} else {
 				tooltip = passTooltip(passItem, passItem.uri.fsPath);
 				if (passItem.tokenizer) {
@@ -228,6 +244,20 @@ export class PassTree implements vscode.TreeDataProvider<SequenceItem> {
 
 		} else if (seqItem.type.localeCompare('nlp')) {
 			icon = 'seq-circle.svg';
+		}
+
+		// zone / endzone lines are markers, not passes: their own icon, and
+		// clicking one opens nothing (there is no _type.nlp behind it).
+		const type = seqItem.type.toLowerCase();
+		if (type == 'zone' || type == 'endzone') {
+			return {
+				tooltip: seqItem.tooltip,
+				label: seqItem.label,
+				contextValue: seqItem.contextValue,
+				collapsibleState: collapse,
+				iconPath: new vscode.ThemeIcon(type == 'zone' ? 'layers' : 'layers-dot',
+					seqItem.active ? undefined : new vscode.ThemeColor('disabledForeground'))
+			};
 		}
 
 		return {
