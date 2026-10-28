@@ -19,6 +19,24 @@ import { generatorChanged, kbOutputsOf } from './session/kbGen';
 
 // First engine with -DICTSOURCE (nlp-engine#432).
 const DICT_SOURCE_ENGINE = '4.2.33';
+// First engine with -TIMELIMIT; a run it stops exits 2.
+const TIME_LIMIT_ENGINE = '4.2.41';
+// First engine that exits 1 for bad arguments or a missing analyzer, input or
+// output folder. Older engines exit 0 for a missing input.
+const EXIT_CODES_ENGINE = '4.2.51';
+
+function engineAtLeast(version: string): boolean {
+	return !!visualText.engineVersion && visualText.versionCompare(visualText.engineVersion, version) >= 0;
+}
+
+/** Explain a nonzero engine exit code, or return '' when the code tells nothing more. */
+function exitCodeMessage(code: unknown, timeLimit: number): string {
+	if (code === 2 && timeLimit > 0)
+		return `Analysis stopped: it ran past the time limit of ${timeLimit} seconds (setting analyzer.timeLimit)`;
+	if (code === 1 && engineAtLeast(EXIT_CODES_ENGINE))
+		return 'Engine stopped before analyzing: bad arguments, or the analyzer, input or output folder is missing (see output/stderr.log)';
+	return '';
+}
 
 let analyzerOutputChannel: vscode.OutputChannel | undefined;
 
@@ -168,10 +186,15 @@ export class NLPFile extends TextFile {
 			// reject the switch and exit, so it goes only to newer ones.
 			if (mode == DevMode.DEV
 				&& vscode.workspace.getConfiguration('analyzer').get<boolean>('dictSource', true)
-				&& visualText.engineVersion
-				&& visualText.versionCompare(visualText.engineVersion, DICT_SOURCE_ENGINE) >= 0) {
+				&& engineAtLeast(DICT_SOURCE_ENGINE)) {
 				args.push('-DICTSOURCE');
 			}
+			// A runaway analyzer stops on its own at the next while turn or pass.
+			let timeLimit = Math.floor(vscode.workspace.getConfiguration('analyzer').get<number>('timeLimit', 0) || 0);
+			if (timeLimit > 0 && engineAtLeast(TIME_LIMIT_ENGINE))
+				args.push('-TIMELIMIT', String(timeLimit));
+			else
+				timeLimit = 0;
 
 			visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.ANALYZING);
 
@@ -208,8 +231,12 @@ export class NLPFile extends TextFile {
 						telemetry.sendError('analyzer.failed', syntaxError ? 'syntax' : 'exec', {
 							secs: Math.round((Date.now() - analyzeStart) / 100) / 10,
 						});
-						if (err)
-							logView.addMessage(err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+						if (err) {
+							const exitMsg = exitCodeMessage(err.code, timeLimit);
+							logView.addMessage(exitMsg || err.message, logLineType.ANALYER_OUTPUT, vscode.Uri.file(filestr));
+							if (exitMsg)
+								vscode.window.showWarningMessage(exitMsg);
+						}
 						visualText.nlp.setAnalyzerStatus(filepath, analyzerStatus.FAILED);
 						nlpStatusBar.resetAnalyzerButton();
 						if (syntaxError)
