@@ -3,7 +3,7 @@
     "displayName": "NLP",
     "description": "NLP++: the only computer programming language built for NLP — create and visually debug analyzers directly in VS Code.",
     "icon": "resources/NLPppLogo.png",
-    "version": "4.3.18",
+    "version": "4.3.19",
     "license": "MIT",
     "publisher": "dehilster",
     "enableApiProposals": false,
@@ -3514,6 +3514,13 @@
                     "scope": "resource",
                     "default": true,
                     "description": "On DEV runs, have the engine (4.2.33 or later) record which dictionary file and line built each node, so Rule Fired on a parse tree node opens that dictionary entry."
+                },
+                "analyzer.timeLimit": {
+                    "type": "number",
+                    "scope": "resource",
+                    "default": 0,
+                    "minimum": 0,
+                    "description": "Stop the analysis of an input that runs longer than this many seconds, so a runaway analyzer does not have to be killed by hand. The engine stops at the next while turn or pass. 0 means no limit. Needs NLP++ engine 4.2.41 or later."
                 },
                 "analyzer.regressionTerminal": {
                     "type": "boolean",

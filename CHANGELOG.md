@@ -3,6 +3,12 @@ All notable changes to the [VSCode NLP++ extension](http://vscode.visualtext.org
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+### 4.3.19
+The extension uses the engine's exit codes and its time limit.
+
+- **A time limit for runaway analyzers.** Set `analyzer.timeLimit` to a number of seconds, and the engine (4.2.41 or later) stops the analysis of any input that runs longer than that, at the next while turn or pass. Until now a runaway analyzer had to be killed by hand. The default, 0, means no limit.
+- **Why a run stopped.** When the time limit stops a run, the log view and a warning say so. With engine 4.2.51 or later, a run that never started because of bad arguments or a missing analyzer, input or output folder says that instead of showing the engine's raw command line.
+
 ### 4.3.18
 The sequence view understands zone mode (NLP++ engine 4.2.48).
 
