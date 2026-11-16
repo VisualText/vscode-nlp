@@ -199,8 +199,48 @@ jobs:
             exit 1
           fi
 
+      # Open VSX is the registry VSCodium, Gitpod, Eclipse Theia and other
+      # VS Code builds install from; the Microsoft Marketplace's terms limit it
+      # to Microsoft's own products, so those users cannot see it.
+      - name: Publish to Open VSX
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.decide.outputs.version }}"
+          VSIX="${{ steps.build.outputs.vsix }}"
+
+          # Same reasoning as VSCE_PAT: no token means the step was never set
+          # up (or the token lapsed), not that the release failed.
+          if [[ -z "${OVSX_PAT:-}" ]]; then
+            echo "::warning::OVSX_PAT is not set, so ${VERSION} was not published to Open VSX. The GitHub release is complete. To automate this step, create an access token at https://open-vsx.org/user-settings/tokens and add it as a repository secret named OVSX_PAT, then re-run this workflow."
+            exit 0
+          fi
+
+          # Open VSX versions cannot be replaced either; a re-run skips it.
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://open-vsx.org/api/dehilster/nlp/${VERSION}" || true)
+          if [[ "${STATUS}" == "200" ]]; then
+            echo "${VERSION} is already on Open VSX; nothing to publish."
+            exit 0
+          fi
+
+          # Publish the same vsix that went to the release and the Marketplace.
+          if npx --yes ovsx@1.3.0 publish "${VSIX}" -p "${OVSX_PAT}" > /tmp/ovsx.log 2>&1; then
+            cat /tmp/ovsx.log
+            echo "Published ${VERSION} to Open VSX."
+          else
+            cat /tmp/ovsx.log
+            if grep -qiE "already published|already exists" /tmp/ovsx.log; then
+              echo "::warning::${VERSION} was already on Open VSX. Nothing to do."
+              exit 0
+            fi
+            echo "::error::Publishing ${VERSION} to Open VSX failed for a reason other than the version already existing. The GitHub release and Marketplace publish are complete; fix the cause and re-run this workflow."
+            exit 1
+          fi
+
       # The language server goes last, so a problem publishing it can never
-      # stop the extension from reaching the Marketplace.
+      # stop the extension from reaching the Marketplace or Open VSX.
       - name: Publish the language server to npm
         if: steps.decide.outputs.publish == 'true'
         run: |
