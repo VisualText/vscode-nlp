@@ -63,10 +63,12 @@ Start with [Using Claude with NLP++](https://visualtext.org/using-claude-with-nl
 
 ## Getting Started
 
-1. Install the extension from the Marketplace. **The NLP-ENGINE comes with it** — there is nothing else to download, and it keeps itself up to date.
+1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=dehilster.nlp). **The NLP-ENGINE comes with it** — there is nothing else to download, and it keeps itself up to date.
 2. Open (or create) a folder to hold your analyzers. Use **New Analyzer** in the Analyzer view and pick a template.
 3. Drop a text file into the analyzer's `input` folder, select it in the **Text** view, and run the analyzer.
 4. Open the resulting `.tree` file, or right-click it and choose **Graph Entire Tree**, to see exactly what matched and why.
+
+**Using VSCodium?** The extension is also published on [Open VSX](https://open-vsx.org/extension/dehilster/nlp), the registry VSCodium and other open-source builds of VS Code install from. Search for **NLP** (publisher *dehilster*) in the Extensions view. It is the same build as the Marketplace version and updates at the same time.
 
 New to NLP++? The [hello-world video](https://visualtext.org/hello-world-tutorial/) and the [tutorial videos](http://tutorials.visualtext.org) cover this ground in a few minutes.
 
@@ -256,6 +258,8 @@ Telemetry respects two independent opt-outs, and sends nothing if either is off:
 
 - VS Code's global `telemetry.telemetryLevel` setting (`off` disables all extension telemetry), and
 - the extension's own `nlp.telemetry.enable` setting.
+
+VSCodium turns `telemetry.telemetryLevel` off by default, so under VSCodium the extension sends nothing unless you turn telemetry back on.
 
 ## Known Issues and Release Notes
 
