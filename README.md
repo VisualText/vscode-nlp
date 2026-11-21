@@ -1,5 +1,7 @@
 # NLP++ Language Extension
 
+[![PyPI: NLPPlus](https://img.shields.io/pypi/v/NLPPlus?label=PyPI%20NLPPlus&logo=pypi&logoColor=white)](https://pypi.org/project/NLPPlus/) [![npm: nlpplus](https://img.shields.io/npm/v/nlpplus?label=npm%20nlpplus&logo=npm)](https://www.npmjs.com/package/nlpplus)
+
 Build, debug, and ship **glass-box** text analyzers in Visual Studio Code.
 
 [![The NLP++ extension in VS Code, with each panel labeled: the development corpus, the NLP pipeline of analyzer passes, the text being analyzed, a traditional parse tree display, the rule matches display, the output tree, dictionaries and knowledge bases, the dictionary being edited, the knowledge base output, help including LLM prompts, analyzer run output, the analyzer list, and the log window](resources/VSCodeNLP.png)](https://raw.githubusercontent.com/VisualText/vscode-nlp/master/resources/VSCodeNLP.png)
